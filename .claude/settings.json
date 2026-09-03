@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(//**/.ssh/**)",
+      "Read(//**/.aws/**)",
+      "Read(//**/.gnupg/**)",
+      "Read(//**/.claude/.credentials.json)",
+      "Read(**/.env)",
+      "Edit(**/.env)",
+      "Read(~/**)",
+      "Edit(~/**)",
+      "Cd"
+    ],
+    "additionalDirectories": []
+  }
+}
