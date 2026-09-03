@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de Skills</title>
+<style>
+  :root{
+    --fundo:#f4f5f7; --papel:#ffffff; --texto:#161a20; --fraco:#5b6472;
+    --borda:#d9dde4; --borda-forte:#b6bdc8;
+    --fluxo:#1f6feb; --chamada:#0f8a76; --devolucao:#c2410c;
+    --gate:#7c3aed; --icone:var(--fluxo);
+    --sombra:0 1px 2px rgba(16,20,28,.06),0 8px 24px rgba(16,20,28,.07);
+    --mono:ui-monospace,"Cascadia Mono","Consolas","SFMono-Regular",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --fundo:#101318; --papel:#171b22; --texto:#e7eaf0; --fraco:#9aa4b3;
+      --borda:#2a303a; --borda-forte:#3c4453;
+      --fluxo:#589bff; --chamada:#3fc4aa; --devolucao:#fb8b52; --gate:#a98bff;
+      --sombra:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fundo);color:var(--texto);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .env{max-width:1180px;margin:0 auto;padding:32px 20px 72px}
+  h1{font-size:27px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+  h2{font-size:19px;margin:44px 0 6px;letter-spacing:-.01em}
+  h3{font-size:14px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.07em;color:var(--fraco)}
+  p{margin:0 0 12px;max-width:74ch}
+  .secao-nota{color:var(--fraco);margin-bottom:18px;max-width:74ch}
+  code,.mono{font-family:var(--mono);font-size:.88em}
+  .cartao{background:var(--papel);border:1px solid var(--borda);border-radius:12px;box-shadow:var(--sombra)}
+
+  /* cabeçalho */
+  .cabeca{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between;
+          border-bottom:1px solid var(--borda);padding-bottom:20px;margin-bottom:26px}
+  .selo{font-family:var(--mono);font-size:12px;color:var(--fraco);border:1px solid var(--borda);
+        border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+  /* palco */
+  .palco{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+  @media (max-width:940px){.palco{grid-template-columns:1fr}}
+  .quadro{padding:6px 6px 10px;position:relative;overflow:hidden}
+  svg#grafo{width:100%;height:auto;display:block;touch-action:manipulation}
+
+  /* controles */
+  .controles{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 12px 6px}
+  .btn{font:inherit;font-size:13px;color:var(--texto);background:var(--papel);
+       border:1px solid var(--borda-forte);border-radius:999px;padding:6px 13px;cursor:pointer;
+       display:inline-flex;align-items:center;gap:7px;transition:background .15s,border-color .15s}
+  .btn:hover{border-color:var(--texto)}
+  .btn[aria-pressed="true"]{background:var(--texto);color:var(--papel);border-color:var(--texto)}
+  .btn .ponto{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .ponto.p-fluxo{background:var(--fluxo)}
+  .ponto.p-chamada{background:var(--chamada)}
+  .ponto.p-devolucao{background:var(--devolucao)}
+  .btn.tocar{margin-left:auto;font-weight:600}
+  .dica{font-size:12.5px;color:var(--fraco);padding:0 14px 10px}
+
+  /* glifos — herdam a cor de quem os usa, no SVG e no HTML */
+  symbol{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .ico{width:21px;height:21px;flex:0 0 auto;vertical-align:-6px;color:var(--icone)}
+  h4 .ico,h5 .ico{width:22px;height:22px;vertical-align:-5px}
+  .fraca{color:var(--fraco);font-size:13.5px;margin:0}
+
+  /* nós */
+  .no{cursor:pointer}
+  .no rect{fill:var(--papel);stroke:var(--borda-forte);stroke-width:1.4;transition:stroke .18s,fill .18s}
+  .no text{font-size:12.5px;font-weight:600;pointer-events:none}
+  .no .num{font-family:var(--mono);fill:var(--texto)}
+  .no .nome{fill:var(--icone)}
+  .no .glifo{color:var(--icone);opacity:.8;transition:opacity .18s,color .18s;pointer-events:none}
+  .no:hover .glifo,.no.sel .glifo{opacity:1}
+  .no.andando .glifo{color:var(--gate);opacity:1}
+  .no:hover rect,.no.sel rect{stroke:var(--texto);stroke-width:2.2}
+  .no.sel rect{fill:color-mix(in srgb,var(--texto) 6%,var(--papel))}
+  .no.apagado{opacity:.26}
+  .no.viz rect{stroke-width:2}
+  .no.andando rect{stroke:var(--gate);stroke-width:2.6}
+
+  /* arestas */
+  .aresta{fill:none;stroke-width:1.7;opacity:.62;transition:opacity .18s,stroke-width .18s}
+  .aresta.fluxo{stroke:var(--fluxo)}
+  .aresta.chamada{stroke:var(--chamada);stroke-dasharray:7 5;animation:corre 1.6s linear infinite}
+  .aresta.devolucao{stroke:var(--devolucao);stroke-dasharray:2 5;stroke-linecap:round}
+  @keyframes corre{to{stroke-dashoffset:-24}}
+  @media (prefers-reduced-motion: reduce){.aresta.chamada{animation:none}}
+  .aresta.apagada{opacity:.07}
+  .aresta.viva{opacity:1;stroke-width:2.8}
+  .miolo text{fill:var(--fraco);font-size:11.5px;font-family:var(--mono)}
+  .miolo .grande{font-size:13px;font-weight:600;fill:var(--texto);font-family:inherit}
+  #bolinha{fill:var(--gate);opacity:0}
+
+  /* painel */
+  .painel{padding:16px 18px 18px;position:sticky;top:16px}
+  .painel .tag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--fraco);
+               border:1px solid var(--borda);border-radius:6px;padding:2px 7px;margin-bottom:8px}
+  .painel h4{margin:0 0 4px;font-size:17px;letter-spacing:-.01em}
+  .painel .frase{color:var(--fraco);font-size:13.5px;margin:0 0 14px}
+  .linha{border-top:1px solid var(--borda);padding:10px 0 0;margin-top:10px}
+  .linha:first-of-type{border-top:0;margin-top:0}
+  .rot{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--fraco);margin-bottom:4px}
+  .painel ul{margin:0;padding-left:16px}
+  .painel li{margin-bottom:3px;font-size:13.5px}
+  .porta{border-left:3px solid var(--gate);padding:8px 0 8px 11px;margin-top:12px;font-size:13.5px}
+  .porta b{color:var(--gate)}
+  .ligacao{display:block;width:100%;text-align:left;font:inherit;font-size:13px;background:none;
+           border:0;border-radius:7px;padding:5px 7px;cursor:pointer;color:var(--texto)}
+  .ligacao:hover{background:color-mix(in srgb,var(--texto) 7%,transparent)}
+  .ligacao .seta{font-family:var(--mono);color:var(--fraco);margin-right:6px}
+
+  /* grades */
+  .grade{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(255px,1fr))}
+  .grade .cartao{padding:14px 15px}
+  .grade h5{margin:0 0 5px;font-size:14px}
+  .grade p{font-size:13.5px;color:var(--fraco);margin:0}
+  .numinho{font-family:var(--mono);font-size:11px;color:var(--fraco)}
+
+
+
+  /* fora do ciclo — skill que não passa o bastão a ninguém */
+  .palco.largo{grid-template-columns:1fr}
+  .aviso{padding:26px;border:1px dashed var(--borda-forte);border-radius:12px;color:var(--fraco);
+         font-size:13.5px;line-height:1.6}
+  .aviso b{color:var(--texto)}
+</style>
+</head>
+<body>
+<div class="env">
+
+  <header class="cabeca">
+    <div>
+      <h1>Mapa de Skills</h1>
+    </div>
+    <div class="selo">clique numa skill · ou toque o ciclo</div>
+  </header>
+
+  <div class="palco">
+    <div class="cartao quadro">
+      <div class="controles">
+        <button type="button" class="btn" data-tipo="fluxo" aria-pressed="true"><span class="ponto p-fluxo"></span>fluxo do ciclo</button>
+        <button type="button" class="btn" data-tipo="chamada" aria-pressed="true"><span class="ponto p-chamada"></span>chamadas</button>
+        <button type="button" class="btn" data-tipo="devolucao" aria-pressed="false"><span class="ponto p-devolucao"></span>devoluções</button>
+        <button type="button" class="btn tocar" id="tocar">▶ tocar o ciclo</button>
+      </div>
+      <svg id="grafo" viewBox="0 0 900 640" role="img" aria-label="Diagrama das skills e suas ligações">
+        <defs>
+          <marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--fluxo)"/></marker>
+          <marker id="pc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--chamada)"/></marker>
+          <marker id="pd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--devolucao)"/></marker>
+
+
+          <!-- ============================ GLIFOS ============================
+               UM SÍMBOLO POR SKILL, com o id `ic-NN` batendo com o campo `n`.
+               O glifo diz o que a skill faz, em traço: botão de ligar para a
+               partida, balão para a entrevista, cilindro para o banco. Sem
+               emoji, que muda de forma em cada máquina e não obedece à cor do
+               tema. viewBox 24x24, só `path`/`circle`/`rect`, sem `fill` e sem
+               `stroke` — a cor e a espessura vêm do CSS.
+
+               Apague este bloco de exemplo e escreva os do pacote.           -->
+          <symbol id="ic-01" viewBox="0 0 24 24"><!-- botão de ligar: a partida -->
+            <path d="M12 3.2v7"/><path d="M17.5 6.6a7.4 7.4 0 1 1-11 0"/></symbol>
+          <!-- ========================== FIM DOS GLIFOS ==================== -->
+        </defs>
+        <g id="arestas"></g>
+        <g id="miolo" class="miolo"></g>
+        <g id="nos"></g>
+        <circle id="bolinha" r="5.5"></circle>
+      </svg>
+      <p class="dica" id="dica">Passe o olho: a linha cheia é o caminho comum; a tracejada é uma skill
+      chamando outra para produzir uma página; a pontilhada é o assunto sendo devolvido para o dono dele.</p>
+    </div>
+
+    <aside class="cartao painel" id="painel"></aside>
+  </div>
+
+  <section id="secao-fora" hidden>
+    <h2 id="titulo-fora"></h2>
+    <p class="secao-nota" id="nota-fora"></p>
+    <div class="grade" id="fora"></div>
+  </section>
+
+</div>
+
+<script>
+/* ==================================================================
+   MODELO DO MAPA DAS SKILLS — três blocos de dados e mais nada.
+   Preencha o nome do pacote, SKILLS e ARESTAS; o resto se vira sozinho:
+   o anel, os raios, o viewBox, as contagens e os títulos saem do que
+   está aqui. Nada abaixo de "geometria" precisa ser tocado.
+   ================================================================== */
+
+/* ===================== O NOME DO PACOTE =====================
+   Vai na aba do navegador, ao lado do título. O título da página é
+   fixo — "Mapa de Skills" — porque é o nome dela, e não do pacote.
+   ============================================================ */
+const NOME_DO_PACOTE = "";
+
+/* ============================ SKILLS ============================
+   Uma entrada por pasta encontrada, na ordem do número.
+     n       "07"            — o número da pasta, com dois dígitos
+     nome    "Designer…"     — o título da skill
+     curto   "Telas"         — o rótulo dentro da caixa, até ~12 letras
+     arq     "skill-07-…"    — o nome da pasta, exato
+     frase   uma linha       — o que a skill faz, em voz de quem não programa
+     le      []              — 2 a 4 itens, da linha "Lê" do Contrato
+     escreve []              — 2 a 4 itens, da linha "Escreve" do Contrato
+     gate    uma frase       — o ponto em que ela para e espera uma pessoa
+     nao     uma linha       — o resumo do "O que NÃO faz"
+     avulsa  true            — opcional: skill fora do ciclo, que não passa o
+                               bastão a ninguém. Sai do anel e vira cartão.
+   ================================================================ */
+let SKILLS = [
+];
+
+/* =========================== ARESTAS ============================
+   Uma entrada por ligação. Só entre skills do ciclo — aresta que toca
+   uma `avulsa` é descartada com aviso no console.
+     a, b  os números das duas pontas, no sentido a → b
+     t     "fluxo"     o bastão passa adiante, pelo gate de fim de rodada
+           "chamada"   uma skill aciona outra para produzir um artefato
+           "devolucao" apareceu assunto de outra skill: nomeia e devolve
+     l     a legenda, que aparece no painel e ao tocar o ciclo
+     fora  true — aresta de fluxo que é atalho, e fica fora do ciclo tocado
+   ================================================================ */
+let ARESTAS = [
+];
+
+/* ---------- geometria ---------- */
+// O anel se ajusta ao tamanho do pacote, e a regra é uma só: duas caixas nunca
+// se tocam. Quem separa dois vizinhos é a distância horizontal no topo e no
+// rodapé, e a vertical nos lados — nas diagonais, nenhuma das duas sozinha. Por
+// isso, quando o pacote é grande, o anel passa a ALTERNAR DOIS RAIOS: um
+// vizinho para fora, o seguinte para dentro. O desvio cresce até nenhum par se
+// encostar; se ele ficar exagerado perto do próprio anel, quem cresce é o anel,
+// e o desvio recomeça. Com número ímpar de skills a alternância não fecharia a
+// volta, então se calcula um vão a mais e a última posição fica vazia — é o
+// corte que se vê no alto, antes da primeira skill.
+const CICLO   = SKILLS.filter(s=>!s.avulsa);
+const AVULSAS = SKILLS.filter(s=>s.avulsa);
+const N       = CICLO.length;
+const VAOS    = N + (N%2 ? 1 : 0);          // par, para a alternância fechar
+const PASSO   = 2*Math.PI/Math.max(VAOS,1);
+const LARG    = N<=14 ? 156 : 132;          // pacote grande, caixa mais estreita
+const ALT     = 48;
+
+const anel = (rx,ry,z) => CICLO.map((s,i)=>{
+  const ang=-Math.PI/2+i*PASSO, d=z*(i%2?-1:1);
+  return {x:(rx+d)*Math.cos(ang), y:(ry+d)*Math.sin(ang)};
+});
+const folgaMinima = p => {                  // sobra do par mais apertado
+  let m=Infinity;
+  for(let i=0;i<p.length;i++) for(let j=i+1;j<p.length;j++){
+    const f=Math.max(Math.abs(p[i].x-p[j].x)-LARG, Math.abs(p[i].y-p[j].y)-ALT);
+    if(f<m) m=f;
+  }
+  return m;
+};
+
+let RY = Math.max(232,(ALT+14)/PASSO);
+let RX = N<=14 ? Math.max(328,(LARG+20)/PASSO) : Math.max(328, RY*1.30);
+let ZIGUE = N<=14 ? 0 : 34;
+for(let giro=0; giro<600 && folgaMinima(anel(RX,RY,ZIGUE))<8; giro++){
+  ZIGUE += 2;
+  if(ZIGUE > RY*0.55){ RX*=1.03; RY*=1.03; ZIGUE=34; }
+}
+if(folgaMinima(anel(RX,RY,ZIGUE))<0) console.warn("caixas encostando: pacote grande demais para um anel só");
+
+const CX = RX + ZIGUE + LARG/2 + 26, CY = RY + ZIGUE + ALT/2 + 26;
+const pos={};
+anel(RX,RY,ZIGUE).forEach((p,i)=>{ pos[CICLO[i].n]={x:CX+p.x, y:CY+p.y}; });
+
+const ORFAS = ARESTAS.filter(e=>!pos[e.a]||!pos[e.b]);
+if(ORFAS.length){
+  console.warn("arestas descartadas, ponta fora do ciclo:",ORFAS);
+  ARESTAS = ARESTAS.filter(e=>pos[e.a]&&pos[e.b]);
+}
+
+function borda(de,para){ // ponto na borda da caixa 'de', na direção de 'para'
+  const p=pos[de], q=pos[para];
+  let dx=q.x-p.x, dy=q.y-p.y;
+  const hw=LARG/2+7, hh=ALT/2+7;
+  const t=Math.min(Math.abs(dx)>1e-3?hw/Math.abs(dx):1e9, Math.abs(dy)>1e-3?hh/Math.abs(dy):1e9);
+  return {x:p.x+dx*t, y:p.y+dy*t};
+}
+// Duas skills podem se ligar por mais de uma aresta. Sem afastá-las, elas se
+// desenham por cima umas das outras e o par parece ter uma ligação só.
+const PARES={};
+ARESTAS.forEach((e,i)=>{
+  const k=[e.a,e.b].slice().sort().join("-");
+  if(!PARES[k]) PARES[k]=[];
+  PARES[k].push(i);
+});
+function faixa(e){ // 0 quando o par tem uma aresta só; ±1, ±2… quando tem mais
+  const g=PARES[[e.a,e.b].slice().sort().join("-")];
+  if(g.length<2) return 0;
+  return (g.indexOf(ARESTAS.indexOf(e)) - (g.length-1)/2) * 2;
+}
+
+function caminho(e){
+  const ia=CICLO.findIndex(s=>s.n===e.a), ib=CICLO.findIndex(s=>s.n===e.b);
+  let vao=Math.abs(ia-ib); vao=Math.min(vao,N-vao);
+  const p=borda(e.a,e.b), q=borda(e.b,e.a);
+  const mx=(p.x+q.x)/2, my=(p.y+q.y)/2;
+  let cx,cy;
+  if(vao===1){ // acompanha o anel, curvando para fora
+    const dx=mx-CX, dy=my-CY, d=Math.hypot(dx,dy)||1;
+    cx=mx+dx/d*26; cy=my+dy/d*26;
+  }else{ // corda, curvando para dentro
+    const k=vao===2?0.20:(vao===3?0.30:0.40);
+    cx=mx+(CX-mx)*k; cy=my+(CY-my)*k;
+  }
+  const f=faixa(e);
+  if(f){ // empurra perpendicularmente, para cada aresta do par ter a sua faixa
+    const vx=q.x-p.x, vy=q.y-p.y, h=Math.hypot(vx,vy)||1;
+    cx += -vy/h*32*f; cy += vx/h*32*f;
+  }
+  return `M${p.x.toFixed(1)},${p.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${q.x.toFixed(1)},${q.y.toFixed(1)}`;
+}
+
+/* ---------- as palavras ---------- */
+const EXTENSO=["nenhuma","uma","duas","três","quatro","cinco","seis","sete","oito","nove","dez",
+ "onze","doze","treze","catorze","quinze","dezesseis","dezessete","dezoito","dezenove","vinte",
+ "vinte e uma","vinte e duas","vinte e três","vinte e quatro","vinte e cinco","vinte e seis",
+ "vinte e sete","vinte e oito","vinte e nove","trinta","trinta e uma","trinta e duas",
+ "trinta e três","trinta e quatro","trinta e cinco","trinta e seis","trinta e sete",
+ "trinta e oito","trinta e nove","quarenta"];
+const porExtenso = k => EXTENSO[k] || String(k);
+const maiuscula  = t => t.charAt(0).toUpperCase()+t.slice(1);
+
+/* ---------- a página vazia ---------- */
+// Modelo aberto sem dados não mostra diagrama nenhum: mostra o que falta.
+const svg=document.getElementById("grafo");
+if(!SKILLS.length){
+  document.getElementById("subtitulo").textContent=
+    "Este é o modelo em branco. Preencha SKILLS e ARESTAS no início do script.";
+  svg.outerHTML='<div class="aviso"><b>Nada para desenhar.</b> As duas listas do início do '+
+    'script estão vazias — este arquivo é o modelo, não o mapa. Quem o preenche é a '+
+    'skill <span class="mono">skill-00-mapa-skills</span>, lendo a pasta das skills do projeto.</div>';
+}else{
+
+/* ---------- cabeçalho ---------- */
+document.title = NOME_DO_PACOTE ? `Mapa de Skills — ${NOME_DO_PACOTE}` : "Mapa de Skills";
+svg.setAttribute("viewBox",`0 0 ${Math.round(2*CX)} ${Math.round(2*CY)}`);
+svg.setAttribute("aria-label",`Diagrama das ${porExtenso(N)} skills do ciclo e suas ligações`);
+if(N>20) document.querySelector(".palco").classList.add("largo");
+
+/* ---------- desenho ---------- */
+const gA=document.getElementById("arestas"), gN=document.getElementById("nos"), gM=document.getElementById("miolo");
+const NS="http://www.w3.org/2000/svg";
+ARESTAS.forEach((e,i)=>{
+  const p=document.createElementNS(NS,"path");
+  p.setAttribute("d",caminho(e));
+  p.setAttribute("class","aresta "+e.t);
+  p.setAttribute("marker-end",`url(#${e.t==="fluxo"?"pf":e.t==="chamada"?"pc":"pd"})`);
+  p.dataset.i=i; p.dataset.tipo=e.t; p.dataset.a=e.a; p.dataset.b=e.b;
+  gA.appendChild(p);
+});
+CICLO.forEach(s=>{
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("class","no"); g.dataset.n=s.n;
+  g.setAttribute("tabindex","0"); g.setAttribute("role","button");
+  g.setAttribute("aria-label",s.n+" "+s.nome);
+  const p=pos[s.n];
+  const esq=p.x-LARG/2;                       // borda esquerda da caixa
+  g.innerHTML=
+    `<rect x="${esq}" y="${p.y-ALT/2}" width="${LARG}" height="${ALT}" rx="10"></rect>`+
+    `<use class="glifo" href="#ic-${s.n}" x="${esq+11}" y="${p.y-12.5}" width="25" height="25"></use>`+
+    `<text x="${esq+44}" y="${p.y+4.5}">`+
+      `<tspan class="num">${s.n}</tspan>`+
+      `<tspan class="nome" dx="7">${s.curto}</tspan>`+
+    `</text>`;
+  gN.appendChild(g);
+});
+gM.innerHTML=
+  `<text class="grande" x="${CX}" y="${CY-6}" text-anchor="middle">o ciclo</text>`+
+  `<text x="${CX}" y="${CY+14}" text-anchor="middle" id="miolo-linha"></text>`;
+
+/* ---------- estado ---------- */
+const ligados={fluxo:true,chamada:true,devolucao:false};
+let sel=null, tocando=false;
+
+function tipoVisivel(t){return ligados[t];}
+function pinta(){
+  const paths=[...gA.children];
+  paths.forEach(p=>{
+    const vis=tipoVisivel(p.dataset.tipo);
+    const toca = sel && (p.dataset.a===sel || p.dataset.b===sel);
+    p.classList.toggle("apagada", !vis || (sel && !toca));
+    p.classList.toggle("viva", !!(vis && toca));
+    p.style.display = vis ? "" : "none";
+  });
+  const vizinhos=new Set();
+  if(sel) ARESTAS.forEach(e=>{ if(!tipoVisivel(e.t))return;
+    if(e.a===sel) vizinhos.add(e.b); if(e.b===sel) vizinhos.add(e.a); });
+  [...gN.children].forEach(g=>{
+    const n=g.dataset.n;
+    g.classList.toggle("sel", n===sel);
+    g.classList.toggle("viz", !!(sel&&vizinhos.has(n)));
+    g.classList.toggle("apagado", !!(sel && n!==sel && !vizinhos.has(n)));
+  });
+  const vis=ARESTAS.filter(e=>tipoVisivel(e.t)).length;
+  document.getElementById("miolo-linha").textContent = sel
+    ? `skill ${sel} · ${vizinhos.size} vizinhas`
+    : `${N} skills · ${vis} ligações`;
+}
+
+// o mesmo glifo do diagrama, reaproveitado no texto — um desenho por skill,
+// em todo lugar em que ela aparece
+const ico = n => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-${n}"/></svg>`;
+
+function painel(n){
+  const s=SKILLS.find(x=>x.n===n);
+  const alvo=document.getElementById("painel");
+  if(!s){
+    alvo.innerHTML=
+      `<span class="tag">o pacote inteiro</span>
+       <h4>${maiuscula(porExtenso(SKILLS.length))} skills, um ciclo</h4>
+       <p class="frase">Qualquer uma pode chamar qualquer outra quando o trabalho pedir. A ordem é a do
+       ciclo comum, não uma obrigação: trabalho pequeno pula etapas, e trabalho que dá errado volta.</p>
+       <div class="linha"><div class="rot">as três ligações</div>
+       <ul>
+         <li><b style="color:var(--fluxo)">Fluxo</b> — o bastão passa adiante, pelo gate de fim de rodada.</li>
+         <li><b style="color:var(--chamada)">Chamada</b> — uma skill aciona outra para produzir um artefato, com o conteúdo já pronto.</li>
+         <li><b style="color:var(--devolucao)">Devolução</b> — apareceu assunto de outra skill: nomeia e devolve, em vez de improvisar.</li>
+       </ul></div>`;
+    return;
+  }
+  const liga = tipo => ARESTAS.filter(e=>e.t===tipo).flatMap(e=>{
+    if(e.a===n) return [{o:e.b,l:e.l,dir:"→"}];
+    if(e.b===n) return [{o:e.a,l:e.l,dir:"←"}];
+    return [];
+  });
+  const bloco=(titulo,itens)=> itens.length? `<div class="linha"><div class="rot">${titulo}</div>`+
+    itens.map(i=>`<button type="button" class="ligacao" data-ir="${i.o}"><span class="seta">${i.dir} ${ico(i.o)} ${i.o}</span>${i.l}</button>`).join("")+`</div>`:"";
+  alvo.innerHTML=
+    `<span class="tag">${s.arq}</span>
+     <h4>${ico(s.n)} ${s.n} · ${s.nome}</h4>
+     <p class="frase">${s.frase}</p>
+     <div class="linha"><div class="rot">lê</div><ul>${s.le.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+     <div class="linha"><div class="rot">escreve</div><ul>${s.escreve.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+     <div class="porta"><b>Gate.</b> ${s.gate}</div>
+     <div class="linha"><div class="rot">não faz</div><p class="fraca">${s.nao}</p></div>
+     ${bloco("fluxo",liga("fluxo"))}${bloco("chamadas",liga("chamada"))}${bloco("devoluções",liga("devolucao"))}`;
+  alvo.querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>escolher(b.dataset.ir));
+}
+
+function escolher(n){ sel = (sel===n? null : n); pinta(); painel(sel); }
+
+gN.querySelectorAll(".no").forEach(g=>{
+  g.addEventListener("click",()=>{ if(!tocando) escolher(g.dataset.n); });
+  g.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();escolher(g.dataset.n);} });
+});
+svg.addEventListener("click",ev=>{
+  if(ev.target.id==="grafo" && !tocando){ sel=null; pinta(); painel(null); }
+});
+document.querySelectorAll(".btn[data-tipo]").forEach(b=>{
+  b.onclick=()=>{ const t=b.dataset.tipo; ligados[t]=!ligados[t];
+    b.setAttribute("aria-pressed",String(ligados[t])); pinta(); };
+});
+
+/* ---------- tocar o ciclo ---------- */
+// o ciclo tocado é o caminho comum de ponta a ponta; a aresta marcada `fora` é
+// atalho, e atalho não entra na demonstração
+const PASSOS = ARESTAS.filter(e=>e.t==="fluxo" && !e.fora);
+const bolinha=document.getElementById("bolinha"), dica=document.getElementById("dica");
+const dicaOriginal=dica.innerHTML;
+function anima(path,ms){
+  return new Promise(res=>{
+    const total=path.getTotalLength(); const t0=performance.now();
+    bolinha.style.opacity="1";
+    (function passo(t){
+      const k=Math.min(1,(t-t0)/ms);
+      const p=path.getPointAtLength(total*k);
+      bolinha.setAttribute("cx",p.x); bolinha.setAttribute("cy",p.y);
+      if(k<1) requestAnimationFrame(passo); else res();
+    })(t0);
+  });
+}
+document.getElementById("tocar").onclick=async function(){
+  if(tocando || !PASSOS.length) return;
+  tocando=true; this.disabled=true; this.textContent="tocando…";
+  if(!ligados.fluxo){ ligados.fluxo=true;
+    document.querySelector('.btn[data-tipo="fluxo"]').setAttribute("aria-pressed","true"); }
+  sel=null; pinta();
+  for(const e of PASSOS){
+    const idx=ARESTAS.indexOf(e);
+    const path=gA.querySelector(`[data-i="${idx}"]`);
+    [...gN.children].forEach(g=>{
+      g.classList.toggle("andando", g.dataset.n===e.a||g.dataset.n===e.b);
+      g.classList.toggle("apagado", g.dataset.n!==e.a&&g.dataset.n!==e.b);
+    });
+    [...gA.children].forEach(p=>{p.classList.toggle("viva",p===path);p.classList.toggle("apagada",p!==path);});
+    dica.innerHTML=`<b>${e.a} → ${e.b}</b> · ${e.l}`;
+    painel(e.a);
+    await anima(path,1000);
+    await new Promise(r=>setTimeout(r,320));
+  }
+  bolinha.style.opacity="0";
+  [...gN.children].forEach(g=>g.classList.remove("andando"));
+  dica.innerHTML=dicaOriginal;
+  tocando=false; this.disabled=false; this.textContent="▶ tocar o ciclo";
+  sel=null; pinta(); painel(null);
+};
+
+/* ---------- seções ---------- */
+if(AVULSAS.length){
+  document.getElementById("secao-fora").hidden=false;
+  document.getElementById("titulo-fora").textContent =
+    AVULSAS.length===1 ? "A skill fora do ciclo"
+                       : `As ${porExtenso(AVULSAS.length)} skills fora do ciclo`;
+  document.getElementById("nota-fora").textContent =
+    "Não recebem nem passam o bastão: entram quando são chamadas, fazem o que fazem e param. "+
+    "Por isso ficam fora do anel — desenhá-las lá seria inventar uma ordem que elas não têm.";
+  document.getElementById("fora").innerHTML=AVULSAS.map(s=>
+    `<div class="cartao"><span class="numinho">${s.n} · ${s.arq}</span>
+     <h5>${ico(s.n)} ${s.nome}</h5><p>${s.frase}</p></div>`).join("");
+}
+
+pinta(); painel(null);
+}
+</script>
+</body>
+</html>

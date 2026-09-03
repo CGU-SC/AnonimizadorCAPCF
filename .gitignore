@@ -1,0 +1,26 @@
+# Segredo do ambiente de desenvolvimento — nunca versionado.
+# O .env.example (com só os nomes das variáveis) fica de fora desta lista de propósito.
+.env
+
+# Documentos de exemplo com CPF real — nunca podem entrar no histórico,
+# mesmo que a pasta volte a existir depois.
+Exemplos/
+
+# Artefatos gerados (instalador, .exe final) — nascem do código, não se editam à mão.
+builds/
+
+# Saída padrão do PyInstaller ao gerar o executável.
+build/
+dist/
+*.spec
+
+# Ambiente virtual do Python — cada máquina cria o seu com `pip install -r requirements.txt`.
+.venv/
+
+# Arquivos que o Python gera sozinho ao rodar.
+__pycache__/
+*.pyc
+
+# Arquivos de configuração do editor/sistema, específicos de cada máquina.
+.vscode/
+Thumbs.db

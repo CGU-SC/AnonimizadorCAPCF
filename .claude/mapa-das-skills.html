@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de Skills</title>
+<style>
+  :root{
+    --fundo:#f4f5f7; --papel:#ffffff; --texto:#161a20; --fraco:#5b6472;
+    --borda:#d9dde4; --borda-forte:#b6bdc8;
+    --fluxo:#1f6feb; --chamada:#0f8a76; --devolucao:#c2410c;
+    --gate:#7c3aed; --icone:var(--fluxo);
+    --sombra:0 1px 2px rgba(16,20,28,.06),0 8px 24px rgba(16,20,28,.07);
+    --mono:ui-monospace,"Cascadia Mono","Consolas","SFMono-Regular",monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --fundo:#101318; --papel:#171b22; --texto:#e7eaf0; --fraco:#9aa4b3;
+      --borda:#2a303a; --borda-forte:#3c4453;
+      --fluxo:#589bff; --chamada:#3fc4aa; --devolucao:#fb8b52; --gate:#a98bff;
+      --sombra:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fundo);color:var(--texto);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .env{max-width:1180px;margin:0 auto;padding:32px 20px 72px}
+  h1{font-size:27px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+  h2{font-size:19px;margin:44px 0 6px;letter-spacing:-.01em}
+  h3{font-size:14px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.07em;color:var(--fraco)}
+  p{margin:0 0 12px;max-width:74ch}
+  .secao-nota{color:var(--fraco);margin-bottom:18px;max-width:74ch}
+  code,.mono{font-family:var(--mono);font-size:.88em}
+  .cartao{background:var(--papel);border:1px solid var(--borda);border-radius:12px;box-shadow:var(--sombra)}
+
+  /* cabeçalho */
+  .cabeca{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between;
+          border-bottom:1px solid var(--borda);padding-bottom:20px;margin-bottom:26px}
+  .selo{font-family:var(--mono);font-size:12px;color:var(--fraco);border:1px solid var(--borda);
+        border-radius:999px;padding:5px 12px;white-space:nowrap}
+
+  /* palco */
+  .palco{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+  @media (max-width:940px){.palco{grid-template-columns:1fr}}
+  .quadro{padding:6px 6px 10px;position:relative;overflow:hidden}
+  svg#grafo{width:100%;height:auto;display:block;touch-action:manipulation}
+
+  /* controles */
+  .controles{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 12px 6px}
+  .btn{font:inherit;font-size:13px;color:var(--texto);background:var(--papel);
+       border:1px solid var(--borda-forte);border-radius:999px;padding:6px 13px;cursor:pointer;
+       display:inline-flex;align-items:center;gap:7px;transition:background .15s,border-color .15s}
+  .btn:hover{border-color:var(--texto)}
+  .btn[aria-pressed="true"]{background:var(--texto);color:var(--papel);border-color:var(--texto)}
+  .btn .ponto{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .ponto.p-fluxo{background:var(--fluxo)}
+  .ponto.p-chamada{background:var(--chamada)}
+  .ponto.p-devolucao{background:var(--devolucao)}
+  .btn.tocar{margin-left:auto;font-weight:600}
+  .dica{font-size:12.5px;color:var(--fraco);padding:0 14px 10px}
+
+  /* glifos — herdam a cor de quem os usa, no SVG e no HTML */
+  symbol{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .ico{width:21px;height:21px;flex:0 0 auto;vertical-align:-6px;color:var(--icone)}
+  h4 .ico,h5 .ico{width:22px;height:22px;vertical-align:-5px}
+  .fraca{color:var(--fraco);font-size:13.5px;margin:0}
+
+  /* nós */
+  .no{cursor:pointer}
+  .no rect{fill:var(--papel);stroke:var(--borda-forte);stroke-width:1.4;transition:stroke .18s,fill .18s}
+  .no text{font-size:12.5px;font-weight:600;pointer-events:none}
+  .no .num{font-family:var(--mono);fill:var(--texto)}
+  .no .nome{fill:var(--icone)}
+  .no .glifo{color:var(--icone);opacity:.8;transition:opacity .18s,color .18s;pointer-events:none}
+  .no:hover .glifo,.no.sel .glifo{opacity:1}
+  .no.andando .glifo{color:var(--gate);opacity:1}
+  .no:hover rect,.no.sel rect{stroke:var(--texto);stroke-width:2.2}
+  .no.sel rect{fill:color-mix(in srgb,var(--texto) 6%,var(--papel))}
+  .no.apagado{opacity:.26}
+  .no.viz rect{stroke-width:2}
+  .no.andando rect{stroke:var(--gate);stroke-width:2.6}
+
+  /* arestas */
+  .aresta{fill:none;stroke-width:1.7;opacity:.62;transition:opacity .18s,stroke-width .18s}
+  .aresta.fluxo{stroke:var(--fluxo)}
+  .aresta.chamada{stroke:var(--chamada);stroke-dasharray:7 5;animation:corre 1.6s linear infinite}
+  .aresta.devolucao{stroke:var(--devolucao);stroke-dasharray:2 5;stroke-linecap:round}
+  @keyframes corre{to{stroke-dashoffset:-24}}
+  @media (prefers-reduced-motion: reduce){.aresta.chamada{animation:none}}
+  .aresta.apagada{opacity:.07}
+  .aresta.viva{opacity:1;stroke-width:2.8}
+  .miolo text{fill:var(--fraco);font-size:11.5px;font-family:var(--mono)}
+  .miolo .grande{font-size:13px;font-weight:600;fill:var(--texto);font-family:inherit}
+  #bolinha{fill:var(--gate);opacity:0}
+
+  /* painel */
+  .painel{padding:16px 18px 18px;position:sticky;top:16px}
+  .painel .tag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--fraco);
+               border:1px solid var(--borda);border-radius:6px;padding:2px 7px;margin-bottom:8px}
+  .painel h4{margin:0 0 4px;font-size:17px;letter-spacing:-.01em}
+  .painel .frase{color:var(--fraco);font-size:13.5px;margin:0 0 14px}
+  .linha{border-top:1px solid var(--borda);padding:10px 0 0;margin-top:10px}
+  .linha:first-of-type{border-top:0;margin-top:0}
+  .rot{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--fraco);margin-bottom:4px}
+  .painel ul{margin:0;padding-left:16px}
+  .painel li{margin-bottom:3px;font-size:13.5px}
+  .porta{border-left:3px solid var(--gate);padding:8px 0 8px 11px;margin-top:12px;font-size:13.5px}
+  .porta b{color:var(--gate)}
+  .ligacao{display:block;width:100%;text-align:left;font:inherit;font-size:13px;background:none;
+           border:0;border-radius:7px;padding:5px 7px;cursor:pointer;color:var(--texto)}
+  .ligacao:hover{background:color-mix(in srgb,var(--texto) 7%,transparent)}
+  .ligacao .seta{font-family:var(--mono);color:var(--fraco);margin-right:6px}
+
+  /* grades */
+  .grade{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(255px,1fr))}
+  .grade .cartao{padding:14px 15px}
+  .grade h5{margin:0 0 5px;font-size:14px}
+  .grade p{font-size:13.5px;color:var(--fraco);margin:0}
+  .numinho{font-family:var(--mono);font-size:11px;color:var(--fraco)}
+
+
+
+  /* fora do ciclo — skill que não passa o bastão a ninguém */
+  .palco.largo{grid-template-columns:1fr}
+  .aviso{padding:26px;border:1px dashed var(--borda-forte);border-radius:12px;color:var(--fraco);
+         font-size:13.5px;line-height:1.6}
+  .aviso b{color:var(--texto)}
+</style>
+</head>
+<body>
+<div class="env">
+
+  <header class="cabeca">
+    <div>
+      <h1>Mapa de Skills</h1>
+    </div>
+    <div class="selo">clique numa skill · ou toque o ciclo</div>
+  </header>
+
+  <div class="palco">
+    <div class="cartao quadro">
+      <div class="controles">
+        <button type="button" class="btn" data-tipo="fluxo" aria-pressed="true"><span class="ponto p-fluxo"></span>fluxo do ciclo</button>
+        <button type="button" class="btn" data-tipo="chamada" aria-pressed="true"><span class="ponto p-chamada"></span>chamadas</button>
+        <button type="button" class="btn" data-tipo="devolucao" aria-pressed="false"><span class="ponto p-devolucao"></span>devoluções</button>
+        <button type="button" class="btn tocar" id="tocar">▶ tocar o ciclo</button>
+      </div>
+      <svg id="grafo" viewBox="0 0 900 640" role="img" aria-label="Diagrama das skills e suas ligações">
+        <defs>
+          <marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--fluxo)"/></marker>
+          <marker id="pc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--chamada)"/></marker>
+          <marker id="pd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--devolucao)"/></marker>
+
+
+          <symbol id="ic-01" viewBox="0 0 24 24"><!-- botão de ligar: a partida -->
+            <path d="M12 3.2v7"/><path d="M17.5 6.6a7.4 7.4 0 1 1-11 0"/></symbol>
+          <symbol id="ic-02" viewBox="0 0 24 24"><!-- balão com pergunta: a entrevista -->
+            <path d="M20 4.5H4v11h4.5L12 19.5V15.5h8z"/>
+            <path d="M9.7 8.4a2.4 2.4 0 1 1 2.9 3.3"/><path d="M12 13.6v.1"/></symbol>
+          <symbol id="ic-03" viewBox="0 0 24 24"><!-- camadas: com o que é feito -->
+            <path d="M12 2.6l8.4 4.2-8.4 4.2-8.4-4.2z"/>
+            <path d="M3.6 11.4l8.4 4.2 8.4-4.2"/><path d="M3.6 16l8.4 4.2 8.4-4.2"/></symbol>
+          <symbol id="ic-04" viewBox="0 0 24 24"><!-- pasta: onde cada coisa mora -->
+            <path d="M3 6.6A1.6 1.6 0 0 1 4.6 5h4.1l2.1 2.6h8.6A1.6 1.6 0 0 1 21 9.2v8.2A1.6 1.6 0 0 1 19.4 19H4.6A1.6 1.6 0 0 1 3 17.4z"/></symbol>
+          <symbol id="ic-05" viewBox="0 0 24 24"><!-- documento: o combinado -->
+            <path d="M6.2 3h7.6L18 7.2V21H6.2z"/><path d="M13.6 3.2v4.2h4.2"/>
+            <path d="M9 11.6h6"/><path d="M9 15.2h6"/><path d="M9 18h3.5"/></symbol>
+          <symbol id="ic-06" viewBox="0 0 24 24"><!-- cilindro: o banco -->
+            <path d="M19 6.2c0 1.8-3.1 3.2-7 3.2s-7-1.4-7-3.2S8.1 3 12 3s7 1.4 7 3.2z"/>
+            <path d="M5 6.2v11.6c0 1.8 3.1 3.2 7 3.2s7-1.4 7-3.2V6.2"/>
+            <path d="M5 12c0 1.8 3.1 3.2 7 3.2s7-1.4 7-3.2"/></symbol>
+          <symbol id="ic-07" viewBox="0 0 24 24"><!-- janela: a tela -->
+            <path d="M3.5 6a1.5 1.5 0 0 1 1.5-1.5h14A1.5 1.5 0 0 1 20.5 6v12a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18z"/>
+            <path d="M3.5 9h17"/><path d="M6.4 6.7v.1"/><path d="M8.9 6.7v.1"/></symbol>
+          <symbol id="ic-08" viewBox="0 0 24 24"><!-- chave: construir -->
+            <path d="M20.4 5.1l-3 3 -1.5-1.5 3-3a4.6 4.6 0 0 0-5.9 5.6L4.6 17.6a1.9 1.9 0 0 0 0 2.7 1.9 1.9 0 0 0 2.7 0l8.4-8.4a4.6 4.6 0 0 0 4.7-6.8z"/></symbol>
+          <symbol id="ic-09" viewBox="0 0 24 24"><!-- lupa: a lente -->
+            <circle cx="10.6" cy="10.6" r="6.6"/><path d="M15.4 15.4L20.6 20.6"/></symbol>
+          <symbol id="ic-10" viewBox="0 0 24 24"><!-- nó no ramo: o commit -->
+            <circle cx="12" cy="12" r="3.9"/><path d="M12 3v5.1"/><path d="M12 15.9V21"/></symbol>
+          <symbol id="ic-11" viewBox="0 0 24 24"><!-- caixa: nas mãos de quem usa -->
+            <path d="M12 2.8l8.2 4.3v9.8L12 21.2 3.8 16.9V7.1z"/>
+            <path d="M3.8 7.1L12 11.4l8.2-4.3"/><path d="M12 11.4v9.8"/></symbol>
+          <symbol id="ic-12" viewBox="0 0 24 24"><!-- janela em branco: a sessão que começa limpa -->
+            <rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.2"/><path d="M3.2 9.2h17.6"/>
+            <path d="M12 12.3v4.4"/><path d="M9.8 14.5h4.4"/></symbol>
+        </defs>
+        <g id="arestas"></g>
+        <g id="miolo" class="miolo"></g>
+        <g id="nos"></g>
+        <circle id="bolinha" r="5.5"></circle>
+      </svg>
+      <p class="dica" id="dica">Passe o olho: a linha cheia é o caminho comum; a tracejada é uma skill
+      chamando outra para produzir uma página; a pontilhada é o assunto sendo devolvido para o dono dele.</p>
+    </div>
+
+    <aside class="cartao painel" id="painel"></aside>
+  </div>
+
+  <section id="secao-fora" hidden>
+    <h2 id="titulo-fora"></h2>
+    <p class="secao-nota" id="nota-fora"></p>
+    <div class="grade" id="fora"></div>
+  </section>
+
+</div>
+
+<script>
+/* ==================================================================
+   MODELO DO MAPA DAS SKILLS — três blocos de dados e mais nada.
+   Preencha o nome do pacote, SKILLS e ARESTAS; o resto se vira sozinho:
+   o anel, os raios, o viewBox, as contagens e os títulos saem do que
+   está aqui. Nada abaixo de "geometria" precisa ser tocado.
+   ================================================================== */
+
+/* ===================== O NOME DO PACOTE =====================
+   Vai na aba do navegador, ao lado do título. O título da página é
+   fixo — "Mapa de Skills" — porque é o nome dela, e não do pacote.
+   ============================================================ */
+const NOME_DO_PACOTE = "Imersão";
+
+/* ============================ SKILLS ============================
+   Uma entrada por pasta encontrada, na ordem do número.
+     n       "07"            — o número da pasta, com dois dígitos
+     nome    "Designer…"     — o título da skill
+     curto   "Telas"         — o rótulo dentro da caixa, até ~12 letras
+     arq     "skill-07-…"    — o nome da pasta, exato
+     frase   uma linha       — o que a skill faz, em voz de quem não programa
+     le      []              — 2 a 4 itens, da linha "Lê" do Contrato
+     escreve []              — 2 a 4 itens, da linha "Escreve" do Contrato
+     gate    uma frase       — o ponto em que ela para e espera uma pessoa
+     nao     uma linha       — o resumo do "O que NÃO faz"
+     avulsa  true            — opcional: skill fora do ciclo, que não passa o
+                               bastão a ninguém. Sai do anel e vira cartão.
+   ================================================================ */
+let SKILLS = [
+ {n:"01",nome:"Iniciar Projeto",curto:"Partida",arq:"skill-01-iniciar-projeto",
+  frase:"A primeira organização: as skills instaladas, a máquina pronta e o lugar do projeto, com o histórico ligado.",
+  le:["a pasta onde a sessão abriu","o .claude/skills/, se existir","as versões do que está instalado"],
+  escreve:["o pacote de skills em .claude/skills/","o histórico ligado com git init","a identidade do git, quando faltar"],
+  gate:"cada coisa instalada com “sim” expresso, e a pasta do projeto escolhida pelo usuário — o comando de versão é a prova de que a ferramenta está lá",
+  nao:"não levanta requisito, não escolhe a stack, não cria a árvore, não commita"},
+ {n:"02",nome:"Analista de Requisitos",curto:"Requisitos",arq:"skill-02-analista-de-requisitos",
+  frase:"Abre todo trabalho novo e pergunta antes de qualquer decisão técnica.",
+  le:["o pedido","o repositório, quando já existe","o CLAUDE.md","o catálogo de skills instaladas"],
+  escreve:["modo A: nada em disco, só o texto do prompt","modo B: o entendimento e as respostas, no chat","o mapa do entendimento, desenhado pela 07"],
+  gate:"o entendimento confirmado por escolha expressa — a pergunta de fechamento vai em <b>lista numerada</b>, nunca “está certo?” nem “o que eu entendi errado?”, e o que ficou inferido e ninguém derrubou sai nomeado como <b>premissa</b>",
+  nao:"não escreve a spec, não escolhe a stack, não cria pasta, não prepara a partida"},
+ {n:"03",nome:"Arquiteto de Solução",curto:"Stack",arq:"skill-03-arquiteto-de-solucao",
+  frase:"Escolhe com o que o programa vai ser feito. A decisão mais cara de desfazer.",
+  le:["as respostas do levantamento da 02: o que faz, quem usa, o que guarda, onde roda"],
+  escreve:["nada em disco: a stack e o motivo, no chat — quem registra no CLAUDE.md é a 04"],
+  gate:"a stack aprovada com “sim” expresso, antes de qualquer arquivo criado",
+  nao:"não levanta requisito, não cria arquivo, não implementa, não decide sozinha"},
+ {n:"04",nome:"Organizador de Ambiente",curto:"Fundação",arq:"skill-04-organizador-de-ambiente",
+  frase:"Funda o projeto: árvore, arquivos de raiz com conteúdo real, backlog. E é a referência de onde cada coisa mora.",
+  le:["as respostas da 02 e a stack aprovada da 03","a pasta do projeto, quando já existe algo"],
+  escreve:["a árvore, CLAUDE.md, .claude/settings.json, .gitignore, .env.example, READMEs","especificacoes/backlog.md, depois do commit fundador"],
+  gate:"o backlog confirmado pelo usuário; e o repositório online, fechado por padrão, só depois do commit fundador — nada é enviado sem “sim” expresso",
+  nao:"não levanta requisito, não escolhe a stack, não escreve spec, não liga o histórico, não implementa"},
+ {n:"05",nome:"Redator de Funcionalidade",curto:"Spec",arq:"skill-05-redator-de-funcionalidade",
+  frase:"Fecha o escopo de uma funcionalidade — acordo curto ou spec formal, pelo tamanho do trabalho.",
+  le:["as respostas do levantamento","o CLAUDE.md e o backlog.md","a spec anterior, quando altera"],
+  escreve:["especificacoes/specs/NNN-nome.md, ou o acordo curto no chat","a spec ilustrada, desenhada pela 07, no mesmo número"],
+  gate:"a spec aprovada antes da primeira linha de código — o texto encolhe, o gate nunca",
+  nao:"não levanta requisito, não decide arquitetura, não implementa"},
+ {n:"06",nome:"Modelador de Dados",curto:"Dados",arq:"skill-06-modelador-de-dados",
+  frase:"Propõe como os dados se organizam e desenha o banco numa página — a única parte do programa que não tem tela.",
+  le:["o esquema real do banco, sempre — nunca a spec","a spec em andamento, o backlog e o CLAUDE.md","o mapa anterior, para saber o que entrou"],
+  escreve:["especificacoes/mapa-do-banco.html, um arquivo só, sempre o vigente"],
+  gate:"o modelo aprovado com “sim” expresso, e cada escolha traduzida para consequência no dia a dia, nunca para estrutura",
+  nao:"não altera o banco, não escolhe com o que guardar, não escreve spec, não constrói"},
+ {n:"07",nome:"Designer de Telas",curto:"Telas",arq:"skill-07-designer-de-telas",
+  frase:"Rascunho de tela antes do código — e o sistema de design antes da primeira tela. Desenha também as páginas que as outras skills pedem.",
+  le:["a spec ou o acordo do que a tela mostra","mockups/sistema-de-design.md","os mockups já aprovados da mesma área"],
+  escreve:["mockups/&lt;area&gt;/NN-nome.html","o sistema de design, na primeira vez","as páginas pedidas por outra skill","mockups/00-indice.html"],
+  gate:"a aprovação visual explícita antes de qualquer código de interface — as páginas pedidas por outra skill não têm esse gate",
+  nao:"não decide o que a tela mostra, não implementa a tela real, não decide sozinha a identidade visual"},
+ {n:"08",nome:"Construtor de Funcionalidades",curto:"Construção",arq:"skill-08-construtor-de-funcionalidades",
+  frase:"Escreve o programa em cinco a oito etapas, cada uma terminando com o programa funcionando.",
+  le:["o projeto inteiro, antes de qualquer pergunta","a spec e o mockup da funcionalidade escolhida","o código que já existe e o histórico"],
+  escreve:["o código, etapa por etapa","abrir/abrir-dev.bat, na primeira etapa que dá o que ver","“O que já nos mordeu”, no CLAUDE.md","a coluna Situação do backlog"],
+  gate:"a funcionalidade escolhida pelo usuário, a lista de etapas aprovada, e cada etapa conferida por ele na tela — “construída” só depois que a pessoa viu funcionando",
+  nao:"não levanta requisito, não escreve spec, não desenha tela nova, não revisa por lente, não commita, não empacota"},
+ {n:"09",nome:"Revisor de Código",curto:"Revisão",arq:"skill-09-revisor-de-codigo",
+  frase:"Uma lente por rodada, escolhida por quem pediu. Seis lentes juntas é o mesmo que nenhuma.",
+  le:["o projeto inteiro como contexto","o código da entrega que vai revisar"],
+  escreve:["nada, enquanto revisa","depois do aceite: o conserto aprovado e os comentários em português","a página de antes e depois, pela 07"],
+  gate:"a lente escolhida pelo humano, e cada achado aprovado um a um antes de qualquer conserto",
+  nao:"não roda duas lentes, não mexe antes do aceite, não muda comportamento, não faz análise de segurança ampla"},
+ {n:"10",nome:"Controlador de Versões",curto:"Commit",arq:"skill-10-controlador-de-versoes",
+  frase:"Registra o trabalho em commits coesos — e antes disso pergunta quem já olhou aquilo.",
+  le:["git status e os diffs pendentes","a convenção de mensagem do projeto","a branch de trabalho"],
+  escreve:["o commit no histórico, depois de apresentado e aprovado"],
+  gate:"o commit apresentado — fatia, mensagem e quem já olhou — e o “sim” expresso antes de executar",
+  nao:"não faz push sem pedido, não empacota, não cria branch sozinha, e nunca se convida"},
+ {n:"11",nome:"Gerente de Entrega",curto:"Entrega",arq:"skill-11-gerente-de-entrega",
+  frase:"Põe a versão nova nas mãos de quem usa, e prova antes que ela não estraga o que já existe.",
+  le:["o programa na versão a entregar","a versão anterior já em uso, quando existe","o CLAUDE.md"],
+  escreve:["o artefato ou a publicação","o número da versão e a nota do que mudou"],
+  gate:"a liberação aprovada por uma pessoa, depois do teste sobre dados que já existem — entrega não se desfaz",
+  nao:"não implementa, não corrige, não substitui a revisão, não escolhe a forma de entrega sozinha"},
+ {n:"12",nome:"Nova Sessão",curto:"Sessão nova",arq:"skill-12-nova-sessao",
+  frase:"Monta o prompt de uma sessão dedicada — ou conduz a atividade aqui. É o modo A das outras, virado skill.",
+  le:["o pedido","o repositório, quando já existe","o CLAUDE.md","o catálogo de skills instaladas"],
+  escreve:["modo A: nada em disco, só o texto do prompt, no chat","modo B: o que a atividade pedir, fase a fase"],
+  gate:"o entendimento confirmado antes de qualquer arquivo, e o modo escolhido pelo usuário — no modo A ela entrega o texto e para, sem executar nada",
+  nao:"não levanta requisito por dimensão, não escolhe a stack, não cria pasta, não escreve spec, não implementa"}
+];
+
+let ARESTAS = [
+ // ---- fluxo: o bastão passa adiante, pelo gate de fim de rodada
+ {a:"01",b:"02",t:"fluxo",l:"partida dada: “a saída desta skill é sempre a 02”"},
+ {a:"02",b:"03",t:"fluxo",l:"em projeto do zero, as respostas do levantamento sustentam a escolha da stack"},
+ {a:"03",b:"04",t:"fluxo",l:"fundar o projeto, e só depois da stack aprovada com “sim” expresso"},
+ {a:"04",b:"05",t:"fluxo",l:"o backlog: a 05 consome um item por vez, e nunca a lista inteira"},
+ {a:"05",b:"06",t:"fluxo",l:"quando a spec pede informação que o banco de hoje não guarda"},
+ {a:"05",b:"07",t:"fluxo",l:"o rascunho de tela vem antes do código da interface"},
+ {a:"05",b:"08",t:"fluxo",l:"spec aprovada e, tendo tela, o rascunho também: rascunho de spec não se constrói"},
+ {a:"07",b:"08",t:"fluxo",l:"rascunho aprovado + spec aprovada = pode construir"},
+ {a:"08",b:"09",t:"fluxo",l:"a entrega inteira, para uma lente escolhida"},
+ {a:"09",b:"10",t:"fluxo",l:"acabou de passar por uma lente: é este o momento em que gravar é o passo certo"},
+ {a:"09",b:"11",t:"fluxo",l:"as lentes com objeto rodaram e nenhum achado aprovado ficou sem conserto"},
+ {a:"10",b:"11",t:"fluxo",l:"o histórico gravado é o que a entrega empacota"},
+ {a:"12",b:"02",t:"fluxo",l:"o caminho normal quando ainda há requisito a descobrir, dimensão por dimensão"},
+ {a:"02",b:"05",t:"fluxo",fora:true,l:"projeto que já existe pula a stack e a fundação: do levantamento direto ao escopo"},
+ // ---- chamada: uma skill aciona outra para produzir um artefato
+ {a:"02",b:"07",t:"chamada",l:"o mapa do entendimento, com as inferências primeiro e contadas"},
+ {a:"04",b:"07",t:"chamada",l:"o painel do backlog, e o mapa do entendimento do projeto que nasceu agora"},
+ {a:"04",b:"10",t:"chamada",l:"o commit fundador, apresentado e aprovado lá"},
+ {a:"04",b:"01",t:"chamada",l:"a ferramenta que a stack exige: a volta para a etapa 2 da partida"},
+ {a:"05",b:"07",t:"chamada",l:"a spec ilustrada, no mesmo número da spec — e o painel, ao marcar “em spec”"},
+ {a:"07",b:"06",t:"chamada",l:"prévia de impacto: aprovar a tela sem olhar os dados é aprovar meia decisão"},
+ {a:"08",b:"06",t:"chamada",l:"etapa que mexeu na estrutura regenera o mapa, no mesmo commit"},
+ {a:"08",b:"07",t:"chamada",l:"o painel do backlog, regenerado no gate a partir do .md"},
+ {a:"08",b:"10",t:"chamada",l:"um commit por etapa — é o que faz a etapa virar ponto de retorno"},
+ {a:"09",b:"07",t:"chamada",l:"a página de antes e depois do que a revisão mudou"},
+ {a:"02",b:"12",t:"chamada",l:"modo A: quem escreve o prompt da sessão dedicada é a 12"},
+ {a:"05",b:"12",t:"chamada",l:"modo A no início da funcionalidade: o prompt, em vez da condução aqui"},
+ {a:"08",b:"12",t:"chamada",l:"modo A no início da construção: o prompt, em vez da condução aqui"},
+ // ---- devolução: apareceu assunto de outra skill, nomeia e devolve
+ {a:"02",b:"01",t:"devolucao",l:"chegou sem a partida dada: devolva em uma linha, em vez de resolver de passagem"},
+ {a:"04",b:"01",t:"devolucao",l:"pasta sem histórico ligado é pré-condição faltando: devolva, não resolva de passagem"},
+ {a:"05",b:"02",t:"devolucao",l:"lacuna estrutural em aberto: volte ao passo 7 em vez de escrever com buraco"},
+ {a:"06",b:"05",t:"devolucao",l:"pergunta sobre o que o programa faz não se responde mexendo no modelo — e o modelo aprovado vira a seção Dados da spec"},
+ {a:"07",b:"05",t:"devolucao",l:"mockup não inventa requisito: sem spec, o passo anterior é outro"},
+ {a:"08",b:"02",t:"devolucao",l:"pergunta cuja resposta muda o combinado"},
+ {a:"08",b:"03",t:"devolucao",l:"decisão técnica de efeito duradouro não se toma construindo"},
+ {a:"08",b:"05",t:"devolucao",l:"escopo que a spec não previa: a spec muda antes de o código andar"},
+ {a:"08",b:"07",t:"devolucao",l:"decisão visual que apareceu no meio da construção volta para o rascunho"},
+ {a:"09",b:"05",t:"devolucao",l:"critérios de aceite que não existem: não há contra o que conferir"},
+ {a:"09",b:"08",t:"devolucao",l:"conserto que mudou o comportamento não é conserto, é funcionalidade"},
+ {a:"10",b:"09",t:"devolucao",l:"pendente que ninguém olhou: revisar antes é o recomendado"},
+ {a:"11",b:"09",t:"devolucao",l:"sem lente nomeada sobre esta versão, nada é gerado — aqui é trava, não recomendação"},
+ {a:"11",b:"08",t:"devolucao",l:"entrega feita fecha a versão, não o projeto"}
+];
+
+/* ---------- geometria ---------- */
+// O anel se ajusta ao tamanho do pacote, e a regra é uma só: duas caixas nunca
+// se tocam. Quem separa dois vizinhos é a distância horizontal no topo e no
+// rodapé, e a vertical nos lados — nas diagonais, nenhuma das duas sozinha. Por
+// isso, quando o pacote é grande, o anel passa a ALTERNAR DOIS RAIOS: um
+// vizinho para fora, o seguinte para dentro. O desvio cresce até nenhum par se
+// encostar; se ele ficar exagerado perto do próprio anel, quem cresce é o anel,
+// e o desvio recomeça. Com número ímpar de skills a alternância não fecharia a
+// volta, então se calcula um vão a mais e a última posição fica vazia — é o
+// corte que se vê no alto, antes da primeira skill.
+const CICLO   = SKILLS.filter(s=>!s.avulsa);
+const AVULSAS = SKILLS.filter(s=>s.avulsa);
+const N       = CICLO.length;
+const VAOS    = N + (N%2 ? 1 : 0);          // par, para a alternância fechar
+const PASSO   = 2*Math.PI/Math.max(VAOS,1);
+const LARG    = N<=14 ? 156 : 132;          // pacote grande, caixa mais estreita
+const ALT     = 48;
+
+const anel = (rx,ry,z) => CICLO.map((s,i)=>{
+  const ang=-Math.PI/2+i*PASSO, d=z*(i%2?-1:1);
+  return {x:(rx+d)*Math.cos(ang), y:(ry+d)*Math.sin(ang)};
+});
+const folgaMinima = p => {                  // sobra do par mais apertado
+  let m=Infinity;
+  for(let i=0;i<p.length;i++) for(let j=i+1;j<p.length;j++){
+    const f=Math.max(Math.abs(p[i].x-p[j].x)-LARG, Math.abs(p[i].y-p[j].y)-ALT);
+    if(f<m) m=f;
+  }
+  return m;
+};
+
+let RY = Math.max(232,(ALT+14)/PASSO);
+let RX = N<=14 ? Math.max(328,(LARG+20)/PASSO) : Math.max(328, RY*1.30);
+let ZIGUE = N<=14 ? 0 : 34;
+for(let giro=0; giro<600 && folgaMinima(anel(RX,RY,ZIGUE))<8; giro++){
+  ZIGUE += 2;
+  if(ZIGUE > RY*0.55){ RX*=1.03; RY*=1.03; ZIGUE=34; }
+}
+if(folgaMinima(anel(RX,RY,ZIGUE))<0) console.warn("caixas encostando: pacote grande demais para um anel só");
+
+const CX = RX + ZIGUE + LARG/2 + 26, CY = RY + ZIGUE + ALT/2 + 26;
+const pos={};
+anel(RX,RY,ZIGUE).forEach((p,i)=>{ pos[CICLO[i].n]={x:CX+p.x, y:CY+p.y}; });
+
+const ORFAS = ARESTAS.filter(e=>!pos[e.a]||!pos[e.b]);
+if(ORFAS.length){
+  console.warn("arestas descartadas, ponta fora do ciclo:",ORFAS);
+  ARESTAS = ARESTAS.filter(e=>pos[e.a]&&pos[e.b]);
+}
+
+function borda(de,para){ // ponto na borda da caixa 'de', na direção de 'para'
+  const p=pos[de], q=pos[para];
+  let dx=q.x-p.x, dy=q.y-p.y;
+  const hw=LARG/2+7, hh=ALT/2+7;
+  const t=Math.min(Math.abs(dx)>1e-3?hw/Math.abs(dx):1e9, Math.abs(dy)>1e-3?hh/Math.abs(dy):1e9);
+  return {x:p.x+dx*t, y:p.y+dy*t};
+}
+// Duas skills podem se ligar por mais de uma aresta. Sem afastá-las, elas se
+// desenham por cima umas das outras e o par parece ter uma ligação só.
+const PARES={};
+ARESTAS.forEach((e,i)=>{
+  const k=[e.a,e.b].slice().sort().join("-");
+  if(!PARES[k]) PARES[k]=[];
+  PARES[k].push(i);
+});
+function faixa(e){ // 0 quando o par tem uma aresta só; ±1, ±2… quando tem mais
+  const g=PARES[[e.a,e.b].slice().sort().join("-")];
+  if(g.length<2) return 0;
+  return (g.indexOf(ARESTAS.indexOf(e)) - (g.length-1)/2) * 2;
+}
+
+function caminho(e){
+  const ia=CICLO.findIndex(s=>s.n===e.a), ib=CICLO.findIndex(s=>s.n===e.b);
+  let vao=Math.abs(ia-ib); vao=Math.min(vao,N-vao);
+  const p=borda(e.a,e.b), q=borda(e.b,e.a);
+  const mx=(p.x+q.x)/2, my=(p.y+q.y)/2;
+  let cx,cy;
+  if(vao===1){ // acompanha o anel, curvando para fora
+    const dx=mx-CX, dy=my-CY, d=Math.hypot(dx,dy)||1;
+    cx=mx+dx/d*26; cy=my+dy/d*26;
+  }else{ // corda, curvando para dentro
+    const k=vao===2?0.20:(vao===3?0.30:0.40);
+    cx=mx+(CX-mx)*k; cy=my+(CY-my)*k;
+  }
+  const f=faixa(e);
+  if(f){ // empurra perpendicularmente, para cada aresta do par ter a sua faixa
+    const vx=q.x-p.x, vy=q.y-p.y, h=Math.hypot(vx,vy)||1;
+    cx += -vy/h*32*f; cy += vx/h*32*f;
+  }
+  return `M${p.x.toFixed(1)},${p.y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${q.x.toFixed(1)},${q.y.toFixed(1)}`;
+}
+
+/* ---------- as palavras ---------- */
+const EXTENSO=["nenhuma","uma","duas","três","quatro","cinco","seis","sete","oito","nove","dez",
+ "onze","doze","treze","catorze","quinze","dezesseis","dezessete","dezoito","dezenove","vinte",
+ "vinte e uma","vinte e duas","vinte e três","vinte e quatro","vinte e cinco","vinte e seis",
+ "vinte e sete","vinte e oito","vinte e nove","trinta","trinta e uma","trinta e duas",
+ "trinta e três","trinta e quatro","trinta e cinco","trinta e seis","trinta e sete",
+ "trinta e oito","trinta e nove","quarenta"];
+const porExtenso = k => EXTENSO[k] || String(k);
+const maiuscula  = t => t.charAt(0).toUpperCase()+t.slice(1);
+
+/* ---------- a página vazia ---------- */
+// Modelo aberto sem dados não mostra diagrama nenhum: mostra o que falta.
+const svg=document.getElementById("grafo");
+if(!SKILLS.length){
+  document.getElementById("subtitulo").textContent=
+    "Este é o modelo em branco. Preencha SKILLS e ARESTAS no início do script.";
+  svg.outerHTML='<div class="aviso"><b>Nada para desenhar.</b> As duas listas do início do '+
+    'script estão vazias — este arquivo é o modelo, não o mapa. Quem o preenche é a '+
+    'skill <span class="mono">skill-00-mapa-skills</span>, lendo a pasta das skills do projeto.</div>';
+}else{
+
+/* ---------- cabeçalho ---------- */
+document.title = NOME_DO_PACOTE ? `Mapa de Skills — ${NOME_DO_PACOTE}` : "Mapa de Skills";
+svg.setAttribute("viewBox",`0 0 ${Math.round(2*CX)} ${Math.round(2*CY)}`);
+svg.setAttribute("aria-label",`Diagrama das ${porExtenso(N)} skills do ciclo e suas ligações`);
+if(N>20) document.querySelector(".palco").classList.add("largo");
+
+/* ---------- desenho ---------- */
+const gA=document.getElementById("arestas"), gN=document.getElementById("nos"), gM=document.getElementById("miolo");
+const NS="http://www.w3.org/2000/svg";
+ARESTAS.forEach((e,i)=>{
+  const p=document.createElementNS(NS,"path");
+  p.setAttribute("d",caminho(e));
+  p.setAttribute("class","aresta "+e.t);
+  p.setAttribute("marker-end",`url(#${e.t==="fluxo"?"pf":e.t==="chamada"?"pc":"pd"})`);
+  p.dataset.i=i; p.dataset.tipo=e.t; p.dataset.a=e.a; p.dataset.b=e.b;
+  gA.appendChild(p);
+});
+CICLO.forEach(s=>{
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("class","no"); g.dataset.n=s.n;
+  g.setAttribute("tabindex","0"); g.setAttribute("role","button");
+  g.setAttribute("aria-label",s.n+" "+s.nome);
+  const p=pos[s.n];
+  const esq=p.x-LARG/2;                       // borda esquerda da caixa
+  g.innerHTML=
+    `<rect x="${esq}" y="${p.y-ALT/2}" width="${LARG}" height="${ALT}" rx="10"></rect>`+
+    `<use class="glifo" href="#ic-${s.n}" x="${esq+11}" y="${p.y-12.5}" width="25" height="25"></use>`+
+    `<text x="${esq+44}" y="${p.y+4.5}">`+
+      `<tspan class="num">${s.n}</tspan>`+
+      `<tspan class="nome" dx="7">${s.curto}</tspan>`+
+    `</text>`;
+  gN.appendChild(g);
+});
+gM.innerHTML=
+  `<text class="grande" x="${CX}" y="${CY-6}" text-anchor="middle">o ciclo</text>`+
+  `<text x="${CX}" y="${CY+14}" text-anchor="middle" id="miolo-linha"></text>`;
+
+/* ---------- estado ---------- */
+const ligados={fluxo:true,chamada:true,devolucao:false};
+let sel=null, tocando=false;
+
+function tipoVisivel(t){return ligados[t];}
+function pinta(){
+  const paths=[...gA.children];
+  paths.forEach(p=>{
+    const vis=tipoVisivel(p.dataset.tipo);
+    const toca = sel && (p.dataset.a===sel || p.dataset.b===sel);
+    p.classList.toggle("apagada", !vis || (sel && !toca));
+    p.classList.toggle("viva", !!(vis && toca));
+    p.style.display = vis ? "" : "none";
+  });
+  const vizinhos=new Set();
+  if(sel) ARESTAS.forEach(e=>{ if(!tipoVisivel(e.t))return;
+    if(e.a===sel) vizinhos.add(e.b); if(e.b===sel) vizinhos.add(e.a); });
+  [...gN.children].forEach(g=>{
+    const n=g.dataset.n;
+    g.classList.toggle("sel", n===sel);
+    g.classList.toggle("viz", !!(sel&&vizinhos.has(n)));
+    g.classList.toggle("apagado", !!(sel && n!==sel && !vizinhos.has(n)));
+  });
+  const vis=ARESTAS.filter(e=>tipoVisivel(e.t)).length;
+  document.getElementById("miolo-linha").textContent = sel
+    ? `skill ${sel} · ${vizinhos.size} vizinhas`
+    : `${N} skills · ${vis} ligações`;
+}
+
+// o mesmo glifo do diagrama, reaproveitado no texto — um desenho por skill,
+// em todo lugar em que ela aparece
+const ico = n => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-${n}"/></svg>`;
+
+function painel(n){
+  const s=SKILLS.find(x=>x.n===n);
+  const alvo=document.getElementById("painel");
+  if(!s){
+    alvo.innerHTML=
+      `<span class="tag">o pacote inteiro</span>
+       <h4>${maiuscula(porExtenso(SKILLS.length))} skills, um ciclo</h4>
+       <p class="frase">Qualquer uma pode chamar qualquer outra quando o trabalho pedir. A ordem é a do
+       ciclo comum, não uma obrigação: trabalho pequeno pula etapas, e trabalho que dá errado volta.</p>
+       <div class="linha"><div class="rot">as três ligações</div>
+       <ul>
+         <li><b style="color:var(--fluxo)">Fluxo</b> — o bastão passa adiante, pelo gate de fim de rodada.</li>
+         <li><b style="color:var(--chamada)">Chamada</b> — uma skill aciona outra para produzir um artefato, com o conteúdo já pronto.</li>
+         <li><b style="color:var(--devolucao)">Devolução</b> — apareceu assunto de outra skill: nomeia e devolve, em vez de improvisar.</li>
+       </ul></div>`;
+    return;
+  }
+  const liga = tipo => ARESTAS.filter(e=>e.t===tipo).flatMap(e=>{
+    if(e.a===n) return [{o:e.b,l:e.l,dir:"→"}];
+    if(e.b===n) return [{o:e.a,l:e.l,dir:"←"}];
+    return [];
+  });
+  const bloco=(titulo,itens)=> itens.length? `<div class="linha"><div class="rot">${titulo}</div>`+
+    itens.map(i=>`<button type="button" class="ligacao" data-ir="${i.o}"><span class="seta">${i.dir} ${ico(i.o)} ${i.o}</span>${i.l}</button>`).join("")+`</div>`:"";
+  alvo.innerHTML=
+    `<span class="tag">${s.arq}</span>
+     <h4>${ico(s.n)} ${s.n} · ${s.nome}</h4>
+     <p class="frase">${s.frase}</p>
+     <div class="linha"><div class="rot">lê</div><ul>${s.le.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+     <div class="linha"><div class="rot">escreve</div><ul>${s.escreve.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+     <div class="porta"><b>Gate.</b> ${s.gate}</div>
+     <div class="linha"><div class="rot">não faz</div><p class="fraca">${s.nao}</p></div>
+     ${bloco("fluxo",liga("fluxo"))}${bloco("chamadas",liga("chamada"))}${bloco("devoluções",liga("devolucao"))}`;
+  alvo.querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>escolher(b.dataset.ir));
+}
+
+function escolher(n){ sel = (sel===n? null : n); pinta(); painel(sel); }
+
+gN.querySelectorAll(".no").forEach(g=>{
+  g.addEventListener("click",()=>{ if(!tocando) escolher(g.dataset.n); });
+  g.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();escolher(g.dataset.n);} });
+});
+svg.addEventListener("click",ev=>{
+  if(ev.target.id==="grafo" && !tocando){ sel=null; pinta(); painel(null); }
+});
+document.querySelectorAll(".btn[data-tipo]").forEach(b=>{
+  b.onclick=()=>{ const t=b.dataset.tipo; ligados[t]=!ligados[t];
+    b.setAttribute("aria-pressed",String(ligados[t])); pinta(); };
+});
+
+/* ---------- tocar o ciclo ---------- */
+// o ciclo tocado é o caminho comum de ponta a ponta; a aresta marcada `fora` é
+// atalho, e atalho não entra na demonstração
+const PASSOS = ARESTAS.filter(e=>e.t==="fluxo" && !e.fora);
+const bolinha=document.getElementById("bolinha"), dica=document.getElementById("dica");
+const dicaOriginal=dica.innerHTML;
+function anima(path,ms){
+  return new Promise(res=>{
+    const total=path.getTotalLength(); const t0=performance.now();
+    bolinha.style.opacity="1";
+    (function passo(t){
+      const k=Math.min(1,(t-t0)/ms);
+      const p=path.getPointAtLength(total*k);
+      bolinha.setAttribute("cx",p.x); bolinha.setAttribute("cy",p.y);
+      if(k<1) requestAnimationFrame(passo); else res();
+    })(t0);
+  });
+}
+document.getElementById("tocar").onclick=async function(){
+  if(tocando || !PASSOS.length) return;
+  tocando=true; this.disabled=true; this.textContent="tocando…";
+  if(!ligados.fluxo){ ligados.fluxo=true;
+    document.querySelector('.btn[data-tipo="fluxo"]').setAttribute("aria-pressed","true"); }
+  sel=null; pinta();
+  for(const e of PASSOS){
+    const idx=ARESTAS.indexOf(e);
+    const path=gA.querySelector(`[data-i="${idx}"]`);
+    [...gN.children].forEach(g=>{
+      g.classList.toggle("andando", g.dataset.n===e.a||g.dataset.n===e.b);
+      g.classList.toggle("apagado", g.dataset.n!==e.a&&g.dataset.n!==e.b);
+    });
+    [...gA.children].forEach(p=>{p.classList.toggle("viva",p===path);p.classList.toggle("apagada",p!==path);});
+    dica.innerHTML=`<b>${e.a} → ${e.b}</b> · ${e.l}`;
+    painel(e.a);
+    await anima(path,1000);
+    await new Promise(r=>setTimeout(r,320));
+  }
+  bolinha.style.opacity="0";
+  [...gN.children].forEach(g=>g.classList.remove("andando"));
+  dica.innerHTML=dicaOriginal;
+  tocando=false; this.disabled=false; this.textContent="▶ tocar o ciclo";
+  sel=null; pinta(); painel(null);
+};
+
+/* ---------- seções ---------- */
+if(AVULSAS.length){
+  document.getElementById("secao-fora").hidden=false;
+  document.getElementById("titulo-fora").textContent =
+    AVULSAS.length===1 ? "A skill fora do ciclo"
+                       : `As ${porExtenso(AVULSAS.length)} skills fora do ciclo`;
+  document.getElementById("nota-fora").textContent =
+    "Não recebem nem passam o bastão: entram quando são chamadas, fazem o que fazem e param. "+
+    "Por isso ficam fora do anel — desenhá-las lá seria inventar uma ordem que elas não têm.";
+  document.getElementById("fora").innerHTML=AVULSAS.map(s=>
+    `<div class="cartao"><span class="numinho">${s.n} · ${s.arq}</span>
+     <h5>${ico(s.n)} ${s.nome}</h5><p>${s.frase}</p></div>`).join("");
+}
+
+pinta(); painel(null);
+}
+</script>
+</body>
+</html>

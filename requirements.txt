@@ -1,0 +1,14 @@
+# Interface gráfica (janela do programa)
+PySide6>=6.7,<7
+
+# Leitura de PDF: extrai texto, detecta ausência de texto e converte página em imagem para o OCR
+PyMuPDF>=1.24,<2
+
+# OCR: liga o Python ao motor Tesseract já instalado na máquina
+pytesseract>=0.3.10,<0.4
+
+# Testes automatizados
+pytest>=8.0,<9
+
+# Empacotamento do programa em um .exe único para instalar nas máquinas do núcleo
+pyinstaller>=6.0,<7
