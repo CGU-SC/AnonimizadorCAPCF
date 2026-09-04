@@ -37,6 +37,12 @@ python -m venv .venv
 Copiar `.env.example` para `.env` (os valores reais ficam só na sua máquina,
 nunca no histórico).
 
+Para abrir o programa, dois cliques em:
+
+```
+abrir\abrir-dev.bat
+```
+
 ## Onde ficam as coisas
 
 Ver `CLAUDE.md` — é o contrato de trabalho do projeto, com a tabela de
