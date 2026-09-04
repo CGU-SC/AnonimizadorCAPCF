@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de design — AnomizadorCAPCF</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.5;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-1) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-5); }
+  h2 {
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: var(--espaco-2);
+    margin-top: var(--espaco-5);
+  }
+  section { margin-bottom: var(--espaco-5); }
+
+  .paleta { display: flex; flex-wrap: wrap; gap: var(--espaco-3); }
+  .cor-card {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    width: 180px;
+    overflow: hidden;
+  }
+  .cor-amostra { height: 60px; }
+  .cor-info { padding: var(--espaco-2); }
+  .cor-nome { font-size: var(--texto-pequeno); font-weight: 600; }
+  .cor-valor { font-family: var(--fonte-mono); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+
+  .escala-tipo p { margin: var(--espaco-2) 0; }
+  .txt-pequeno { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .txt-base { font-size: var(--texto-base); }
+  .txt-grande { font-size: var(--texto-grande); }
+  .txt-titulo { font-size: var(--texto-titulo); font-weight: 600; }
+  .txt-mono { font-family: var(--fonte-mono); }
+
+  .componentes { display: flex; flex-wrap: wrap; gap: var(--espaco-4); align-items: flex-start; }
+
+  button {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-2) var(--espaco-4);
+    border-radius: var(--raio);
+    border: none;
+    cursor: pointer;
+  }
+  .btn-principal { background: var(--cor-destaque); color: #fff; }
+  .btn-principal:hover { background: var(--cor-destaque-hover); }
+  .btn-secundario { background: var(--cor-fundo-elevado); color: var(--cor-texto); border: 1px solid var(--cor-borda); }
+
+  .campo {
+    display: flex; flex-direction: column; gap: var(--espaco-1);
+  }
+  .campo label { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .campo input {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    color: var(--cor-texto);
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-base);
+    min-width: 240px;
+  }
+
+  .selo { display: inline-flex; align-items: center; gap: var(--espaco-1); padding: 2px var(--espaco-2); border-radius: 12px; font-size: var(--texto-pequeno); font-weight: 600; }
+  .selo-sucesso { background: rgba(76,175,109,0.15); color: var(--cor-sucesso); }
+  .selo-alerta { background: rgba(217,164,65,0.15); color: var(--cor-alerta); }
+  .selo-erro { background: rgba(217,83,79,0.15); color: var(--cor-erro); }
+
+  table { border-collapse: collapse; width: 100%; max-width: 640px; }
+  th, td {
+    text-align: left;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  th { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); font-weight: 600; }
+  td.numero { font-family: var(--fonte-mono); }
+
+  .layout-exemplo { display: flex; height: 260px; border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; max-width: 640px; }
+  .menu-lateral { width: 220px; background: var(--cor-fundo-elevado); padding: var(--espaco-3); border-right: 1px solid var(--cor-borda); }
+  .item-menu { padding: var(--espaco-2) var(--espaco-2); border-radius: var(--raio); margin-bottom: var(--espaco-1); font-size: var(--texto-base); }
+  .item-menu.ativo { background: var(--cor-destaque); color: #fff; }
+  .painel-principal { flex: 1; padding: var(--espaco-3); color: var(--cor-texto-secundario); }
+</style>
+</head>
+<body>
+
+<h1>AnomizadorCAPCF</h1>
+<p class="subtitulo">Sistema de design — tema escuro (único por enquanto), decidido em 03/09/2026</p>
+
+<section>
+  <h2>Paleta</h2>
+  <div class="paleta">
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-fundo)"></div><div class="cor-info"><div class="cor-nome">fundo</div><div class="cor-valor">#1e2228</div></div></div>
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-fundo-elevado)"></div><div class="cor-info"><div class="cor-nome">fundo-elevado</div><div class="cor-valor">#262b33</div></div></div>
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-borda)"></div><div class="cor-info"><div class="cor-nome">borda</div><div class="cor-valor">#383e47</div></div></div>
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque)"></div><div class="cor-info"><div class="cor-nome">destaque</div><div class="cor-valor">#3b6ea5</div></div></div>
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-sucesso)"></div><div class="cor-info"><div class="cor-nome">sucesso</div><div class="cor-valor">#4caf6d</div></div></div>
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta)"></div><div class="cor-info"><div class="cor-nome">alerta</div><div class="cor-valor">#d9a441</div></div></div>
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro)"></div><div class="cor-info"><div class="cor-nome">erro</div><div class="cor-valor">#d9534f</div></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Tipografia</h2>
+  <div class="escala-tipo">
+    <p class="txt-titulo">Título — Segoe UI 28px</p>
+    <p class="txt-grande">Texto grande — Segoe UI 20px</p>
+    <p class="txt-base">Texto base — Segoe UI 15px, usado na maior parte da tela</p>
+    <p class="txt-pequeno">Texto pequeno / legenda — Segoe UI 13px</p>
+    <p class="txt-mono txt-base">123.456.789-10 — fonte monoespaçada, para CPF e número</p>
+  </div>
+</section>
+
+<section>
+  <h2>Componentes</h2>
+  <div class="componentes">
+    <button class="btn-principal">Processar documento</button>
+    <button class="btn-secundario">Cancelar</button>
+    <div class="campo">
+      <label>Caminho do arquivo</label>
+      <input type="text" value="C:\Documentos\sintese-01.pdf" readonly>
+    </div>
+    <div>
+      <span class="selo selo-sucesso">CPF conferido</span><br><br>
+      <span class="selo selo-alerta">CPF suspeito</span><br><br>
+      <span class="selo selo-erro">Falha ao ler</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Tabela (densidade confortável)</h2>
+  <table>
+    <thead>
+      <tr><th>Ocorrência</th><th>CPF encontrado</th><th>Situação</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Linha 12</td><td class="numero">***.456.789-**</td><td><span class="selo selo-sucesso">conferido</span></td></tr>
+      <tr><td>Linha 47</td><td class="numero">***.1O2.345-**</td><td><span class="selo selo-alerta">suspeito</span></td></tr>
+      <tr><td>Linha 88</td><td class="numero">***.789.012-**</td><td><span class="selo selo-sucesso">conferido</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Layout de referência</h2>
+  <div class="layout-exemplo">
+    <div class="menu-lateral">
+      <div class="item-menu ativo">Gerar OCR</div>
+      <div class="item-menu">Anonimizar</div>
+    </div>
+    <div class="painel-principal">O conteúdo de cada módulo aparece aqui, no painel principal.</div>
+  </div>
+</section>
+
+</body>
+</html>
