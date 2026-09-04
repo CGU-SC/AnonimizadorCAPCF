@@ -34,7 +34,7 @@ dia o programa sair da universidade.
 | Criar/atualizar o ambiente virtual | `python -m venv .venv` |
 | Instalar as dependências | `.\.venv\Scripts\python.exe -m pip install -r requirements.txt` |
 | Rodar os testes | `.\.venv\Scripts\python.exe -m pytest` |
-| Rodar o programa | *(ainda não existe — entra na primeira etapa da `skill-08-construtor-de-funcionalidades`)* |
+| Rodar o programa | `abrir\abrir-dev.bat` (ou `.\.venv\Scripts\python.exe programa\main.py`) |
 | Gerar o instalador | *(ainda não existe — entra com a `skill-11-gerente-de-entrega`)* |
 
 ## Onde ficam as coisas
