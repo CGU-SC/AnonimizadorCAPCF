@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -73,6 +74,32 @@ class MenuLateral(QWidget):
         return botao
 
 
+class PainelVazio(QWidget):
+    """O que aparece no painel quando nenhum módulo foi escolhido ainda."""
+
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(8)
+
+        icone = QLabel("◧")
+        icone.setAlignment(Qt.AlignCenter)
+        icone.setStyleSheet(f"font-size: 40px; color: {COR_TEXTO_SECUNDARIO};")
+
+        titulo = QLabel("Escolha um módulo para começar")
+        titulo.setAlignment(Qt.AlignCenter)
+        titulo.setStyleSheet(f"font-size: 20px; color: {COR_TEXTO};")
+
+        texto = QLabel('Clique em "Gerar OCR" ou "Anonimizar" no menu ao lado.')
+        texto.setAlignment(Qt.AlignCenter)
+        texto.setStyleSheet(f"font-size: 15px; color: {COR_TEXTO_SECUNDARIO};")
+
+        layout.addWidget(icone)
+        layout.addWidget(titulo)
+        layout.addWidget(texto)
+
+
 class JanelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -88,9 +115,12 @@ class JanelaPrincipal(QMainWindow):
         self.menu = MenuLateral()
         raiz_layout.addWidget(self.menu)
 
-        # O painel principal ainda fica vazio - o conteúdo entra nas próximas etapas.
-        self.painel = QWidget()
+        # QStackedWidget porque o painel vai trocar de conteúdo conforme o
+        # módulo escolhido no menu (etapa 4) - aqui só existe a página vazia.
+        self.painel = QStackedWidget()
         self.painel.setStyleSheet(f"background-color: {COR_FUNDO};")
+        self.painel_vazio = PainelVazio()
+        self.painel.addWidget(self.painel_vazio)
         raiz_layout.addWidget(self.painel)
 
         self.setCentralWidget(raiz)
