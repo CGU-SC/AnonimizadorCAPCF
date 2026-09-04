@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Spec ilustrada 001 — Interface da janela</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 980px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-5); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .objetivo {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+
+  /* fluxos lado a lado */
+  .fluxos { display: flex; gap: var(--espaco-4); flex-wrap: wrap; }
+  .fluxo-coluna {
+    flex: 1;
+    min-width: 300px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+  }
+  .fluxo-coluna.torto { border-color: var(--cor-alerta); }
+  .fluxo-titulo {
+    font-weight: 700;
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .fluxo-titulo .marca { width: 10px; height: 10px; border-radius: 50%; background: var(--cor-sucesso); }
+  .torto .fluxo-titulo .marca { background: var(--cor-alerta); }
+  .passo {
+    display: flex; gap: var(--espaco-3); align-items: flex-start;
+    padding: var(--espaco-2) 0;
+  }
+  .passo:not(:last-child) { border-bottom: 1px dashed var(--cor-borda); }
+  .passo-numero {
+    flex: 0 0 auto;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--cor-destaque); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--texto-pequeno); font-weight: 700;
+  }
+  .torto .passo-numero { background: var(--cor-alerta); color: #2a2200; }
+  .passo-texto { padding-top: 2px; }
+
+  /* estados */
+  .estados { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-3); }
+  .estado-quadro {
+    flex: 1; min-width: 240px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+  }
+  .estado-cabecalho {
+    padding: var(--espaco-2) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .estado-cabecalho.vazio { background: rgba(59,110,165,0.18); color: var(--cor-destaque-hover); }
+  .estado-cabecalho.selecionado { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .estado-corpo { padding: var(--espaco-3); color: var(--cor-texto); }
+  .nao-aplica {
+    flex: 1; min-width: 240px;
+    border: 1px dashed var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+  }
+
+  /* escopo / fora de escopo */
+  .escopos { display: flex; gap: var(--espaco-4); flex-wrap: wrap; }
+  .escopo-coluna { flex: 1; min-width: 300px; }
+  .escopo-titulo {
+    font-weight: 700;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .escopo-titulo.dentro { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .escopo-titulo.fora { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .escopo-lista {
+    list-style: none; margin: 0; padding: var(--espaco-3);
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda); border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+  }
+  .escopo-lista li {
+    padding: var(--espaco-2) 0;
+    display: flex; gap: var(--espaco-2);
+  }
+  .escopo-lista li:not(:last-child) { border-bottom: 1px solid var(--cor-borda); }
+  .escopo-lista.dentro li::before { content: "✓"; color: var(--cor-sucesso); font-weight: 700; }
+  .escopo-lista.fora li::before { content: "✕"; color: var(--cor-erro); font-weight: 700; }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+  .rodape code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo-elevado);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spec 001 — Interface da janela</h1>
+<p class="subtitulo">O combinado, desenhado — fluxos, estados e o que fica de fora. Rascunho: <code>especificacoes/specs/001-interface-da-janela.md</code></p>
+
+<div class="objetivo">
+  <strong>Objetivo:</strong> dar ao programa uma janela própria, com a
+  estrutura onde os dois módulos futuros (Gerar OCR e Anonimizar) vão
+  aparecer — um menu lateral para escolher qual rodar, e um painel principal
+  que muda de acordo com a escolha.
+</div>
+
+<h2>Fluxos</h2>
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminho normal — abrir e navegar</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">A pessoa abre o programa.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">A janela aparece: menu lateral (Gerar OCR / Anonimizar) e painel com a mensagem de boas-vindas.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">A pessoa clica em "Gerar OCR" ou em "Anonimizar", no menu.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">O painel troca para o conteúdo daquele módulo — nesta versão, o aviso de "ainda não construído".</div></div>
+    <div class="passo"><div class="passo-numero">5</div><div class="passo-texto">A pessoa pode clicar no outro item a qualquer momento, e o painel troca de novo.</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminho torto — clicar no que já está selecionado</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">A pessoa clica no item do menu que já está marcado.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Nada muda: o painel continua mostrando o mesmo conteúdo, sem piscar e sem recarregar.</div></div>
+  </div>
+</div>
+
+<h2>Estados da interface</h2>
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho vazio">Vazio — estado inicial</div>
+    <div class="estado-corpo">Menu lateral visível, nada marcado. Painel mostra a mensagem convidando a escolher "Gerar OCR" ou "Anonimizar".</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho selecionado">Com módulo selecionado</div>
+    <div class="estado-corpo">Menu lateral visível, com o item escolhido marcado. Painel mostra o aviso de que aquele módulo ainda não foi construído.</div>
+  </div>
+</div>
+<div class="estados">
+  <div class="nao-aplica">Carregando — não se aplica: abrir a janela e trocar o painel é instantâneo.</div>
+  <div class="nao-aplica">Erro — não se aplica: não há nenhuma operação nesta funcionalidade que possa falhar.</div>
+</div>
+
+<h2>Escopo</h2>
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Entra nesta entrega</div>
+    <ul class="escopo-lista dentro">
+      <li>Janela própria do programa</li>
+      <li>Menu lateral fixo com "Gerar OCR" e "Anonimizar"</li>
+      <li>Painel principal que troca conforme a escolha</li>
+      <li>Mensagem de boas-vindas quando nada está escolhido</li>
+      <li>Aviso de "módulo ainda não construído" ao escolher qualquer um dos dois</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Fora desta entrega</div>
+    <ul class="escopo-lista fora">
+      <li>O funcionamento real de "Gerar OCR" — spec 002</li>
+      <li>O funcionamento real de "Anonimizar" — spec 003</li>
+      <li>Qualquer processamento de documento</li>
+      <li>Redimensionar janela, temas, atalhos de teclado</li>
+    </ul>
+  </div>
+</div>
+
+<p class="rodape">
+  Gerado pela <code>skill-07-designer-de-telas</code> a partir da spec 001. Mostra o
+  combinado — não a aparência da tela. O rascunho visual (cores, botões,
+  layout de verdade) vem depois, como mockup aprovado à parte.
+</p>
+
+</body>
+</html>
