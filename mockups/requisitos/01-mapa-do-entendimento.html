@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Mapa do entendimento — AnomizadorCAPCF</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 900px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+
+  .contagens { display: flex; gap: var(--espaco-3); margin-bottom: var(--espaco-5); flex-wrap: wrap; }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 140px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-inferido .contagem-numero { color: var(--cor-alerta); }
+  .c-respondido .contagem-numero { color: var(--cor-sucesso); }
+  .c-aberto .contagem-numero { color: var(--cor-texto-secundario); }
+
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .marca { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .marca-inferido { background: var(--cor-alerta); }
+  .marca-respondido { background: var(--cor-sucesso); }
+  .marca-aberto { background: var(--cor-texto-secundario); }
+
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao.inferido { border-left-color: var(--cor-alerta); }
+  .cartao.aberto { border-left-color: var(--cor-texto-secundario); }
+  .cartao-titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .cartao-texto { color: var(--cor-texto); }
+  .selo-premissa {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(217,164,65,0.15); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+
+<h1>Mapa do entendimento</h1>
+<p class="subtitulo">AnomizadorCAPCF — levantamento fechado em 03/09/2026, nível geral (fundação do projeto)</p>
+
+<div class="contagens">
+  <div class="contagem-item c-inferido">
+    <div class="contagem-numero">6</div>
+    <div class="contagem-label">inferido por mim (premissas)</div>
+  </div>
+  <div class="contagem-item c-respondido">
+    <div class="contagem-numero">10</div>
+    <div class="contagem-label">respondido por você</div>
+  </div>
+  <div class="contagem-item c-aberto">
+    <div class="contagem-numero">0</div>
+    <div class="contagem-label">em aberto (estrutural)</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Inferido por mim — confirme ou derrube</h2>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo">Quando o OCR roda</div>
+    <div class="cartao-texto">O programa detecta sozinho se o PDF tem texto por dentro, e só roda o OCR quando não há — isso é verificação exata (mecânica), não palpite.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo">PDF com vários documentos dentro</div>
+    <div class="cartao-texto">Entra como um documento só, sai como um <code>.md</code> só. Separar por dentro fica para uma versão futura.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo">Pontuação da máscara</div>
+    <div class="cartao-texto">O CPF mascarado mantém a pontuação do original (<code>12345678910</code> → <code>***456789**</code>), com a barra virando traço (<code>123.456.789/10</code> → <code>***.456.789-**</code>).</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo">Conferência do que o OCR leu</div>
+    <div class="cartao-texto">O programa usa o dígito verificador do CPF para conferir o que achou. O que não fechar vira lista de suspeitos para a conferência humana, em vez de passar calado.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo">Tabelas no arquivo de saída</div>
+    <div class="cartao-texto">O <code>.md</code> preserva as tabelas do documento original como tabelas de texto.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo">Sistema operacional das máquinas do núcleo</div>
+    <div class="cartao-texto">As máquinas onde o programa vai ser instalado são Windows.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+</div>
+
+<h2><span class="marca marca-respondido"></span>Respondido por você</h2>
+<div class="cartoes">
+  <div class="cartao">
+    <div class="cartao-titulo">Propósito</div>
+    <div class="cartao-texto">Preparar documentos da CAPCF para irem a assistentes de IA em chatbots convencionais, tirando o CPF antes — hoje isso não é possível porque os documentos carregam CPF.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">Quem usa</div>
+    <div class="cartao-texto">O núcleo da CAPCF/UFSC, uma pessoa por vez, cada uma na própria máquina. Não é serviço compartilhado — o programa é instalado localmente.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">O que a 1ª versão faz</div>
+    <div class="cartao-texto">Dois módulos em sequência: OCR (cria o texto onde não existe) e anonimizador de CPF. Interface em janela própria, com menu lateral (Gerar OCR / Anonimizar) e painel principal.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">Documentos de entrada</div>
+    <div class="cartao-texto">PDF — às vezes com texto por dentro (quando exportado do sistema de processos da UFSC), às vezes só imagem (quando impresso, ou quando é anexo escaneado por terceiro).</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">Motor de OCR</div>
+    <div class="cartao-texto">Dois no menu: Tesseract local, e (fora do escopo desta 1ª versão) uma LLM remota apontando para um servidor que a TI da UFSC pretende montar dentro da própria universidade. Nunca um serviço de empresa externa — contradiria o motivo do programa existir.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">O que anonimizar</div>
+    <div class="cartao-texto">Só CPF. Nome não é considerado dado sensível para este uso.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">Formatos de CPF reconhecidos</div>
+    <div class="cartao-texto"><code>123.456.789-10</code>, <code>123456789-10</code>, <code>12345678910</code>, <code>123.456.789/10</code>.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">Regra da máscara</div>
+    <div class="cartao-texto">3 primeiros dígitos → <code>***</code>; 2 últimos → <code>**</code>.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">Saída</div>
+    <div class="cartao-texto"><code>.md</code>, para a pessoa arrastar para dentro da conversa com o assistente de IA — não é documento oficial, e ninguém precisa abri-lo fora desse uso.</div>
+  </div>
+  <div class="cartao">
+    <div class="cartao-titulo">Conferência humana</div>
+    <div class="cartao-texto">Parte fixa do processo quando o texto veio de OCR — não é etapa opcional. É a segurança contra o OCR errar um dígito e deixar um CPF passar inteiro.</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-aberto"></span>Em aberto</h2>
+<div class="cartoes">
+  <div class="cartao aberto">
+    <div class="cartao-titulo">Nada estrutural</div>
+    <div class="cartao-texto">Sobra só detalhe de spec, a ser fechado quando cada módulo for escrito: o que exatamente aparece na lista de CPF suspeito, e como a pessoa corrige o que estiver errado.</div>
+  </div>
+</div>
+
+<p class="rodape">
+  Fora de escopo desta 1ª versão: outro dado sensível além do CPF; saída em
+  XLSX ou PDF (fica para um "anonimizador de documentos" futuro); construir o
+  assistente de IA em si; qualquer uso oficial do arquivo gerado.
+</p>
+
+</body>
+</html>

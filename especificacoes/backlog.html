@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Backlog — AnomizadorCAPCF</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.5;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-5); }
+  h2 {
+    font-size: var(--texto-grande);
+    color: var(--cor-texto-secundario);
+    font-weight: 600;
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-2);
+  }
+  .contagem {
+    background: var(--cor-fundo-elevado);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: var(--texto-pequeno);
+  }
+  .coluna { margin-bottom: var(--espaco-5); }
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao-titulo { font-size: var(--texto-grande); font-weight: 600; margin-bottom: var(--espaco-2); }
+  .cartao-entrega { color: var(--cor-texto-secundario); }
+  .vazio { color: var(--cor-texto-secundario); font-style: italic; }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+
+<h1>Backlog</h1>
+<p class="subtitulo">O que está previsto para o AnomizadorCAPCF — espelha <code>especificacoes/backlog.md</code>, sempre a versão vigente</p>
+
+<div class="coluna">
+  <h2>Prevista <span class="contagem">3</span></h2>
+  <div class="cartoes">
+    <div class="cartao">
+      <div class="cartao-titulo">1. Interface da janela</div>
+      <div class="cartao-entrega">A estrutura com o menu lateral (Gerar OCR / Anonimizar) e o painel principal onde cada módulo aparece.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">2. Módulo de OCR</div>
+      <div class="cartao-entrega">Transforma um documento escaneado sem texto em texto legível, usando o Tesseract local.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">3. Módulo de Anonimizador de CPF</div>
+      <div class="cartao-entrega">Encontra todo CPF no texto (em qualquer formato de pontuação), mascara e gera o <code>.md</code> pronto para o assistente.</div>
+    </div>
+  </div>
+</div>
+
+<div class="coluna">
+  <h2>Em spec <span class="contagem">0</span></h2>
+  <p class="vazio">Nenhuma funcionalidade em spec ainda.</p>
+</div>
+
+<div class="coluna">
+  <h2>Em construção <span class="contagem">0</span></h2>
+  <p class="vazio">Nenhuma funcionalidade em construção ainda.</p>
+</div>
+
+<div class="coluna">
+  <h2>Construída <span class="contagem">0</span></h2>
+  <p class="vazio">Nenhuma funcionalidade construída ainda.</p>
+</div>
+
+<p class="rodape">
+  Estas três linhas são só a parte visível do trabalho — cerca de um terço do
+  esforço real de um projeto costuma ser funcionalidade nova; o resto é
+  correção, ajuste, empacotamento e registro, e não aparece aqui.
+</p>
+
+</body>
+</html>
