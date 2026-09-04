@@ -22,6 +22,8 @@ COR_FUNDO_ELEVADO = "#262b33"
 COR_BORDA = "#383e47"
 COR_TEXTO = "#e8eaed"
 COR_TEXTO_SECUNDARIO = "#9aa1ac"
+COR_DESTAQUE = "#3b6ea5"
+COR_ALERTA = "#d9a441"
 
 
 class MenuLateral(QWidget):
@@ -69,6 +71,11 @@ class MenuLateral(QWidget):
             QPushButton:hover {{
                 background-color: rgba(255, 255, 255, 0.06);
             }}
+            QPushButton:checked {{
+                background-color: {COR_DESTAQUE};
+                color: #ffffff;
+                font-weight: 600;
+            }}
             """
         )
         return botao
@@ -100,6 +107,35 @@ class PainelVazio(QWidget):
         layout.addWidget(texto)
 
 
+class PainelModuloNaoConstruido(QWidget):
+    """Ocupa o lugar de um módulo que ainda não existe, para o encaixe futuro."""
+
+    def __init__(self, nome_modulo):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(8)
+
+        selo = QLabel("AINDA NÃO CONSTRUÍDO")
+        selo.setAlignment(Qt.AlignCenter)
+        selo.setStyleSheet(
+            f"font-size: 13px; font-weight: 700; color: {COR_ALERTA};"
+            "letter-spacing: 1px;"
+        )
+
+        titulo = QLabel(nome_modulo)
+        titulo.setAlignment(Qt.AlignCenter)
+        titulo.setStyleSheet(f"font-size: 20px; font-weight: 600; color: {COR_TEXTO};")
+
+        texto = QLabel("Este módulo entra numa próxima etapa do projeto.")
+        texto.setAlignment(Qt.AlignCenter)
+        texto.setStyleSheet(f"font-size: 15px; color: {COR_TEXTO_SECUNDARIO};")
+
+        layout.addWidget(selo)
+        layout.addWidget(titulo)
+        layout.addWidget(texto)
+
+
 class JanelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -115,13 +151,23 @@ class JanelaPrincipal(QMainWindow):
         self.menu = MenuLateral()
         raiz_layout.addWidget(self.menu)
 
-        # QStackedWidget porque o painel vai trocar de conteúdo conforme o
-        # módulo escolhido no menu (etapa 4) - aqui só existe a página vazia.
+        # QStackedWidget porque o painel troca de conteúdo conforme o módulo
+        # escolhido no menu: cada página é um estado da tela.
         self.painel = QStackedWidget()
         self.painel.setStyleSheet(f"background-color: {COR_FUNDO};")
         self.painel_vazio = PainelVazio()
+        self.painel_ocr = PainelModuloNaoConstruido("Gerar OCR")
         self.painel.addWidget(self.painel_vazio)
+        self.painel.addWidget(self.painel_ocr)
         raiz_layout.addWidget(self.painel)
+
+        self.menu.botao_ocr.setCheckable(True)
+        # Exclusivo para o item marcado não desmarcar sozinho quando alguém
+        # clica nele de novo: clicar no que já está escolhido não muda nada.
+        self.menu.botao_ocr.setAutoExclusive(True)
+        self.menu.botao_ocr.clicked.connect(
+            lambda: self.painel.setCurrentWidget(self.painel_ocr)
+        )
 
         self.setCentralWidget(raiz)
 
