@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 01 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-4); }
+
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 300px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  pre {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    overflow-x: auto;
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    line-height: 1.5;
+    color: var(--cor-texto);
+  }
+  pre .rem { color: var(--cor-texto-secundario); }
+  pre .novo { color: var(--cor-sucesso); }
+
+  .lista-simples { list-style: none; padding: 0; margin: 0; }
+  .lista-simples li {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-2);
+  }
+
+  .nao-consertado {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-erro);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .nao-consertado .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .nao-consertado .motivo {
+    margin-top: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+  }
+  .amostra-cor {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border-radius: 2px;
+    border: 1px solid var(--cor-borda);
+    vertical-align: -1px;
+    margin-right: 3px;
+  }
+  code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+
+  .aviso {
+    margin-top: var(--espaco-5);
+    background: rgba(59,110,165,0.12);
+    border: 1px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .rodape {
+    margin-top: var(--espaco-4);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+</style>
+</head>
+<body>
+
+<h1>Revisão 01 — antes e depois</h1>
+<p class="subtitulo">AnomizadorCAPCF — 05/09/2026</p>
+
+<div class="lente">
+  <div class="rotulo">O que foi revisado, e por qual lente</div>
+  <p>
+    A funcionalidade 1, <strong>Interface da janela</strong> (spec 001), recém-construída
+    — os arquivos <code>programa/main.py</code> e <code>abrir/abrir-dev.bat</code>.
+    A lente foi a <strong>CRÍTICA</strong>: procura só quatro tipos de defeito —
+    o programa quebrar, perder ou corromper dado, entregar um resultado errado
+    sem avisar, ou consumir recurso da máquina até travar.
+  </p>
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">achado dentro da lente</div>
+  </div>
+  <div class="contagem-item c-consertado">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">aprovado e consertado</div>
+  </div>
+  <div class="contagem-item c-recusado">
+    <div class="contagem-numero">0</div>
+    <div class="contagem-label">recusados</div>
+  </div>
+  <div class="contagem-item c-fora">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">fora da lente, não consertado</div>
+  </div>
+</div>
+
+<h2>A mudança</h2>
+
+<div class="mudanca">
+  <div class="arquivo">abrir/abrir-dev.bat</div>
+  <div class="explicacao">
+    O atalho de abrir o programa só instalava as dependências quando criava a
+    pasta do ambiente virtual pela primeira vez. Se essa instalação fosse
+    interrompida no meio — internet caindo, janela fechada —, a pasta ficava de
+    pé mas incompleta, e o atalho pulava a instalação para sempre: a pessoa
+    clicava, o programa não abria, e não havia nada que ela pudesse fazer
+    sozinha para sair desse estado. Agora a conferência das dependências roda
+    toda vez. Estando tudo instalado, ela leva pouco mais de um segundo e nada
+    muda no que se vê.
+  </div>
+
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+<pre>if not exist ".venv\Scripts\python.exe" (
+    echo   Ambiente virtual nao encontrado - criando...
+    python -m venv .venv
+    if errorlevel 1 goto erro
+    echo   Instalando as dependencias, pode levar um minuto...
+    ".venv\Scripts\python.exe" -m pip install -r requirements.txt
+    if errorlevel 1 goto erro
+)</pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+<pre>if not exist ".venv\Scripts\python.exe" (
+    echo   Ambiente virtual nao encontrado - criando...
+    python -m venv .venv
+    if errorlevel 1 goto erro
+)
+
+<span class="rem">REM A instalacao roda sempre, e nao so quando o ambiente e
+REM criado: uma instalacao interrompida no meio deixa a pasta
+REM .venv de pe mas incompleta, e quem so clica no atalho
+REM ficaria preso nesse estado para sempre. Estando tudo
+REM instalado, este passo confere e sai em poucos segundos.</span>
+<span class="novo">echo   Conferindo as dependencias, pode levar um minuto na primeira vez...
+".venv\Scripts\python.exe" -m pip install -r requirements.txt
+if errorlevel 1 goto erro</span></pre>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul class="lista-simples">
+  <li>Nenhum arquivo foi criado, apagado, renomeado ou movido pelo conserto — só o conteúdo de <code>abrir/abrir-dev.bat</code> mudou.</li>
+  <li>O arquivo novo desta rodada é esta própria página de revisão.</li>
+</ul>
+
+<h2>O que foi achado e NÃO consertado</h2>
+<div class="nao-consertado">
+  <div class="titulo">O fundo escuro do menu lateral não está sendo pintado</div>
+  <p>
+    Medido rodando a janela sem tela: a faixa do menu sai
+    <span class="amostra-cor" style="background:#efefef"></span><code>#efefef</code>
+    (o cinza-claro padrão do Windows), com o texto cinza
+    <span class="amostra-cor" style="background:#9aa1ac"></span><code>#9aa1ac</code>
+    por cima; o escuro
+    <span class="amostra-cor" style="background:#262b33"></span><code>#262b33</code>
+    aparece só atrás do nome do programa. Fica diferente do rascunho aprovado
+    (<code>mockups/janela/01-interface-da-janela.html</code>) e o contraste do
+    texto piora.
+  </p>
+  <div class="motivo">
+    Por que não foi consertado: é defeito visual, e não cabe em nenhuma das
+    quatro classes da lente crítica desta rodada — quem o veria é a lente
+    CONFERIR NA TELA, que ainda não rodou. A decisão de abrir essa rodada é de
+    quem usa o programa.
+  </div>
+</div>
+
+<div class="aviso">
+  <strong>Esta página mostra o que foi mexido — não que o programa continua
+  funcionando.</strong> Isso quem mostrou foi você: depois do conserto, rodou o
+  atalho e confirmou que o programa abriu, com o passo novo de conferência das
+  dependências passando sem erro.
+</div>
+
+<p class="rodape">
+  Gerada pela <code>skill-07-designer-de-telas</code>, a pedido da
+  <code>skill-09-revisor-de-codigo</code>. As outras cinco lentes não rodaram, e
+  o que elas veriam continua invisível.
+</p>
+
+</body>
+</html>
