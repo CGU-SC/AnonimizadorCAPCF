@@ -156,20 +156,39 @@ class JanelaPrincipal(QMainWindow):
         self.painel = QStackedWidget()
         self.painel.setStyleSheet(f"background-color: {COR_FUNDO};")
         self.painel_vazio = PainelVazio()
-        self.painel_ocr = PainelModuloNaoConstruido("Gerar OCR")
         self.painel.addWidget(self.painel_vazio)
-        self.painel.addWidget(self.painel_ocr)
         raiz_layout.addWidget(self.painel)
 
-        self.menu.botao_ocr.setCheckable(True)
-        # Exclusivo para o item marcado não desmarcar sozinho quando alguém
-        # clica nele de novo: clicar no que já está escolhido não muda nada.
-        self.menu.botao_ocr.setAutoExclusive(True)
-        self.menu.botao_ocr.clicked.connect(
-            lambda: self.painel.setCurrentWidget(self.painel_ocr)
-        )
+        self.itens_do_menu = []
+        self._ligar_item_ao_painel(self.menu.botao_ocr, "Gerar OCR")
+        self._ligar_item_ao_painel(self.menu.botao_anonimizar, "Anonimizar")
 
         self.setCentralWidget(raiz)
+
+    def _ligar_item_ao_painel(self, botao, nome_modulo):
+        """Faz o item do menu se marcar e trazer o painel daquele módulo."""
+        painel_do_modulo = PainelModuloNaoConstruido(nome_modulo)
+        self.painel.addWidget(painel_do_modulo)
+
+        botao.setCheckable(True)
+        self.itens_do_menu.append(botao)
+        botao.clicked.connect(
+            lambda: self._ao_clicar_no_item(botao, painel_do_modulo)
+        )
+
+    def _ao_clicar_no_item(self, botao_clicado, painel_do_modulo):
+        # O clique já marcou ou desmarcou o item antes de chegar aqui, então é o
+        # estado novo do botão que diz para onde o painel vai.
+        if botao_clicado.isChecked():
+            # Só um item marcado por vez - regra RN-2 da spec 001.
+            for outro in self.itens_do_menu:
+                if outro is not botao_clicado:
+                    outro.setChecked(False)
+            self.painel.setCurrentWidget(painel_do_modulo)
+        else:
+            # Clicar no item já marcado é o jeito de sair do módulo sem precisar
+            # entrar no outro - regra RN-3 da spec 001.
+            self.painel.setCurrentWidget(self.painel_vazio)
 
 
 def main():
