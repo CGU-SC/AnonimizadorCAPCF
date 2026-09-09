@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Spec ilustrada 002 — Módulo de OCR</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1080px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-5); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-2);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  h2 + .nota { margin-top: 0; }
+  .nota { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-3); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .objetivo {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+
+  /* ---- diagrama do percurso: caixas e setas ---- */
+  .mapa { display: flex; flex-direction: column; gap: var(--espaco-2); align-items: center; }
+  .caixa {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    text-align: center;
+    min-width: 200px;
+  }
+  .caixa .rotulo { font-weight: 600; }
+  .caixa .detalhe { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .caixa.decisao { border-color: var(--cor-destaque); border-style: dashed; }
+  .caixa.pessoa { border-left: 4px solid var(--cor-sucesso); }
+  .caixa.saida { border-left: 4px solid var(--cor-destaque); }
+  .caixa.bloqueada { border-left: 4px solid var(--cor-texto-secundario); opacity: 0.7; }
+  .seta { color: var(--cor-texto-secundario); font-size: var(--texto-grande); line-height: 1; }
+  .ramos { display: flex; gap: var(--espaco-4); flex-wrap: wrap; justify-content: center; width: 100%; }
+  .ramo {
+    flex: 1; min-width: 280px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    display: flex; flex-direction: column; gap: var(--espaco-2); align-items: center;
+  }
+  .ramo-titulo { font-size: var(--texto-pequeno); text-transform: uppercase; letter-spacing: 0.05em; color: var(--cor-texto-secundario); font-weight: 700; }
+
+  /* ---- fluxos lado a lado ---- */
+  .fluxos { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .fluxo-coluna {
+    flex: 1; min-width: 320px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .fluxo-coluna.torto { border-color: var(--cor-alerta); }
+  .fluxo-titulo { font-weight: 700; margin-bottom: var(--espaco-2); display: flex; align-items: center; gap: var(--espaco-2); }
+  .fluxo-titulo .marca { width: 10px; height: 10px; border-radius: 50%; background: var(--cor-sucesso); flex: 0 0 auto; }
+  .torto .fluxo-titulo .marca { background: var(--cor-alerta); }
+  .fluxo-quando { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-3); }
+  .passo { display: flex; gap: var(--espaco-3); align-items: flex-start; padding: var(--espaco-2) 0; }
+  .passo:not(:last-child) { border-bottom: 1px dashed var(--cor-borda); }
+  .passo-numero {
+    flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--cor-destaque); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--texto-pequeno); font-weight: 700;
+  }
+  .torto .passo-numero { background: var(--cor-alerta); color: #2a2200; }
+  .passo-texto { padding-top: 2px; }
+
+  /* ---- estados ---- */
+  .estados { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .estado-quadro {
+    flex: 1; min-width: 250px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+  }
+  .estado-cabecalho {
+    padding: var(--espaco-2) var(--espaco-3);
+    font-weight: 700; font-size: var(--texto-pequeno);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .cab-vazio { background: rgba(59,110,165,0.18); color: var(--cor-destaque-hover); }
+  .cab-carregando { background: rgba(154,161,172,0.18); color: var(--cor-texto-secundario); }
+  .cab-dados { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .cab-decisao { background: rgba(217,164,65,0.18); color: var(--cor-alerta); }
+  .cab-erro { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .estado-corpo { padding: var(--espaco-3); }
+
+  /* ---- fora de escopo: mesmo peso do escopo ---- */
+  .duas-colunas { display: flex; gap: var(--espaco-3); flex-wrap: wrap; align-items: stretch; }
+  .coluna-peso { flex: 1; min-width: 320px; }
+  .titulo-peso {
+    font-size: var(--texto-grande); font-weight: 700;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .titulo-entra { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .titulo-nao-entra { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .corpo-peso {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda); border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    height: calc(100% - 44px);
+  }
+  .corpo-peso ul { margin: 0; padding-left: var(--espaco-4); }
+  .corpo-peso li { margin-bottom: var(--espaco-2); }
+  .corpo-peso li:last-child { margin-bottom: 0; }
+  .quando { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+
+  /* ---- premissas e regras ---- */
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-alerta);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+  }
+  .cartao.regra { border-left-color: var(--cor-destaque); }
+  .cartao .chave { font-weight: 700; color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); text-transform: uppercase; letter-spacing: 0.05em; }
+  .fronteira {
+    display: flex; gap: var(--espaco-3); flex-wrap: wrap; align-items: center;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .fronteira .lado { flex: 1; min-width: 260px; }
+  .fronteira .divisor { width: 2px; align-self: stretch; background: var(--cor-alerta); border-radius: 2px; min-height: 60px; }
+  .fronteira h3 { margin: 0 0 var(--espaco-1) 0; font-size: var(--texto-base); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+
+<h1>Spec ilustrada 002 — Módulo de OCR</h1>
+<p class="subtitulo">O combinado do item 2 do backlog, desenhado — 09/09/2026 · situação: aprovada</p>
+
+<div class="objetivo">
+  <strong>Objetivo.</strong> Transformar um PDF da CAPCF em texto conferido por uma
+  pessoa, para esse texto seguir para o Anonimizador de CPF ou ser salvo como
+  <code>.md</code>. É o módulo que resolve o caso em que o documento não tem texto
+  legível por dentro.
+  <div class="nota" style="margin-top:8px;margin-bottom:0">
+    Esta página desenha <em>o combinado</em>: caixas, setas e quadros. Ela não é o
+    desenho da tela — o rascunho visual é outro artefato, com aprovação própria.
+  </div>
+</div>
+
+<h2>O percurso do documento</h2>
+<p class="nota">Onde o programa decide sozinho, onde a pessoa decide, e em que momento existe arquivo no disco.</p>
+
+<div class="mapa">
+  <div class="caixa"><div class="rotulo">A pessoa escolhe o PDF</div><div class="detalhe">botão, ou arrastando para dentro</div></div>
+  <div class="seta">↓</div>
+  <div class="caixa decisao"><div class="rotulo">Tem texto por dentro?</div><div class="detalhe">verificação exata — o programa conta os caracteres que existem</div></div>
+  <div class="seta">↓</div>
+
+  <div class="ramos">
+    <div class="ramo">
+      <div class="ramo-titulo">Não tem texto — o OCR roda</div>
+      <div class="caixa"><div class="rotulo">Desenha cada página como imagem</div><div class="detalhe">300 pontos por polegada</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Endireita a página girada</div><div class="detalhe">detecção em cima da imagem — o PDF não sabe que está deitado</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Lê com o Tesseract</div><div class="detalhe">"página 7 de 12", com cancelar</div></div>
+    </div>
+
+    <div class="ramo">
+      <div class="ramo-titulo">Tem texto — a pessoa decide</div>
+      <div class="caixa pessoa"><div class="rotulo">Mostra as primeiras linhas desse texto</div><div class="detalhe">e a pessoa decide, olhando</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Aproveitar este texto</div><div class="detalhe">vai direto para a conferência</div></div>
+      <div class="caixa"><div class="rotulo">…ou ignorar e ler as imagens</div><div class="detalhe">volta para o caminho da esquerda</div></div>
+    </div>
+  </div>
+
+  <div class="seta">↓</div>
+  <div class="caixa pessoa" style="min-width:340px">
+    <div class="rotulo">Conferência — o PDF de um lado, o texto do outro</div>
+    <div class="detalhe">andam juntos, página a página · o texto é editável · passo obrigatório</div>
+  </div>
+  <div class="seta">↓</div>
+
+  <div class="ramos">
+    <div class="ramo">
+      <div class="ramo-titulo">Saída 1</div>
+      <div class="caixa saida"><div class="rotulo">Salvar o texto como está</div><div class="detalhe">o destino aparece preenchido e editável antes de gravar</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Arquivo <code>.md</code> — com os CPFs inteiros</div><div class="detalhe">é o primeiro e único momento em que algo vai para o disco</div></div>
+    </div>
+    <div class="ramo">
+      <div class="ramo-titulo">Saída 2</div>
+      <div class="caixa bloqueada"><div class="rotulo">Seguir para o Anonimizar</div><div class="detalhe">apagada enquanto o item 3 do backlog não existir</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa bloqueada"><div class="rotulo">O texto passa por dentro do programa</div><div class="detalhe">sem tocar no disco — responsabilidade da spec 003</div></div>
+    </div>
+  </div>
+</div>
+
+<h2>Fluxos — o normal e os tortos, lado a lado</h2>
+<p class="nota">O caminho normal tem onze passos. Cada torto tem dois ou três — e é olhando essa diferença que se lembra do que falta.</p>
+
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Normal — PDF escaneado, sem texto</div>
+    <div class="fluxo-quando">O fluxo principal desta spec</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">Clica em "Gerar OCR" no menu lateral.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">O painel mostra a área de escolher o PDF e a escolha do motor.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">Escolhe o PDF.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">O programa confere se há camada de texto. Não há.</div></div>
+    <div class="passo"><div class="passo-numero">5</div><div class="passo-texto">Desenha as páginas, endireita as giradas e lê, mostrando o andamento.</div></div>
+    <div class="passo"><div class="passo-numero">6</div><div class="passo-texto">Abre a conferência: PDF à esquerda, texto à direita.</div></div>
+    <div class="passo"><div class="passo-numero">7</div><div class="passo-texto">Ela compara e corrige o que o motor errou.</div></div>
+    <div class="passo"><div class="passo-numero">8</div><div class="passo-texto">Clica em "conferido".</div></div>
+    <div class="passo"><div class="passo-numero">9</div><div class="passo-texto">Escolhe entre salvar e seguir para o Anonimizar.</div></div>
+    <div class="passo"><div class="passo-numero">10</div><div class="passo-texto">O destino aparece preenchido, com a opção de trocar e o aviso dos CPFs.</div></div>
+    <div class="passo"><div class="passo-numero">11</div><div class="passo-texto">Confirma. O arquivo é gravado e a tela diz onde.</div></div>
+  </div>
+
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — a camada de texto está embaralhada</div>
+    <div class="fluxo-quando">Documento que já passou por um OCR ruim antes</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">O programa acha texto por dentro e mostra as primeiras linhas.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">A pessoa reconhece o lixo num olhar e escolhe "ignorar e ler as imagens".</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">Segue pelo caminho do OCR, a partir do passo 5 do normal.</div></div>
+    <div class="fluxo-quando" style="margin-top:12px;margin-bottom:0">O programa nunca julga sozinho se o texto presta — isso seria palpite, e palpite errado aqui produz um arquivo de lixo que ninguém percebe.</div>
+  </div>
+</div>
+
+<div class="fluxos" style="margin-top:16px">
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — o Tesseract não está instalado</div>
+    <div class="fluxo-quando">Máquina nova, ou instalação que ninguém fez ainda</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">Ao abrir o módulo, um aviso no alto: o motor não foi encontrado — <strong>já com "instalar agora", "conferir de novo" e o lugar para apontar a pasta</strong>.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Ela resolve ali, antes de escolher documento nenhum. <span class="quando">Fazer ela arrastar um PDF para só então descobrir que falta uma peça é gastar o tempo dela para dar uma notícia que já se sabia ao abrir a tela.</span></div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">O aviso não bloqueia: o caminho do PDF que já tem texto continua funcionando, porque ele não usa o motor.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">Ignorando o aviso e escolhendo um PDF escaneado, a tela cheia repete a explicação e as mesmas três saídas.</div></div>
+    <div class="fluxo-quando" style="margin-top:12px;margin-bottom:0">O programa nunca baixa nem instala nada sozinho: ele abre um instalador que já está na máquina, e quem clica "Sim" na confirmação do Windows é uma pessoa.</div>
+  </div>
+
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — desistências e tropeços</div>
+    <div class="fluxo-quando">Quatro casos que terminam sem arquivo nenhum</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto"><strong>Cancela no meio da leitura</strong> — o programa para, descarta o que leu e volta. Nada foi gravado.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto"><strong>O arquivo não abre</strong> (corrompido, com senha, ou não é PDF) — uma frase em linguagem comum, e volta.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto"><strong>Já existe arquivo com aquele nome</strong> — pergunta antes de escrever por cima. Nunca sobrescreve calado.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto"><strong>Quer seguir para o Anonimizar, que não existe</strong> — o botão está apagado com a explicação; salvar continua disponível.</div></div>
+  </div>
+</div>
+
+<h2>Estados — o que aparece em cada momento</h2>
+<p class="nota">O vazio primeiro: é o primeiro que a pessoa vê de verdade, e o último que alguém lembra de especificar.</p>
+
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-vazio">vazio</div>
+    <div class="estado-corpo">A área de escolher o PDF, e a escolha do motor com o Tesseract marcado e a IA local apagada.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-vazio">vazio, com o motor faltando</div>
+    <div class="estado-corpo">O mesmo painel, mais o aviso no alto — <strong>já com "instalar agora", "conferir de novo" e o lugar para apontar a pasta</strong>. A área de escolher o PDF continua funcionando.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-carregando">conferindo o arquivo</div>
+    <div class="estado-corpo">Um instante: o programa acabou de receber o PDF e está vendo se há camada de texto.</div>
+  </div>
+</div>
+
+<div class="estados" style="margin-top:16px">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-decisao">decidindo sobre a camada</div>
+    <div class="estado-corpo">Só quando há texto por dentro: o aviso, as primeiras linhas desse texto, e as duas saídas.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-carregando">carregando (lendo)</div>
+    <div class="estado-corpo">Barra que avança, "página 7 de 12", o nome do arquivo e o cancelar. É o estado que pode durar minutos.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">com dados (conferência)</div>
+    <div class="estado-corpo">A tela dividida, o aviso de onde o texto veio (OCR ou camada do PDF), e o "conferido".</div>
+  </div>
+</div>
+
+<div class="estados" style="margin-top:16px">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">escolhendo a saída</div>
+    <div class="estado-corpo">As duas saídas lado a lado, com o Anonimizar apagado enquanto aquele módulo não existir.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-decisao">salvando</div>
+    <div class="estado-corpo">O caminho de destino preenchido e editável, o aviso de que o arquivo sai com os CPFs inteiros, e a confirmação.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">sucesso</div>
+    <div class="estado-corpo">Onde o arquivo foi gravado, com o botão de abrir a pasta e o de processar outro documento.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-erro">erro</div>
+    <div class="estado-corpo">Uma frase dizendo o que houve, sem termo técnico, e o caminho de volta. Vale para arquivo que não abre, motor não encontrado e falha na leitura.</div>
+  </div>
+</div>
+
+<h2>O que entra e o que não entra</h2>
+<p class="nota">As duas listas têm o mesmo peso. A segunda é a que evita a discussão "eu achei que isso estava incluído".</p>
+
+<div class="duas-colunas">
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-entra">Entra nesta entrega</div>
+    <div class="corpo-peso">
+      <ul>
+        <li>Ocupar o painel do "Gerar OCR", no lugar do aviso de "ainda não construído".</li>
+        <li>Escolher o PDF e escolher o motor de leitura.</li>
+        <li>Detectar, por verificação exata, se há texto por dentro.</li>
+        <li>Havendo texto: mostrar as primeiras linhas e deixar a pessoa escolher.</li>
+        <li>Não havendo: desenhar as páginas, endireitar as giradas e ler com o Tesseract.</li>
+        <li>Andamento com contagem de páginas e cancelar.</li>
+        <li>Remontar tabela como tabela de texto, nos dois caminhos.</li>
+        <li><strong>Tela de conferência</strong> lado a lado, com o texto editável.</li>
+        <li>Duas saídas: salvar o <code>.md</code>, ou seguir para o Anonimizar.</li>
+        <li>Destino preenchido e editável antes de gravar; pergunta antes de sobrescrever.</li>
+        <li>Avisar e ajudar quando o Tesseract não estiver instalado.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-nao-entra">NÃO entra nesta entrega</div>
+    <div class="corpo-peso">
+      <ul>
+        <li><strong>Qualquer coisa a ver com CPF</strong> — não procura, não valida, não mascara, não lista suspeito. <span class="quando">É inteiramente o item 3 do backlog.</span></li>
+        <li><strong>A leitura por IA local</strong> — o item aparece na tela, desligado. <span class="quando">Vira item novo no backlog, com spec própria e decisão técnica antes.</span></li>
+        <li><strong>Separar um PDF com vários documentos dentro.</strong> <span class="quando">Entra um, sai um.</span></li>
+        <li><strong>Processar vários PDFs de uma vez.</strong></li>
+        <li><strong>Saída em XLSX, DOCX ou PDF.</strong> <span class="quando">Só <code>.md</code>.</span></li>
+        <li><strong>Corrigir ou alterar o PDF de origem.</strong></li>
+        <li><strong>Guardar histórico</strong> — nem documento, nem pasta, nem preferência.</li>
+        <li><strong>Reconhecer letra manuscrita.</strong> <span class="quando">O Tesseract não faz isso de forma confiável, e prometer seria enganar.</span></li>
+        <li><strong>Empacotar o instalador do Tesseract.</strong> <span class="quando">Como ele chega na máquina é decisão do dia da entrega.</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>A fronteira com o módulo 3</h2>
+<p class="nota">O que este módulo entrega, e onde a responsabilidade dele termina.</p>
+
+<div class="fronteira">
+  <div class="lado">
+    <h3>Módulo 2 — Gerar OCR</h3>
+    <p style="margin:0">Entrega <strong>texto fiel ao documento</strong>. A conferência humana que acontece aqui é sobre <strong>a leitura estar certa</strong> — se o motor trocou um "5" por um "S". Ela não tem nada a ver com dado sensível.</p>
+  </div>
+  <div class="divisor"></div>
+  <div class="lado">
+    <h3>Módulo 3 — Anonimizar</h3>
+    <p style="margin:0">Recebe texto. Encontra o CPF, confere o dígito verificador, mascara, e monta a lista de suspeitos para a pessoa olhar. <span class="quando">Nada disso está nesta spec.</span></p>
+  </div>
+</div>
+
+<h2>Premissas — o que está sendo assumido</h2>
+<p class="nota">Premissa que cair reabre a spec no ponto que ela sustentava, em vez de virar remendo adiante.</p>
+
+<div class="cartoes">
+  <div class="cartao"><span class="chave">entrada</span><br>A entrada é sempre PDF — às vezes com texto por dentro, às vezes só imagem.</div>
+  <div class="cartao"><span class="chave">detecção</span><br>O programa detecta sozinho se há texto e só roda o OCR quando não há. Isso é verificação exata. Julgar se esse texto <em>presta</em> é outra coisa, e fica com a pessoa.</div>
+  <div class="cartao"><span class="chave">motor</span><br>O motor desta versão é o Tesseract da máquina, com o pacote de português. Nunca um serviço de empresa externa.</div>
+  <div class="cartao"><span class="chave">tabelas</span><br>A saída <code>.md</code> preserva as tabelas do documento original como tabelas de texto.</div>
+  <div class="cartao"><span class="chave">documento único</span><br>PDF com vários documentos dentro entra como um só e sai como um <code>.md</code> só.</div>
+  <div class="cartao"><span class="chave">conferência</span><br>A conferência humana é parte fixa do processo quando o texto veio de OCR, e não etapa opcional.</div>
+  <div class="cartao"><span class="chave">máquinas</span><br>As máquinas do núcleo são Windows.</div>
+  <div class="cartao"><span class="chave">instalador</span><br>O instalador do Tesseract estará disponível na máquina para o botão "instalar agora" abrir. Não estando, o botão fica apagado e sobra o passo a passo escrito.</div>
+</div>
+
+<h2>As regras que mais pesam</h2>
+<p class="nota">A spec traz vinte e duas. Estas seis são as que mudam o que a pessoa vê acontecer.</p>
+
+<div class="cartoes">
+  <div class="cartao regra"><span class="chave">RN-2</span><br>Nada é gravado em disco antes de a pessoa escolher salvar. Cancelar, fechar ou trocar de documento não deixa arquivo nenhum para trás.</div>
+  <div class="cartao regra"><span class="chave">RN-4</span><br>Havendo camada de texto, o programa nunca decide sozinho se ela presta. Mostra as primeiras linhas, e a escolha é da pessoa.</div>
+  <div class="cartao regra"><span class="chave">RN-6</span><br>Antes de ler, o programa detecta a orientação do conteúdo e endireita a página girada. O campo de rotação do PDF não serve para isso: documento deitado dentro de página em pé tem esse campo zerado.</div>
+  <div class="cartao regra"><span class="chave">RN-11</span><br>Nenhum aviso do programa entra dentro do arquivo de saída. Recado no meio do texto ninguém lê, e ele ainda viaja para dentro da conversa com o assistente de IA, onde vira ruído.</div>
+  <div class="cartao regra"><span class="chave">RN-14</span><br>O arquivo que sai deste módulo tem os CPFs inteiros. A tela diz isso com todas as letras antes de gravar.</div>
+  <div class="cartao regra"><span class="chave">RN-20 e RN-21</span><br>O programa nunca baixa nem instala nada sozinho, e não há neste módulo nenhum código que converse com motor remoto.</div>
+</div>
+
+<h2>Questões em aberto</h2>
+<div class="objetivo" style="border-left-color: var(--cor-sucesso)">
+  <strong>Nenhuma.</strong> Todas as decisões que faltavam foram fechadas na conversa
+  de 09/09/2026 — a fronteira com o módulo 3, o que fazer com PDF que já tem
+  texto, o andamento na tela, a falta do Tesseract, o destino do arquivo, as
+  tabelas, a tela de conferência e o lugar do segundo motor.
+</div>
+
+<div class="rodape">
+  Gerada pela skill-07-designer-de-telas, a pedido da skill-05-redator-de-funcionalidade ·
+  espelha <code>especificacoes/specs/002-modulo-de-ocr.md</code> · regenera por cima quando a spec mudar
+</div>
+
+</body>
+</html>
