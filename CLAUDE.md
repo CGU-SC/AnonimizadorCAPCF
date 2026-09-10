@@ -130,3 +130,10 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
   as fontes instaladas no Windows. A página fica cheia de caixas, o OCR não lê
   nada, e nada no caminho acusa erro — o arquivo parece pronto. Deixe o Qt
   subir no modo normal, mesmo quando nenhuma janela vai aparecer.
+- Texto com quebra de linha dentro de caixa de largura limitada (`QLabel` com
+  `setWordWrap`) sai **cortado** no Qt: a caixa reserva a altura de uma linha
+  só, e o resto da frase some para fora da borda, sem nenhum aviso. Aconteceu
+  na caixa de erro do Módulo de OCR em 10/09/2026. Resolve dando largura fixa
+  ao texto e calculando a altura a partir dela (`heightForWidth`), e
+  recalculando sempre que a frase mudar. Vale para toda caixa de aviso, erro ou
+  explicação que o programa vier a ter.
