@@ -13,17 +13,19 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-NOME_PROGRAMA = "AnomizadorCAPCF"
-LARGURA_MENU = 220
+from estilo import (
+    COR_ALERTA,
+    COR_BORDA,
+    COR_DESTAQUE,
+    COR_FUNDO,
+    COR_FUNDO_ELEVADO,
+    COR_TEXTO,
+    COR_TEXTO_SECUNDARIO,
+    LARGURA_MENU,
+)
+from painel_ocr import PainelOcr
 
-# Cores do sistema de design do projeto (mockups/sistema-de-design.md), tema escuro.
-COR_FUNDO = "#1e2228"
-COR_FUNDO_ELEVADO = "#262b33"
-COR_BORDA = "#383e47"
-COR_TEXTO = "#e8eaed"
-COR_TEXTO_SECUNDARIO = "#9aa1ac"
-COR_DESTAQUE = "#3b6ea5"
-COR_ALERTA = "#d9a441"
+NOME_PROGRAMA = "AnomizadorCAPCF"
 
 
 class MenuLateral(QWidget):
@@ -160,14 +162,15 @@ class JanelaPrincipal(QMainWindow):
         raiz_layout.addWidget(self.painel)
 
         self.itens_do_menu = []
-        self._ligar_item_ao_painel(self.menu.botao_ocr, "Gerar OCR")
-        self._ligar_item_ao_painel(self.menu.botao_anonimizar, "Anonimizar")
+        self._ligar_item_ao_painel(self.menu.botao_ocr, PainelOcr())
+        self._ligar_item_ao_painel(
+            self.menu.botao_anonimizar, PainelModuloNaoConstruido("Anonimizar")
+        )
 
         self.setCentralWidget(raiz)
 
-    def _ligar_item_ao_painel(self, botao, nome_modulo):
+    def _ligar_item_ao_painel(self, botao, painel_do_modulo):
         """Faz o item do menu se marcar e trazer o painel daquele módulo."""
-        painel_do_modulo = PainelModuloNaoConstruido(nome_modulo)
         self.painel.addWidget(painel_do_modulo)
 
         botao.setCheckable(True)

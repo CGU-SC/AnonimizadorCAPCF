@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 03 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .mudanca .pergunta {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-4);
+    border-left: 2px solid var(--cor-borda);
+    padding-left: var(--espaco-3);
+  }
+
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 300px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  pre {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    overflow-x: auto;
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    line-height: 1.5;
+    color: var(--cor-texto);
+  }
+  pre .rem { color: var(--cor-texto-secundario); }
+  pre .novo { color: var(--cor-sucesso); }
+
+  .lista-simples { list-style: none; padding: 0; margin: 0; }
+  .lista-simples li {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-2);
+  }
+
+  .nao-consertado {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-erro);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-3);
+  }
+  .nao-consertado .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .nao-consertado .motivo {
+    margin-top: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+  }
+  code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+
+  .aviso {
+    margin-top: var(--espaco-5);
+    background: rgba(59,110,165,0.12);
+    border: 1px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .prova {
+    background: rgba(76,175,109,0.10);
+    border: 1px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .rodape {
+    margin-top: var(--espaco-4);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+</style>
+</head>
+<body>
+
+<h1>Revisão 03 — antes e depois</h1>
+<p class="subtitulo">AnomizadorCAPCF — 10/09/2026</p>
+
+<div class="lente">
+  <div class="rotulo">O que foi revisado, e por qual lente</div>
+  <p>
+    A <strong>etapa 1 do Módulo de OCR</strong>, recém-construída e conferida na
+    tela: o painel do "Gerar OCR", o arquivo que lê o PDF, as cores do sistema de
+    design e os primeiros testes automatizados do projeto.
+  </p>
+  <p>
+    A lente foi a <strong>CRÍTICA</strong>: procura só quatro tipos de defeito —
+    o programa quebrar ou entrar num estado do qual não sai, perder ou corromper
+    dado, entregar um resultado errado sem avisar, ou consumir recurso da máquina
+    até travar. Ela não olha estilo, nem clareza, nem o que a spec prometeu.
+  </p>
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado">
+    <div class="contagem-numero">3</div>
+    <div class="contagem-label">achados dentro da lente</div>
+  </div>
+  <div class="contagem-item c-consertado">
+    <div class="contagem-numero">3</div>
+    <div class="contagem-label">aprovados e consertados</div>
+  </div>
+  <div class="contagem-item c-recusado">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">suspeitas derrubadas antes de mostrar</div>
+  </div>
+  <div class="contagem-item c-fora">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">achados fora da lente, não consertados</div>
+  </div>
+</div>
+
+<h2>As duas suspeitas que não viraram achado</h2>
+
+<div class="prova">
+  <p>
+    Nem toda suspeita vira achado — e mostrar suspeita não confirmada é o jeito
+    mais rápido de a revisão virar uma lista que ninguém lê. Estas duas foram
+    derrubadas com medição, antes de chegarem à conversa:
+  </p>
+  <p>
+    <strong>"Documento grande vai travar a janela."</strong> Medido: 2 a 4
+    milésimos de segundo por página. Um documento de 500 páginas levaria 2
+    segundos. Não é problema.
+  </p>
+  <p>
+    <strong>"Arrastar arquivo pode falhar por causa dos botões no caminho."</strong>
+    Conferido no comportamento do Qt: não falha.
+  </p>
+</div>
+
+<h2>O que foi consertado</h2>
+
+<div class="mudanca">
+  <div class="arquivo">1 · programa/painel_ocr.py — a tela sem saída</div>
+  <div class="explicacao">
+    A tela "Conferindo o documento…" não tem botão nenhum. Se a leitura
+    estourasse por um motivo não previsto — um PDF que abre mas tem uma página
+    danificada por dentro —, o painel ficava preso nela <strong>para
+    sempre</strong>. Sair pelo menu e voltar trazia a mesma tela travada. A única
+    saída era fechar o programa inteiro, e quem usa não teria como saber disso.
+  </div>
+  <div class="pergunta">
+    Por que passou na conferência de tela: o documento corrompido da massa não
+    abre logo de cara, então cai no caminho previsto. O caso ruim é o documento
+    que abre e quebra no meio — que a massa de teste não tem.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">try:
+    ficha = conferir(caminho)
+except DocumentoNaoAbre as problema:
+    self.tela_erro.mostrar(caminho, str(problema))
+    self.telas.setCurrentWidget(self.tela_erro)
+    return
+
+# qualquer outra falha: ninguém trata, e a
+# tela de espera fica para sempre</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">try:
+    ficha = conferir(caminho)
+except DocumentoNaoAbre as problema:
+    self._mostrar_erro(caminho, str(problema))
+    return
+except Exception:
+    # Qualquer falha não prevista também precisa
+    # terminar numa tela com saída.
+    self._mostrar_erro(
+        caminho,
+        "O documento não pôde ser lido até o fim. "
+        "Ele pode estar danificado por dentro.",
+    )
+    return</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">2 · programa/painel_ocr.py — o número escrito errado na tela</div>
+  <div class="explicacao">
+    A linha que informa quantas letras o documento tem saía como
+    <strong>"sim. 1472 letras"</strong>: o ponto tinha comido a vírgula da frase,
+    e o separador de milhar nunca aparecia. É a linha que a pessoa lê para
+    decidir se aproveita o texto do documento ou manda reler tudo.
+  </div>
+  <div class="pergunta">
+    A causa: uma troca de vírgula por ponto, feita para formatar o número, acabou
+    trocando também a vírgula da frase — e o formato automático que traria o
+    separador de milhar depende de como o Windows daquela máquina está
+    configurado. Aqui, não trouxe nada.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">f"sim, {n:n} letras".replace(",", ".")
+
+# na tela:   sim. 1472 letras</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">def _com_separador_de_milhar(numero):
+    """1.720, e não 1720 - igual em
+    qualquer máquina."""
+    return f"{numero:,}".replace(",", ".")
+
+letras = _com_separador_de_milhar(n)
+f"sim, {letras} letras"
+
+# na tela:   sim, 1.472 letras</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">3 · dados-exemplo/gerar-massa.py — o "gerado" que não gerou</div>
+  <div class="explicacao">
+    O script que fabrica os documentos de teste podia anunciar
+    <strong>"gerado"</strong> sem ter gravado nada. Basta um dos PDFs estar
+    aberto num leitor: o Windows não deixa escrever, o Qt não reclama, e o script
+    imprime o tamanho do arquivo <em>velho</em>.
+  </div>
+  <div class="pergunta">
+    Por que isso pesa mais do que parece: foi comparando os arquivos antes e
+    depois que a revisão anterior provou não ter quebrado nada. Um script que
+    pode não gerar em silêncio faz essa prova deixar de valer.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">return folha, QPainter(folha)
+
+...
+
+print(f"gerado: {caminho.name} "
+      f"({caminho.stat().st_size} bytes)")</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">pintor = QPainter(folha)
+if not pintor.isActive():
+    raise RuntimeError(
+        f"Não consegui escrever em {caminho.name}. "
+        "O arquivo provavelmente está aberto em "
+        "algum programa - feche-o e rode de novo."
+    )
+
+...
+
+# Segunda trava, valendo para os seis: só conta
+# como gerado o arquivo cuja data de alteração
+# é desta rodada.
+if not caminho.exists() or eh_antigo(caminho):
+    raise RuntimeError(
+        f"{nome} não foi gravado. ..."
+    )</span></pre>
+    </div>
+  </div>
+</div>
+
+<h2>Os testes que impedem os três de voltarem</h2>
+
+<div class="prova">
+  <p>
+    Conserto sem teste volta. Cada um dos três achados ganhou um teste que falha
+    se o defeito reaparecer — e o projeto passou de 10 para <strong>13
+    testes</strong>, todos passando.
+  </p>
+  <p>
+    Um deles provou o próprio valor antes mesmo de entrar: ao ser escrito, ele
+    derrubou <strong>o número que estava no roteiro de conferência</strong>. O
+    documento de teste tem <strong>1.472</strong> letras, e não 1.720 como havia
+    sido dito — o 1.720 vinha de uma conferência solta que contava também espaços
+    e quebras de linha. O programa estava certo; errado estava o gabarito escrito
+    por quem construiu.
+  </p>
+</div>
+
+<h2>O que mudou no projeto</h2>
+
+<ul class="lista-simples">
+  <li><strong>Nasceram</strong> <code>programa/documento.py</code>, <code>programa/painel_ocr.py</code> e <code>programa/estilo.py</code>.</li>
+  <li><strong>Nasceram</strong> os primeiros testes: <code>programa/test_documento.py</code> e <code>programa/test_painel_ocr.py</code>.</li>
+  <li><strong>Encolheu</strong> <code>programa/main.py</code>: as cores saíram de dentro dele e foram para o arquivo de estilo.</li>
+  <li><strong>Nasceram</strong> três rascunhos da tela em <code>mockups/ocr/</code> — o <code>03</code> é o aprovado.</li>
+  <li><strong>Cresceu</strong> a seção "O que já nos mordeu" do <code>CLAUDE.md</code>, com a armadilha do texto que sai cortado da caixa.</li>
+</ul>
+
+<h2>O que foi achado e NÃO consertado</h2>
+
+<div class="nao-consertado">
+  <div class="titulo">A mensagem de erro pode mentir sobre a causa</div>
+  <p>
+    Ao abrir o documento, qualquer falha vira a frase "pode estar danificado". Um
+    arquivo em pasta de rede sem permissão de leitura, por exemplo, seria
+    anunciado como danificado — e quem usa procuraria o problema no lugar errado.
+  </p>
+  <div class="motivo">
+    Por que ficou: é mensagem enganosa, não defeito de funcionamento — não passa
+    na trava desta lente, que exige prejuízo concreto. Seria achado da lente de
+    clareza.
+  </div>
+</div>
+
+<div class="nao-consertado">
+  <div class="titulo">O rascunho aprovado tem dois textos desatualizados</div>
+  <p>
+    O rascunho <code>mockups/ocr/03-escolher-o-documento.html</code> mostra
+    "1.720 letras" e a frase de erro com a vírgula na posição antiga. O programa
+    já está certo nos dois casos.
+  </p>
+  <div class="motivo">
+    Por que ficou: rascunho não se sobrescreve, e gerar um rascunho novo por
+    causa de dois textos custaria mais do que informa. O programa é a fonte daqui
+    em diante.
+  </div>
+</div>
+
+<div class="aviso">
+  <strong>Esta página não substitui abrir o programa.</strong> Ela mostra o que
+  foi mexido — não que tudo continua funcionando. Quem mostra isso é você,
+  abrindo a janela e escolhendo um documento.
+</div>
+
+<p class="rodape">
+  Gerado pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.
+  Uma lente rodou nesta rodada: a crítica. As outras cinco não rodaram — o que
+  elas veriam continua invisível. A de critérios de aceite, em especial, ainda
+  não conferiu o construído contra os 24 itens da spec 002.
+</p>
+
+</body>
+</html>
