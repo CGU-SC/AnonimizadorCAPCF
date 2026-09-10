@@ -37,3 +37,16 @@ quebrada por dentro — coisa que acontece quando o documento já passou por um
 OCR ruim antes. O arquivo daqui não reproduz esse defeito por dentro: ele
 simplesmente carrega um texto que é lixo. Para o programa dá no mesmo, porque
 o que ele faz é mostrar as primeiras linhas e deixar a pessoa decidir.
+
+## Por que os PDFs "mudam" ao serem gerados de novo
+
+Rodar o script outra vez faz o git acusar que quase todos os arquivos mudaram,
+mesmo sem ninguém ter mexido em nada. É esperado, e não é defeito: todo PDF
+carrega uma marca única gerada na hora de gravar, os que o Qt escreve guardam
+também a data e a hora, e o protegido por senha é cifrado com uma chave nova a
+cada vez.
+
+O documento em si continua idêntico — mesmas páginas, mesmo texto, mesma
+aparência. Então **não vale a pena commitar essa troca de bytes**: ela suja o
+histórico sem registrar mudança nenhuma. Gerou de novo e o conteúdo é o mesmo?
+Descarte as alterações dos PDFs e commite só o que mudou de verdade.
