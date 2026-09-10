@@ -9,6 +9,7 @@ Rode assim, da raiz do projeto:
     .\.venv\Scripts\python.exe dados-exemplo\gerar-massa.py
 """
 import sys
+import time
 from pathlib import Path
 
 import pymupdf
@@ -120,7 +121,19 @@ def _abrir_folha(caminho):
     folha.setPageSize(QPageSize(QPageSize.A4))
     folha.setResolution(72)  # 72 = a mesma unidade de medida do PyMuPDF
     folha.setPageMargins(QMarginsF(0, 0, 0, 0))
-    return folha, QPainter(folha)
+
+    pintor = QPainter(folha)
+    # Quando o arquivo de destino está aberto em outro programa, o Windows não
+    # deixa escrever nele - e o Qt não reclama: ele simplesmente joga fora todo
+    # o desenho. Sem esta conferência o script anunciaria "gerado" mostrando o
+    # tamanho do arquivo VELHO, e a massa ficaria desatualizada em silêncio.
+    if not pintor.isActive():
+        raise RuntimeError(
+            f"Não consegui escrever em {caminho.name}. O arquivo provavelmente "
+            "está aberto em algum programa (um leitor de PDF, por exemplo) - "
+            "feche-o e rode de novo."
+        )
+    return folha, pintor
 
 
 # ---------------------------------------------------------------------------
@@ -288,6 +301,8 @@ def main():
     PASTA.mkdir(exist_ok=True)
     gerados = []
 
+    comeco = time.time()
+
     for nome, gerar in [
         ("01-com-texto-e-tabela.pdf", gerar_com_texto_e_tabela),
         ("02-imprimir-para-pdf.pdf", gerar_imprimir_para_pdf),
@@ -298,6 +313,15 @@ def main():
     ]:
         caminho = PASTA / nome
         gerar(caminho)
+
+        # Segunda trava, agora valendo para os seis: só conta como gerado o
+        # arquivo cuja data de alteração é desta rodada. Anunciar "gerado" sobre
+        # um arquivo velho é pior que falhar, porque ninguém vai desconfiar.
+        if not caminho.exists() or caminho.stat().st_mtime < comeco:
+            raise RuntimeError(
+                f"{nome} não foi gravado. O arquivo pode estar aberto em algum "
+                "programa, ou a pasta pode estar protegida contra escrita."
+            )
         gerados.append(caminho)
 
     for caminho in gerados:
