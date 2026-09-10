@@ -117,3 +117,16 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
   Windows que só aparece numa sessão com tela — comando rodado por controle
   remoto ou terminal sem interface trava nessa hora. Resolve rodando com
   alguém na frente da máquina para confirmar.
+- O Tesseract pode estar instalado e mesmo assim o `pytesseract` dizer que não
+  achou: ele procura só no caminho que o Windows conhece, e o instalador não
+  põe o Tesseract lá. Antes de concluir que falta instalar, olhe em
+  `C:\Program Files\Tesseract-OCR\tesseract.exe`. A decisão do projeto é o
+  programa procurar nas pastas de sempre por conta própria — **isso ainda está
+  por construir**, na etapa do aviso de motor faltando (spec 002, RN-19). Mexer
+  no caminho do Windows resolveria só esta máquina, e as do núcleo continuariam
+  quebradas.
+- Desenhar PDF com o Qt no modo "sem tela" (`QT_QPA_PLATFORM=offscreen`) sai
+  com um quadradinho preto no lugar de cada letra: nesse modo o Qt não enxerga
+  as fontes instaladas no Windows. A página fica cheia de caixas, o OCR não lê
+  nada, e nada no caminho acusa erro — o arquivo parece pronto. Deixe o Qt
+  subir no modo normal, mesmo quando nenhuma janela vai aparecer.
