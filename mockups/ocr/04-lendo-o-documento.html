@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 04 — Lendo o documento (Gerar OCR)</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #14171c;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 760px; }
+
+  .rotulo-estado {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    margin: var(--espaco-5) 0 var(--espaco-2) 0;
+  }
+  .rotulo-estado .quando {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .rotulo-estado .depois,
+  .rotulo-estado .escolher {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: var(--espaco-2);
+    font-weight: 700;
+  }
+  .rotulo-estado .depois { background: rgba(217,164,65,0.15); color: var(--cor-alerta); }
+  .rotulo-estado .escolher { background: rgba(59,110,165,0.20); color: #7fb1e8; }
+  .nota {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    max-width: 900px;
+    margin-top: var(--espaco-2);
+  }
+
+  .janela {
+    display: flex;
+    width: 100%;
+    max-width: 900px;
+    height: 520px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .menu-lateral {
+    width: 220px;
+    flex: 0 0 220px;
+    background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda);
+    padding: var(--espaco-4) 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-nome-programa {
+    padding: 0 var(--espaco-3) var(--espaco-4) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: var(--espaco-3);
+  }
+  .menu-item {
+    padding: var(--espaco-3);
+    margin: 0 var(--espaco-2);
+    border-radius: var(--raio);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-base);
+  }
+  .menu-item.ativo {
+    background: var(--cor-destaque);
+    color: #fff;
+    font-weight: 600;
+  }
+  .painel-principal {
+    flex: 1;
+    background: var(--cor-fundo);
+    padding: var(--espaco-4) var(--espaco-5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .painel-centrado { align-items: center; justify-content: center; text-align: center; }
+
+  .titulo-modulo { font-size: var(--texto-grande); font-weight: 600; margin-bottom: var(--espaco-1); }
+  .legenda-modulo { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-4); }
+
+  .botao {
+    display: inline-block;
+    background: var(--cor-destaque);
+    color: #fff;
+    border: none;
+    border-radius: var(--raio);
+    padding: 10px 18px;
+    font-size: var(--texto-base);
+    font-weight: 600;
+  }
+  .botao.secundario {
+    background: transparent;
+    color: var(--cor-texto-secundario);
+    border: 1px solid var(--cor-borda);
+    font-weight: 400;
+  }
+  .botao.apagado {
+    background: var(--cor-fundo-elevado);
+    color: #5d646e;
+    border: 1px solid var(--cor-borda);
+    font-weight: 400;
+  }
+  .acoes { display: flex; gap: var(--espaco-3); align-items: center; }
+
+  /* leitura em andamento */
+  .lendo { width: 100%; max-width: 420px; }
+  .lendo .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-3);
+  }
+  .lendo .contagem {
+    font-size: var(--texto-grande);
+    margin-bottom: var(--espaco-1);
+  }
+  .lendo .restante {
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-3);
+  }
+  .barra {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--cor-borda);
+    overflow: hidden;
+    margin-bottom: var(--espaco-4);
+  }
+  .barra .cheio { height: 100%; background: var(--cor-destaque); border-radius: 3px; }
+
+  /* caixa do texto lido */
+  .caixa-texto {
+    flex: 1;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    line-height: 1.6;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: var(--cor-texto);
+    margin-bottom: var(--espaco-3);
+  }
+  .selo-origem {
+    display: inline-block;
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 10px;
+    margin-bottom: var(--espaco-3);
+    background: rgba(217,164,65,0.15);
+    color: var(--cor-alerta);
+  }
+
+  .faixa-info {
+    border-left: 3px solid var(--cor-destaque);
+    background: rgba(59,110,165,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    margin-bottom: var(--espaco-4);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+  }
+
+  .caixa-erro {
+    border-left: 4px solid var(--cor-erro);
+    background: rgba(217,83,79,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    text-align: left;
+    width: 460px;
+    margin-bottom: var(--espaco-4);
+  }
+  .caixa-erro .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .caixa-erro .texto { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+
+  .area-arrastar {
+    border: 2px dashed var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-5) var(--espaco-4);
+    text-align: center;
+  }
+  .area-arrastar .icone { font-size: 34px; opacity: 0.5; margin-bottom: var(--espaco-2); }
+  .area-arrastar .chamada { font-size: var(--texto-grande); margin-bottom: var(--espaco-3); }
+
+  .comparacao { display: flex; gap: var(--espaco-4); flex-wrap: wrap; }
+  .comparacao > div { flex: 1; min-width: 420px; }
+  .comparacao .letra {
+    font-size: var(--texto-base);
+    font-weight: 700;
+    color: var(--cor-texto);
+    margin-bottom: var(--espaco-2);
+  }
+  .comparacao .janela { height: 420px; max-width: none; }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+    max-width: 900px;
+  }
+  code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo-elevado);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 04 — Lendo o documento</h1>
+<p class="subtitulo">
+  A etapa 2 de 7 do Módulo de OCR: o que aparece depois de clicar em "Ler as 12
+  páginas". Uma página leva cerca de <strong>0,9 segundo</strong> para ser lida,
+  então este documento fica uns <strong>11 segundos</strong> nesta tela — tempo
+  de sobra para a contagem andar e para o cancelar servir para alguma coisa.
+</p>
+
+<div class="rotulo-estado">Estado 1 — lendo <span class="quando">· o estado que pode durar minutos</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal painel-centrado">
+    <div class="lendo">
+      <div class="arquivo">02-imprimir-para-pdf.pdf</div>
+      <div class="contagem">Lendo a página 7 de 12</div>
+      <div class="restante">Faltam cerca de 5 segundos.</div>
+      <div class="barra"><div class="cheio" style="width: 58%"></div></div>
+      <div class="acoes">
+        <button class="botao secundario">Cancelar a leitura</button>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  A janela continua respondendo o tempo todo — dá para mover, minimizar e clicar
+  em cancelar a qualquer momento. Programa que congela é programa que a pessoa
+  encerra à força, achando que travou.
+</p>
+
+<div class="rotulo-estado">Estado 2 — leitura terminada <span class="quando">· o texto lido, numa caixa para ler e rolar</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="titulo-modulo">Texto lido</div>
+    <div class="legenda-modulo">02-imprimir-para-pdf.pdf — 12 páginas</div>
+    <div><span class="selo-origem">VEIO DO OCR — PRECISA DE CONFERÊNCIA</span></div>
+    <div class="caixa-texto">UNIVERSIDADE FEDERAL DE SANTA CATARINA
+Coordenadoria de Analise de Prestacoes de Contas Fundacionais
+
+PRESTACAO DE CONTAS - PROJETO 042/2026
+Pagina 1 de 12
+
+Trata-se de prestacao de contas referente ao projeto de pesquisa identificado
+abaixo, encaminhada pela fundacao de apoio para analise desta Coordenadoria. O
+responsavel indicado no termo de outorga e o servidor Fulano de Tal Exemplo,
+inscrito no CPF 123.456.789-10, conforme documentacao anexa aos autos do
+processo administrativo.
+
+UNIVERSIDADE FEDERAL DE SANTA CATARINA
+Coordenadoria de Analise de Prestacoes de Contas Fundacionais
+
+PRESTACAO DE CONTAS - PROJETO 042/2026
+Pagina 2 de 12
+</div>
+    <div class="acoes">
+      <button class="botao apagado">Conferir o texto</button>
+      <button class="botao secundario">Processar outro documento</button>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  Esta caixa é <strong>provisória</strong>. Na etapa 3 ela vira a metade direita
+  da tela de conferência, com o PDF do lado esquerdo andando junto. O botão
+  "Conferir o texto" aparece apagado por isso. Por dentro, o programa já guarda o
+  texto <strong>separado por página</strong> — é o que vai permitir as duas
+  metades rolarem casadas.
+</p>
+
+<div class="rotulo-estado">Estado 3 — falhou no meio da leitura <span class="quando">· caminho torto</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal painel-centrado">
+    <div>
+      <div class="caixa-erro">
+        <div class="titulo">A leitura parou na página 7</div>
+        <div class="texto">
+          Alguma coisa deu errado ao ler esta página. Nada foi gravado, e o
+          documento original não foi tocado. Você pode tentar de novo ou escolher
+          outro documento.
+        </div>
+      </div>
+      <div class="acoes" style="justify-content: center;">
+        <button class="botao">Tentar de novo</button>
+        <button class="botao secundario">Escolher outro documento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="rotulo-estado">
+  Estado 4 — depois de cancelar
+  <span class="quando">· caminho torto</span>
+  <span class="escolher">preciso da sua escolha</span>
+</div>
+<p class="nota" style="margin-bottom: var(--espaco-3);">
+  A spec diz que cancelar <em>"para na página em que está, descarta o que leu e
+  volta para a tela de escolher o PDF"</em>. Ela não diz se o programa avisa que
+  cancelou. São dois jeitos, e a diferença aparece na hora em que a pessoa clica:
+</p>
+<div class="comparacao">
+  <div>
+    <div class="letra">A — volta calada</div>
+    <div class="janela">
+      <div class="menu-lateral">
+        <div class="menu-nome-programa">AnomizadorCAPCF</div>
+        <div class="menu-item ativo">Gerar OCR</div>
+        <div class="menu-item">Anonimizar</div>
+      </div>
+      <div class="painel-principal">
+        <div class="titulo-modulo">Gerar OCR</div>
+        <div class="legenda-modulo">Converte documento digitalizado em texto para conferência.</div>
+        <div class="area-arrastar">
+          <div class="icone">📄</div>
+          <div class="chamada">Arraste o PDF aqui</div>
+          <button class="botao">Escolher arquivo…</button>
+        </div>
+      </div>
+    </div>
+    <p class="nota">
+      Tela limpa, como se nada tivesse acontecido. Menos ruído — e a pessoa que
+      clicou sem querer não descobre o que fez.
+    </p>
+  </div>
+  <div>
+    <div class="letra">B — volta avisando</div>
+    <div class="janela">
+      <div class="menu-lateral">
+        <div class="menu-nome-programa">AnomizadorCAPCF</div>
+        <div class="menu-item ativo">Gerar OCR</div>
+        <div class="menu-item">Anonimizar</div>
+      </div>
+      <div class="painel-principal">
+        <div class="titulo-modulo">Gerar OCR</div>
+        <div class="legenda-modulo">Converte documento digitalizado em texto para conferência.</div>
+        <div class="faixa-info">
+          Leitura cancelada na página 7. Nada foi gravado, e o documento original
+          não foi tocado.
+        </div>
+        <div class="area-arrastar">
+          <div class="icone">📄</div>
+          <div class="chamada">Arraste o PDF aqui</div>
+          <button class="botao">Escolher arquivo…</button>
+        </div>
+      </div>
+    </div>
+    <p class="nota">
+      Confirma o que aconteceu e diz que nada ficou para trás. Uma linha a mais na
+      tela, que some ao escolher o próximo documento.
+    </p>
+  </div>
+</div>
+
+<p class="rodape">
+  Rascunho gerado pela skill-07-designer-de-telas em 10/09/2026, a partir do
+  rascunho aprovado <code>mockups/ocr/03-escolher-o-documento.html</code> e do
+  <code>mockups/sistema-de-design.md</code>. O texto mostrado na caixa é o que o
+  Tesseract leu de verdade do documento inventado <code>02-imprimir-para-pdf.pdf</code>
+  — inclusive o CPF, que é inventado e tem dígito verificador inválido. Este
+  módulo não mexe com CPF: quem o mascara é o módulo 3.
+</p>
+
+</body>
+</html>

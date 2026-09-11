@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 04 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .mudanca .pergunta {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-4);
+    border-left: 2px solid var(--cor-borda);
+    padding-left: var(--espaco-3);
+  }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 300px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  pre {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    overflow-x: auto;
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    line-height: 1.5;
+    color: var(--cor-texto);
+  }
+  pre .rem { color: var(--cor-texto-secundario); }
+  pre .novo { color: var(--cor-sucesso); }
+  .lista-simples { list-style: none; padding: 0; margin: 0; }
+  .lista-simples li {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-2);
+  }
+  .nao-consertado {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-erro);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-3);
+  }
+  .nao-consertado .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .nao-consertado .motivo {
+    margin-top: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+  }
+  code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  .aviso {
+    margin-top: var(--espaco-5);
+    background: rgba(59,110,165,0.12);
+    border: 1px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .prova {
+    background: rgba(76,175,109,0.10);
+    border: 1px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  table { border-collapse: collapse; width: 100%; margin-top: var(--espaco-2); }
+  th, td {
+    text-align: left;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: var(--texto-pequeno);
+  }
+  th { color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rodape {
+    margin-top: var(--espaco-4);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+</style>
+</head>
+<body>
+
+<h1>Revisão 04 — antes e depois</h1>
+<p class="subtitulo">AnomizadorCAPCF — 10/09/2026</p>
+
+<div class="lente">
+  <div class="rotulo">O que foi revisado, e por qual lente</div>
+  <p>
+    A <strong>etapa 2 do Módulo de OCR</strong>, recém-construída e conferida na
+    tela: a leitura rodando com contagem de páginas e cancelamento, a peça que
+    faz esse trabalho acontecer ao lado da janela, e as telas novas do painel.
+  </p>
+  <p>
+    A lente foi a <strong>CRÍTICA</strong> de novo, e por um motivo: é nesta
+    etapa que entra trabalho rodando em paralelo com a tela — o lugar onde
+    defeito costuma aparecer como travamento, e não como mensagem de erro.
+  </p>
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado">
+    <div class="contagem-numero">3</div>
+    <div class="contagem-label">achados dentro da lente</div>
+  </div>
+  <div class="contagem-item c-consertado">
+    <div class="contagem-numero">3</div>
+    <div class="contagem-label">aprovados e consertados</div>
+  </div>
+  <div class="contagem-item c-recusado">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">suspeita derrubada por reprodução</div>
+  </div>
+  <div class="contagem-item c-fora">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">apontamentos fora da lente</div>
+  </div>
+</div>
+
+<h2>A suspeita que não virou achado</h2>
+
+<div class="prova">
+  <p>
+    A varredura mecânica apontou que o programa largava a referência do trabalho
+    em andamento cedo demais, e que isso poderia destruí-lo enquanto ele ainda
+    rodava — o clássico "destruído enquanto ainda estava rodando".
+  </p>
+  <p>
+    <strong>Foi reproduzido, e não acontece.</strong> Montando o painel e
+    acompanhando o estado a cada 400 milésimos de segundo, o aviso de leitura
+    terminada só chega quando o trabalho já acabou de fato. Largar a referência
+    ali é seguro. Achado não confirmado é achado que não se mostra.
+  </p>
+</div>
+
+<h2>O que foi consertado</h2>
+
+<div class="mudanca">
+  <div class="arquivo">1 · programa/main.py — fechar a janela durante a leitura estourava</div>
+  <div class="explicacao">
+    Mandar ler um documento de doze páginas e fechar a janela no meio fazia o
+    programa <strong>abortar em vez de fechar limpo</strong>. Dependendo da
+    máquina, o Windows mostra a caixa de "o programa parou de funcionar" — que
+    assusta, e ainda deixa a dúvida de se o documento foi mexido.
+  </div>
+  <div class="pergunta">
+    Reproduzido, não deduzido: janela montada, leitura de doze páginas iniciada,
+    janela fechada no meio. <strong>O programa terminava com código de erro
+    127.</strong> Depois do conserto, o mesmo cenário termina em 0.
+    <br><br>
+    Por que passou na conferência de tela: o roteiro nunca mandou fechar a janela
+    no meio da leitura. É o que ninguém testa de propósito e todo mundo faz sem
+    pensar.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">class JanelaPrincipal(QMainWindow):
+    ...
+    # nada: fechar a janela simplesmente
+    # fechava, com a leitura ainda rodando</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">def closeEvent(self, evento):
+    """Antes de fechar, para o que
+    estiver rodando."""
+    self.painel_ocr.encerrar()
+    super().closeEvent(evento)
+
+# e no painel:
+def encerrar(self):
+    if self.leitura is not None and \
+            self.leitura.isRunning():
+        self.leitura.cancelar()
+        self.leitura.wait(20_000)</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">2 · programa/painel_ocr.py — a barra de progresso mentia</div>
+  <div class="explicacao">
+    A barra contava apenas as páginas <em>terminadas</em>, ignorando a que estava
+    sendo lida. Num documento de <strong>uma página só</strong> ela ficava em
+    zero do começo ao fim da leitura — barra parada, que quem olha lê como
+    programa travado. Num de doze, chegava a 91% na última página e nunca
+    completava.
+  </div>
+  <div class="pergunta">
+    O rascunho aprovado mostra a barra em 58% na página 7 de 12 — ou seja, com a
+    página em curso contada. O programa mostrava 50%.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">self.barra.setValue(pagina - 1)
+
+# 1 de 1   ->  0%
+# 7 de 12  ->  50%
+# 12 de 12 ->  91%</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">self.barra.setValue(pagina)
+
+# 1 de 1   ->  100%
+# 7 de 12  ->  58%
+# 12 de 12 ->  100%</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">3 · programa/painel_ocr.py — um botão que nunca podia dar certo</div>
+  <div class="explicacao">
+    Quando a leitura falhava por <strong>falta do motor</strong> — o Tesseract
+    não instalado —, a tela oferecia "Tentar de novo". Clicar falhava igual, e
+    de novo, e de novo. Nada no caminho dizia que o problema era outro.
+  </div>
+  <div class="pergunta">
+    A diferença que importa: falhar ao ler uma página pode ser passageiro, e
+    tentar de novo faz sentido. Faltar o motor não é passageiro — só instalando
+    resolve. O mesmo botão para as duas coisas ensina que o botão não serve para
+    nada.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">titulo = (f"A leitura parou na página {pagina}"
+          if pagina
+          else "A leitura não pôde ser feita")
+self.tela_erro.mostrar_falha(titulo, motivo)
+# o botão aparecia nos dois casos</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">if pagina:
+    titulo = f"A leitura parou na página {pagina}"
+    # falha numa página pode ser passageira
+    pode_tentar = True
+else:
+    titulo = "A leitura não pôde ser feita"
+    # falta de motor só instalando resolve
+    pode_tentar = False
+
+self.tela_erro.mostrar_falha(
+    titulo, motivo,
+    pode_tentar_de_novo=pode_tentar)</span></pre>
+    </div>
+  </div>
+</div>
+
+<h2>Os testes que impedem os três de voltarem</h2>
+
+<div class="prova">
+  <p>
+    O projeto passou de <strong>19 para 22 testes</strong>, todos passando, e a
+    lista inteira termina limpa.
+  </p>
+  <table>
+    <tr><th>O que o teste guarda</th><th>Como ele falha se o defeito voltar</th></tr>
+    <tr>
+      <td>Fechar no meio da leitura</td>
+      <td>inicia uma leitura de verdade, manda encerrar, e cobra que o trabalho tenha mesmo parado</td>
+    </tr>
+    <tr>
+      <td>A barra num documento de uma página</td>
+      <td>cobra que a barra chegue ao fim, e que na página 7 de 12 ela marque 7</td>
+    </tr>
+    <tr>
+      <td>O botão de tentar de novo</td>
+      <td>cobra que ele apareça na falha de página e suma na falta de motor</td>
+    </tr>
+  </table>
+</div>
+
+<h2>O que mudou no projeto</h2>
+
+<ul class="lista-simples">
+  <li><strong>Nasceram</strong> <code>programa/leitura.py</code> e <code>programa/leitura_em_segundo_plano.py</code>.</li>
+  <li><strong>Nasceu</strong> <code>programa/conftest.py</code>, que faz a lista de testes terminar limpa.</li>
+  <li><strong>Nasceu</strong> <code>programa/test_leitura.py</code>, com os testes de OCR.</li>
+  <li><strong>Cresceu</strong> <code>programa/painel_ocr.py</code>, com as telas de leitura, de texto lido e a faixa de aviso.</li>
+  <li><strong>Nasceu</strong> o rascunho <code>mockups/ocr/04-lendo-o-documento.html</code>.</li>
+  <li><strong>Cresceu</strong> a seção "O que já nos mordeu" do <code>CLAUDE.md</code>, com duas armadilhas novas.</li>
+</ul>
+
+<h2>O que foi apontado e NÃO consertado</h2>
+
+<div class="nao-consertado">
+  <div class="titulo">Uma linha sobrando no arquivo de testes do painel</div>
+  <p>
+    O arquivo ainda pede uma peça que deixou de ser usada quando o preparo dos
+    testes foi para o <code>conftest.py</code>.
+  </p>
+  <div class="motivo">Por que ficou: é arrumação, não defeito. Seria achado da lente de clareza.</div>
+</div>
+
+<div class="nao-consertado">
+  <div class="titulo">A quebra de linha do script da massa, num caso que não acontece</div>
+  <p>
+    Se uma única palavra fosse mais longa que a largura inteira da linha, a
+    quebra deixaria uma linha vazia. Nenhum texto de hoje tem palavra assim.
+  </p>
+  <div class="motivo">
+    Por que ficou: não passa na trava desta lente, que exige prejuízo concreto —
+    e o script é ferramenta de quem constrói, não do programa entregue.
+  </div>
+</div>
+
+<div class="aviso">
+  <strong>Esta página não substitui abrir o programa.</strong> Ela mostra o que
+  foi mexido — não que tudo continua funcionando.
+</div>
+
+<p class="rodape">
+  Gerado pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.
+  Uma lente rodou nesta rodada: a crítica. As outras cinco não rodaram. A de
+  critérios de aceite continua sendo a que mais falta — com duas etapas prontas,
+  boa parte dos 24 itens da spec 002 já teria como ser conferida.
+</p>
+
+</body>
+</html>
