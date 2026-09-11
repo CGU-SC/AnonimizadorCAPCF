@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 07 — Decidir sobre o texto existente (Gerar OCR)</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #14171c;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 820px; }
+
+  .rotulo-estado {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    margin: var(--espaco-5) 0 var(--espaco-2) 0;
+  }
+  .rotulo-estado .quando { font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .nota { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 980px; margin-top: var(--espaco-2); }
+
+  .janela {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    height: 600px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .menu-lateral {
+    width: 200px;
+    flex: 0 0 200px;
+    background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda);
+    padding: var(--espaco-4) 0;
+  }
+  .menu-nome-programa {
+    padding: 0 var(--espaco-3) var(--espaco-4) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: var(--espaco-3);
+  }
+  .menu-item { padding: var(--espaco-3); margin: 0 var(--espaco-2); border-radius: var(--raio); color: var(--cor-texto-secundario); }
+  .menu-item.ativo { background: var(--cor-destaque); color: #fff; font-weight: 600; }
+
+  .painel-principal {
+    flex: 1;
+    background: var(--cor-fundo);
+    padding: var(--espaco-4) var(--espaco-5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .titulo-modulo { font-size: var(--texto-grande); font-weight: 600; margin-bottom: var(--espaco-1); }
+  .legenda-modulo { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-3); }
+
+  .selo {
+    display: inline-block;
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 10px;
+    background: rgba(59,110,165,0.20);
+    color: #7fb1e8;
+    margin-bottom: var(--espaco-3);
+  }
+
+  .rotulo-amostra {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-1);
+  }
+  .amostra {
+    flex: 1;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    font-family: var(--fonte-mono);
+    font-size: 12px;
+    line-height: 1.5;
+    overflow: auto;
+    white-space: pre-wrap;
+    color: var(--cor-texto);
+    margin-bottom: var(--espaco-3);
+    min-height: 0;
+  }
+
+  .escolhas { display: flex; gap: var(--espaco-3); align-items: flex-start; }
+  .escolha { flex: 1; }
+  .botao {
+    width: 100%;
+    background: var(--cor-destaque);
+    color: #fff;
+    border: none;
+    border-radius: var(--raio);
+    padding: 10px 18px;
+    font-size: var(--texto-base);
+    font-weight: 600;
+    text-align: center;
+  }
+  .botao.secundario { background: transparent; color: var(--cor-texto); border: 1px solid var(--cor-borda); font-weight: 400; }
+  .escolha .porque {
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-top: var(--espaco-2);
+    text-align: center;
+  }
+  .voltar {
+    margin-top: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    text-align: center;
+  }
+
+  .fluxo {
+    display: flex;
+    gap: var(--espaco-2);
+    align-items: center;
+    flex-wrap: wrap;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    max-width: 1000px;
+    margin-top: var(--espaco-3);
+  }
+  .caixa {
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .caixa.aqui { border-color: var(--cor-destaque); color: #7fb1e8; font-weight: 600; }
+  .seta-fluxo { color: var(--cor-texto-secundario); }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+    max-width: 1000px;
+  }
+  code { font-family: var(--fonte-mono); background: var(--cor-fundo-elevado); padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 07 — Decidir sobre o texto existente</h1>
+<p class="subtitulo">
+  A etapa 4 de 7. Aparece só quando o documento escolhido <strong>já tem texto
+  gravado por dentro</strong>, e é o que faz o botão "Ver o texto e decidir"
+  deixar de estar apagado. O texto mostrado nas duas telas abaixo é o texto de
+  verdade dos documentos de teste — o bom e o embaralhado.
+</p>
+
+<div class="fluxo">
+  <span class="caixa">escolher o documento</span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa">conferir o arquivo</span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa aqui">decidir sobre o texto</span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa">ler as imagens <em>(se ignorar)</em></span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa">conferir o texto</span>
+</div>
+
+<div class="rotulo-estado">Estado 1 — o texto existente presta <span class="quando">· o caminho normal</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="titulo-modulo">Este documento já tem texto por dentro</div>
+    <div class="legenda-modulo">01-com-texto-e-tabela.pdf — 3 páginas, 1.472 letras</div>
+    <div><span class="selo">TEXTO GRAVADO NO PRÓPRIO DOCUMENTO</span></div>
+
+    <div class="rotulo-amostra">AS PRIMEIRAS LINHAS DESSE TEXTO</div>
+    <div class="amostra">UNIVERSIDADE FEDERAL DE SANTA CATARINA
+Coordenadoria de Analise de Prestacoes de Contas Fundacionais
+PRESTACAO DE CONTAS - PROJETO 042/2026
+Pagina 1 de 3
+Trata-se de prestacao de contas referente ao projeto de pesquisa identificado
+abaixo, encaminhada pela fundacao de apoio para analise desta Coordenadoria. O
+responsavel indicado no termo de outorga e o servidor Fulano de Tal Exemplo,
+inscrito no CPF 123.456.789-10, conforme documentacao anexa aos autos do
+processo administrativo.</div>
+
+    <div class="escolhas">
+      <div class="escolha">
+        <button class="botao">Aproveitar este texto</button>
+        <div class="porque">Se o texto acima está legível. Vai direto para a conferência.</div>
+      </div>
+      <div class="escolha">
+        <button class="botao secundario">Ignorar e ler as imagens</button>
+        <div class="porque">Se o texto acima está estranho ou ilegível. Leva uns 5 segundos.</div>
+      </div>
+    </div>
+    <div class="voltar">Escolher outro documento</div>
+  </div>
+</div>
+<p class="nota">
+  O programa <strong>não julga</strong> se o texto presta — ele mostra e você
+  decide num olhar. É a regra RN-4 da spec: julgar qualidade de texto é palpite,
+  e palpite errado aqui produz um arquivo de lixo que ninguém percebe.
+</p>
+
+<div class="rotulo-estado">Estado 2 — o texto existente é lixo <span class="quando">· caminho torto, e o motivo de esta tela existir</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="titulo-modulo">Este documento já tem texto por dentro</div>
+    <div class="legenda-modulo">04-texto-embaralhado.pdf — 1 página, 467 letras</div>
+    <div><span class="selo">TEXTO GRAVADO NO PRÓPRIO DOCUMENTO</span></div>
+
+    <div class="rotulo-amostra">AS PRIMEIRAS LINHAS DESSE TEXTO</div>
+    <div class="amostra">Ø¶§ þÝÆµ ¤ÐÑÞ° «»©
+þýü Ø×Ö µ¶· ¤¥¦ ÐÑÒ
+«¬­® ¿ÀÁ Þßà ðñò °±
+©ª« ÆÇÈ ÕÖ× åæç õö
+Ø¶§ þÝÆµ ¤ÐÑÞ° «»©
+þýü Ø×Ö µ¶· ¤¥¦ ÐÑÒ
+«¬­® ¿ÀÁ Þßà ðñò °±
+©ª« ÆÇÈ ÕÖ× åæç õö
+Ø¶§ þÝÆµ ¤ÐÑÞ° «»©</div>
+
+    <div class="escolhas">
+      <div class="escolha">
+        <button class="botao">Aproveitar este texto</button>
+        <div class="porque">Se o texto acima está legível. Vai direto para a conferência.</div>
+      </div>
+      <div class="escolha">
+        <button class="botao secundario">Ignorar e ler as imagens</button>
+        <div class="porque">Se o texto acima está estranho ou ilegível. Leva uns 2 segundos.</div>
+      </div>
+    </div>
+    <div class="voltar">Escolher outro documento</div>
+  </div>
+</div>
+<p class="nota">
+  Este é o documento que já passou por um OCR ruim antes: ele <strong>tem</strong>
+  texto por dentro, e esse texto não quer dizer nada. Num olhar você vê o lixo e
+  escolhe "ignorar e ler as imagens". Um programa que decidisse sozinho
+  aproveitaria isto e entregaria um arquivo ilegível — e o erro só apareceria
+  dentro da conversa com o assistente de IA, longe demais para ser corrigido.
+</p>
+
+<p class="nota">
+  <strong>A estimativa de tempo no botão de ignorar</strong> sai do número de
+  páginas do documento, no ritmo medido de leitura (cerca de um segundo e meio
+  por página). Ela existe para a escolha não ser feita no escuro: "ignorar" num
+  documento de cem páginas custa dois minutos e meio, e é justo saber disso antes
+  de clicar.
+</p>
+
+<p class="rodape">
+  Rascunho gerado pela skill-07-designer-de-telas em 11/09/2026, a partir do
+  rascunho aprovado <code>mockups/ocr/06-conferir-o-texto.html</code> e do
+  <code>mockups/sistema-de-design.md</code>. O texto das duas amostras foi
+  extraído de verdade dos documentos inventados de <code>dados-exemplo/</code>. O
+  CPF que aparece é inventado e tem dígito verificador inválido; este módulo não
+  mexe com CPF.
+</p>
+
+</body>
+</html>

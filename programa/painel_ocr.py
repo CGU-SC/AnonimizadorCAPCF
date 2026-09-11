@@ -26,9 +26,10 @@ from PySide6.QtWidgets import (
 )
 
 import estilo
-from documento import DocumentoNaoAbre, conferir
+from documento import DocumentoNaoAbre, conferir, texto_da_camada
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
-from tela_conferencia import TelaConferencia
+from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
+from tela_decisao import TelaDecisao
 
 
 class PainelOcr(QWidget):
@@ -54,9 +55,15 @@ class PainelOcr(QWidget):
         self.tela_escolher = self._montar_tela_escolher()
         self.tela_conferindo = self._montar_tela_conferindo()
         self.tela_ficha = _TelaFicha(
-            ao_escolher_outro=self.voltar_para_escolher, ao_ler=self.comecar_a_ler
+            ao_escolher_outro=self.voltar_para_escolher,
+            ao_ler=self.seguir_a_partir_da_ficha,
         )
         self.tela_lendo = _TelaLendo(ao_cancelar=self.cancelar_leitura)
+        self.tela_decisao = TelaDecisao(
+            ao_aproveitar=self.aproveitar_o_texto_existente,
+            ao_ignorar=self.comecar_a_ler,
+            ao_escolher_outro=self.voltar_para_escolher,
+        )
         self.tela_conferencia = TelaConferencia(
             ao_processar_outro=self.voltar_para_escolher
         )
@@ -66,7 +73,8 @@ class PainelOcr(QWidget):
         )
 
         for tela in (self.tela_escolher, self.tela_conferindo, self.tela_ficha,
-                     self.tela_lendo, self.tela_conferencia, self.tela_erro):
+                     self.tela_lendo, self.tela_decisao, self.tela_conferencia,
+                     self.tela_erro):
             self.telas.addWidget(tela)
 
         layout.addWidget(self.telas)
@@ -258,6 +266,41 @@ class PainelOcr(QWidget):
         leitura.falhou.connect(
             lambda pagina, motivo: self._leitura_falhou(leitura, pagina, motivo))
         leitura.start()
+
+    def seguir_a_partir_da_ficha(self, ficha):
+        """O botão da ficha leva a um de dois lugares, conforme o documento.
+
+        Tendo texto gravado por dentro, a escolha é da pessoa: aproveitar ou
+        mandar reler. Não tendo, não há o que escolher e a leitura começa.
+        """
+        if ficha.tem_camada_de_texto:
+            self.decidir_sobre_o_texto_existente(ficha)
+        else:
+            self.comecar_a_ler(ficha)
+
+    def decidir_sobre_o_texto_existente(self, ficha):
+        """Mostra o texto que já está no documento e deixa a escolha com a pessoa."""
+        try:
+            paginas = texto_da_camada(ficha.caminho)
+        except Exception:
+            self._mostrar_erro(
+                ficha.caminho,
+                "O documento não pôde ser lido até o fim. Ele pode estar "
+                "danificado por dentro.",
+            )
+            return
+        self.tela_decisao.mostrar(ficha, paginas)
+        self.telas.setCurrentWidget(self.tela_decisao)
+
+    def aproveitar_o_texto_existente(self, ficha, paginas):
+        """Vai direto para a conferência, com o texto que já estava no PDF.
+
+        A conferência acontece mesmo aqui: ela é passo obrigatório nos dois
+        caminhos (RN-12). Texto gravado no documento erra menos que o adivinhado
+        de uma imagem, mas erra - e quem diz se está bom é quem olha.
+        """
+        self.tela_conferencia.mostrar(ficha, paginas, origem=ORIGEM_CAMADA_DO_PDF)
+        self.telas.setCurrentWidget(self.tela_conferencia)
 
     def tentar_ler_de_novo(self):
         """Refaz a leitura do mesmo documento, depois de uma falha."""
@@ -484,12 +527,6 @@ class _TelaFicha(QWidget):
         acoes.addStretch()
         layout.addLayout(acoes)
 
-        layout.addSpacing(estilo.ESPACO_3)
-        self.aviso_da_proxima_etapa = _legenda(
-            "A decisão sobre o texto que já existe no documento entra na "
-            "próxima etapa do projeto."
-        )
-        layout.addWidget(self.aviso_da_proxima_etapa)
         layout.addStretch()
 
     def _pedir_leitura(self):
@@ -501,11 +538,6 @@ class _TelaFicha(QWidget):
         self.nome_arquivo.setText(ficha.caminho.name)
         self.linha_paginas.definir(str(ficha.paginas))
 
-        # Documento que já tem texto por dentro leva a uma tela de decisão que
-        # ainda não existe - ela é a etapa 4. Até lá o botão fica apagado, com
-        # a explicação embaixo.
-        self.botao_ler.setEnabled(not ficha.tem_camada_de_texto)
-        self.aviso_da_proxima_etapa.setVisible(ficha.tem_camada_de_texto)
 
         if ficha.tem_camada_de_texto:
             letras = _com_separador_de_milhar(ficha.letras_na_camada_de_texto)
