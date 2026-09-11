@@ -162,12 +162,24 @@ class JanelaPrincipal(QMainWindow):
         raiz_layout.addWidget(self.painel)
 
         self.itens_do_menu = []
-        self._ligar_item_ao_painel(self.menu.botao_ocr, PainelOcr())
+        self.painel_ocr = PainelOcr()
+        self._ligar_item_ao_painel(self.menu.botao_ocr, self.painel_ocr)
         self._ligar_item_ao_painel(
             self.menu.botao_anonimizar, PainelModuloNaoConstruido("Anonimizar")
         )
 
         self.setCentralWidget(raiz)
+
+    def closeEvent(self, evento):
+        """Antes de fechar, para o que estiver rodando.
+
+        Fechar a janela no meio de uma leitura fazia o programa estourar em vez
+        de fechar limpo, e o Windows mostrava a caixa de "o programa parou de
+        funcionar" - que assusta e ainda deixa a dúvida de se o documento foi
+        mexido (não foi, nunca é).
+        """
+        self.painel_ocr.encerrar()
+        super().closeEvent(evento)
 
     def _ligar_item_ao_painel(self, botao, painel_do_modulo):
         """Faz o item do menu se marcar e trazer o painel daquele módulo."""

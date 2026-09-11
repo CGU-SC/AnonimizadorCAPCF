@@ -137,3 +137,15 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
   ao texto e calculando a altura a partir dela (`heightForWidth`), e
   recalculando sempre que a frase mudar. Vale para toda caixa de aviso, erro ou
   explicação que o programa vier a ter.
+- Tela do Qt criada dentro de um teste e deixada para trás faz a lista inteira
+  de testes **terminar com erro mesmo passando**: todos os testes passam, e o
+  comando devolve código de erro na saída, sem nenhuma mensagem. A tela só é
+  desmontada quando o Python fecha, e aí o Qt já foi desligado. Resolvido em
+  10/09/2026 com o `programa/conftest.py`, que desmonta as telas no fim de cada
+  teste. Quem olha só o resultado do comando concluiria que a lista falhou.
+- Trabalho que roda ao lado da janela (uma `QThread`) precisa ser **parado antes
+  de a janela fechar**. Sem isso, fechar o programa no meio de uma leitura o faz
+  estourar em vez de fechar limpo, e o Windows mostra a caixa de "o programa
+  parou de funcionar" — que assusta quem usa e ainda deixa a dúvida de se o
+  documento foi mexido. Reproduzido e resolvido em 10/09/2026, com o
+  `closeEvent` da janela pedindo o encerramento e esperando.

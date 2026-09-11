@@ -7,15 +7,7 @@ exatamente o que aconteceu na conferência da etapa 1, em 10/09/2026.
 from pathlib import Path
 
 import pytest
-from PySide6.QtWidgets import QApplication
-
 import painel_ocr
-
-
-@pytest.fixture(scope="module")
-def aplicacao():
-    """O Qt precisa estar de pé para qualquer tela existir, mesmo sem aparecer."""
-    return QApplication.instance() or QApplication([])
 
 
 def test_a_caixa_de_erro_cabe_a_frase_inteira(aplicacao):
@@ -54,7 +46,9 @@ def test_o_numero_de_letras_sai_escrito_em_portugues(aplicacao):
     """
     import documento
 
-    tela = painel_ocr._TelaFicha(ao_escolher_outro=lambda: None)
+    tela = painel_ocr._TelaFicha(
+        ao_escolher_outro=lambda: None, ao_ler=lambda _ficha: None
+    )
     massa = Path(__file__).parent.parent / "dados-exemplo"
     ficha = documento.conferir(massa / "01-com-texto-e-tabela.pdf")
 
@@ -112,3 +106,72 @@ def test_toda_mensagem_de_erro_do_programa_cabe_na_caixa(aplicacao):
             ), f"a frase de erro de {nome} não cabe na caixa"
         else:
             pytest.fail(f"{nome} deveria ter dado erro e não deu")
+
+
+def test_a_barra_anda_mesmo_num_documento_de_uma_pagina_so(aplicacao):
+    """Teste de regressão do defeito achado pela lente crítica na etapa 2.
+
+    A barra contava só as páginas terminadas. Num documento de uma página só
+    ela ficava em zero do começo ao fim da leitura, e barra parada é lida como
+    programa travado.
+    """
+    import documento
+
+    tela = painel_ocr._TelaLendo(ao_cancelar=lambda: None)
+    massa = Path(__file__).parent.parent / "dados-exemplo"
+
+    tela.comecar(documento.conferir(massa / "03-conteudo-girado.pdf"))
+    tela.avancar(1, 1)
+    assert tela.barra.value() == tela.barra.maximum(), (
+        "num documento de uma página a barra não saiu do lugar"
+    )
+
+    tela.comecar(documento.conferir(massa / "02-imprimir-para-pdf.pdf"))
+    tela.avancar(7, 12)
+    # 7 de 12 é o que o rascunho aprovado mostra nessa página.
+    assert tela.barra.value() == 7
+    assert tela.barra.maximum() == 12
+
+
+def test_sem_motor_de_leitura_nao_aparece_tentar_de_novo(aplicacao):
+    """Teste de regressão: botão que nunca pode dar certo não deve existir.
+
+    Falhar numa página pode ser passageiro. Faltar o motor de leitura não é -
+    só instalando resolve -, e oferecer "tentar de novo" ali gasta o tempo de
+    quem usa e ainda esconde a causa real.
+    """
+    painel = painel_ocr.PainelOcr()
+
+    painel._leitura_falhou(7, "Alguma coisa deu errado ao ler esta página.")
+    assert not painel.tela_erro.botao_tentar.isHidden(), (
+        "falha numa página pode ser tentada de novo, e o botão sumiu"
+    )
+
+    painel._leitura_falhou(0, "O motor de leitura não foi encontrado.")
+    assert painel.tela_erro.botao_tentar.isHidden(), (
+        "sem motor instalado, tentar de novo vai falhar igual - o botão não "
+        "pode aparecer"
+    )
+
+
+def test_fechar_no_meio_da_leitura_para_a_leitura_antes(aplicacao):
+    """Teste de regressão do defeito mais grave achado na etapa 2.
+
+    Fechar a janela durante uma leitura fazia o programa estourar em vez de
+    fechar limpo. Reproduzido em 10/09/2026: o programa terminava com código de
+    erro. Agora ele pede para a leitura parar e espera a página em curso.
+    """
+    import documento
+
+    painel = painel_ocr.PainelOcr()
+    massa = Path(__file__).parent.parent / "dados-exemplo"
+    painel.comecar_a_ler(documento.conferir(massa / "02-imprimir-para-pdf.pdf"))
+
+    assert painel.leitura.isRunning(), "a leitura nem chegou a começar"
+
+    painel.encerrar()
+
+    assert not painel.leitura.isRunning(), (
+        "a leitura continuou rodando depois de o programa mandar encerrar - "
+        "é isso que faz o programa estourar ao fechar"
+    )
