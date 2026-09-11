@@ -178,6 +178,14 @@
   .fronteira .divisor { width: 2px; align-self: stretch; background: var(--cor-alerta); border-radius: 2px; min-height: 60px; }
   .fronteira h3 { margin: 0 0 var(--espaco-1) 0; font-size: var(--texto-base); }
   .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+  .emenda {
+    background: rgba(217,164,65,0.10);
+    border: 1px solid var(--cor-alerta);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin: var(--espaco-4) 0;
+  }
+  .cartao.novo { border-left-color: var(--cor-sucesso); }
 </style>
 </head>
 <body>
@@ -296,6 +304,16 @@
     <div class="passo"><div class="passo-numero">3</div><div class="passo-texto"><strong>Já existe arquivo com aquele nome</strong> — pergunta antes de escrever por cima. Nunca sobrescreve calado.</div></div>
     <div class="passo"><div class="passo-numero">4</div><div class="passo-texto"><strong>Quer seguir para o Anonimizar, que não existe</strong> — o botão está apagado com a explicação; salvar continua disponível.</div></div>
   </div>
+</div>
+
+<div class="emenda">
+  <strong>Emendada em 11/09/2026.</strong> Construindo a tela de conferência
+  apareceu um buraco: a spec mandava fazer uma tela para conferência humana e
+  não dizia que a pessoa precisa conseguir enxergar o documento. Numa janela de
+  mil pixels, a página encolhida para meia tela mostra o texto com cerca de seis
+  pixels por letra. Entraram os controles de tamanho das duas metades — no
+  escopo, nas regras RN-23 e RN-24, em dois critérios de aceite, e no
+  fora-de-escopo (girar a página continua de fora).
 </div>
 
 <h2>Estados — o que aparece em cada momento</h2>
@@ -421,7 +439,7 @@
 </div>
 
 <h2>As regras que mais pesam</h2>
-<p class="nota">A spec traz vinte e duas. Estas seis são as que mudam o que a pessoa vê acontecer.</p>
+<p class="nota">A spec traz vinte e quatro. Estas sete são as que mudam o que a pessoa vê acontecer.</p>
 
 <div class="cartoes">
   <div class="cartao regra"><span class="chave">RN-2</span><br>Nada é gravado em disco antes de a pessoa escolher salvar. Cancelar, fechar ou trocar de documento não deixa arquivo nenhum para trás.</div>
@@ -430,6 +448,7 @@
   <div class="cartao regra"><span class="chave">RN-11</span><br>Nenhum aviso do programa entra dentro do arquivo de saída. Recado no meio do texto ninguém lê, e ele ainda viaja para dentro da conversa com o assistente de IA, onde vira ruído.</div>
   <div class="cartao regra"><span class="chave">RN-14</span><br>O arquivo que sai deste módulo tem os CPFs inteiros. A tela diz isso com todas as letras antes de gravar.</div>
   <div class="cartao regra"><span class="chave">RN-20 e RN-21</span><br>O programa nunca baixa nem instala nada sozinho, e não há neste módulo nenhum código que converse com motor remoto.</div>
+  <div class="cartao regra novo"><span class="chave">RN-23 e RN-24</span><br>Na conferência, a página do documento aumenta e diminui de 50% a 400%, e o tamanho escolhido vale para as páginas seguintes. A letra do texto também aumenta e diminui — e isso não altera o texto, só como ele aparece na tela.</div>
 </div>
 
 <h2>Questões em aberto</h2>
@@ -442,7 +461,7 @@
 
 <div class="rodape">
   Gerada pela skill-07-designer-de-telas, a pedido da skill-05-redator-de-funcionalidade ·
-  espelha <code>especificacoes/specs/002-modulo-de-ocr.md</code> · regenera por cima quando a spec mudar
+  espelha <code>especificacoes/specs/002-modulo-de-ocr.md</code> · regenerada em 11/09/2026, com a emenda dos controles de tamanho
 </div>
 
 </body>

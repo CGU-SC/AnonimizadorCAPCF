@@ -2,6 +2,11 @@
 
 **Status:** aprovada
 **Data:** 2026-09-09
+**Emendada em:** 2026-09-11 — acrescentados os controles de tamanho da tela de
+conferência (escopo, RN-23, RN-24, dois critérios de aceite e um item de
+fora-de-escopo). O buraco apareceu construindo a etapa 3: a spec mandava
+construir uma tela para conferência humana e não dizia que a pessoa precisa
+conseguir enxergar o documento.
 
 ## Objetivo
 
@@ -37,6 +42,11 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
 - Avisar, ao abrir o módulo, quando o Tesseract não estiver instalado na
   máquina, **já oferecendo a instalação assistida no próprio aviso** — sem
   esperar a pessoa escolher um documento para descobrir que falta uma peça.
+- Na tela de conferência, **controles de tamanho**: aumentar e diminuir a
+  página do documento à esquerda, e aumentar e diminuir a letra do texto à
+  direita. Sem eles, a página encolhida para caber em meia tela mostra o texto
+  do documento com cerca de 6 pixels por letra — pequeno demais para a
+  conferência que esta tela existe para permitir.
 
 ## Fora de escopo
 
@@ -59,6 +69,8 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
 - **Empacotar o instalador do Tesseract junto do programa.** A spec exige que o
   instalador esteja disponível na máquina; como ele chega lá é decisão da
   `skill-11-gerente-de-entrega`, no dia da entrega.
+- **Girar a página na tela de conferência**, e qualquer edição do documento
+  original. O programa nunca escreve no PDF que recebeu (RN-17).
 
 ## Premissas
 
@@ -199,7 +211,7 @@ usado quando a IA local entrar, em spec própria.
   o botão de cancelar. É o estado que pode durar minutos.
 - **com dados (conferência):** a tela dividida — PDF à esquerda, texto editável à
   direita, na mesma página —, um aviso dizendo se o texto veio de OCR ou da
-  camada do PDF, e o botão "conferido".
+  camada do PDF, os controles de tamanho de cada metade, e o botão "conferido".
 - **escolhendo a saída:** as duas saídas lado a lado, com o botão do Anonimizar
   apagado enquanto aquele módulo não existir.
 - **salvando:** o caminho de destino preenchido, editável, o aviso de que o
@@ -273,6 +285,15 @@ usado quando a IA local entrar, em spec própria.
   módulo, nenhum código que converse com motor remoto.
 - RN-22: nada é guardado entre um uso e outro — nem histórico, nem preferência
   de motor, nem última pasta usada.
+- RN-23: a página do documento, na conferência, tem controles de **−** e **+**,
+  indo de 50% a 400%, mais um botão que volta ao tamanho que cabe na largura. O
+  tamanho escolhido **vale para as páginas seguintes** enquanto o mesmo
+  documento estiver aberto: quem aumentou para conseguir ler não quer reajustar
+  a cada página.
+- RN-24: a letra do texto lido também tem **−** e **+**, de 10 a 22 pixels.
+  Mudar o tamanho da letra **não altera o texto** — é só como ele aparece na
+  tela, e nada disso vai para o arquivo salvo. Pela RN-22, nenhum dos dois
+  tamanhos sobrevive a fechar o programa.
 
 ## Critérios de aceite
 
@@ -342,6 +363,10 @@ usado quando a IA local entrar, em spec própria.
 - Dado que a pessoa fecha e reabre o programa, quando ela volta ao módulo, então
   a tela está no estado inicial: nenhum documento, nenhuma pasta lembrada,
   nenhum histórico.
+- Dado que a pessoa aumentou a página do documento e virou de página, então a
+  página nova aparece no mesmo tamanho que ela escolheu.
+- Dado que a pessoa mudou o tamanho da letra do texto, quando o arquivo é salvo,
+  então o conteúdo dele é exatamente o mesmo — o tamanho da letra é só da tela.
 
 ## Questões em aberto
 
