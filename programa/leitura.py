@@ -34,6 +34,25 @@ PASTAS_DE_COSTUME = [
 ]
 
 
+# Quanto uma página costuma levar para ser lida, medido nesta máquina em
+# 11/09/2026 sobre a massa de teste: o desenho da página, a detecção de
+# orientação e o OCR somados. Serve só para dizer à pessoa quanto tempo ela vai
+# esperar antes de ela escolher esperar - a estimativa que aparece DURANTE a
+# leitura é calculada pelo ritmo real, e não por este número.
+SEGUNDOS_POR_PAGINA = 1.5
+
+
+def tempo_estimado(paginas):
+    """Uma frase curta com quanto a leitura deve levar."""
+    segundos = round(paginas * SEGUNDOS_POR_PAGINA)
+    if segundos < 60:
+        return f"uns {segundos} segundos"
+    # Arredonda para cima na metade: quem decide esperar prefere descobrir que
+    # terminou antes do previsto a descobrir que ainda falta.
+    minutos = int(segundos / 60 + 0.5)
+    return "cerca de 1 minuto" if minutos == 1 else f"cerca de {minutos} minutos"
+
+
 class MotorNaoEncontrado(Exception):
     """O Tesseract não está instalado, ou está em pasta que não conhecemos."""
 

@@ -77,6 +77,36 @@ def conferir(caminho):
     )
 
 
+def texto_da_camada(caminho):
+    """Devolve o texto que já está gravado dentro do PDF, uma entrada por página.
+
+    É o texto que a pessoa pode escolher aproveitar, em vez de mandar o programa
+    reler as imagens. Separado por página como o do OCR (regra RN-8), porque a
+    tela de conferência é a mesma nos dois caminhos.
+    """
+    documento = pymupdf.open(caminho)
+    try:
+        return [pagina.get_text() for pagina in documento]
+    finally:
+        documento.close()
+
+
+def primeiras_linhas(paginas, quantas=12):
+    """As primeiras linhas com conteúdo, para a pessoa julgar o texto num olhar.
+
+    Linha vazia não conta: PDF escaneado devolve páginas cheias delas, e mostrar
+    uma amostra em branco não deixa ninguém decidir nada.
+    """
+    linhas = []
+    for pagina in paginas:
+        for linha in pagina.splitlines():
+            if linha.strip():
+                linhas.append(linha.rstrip())
+                if len(linhas) == quantas:
+                    return linhas
+    return linhas
+
+
 def _contar_letras_da_camada_de_texto(documento):
     """Conta quantas letras existem gravadas como texto dentro do PDF.
 
