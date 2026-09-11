@@ -1,22 +1,22 @@
-"""O painel do item "Gerar OCR": escolher o documento e ver o que ele é.
+"""O painel do item "Gerar OCR": o percurso do documento, da escolha à conferência.
 
-Segue o rascunho aprovado mockups/ocr/03-escolher-o-documento.html.
+É ele que troca de tela conforme o documento anda: escolher, conferir o
+arquivo, ler, conferir o texto, ou explicar o que deu errado. Cada tela é uma
+peça à parte, e este arquivo é quem sabe a ordem entre elas.
 
-Nesta etapa o painel só descobre e informa. A leitura em si - as páginas
-viradas em imagem, a contagem e o cancelar - é a etapa seguinte, e por isso o
-botão de ler aparece apagado.
+Segue os rascunhos aprovados mockups/ocr/03-escolher-o-documento.html (a
+escolha), 04-lendo-o-documento.html (a leitura) e 06-conferir-o-texto.html (a
+conferência).
 """
 import time
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import (
     QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
-    QPlainTextEdit,
     QProgressBar,
     QPushButton,
     QRadioButton,
@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 import estilo
 from documento import DocumentoNaoAbre, conferir
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
+from tela_conferencia import TelaConferencia
 
 
 class PainelOcr(QWidget):
@@ -56,14 +57,16 @@ class PainelOcr(QWidget):
             ao_escolher_outro=self.voltar_para_escolher, ao_ler=self.comecar_a_ler
         )
         self.tela_lendo = _TelaLendo(ao_cancelar=self.cancelar_leitura)
-        self.tela_texto = _TelaTexto(ao_processar_outro=self.voltar_para_escolher)
+        self.tela_conferencia = TelaConferencia(
+            ao_processar_outro=self.voltar_para_escolher
+        )
         self.tela_erro = _TelaErro(
             ao_escolher_outro=self.voltar_para_escolher,
             ao_tentar_de_novo=self.tentar_ler_de_novo,
         )
 
         for tela in (self.tela_escolher, self.tela_conferindo, self.tela_ficha,
-                     self.tela_lendo, self.tela_texto, self.tela_erro):
+                     self.tela_lendo, self.tela_conferencia, self.tela_erro):
             self.telas.addWidget(tela)
 
         layout.addWidget(self.telas)
@@ -240,12 +243,21 @@ class PainelOcr(QWidget):
         self.tela_lendo.comecar(ficha)
         self.telas.setCurrentWidget(self.tela_lendo)
 
-        self.leitura = LeituraEmSegundoPlano(ficha.caminho)
-        self.leitura.avancou.connect(self.tela_lendo.avancar)
-        self.leitura.terminou.connect(lambda paginas: self._leitura_terminou(ficha, paginas))
-        self.leitura.cancelou.connect(self._leitura_cancelada)
-        self.leitura.falhou.connect(self._leitura_falhou)
-        self.leitura.start()
+        # Cada aviso carrega quem o mandou. Leitura abandonada - porque a pessoa
+        # escolheu outro documento no meio - continua terminando o que estava
+        # fazendo, e o aviso dela chega depois; sem esta marca, ele sequestraria
+        # a tela e mostraria a conferência de um documento que ninguém pediu.
+        leitura = LeituraEmSegundoPlano(ficha.caminho)
+        self.leitura = leitura
+        leitura.avancou.connect(
+            lambda pagina, total: self._leitura_avancou(leitura, pagina, total))
+        leitura.terminou.connect(
+            lambda paginas: self._leitura_terminou(leitura, ficha, paginas))
+        leitura.cancelou.connect(
+            lambda pagina: self._leitura_cancelada(leitura, pagina))
+        leitura.falhou.connect(
+            lambda pagina, motivo: self._leitura_falhou(leitura, pagina, motivo))
+        leitura.start()
 
     def tentar_ler_de_novo(self):
         """Refaz a leitura do mesmo documento, depois de uma falha."""
@@ -270,16 +282,41 @@ class PainelOcr(QWidget):
         segundos só acontecem se alguma coisa estiver muito errada - e aí fechar
         assim mesmo é melhor que não fechar.
         """
+        self.abandonar_leitura()
+
+    def abandonar_leitura(self):
+        """Para a leitura em andamento e a esquece.
+
+        Usado quando a pessoa escolhe outro documento no meio da leitura, e ao
+        fechar o programa. Sem isto, três coisas davam errado de uma vez: a
+        máquina seguia trabalhando num documento abandonado; o aviso de leitura
+        terminada chegava depois e levava a tela para a conferência do documento
+        antigo; e começar uma leitura nova por cima da velha derrubava o
+        programa.
+        """
         if self.leitura is not None and self.leitura.isRunning():
             self.leitura.cancelar()
             self.leitura.wait(20_000)
-
-    def _leitura_terminou(self, ficha, paginas):
-        self.tela_texto.mostrar(ficha, paginas)
-        self.telas.setCurrentWidget(self.tela_texto)
         self.leitura = None
 
-    def _leitura_cancelada(self, pagina):
+    def _e_a_leitura_de_agora(self, leitura):
+        """Diz se o aviso veio da leitura que a tela está esperando."""
+        return leitura is self.leitura
+
+    def _leitura_avancou(self, leitura, pagina, total):
+        if self._e_a_leitura_de_agora(leitura):
+            self.tela_lendo.avancar(pagina, total)
+
+    def _leitura_terminou(self, leitura, ficha, paginas):
+        if not self._e_a_leitura_de_agora(leitura):
+            return
+        self.tela_conferencia.mostrar(ficha, paginas)
+        self.telas.setCurrentWidget(self.tela_conferencia)
+        self.leitura = None
+
+    def _leitura_cancelada(self, leitura, pagina):
+        if not self._e_a_leitura_de_agora(leitura):
+            return
         self.faixa_do_topo.mostrar(
             f"Leitura cancelada na página {pagina}. Nada foi gravado, e o "
             "documento original não foi tocado."
@@ -287,7 +324,9 @@ class PainelOcr(QWidget):
         self.voltar_para_escolher()
         self.leitura = None
 
-    def _leitura_falhou(self, pagina, motivo):
+    def _leitura_falhou(self, leitura, pagina, motivo):
+        if not self._e_a_leitura_de_agora(leitura):
+            return
         if pagina:
             titulo = f"A leitura parou na página {pagina}"
             # Falhar numa página pode ser passageiro, e tentar de novo resolve.
@@ -310,6 +349,9 @@ class PainelOcr(QWidget):
         haver um instante de janela parada sem explicação. Por isso a leitura
         acontece logo depois, quando o Qt já desenhou a tela de espera.
         """
+        # Escolher outro documento no meio de uma leitura para a leitura antiga:
+        # ela seguiria gastando a maquina num documento que ninguem quer mais.
+        self.abandonar_leitura()
         self.faixa_do_topo.esconder()
         self.telas.setCurrentWidget(self.tela_conferindo)
         QTimer.singleShot(0, lambda: self._conferir(caminho))
@@ -341,6 +383,7 @@ class PainelOcr(QWidget):
         self.telas.setCurrentWidget(self.tela_erro)
 
     def voltar_para_escolher(self):
+        self.tela_conferencia.esquecer()
         self.telas.setCurrentWidget(self.tela_escolher)
 
     # ------------------------------------------------------ arrastar e soltar
@@ -595,84 +638,6 @@ class _TelaLendo(QWidget):
         self.restante.setText("Terminando a página que já estava sendo lida.")
         self.botao_cancelar.setEnabled(False)
         self.botao_cancelar.setText("Cancelando…")
-
-
-class _TelaTexto(QWidget):
-    """O texto lido, numa caixa para ler e rolar.
-
-    Provisória: na etapa 3 esta caixa vira a metade direita da tela de
-    conferência, com o PDF do lado esquerdo andando junto.
-    """
-
-    def __init__(self, ao_processar_outro):
-        super().__init__()
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-
-        self.titulo = _titulo("Texto lido")
-        self.legenda = _legenda("")
-        layout.addWidget(self.titulo)
-        layout.addWidget(self.legenda)
-        layout.addSpacing(estilo.ESPACO_3)
-
-        self.selo = QLabel("VEIO DO OCR — PRECISA DE CONFERÊNCIA")
-        self.selo.setStyleSheet(
-            f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 700;"
-            f"color: {estilo.COR_ALERTA};"
-            "background-color: rgba(217, 164, 65, 38);"
-            f"border-radius: 10px; padding: 3px 10px;"
-        )
-        layout.addWidget(self.selo, alignment=Qt.AlignLeft)
-        layout.addSpacing(estilo.ESPACO_3)
-
-        self.caixa = QPlainTextEdit()
-        self.caixa.setReadOnly(True)
-        self.caixa.setStyleSheet(
-            f"""
-            QPlainTextEdit {{
-                background-color: {estilo.COR_FUNDO_ELEVADO};
-                border: 1px solid {estilo.COR_BORDA};
-                border-radius: {estilo.RAIO}px;
-                padding: {estilo.ESPACO_3}px;
-                font-family: {estilo.FONTE_MONO};
-                font-size: {estilo.TEXTO_PEQUENO}px;
-                color: {estilo.COR_TEXTO};
-            }}
-            """
-        )
-        layout.addWidget(self.caixa, stretch=1)
-        layout.addSpacing(estilo.ESPACO_3)
-
-        self.botao_conferir = QPushButton("Conferir o texto")
-        self.botao_conferir.setStyleSheet(estilo.estilo_botao(principal=True))
-        # A tela de conferência lado a lado é a etapa 3.
-        self.botao_conferir.setEnabled(False)
-
-        botao_outro = QPushButton("Processar outro documento")
-        botao_outro.setCursor(Qt.PointingHandCursor)
-        botao_outro.setStyleSheet(estilo.estilo_botao(principal=False))
-        botao_outro.clicked.connect(ao_processar_outro)
-
-        acoes = QHBoxLayout()
-        acoes.setSpacing(estilo.ESPACO_3)
-        acoes.addWidget(self.botao_conferir)
-        acoes.addWidget(botao_outro)
-        acoes.addStretch()
-        layout.addLayout(acoes)
-
-    def mostrar(self, ficha, paginas):
-        self.legenda.setText(
-            f"{ficha.caminho.name} — {ficha.paginas} "
-            + ("página" if ficha.paginas == 1 else "páginas")
-        )
-        # O texto guardado fica separado por página (regra RN-8), porque é isso
-        # que vai permitir as duas metades da conferência rolarem casadas. Aqui
-        # ele é só juntado para leitura, com uma linha em branco entre páginas.
-        self.paginas = paginas
-        self.caixa.setPlainText("\n\n".join(p.strip() for p in paginas))
-        # Começa mostrando o alto do documento, e não o fim.
-        self.caixa.moveCursor(QTextCursor.MoveOperation.Start)
 
 
 class _FaixaDoTopo(QLabel):

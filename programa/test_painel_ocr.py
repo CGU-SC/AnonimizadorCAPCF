@@ -141,13 +141,18 @@ def test_sem_motor_de_leitura_nao_aparece_tentar_de_novo(aplicacao):
     quem usa e ainda esconde a causa real.
     """
     painel = painel_ocr.PainelOcr()
+    # O aviso carrega quem o mandou, para leitura abandonada nao sequestrar a
+    # tela; aqui a leitura de mentira faz esse papel.
+    leitura = painel_ocr.LeituraEmSegundoPlano(Path("qualquer.pdf"))
+    painel.leitura = leitura
 
-    painel._leitura_falhou(7, "Alguma coisa deu errado ao ler esta página.")
+    painel._leitura_falhou(leitura, 7, "Alguma coisa deu errado ao ler esta página.")
     assert not painel.tela_erro.botao_tentar.isHidden(), (
         "falha numa página pode ser tentada de novo, e o botão sumiu"
     )
 
-    painel._leitura_falhou(0, "O motor de leitura não foi encontrado.")
+    painel.leitura = leitura
+    painel._leitura_falhou(leitura, 0, "O motor de leitura não foi encontrado.")
     assert painel.tela_erro.botao_tentar.isHidden(), (
         "sem motor instalado, tentar de novo vai falhar igual - o botão não "
         "pode aparecer"
@@ -167,11 +172,61 @@ def test_fechar_no_meio_da_leitura_para_a_leitura_antes(aplicacao):
     massa = Path(__file__).parent.parent / "dados-exemplo"
     painel.comecar_a_ler(documento.conferir(massa / "02-imprimir-para-pdf.pdf"))
 
-    assert painel.leitura.isRunning(), "a leitura nem chegou a começar"
+    leitura = painel.leitura
+    assert leitura.isRunning(), "a leitura nem chegou a começar"
 
     painel.encerrar()
 
-    assert not painel.leitura.isRunning(), (
+    assert not leitura.isRunning(), (
         "a leitura continuou rodando depois de o programa mandar encerrar - "
         "é isso que faz o programa estourar ao fechar"
+    )
+
+
+def test_escolher_outro_documento_para_a_leitura_em_andamento(aplicacao):
+    """Teste de regressão do defeito mais grave achado na etapa 3.
+
+    Escolher outro documento no meio de uma leitura deixava três coisas
+    erradas: a máquina seguia trabalhando num documento abandonado; o aviso de
+    leitura terminada chegava depois e levava a tela para a conferência do
+    documento antigo; e começar outra leitura por cima derrubava o programa.
+    """
+    import documento
+
+    painel = painel_ocr.PainelOcr()
+    massa = Path(__file__).parent.parent / "dados-exemplo"
+    painel.comecar_a_ler(documento.conferir(massa / "02-imprimir-para-pdf.pdf"))
+    abandonada = painel.leitura
+    assert abandonada.isRunning()
+
+    painel.receber_documento(massa / "01-com-texto-e-tabela.pdf")
+
+    assert not abandonada.isRunning(), (
+        "a leitura antiga continuou rodando num documento que ninguém quer mais"
+    )
+    assert painel.leitura is None
+
+
+def test_aviso_de_leitura_abandonada_nao_sequestra_a_tela(aplicacao):
+    """O aviso que chega atrasado não pode trocar a tela por conta própria.
+
+    Uma leitura abandonada termina o que estava fazendo e avisa depois. Se esse
+    aviso valesse, a pessoa estaria olhando um documento e o programa a levaria
+    para outro, sem ela ter pedido nada.
+    """
+    import documento
+
+    painel = painel_ocr.PainelOcr()
+    massa = Path(__file__).parent.parent / "dados-exemplo"
+    ficha_antiga = documento.conferir(massa / "02-imprimir-para-pdf.pdf")
+    abandonada = painel_ocr.LeituraEmSegundoPlano(ficha_antiga.caminho)
+
+    # O programa já está em outro documento: esta leitura não é mais a de agora.
+    painel.leitura = None
+    tela_antes = painel.telas.currentWidget()
+
+    painel._leitura_terminou(abandonada, ficha_antiga, ["texto velho"])
+
+    assert painel.telas.currentWidget() is tela_antes, (
+        "o aviso de uma leitura abandonada trocou a tela"
     )

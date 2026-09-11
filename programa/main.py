@@ -142,8 +142,14 @@ class JanelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(NOME_PROGRAMA)
-        # Tamanho de referência do rascunho aprovado (mockups/janela/01-interface-da-janela.html).
-        self.resize(900, 520)
+        # Cresceu de 900x520 para caber a tela de conferência, que é dividida em
+        # duas metades: com 900 de largura cada metade fica com uns 330, e o
+        # texto ao lado da página do documento vira uma coluna estreita demais
+        # para comparar linha por linha. 1000x640 é o tamanho em que o rascunho
+        # aprovado dela foi desenhado.
+        self.resize(1000, 640)
+        # Abaixo disto a conferência deixa de servir, então a janela não encolhe.
+        self.setMinimumSize(900, 560)
 
         raiz = QWidget()
         raiz_layout = QHBoxLayout(raiz)

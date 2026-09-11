@@ -88,6 +88,35 @@ def preparar_motor():
     return caminho
 
 
+# Teto de densidade para a imagem da tela. Acima disto a página vira uma imagem
+# enorme que custa memória e demora a preparar, sem ganho que o olho note numa
+# tela comum. Chegando ao teto, o que falta de tamanho é esticado - e esticar
+# pouco não borra.
+PONTOS_POR_POLEGADA_MAXIMO_NA_TELA = 300
+
+
+def imagem_da_pagina(caminho, indice, largura_desejada):
+    """Desenha uma página do PDF no tamanho em que ela vai aparecer.
+
+    O tamanho é pedido em pixels, e não em densidade, porque é isso que evita o
+    borrão: desenhar sempre no mesmo tamanho e depois esticar não cria detalhe
+    nenhum - a letra fica maior e mais borrada, que é o oposto do que o botão de
+    aumentar promete.
+
+    Uma página por vez, e não o documento inteiro: é o que mantém a tela de
+    conferência leve mesmo num documento de duzentas páginas.
+    """
+    documento = pymupdf.open(caminho)
+    try:
+        pagina = documento[indice]
+        # 72 pontos por polegada é a unidade em que o PDF mede a própria página.
+        densidade = round(72 * largura_desejada / pagina.rect.width)
+        densidade = min(max(densidade, 36), PONTOS_POR_POLEGADA_MAXIMO_NA_TELA)
+        return pagina.get_pixmap(dpi=densidade).tobytes("png")
+    finally:
+        documento.close()
+
+
 def ler_documento(caminho, ao_avancar=None, foi_cancelado=None):
     """Lê o documento inteiro e devolve o texto de cada página, em ordem.
 
