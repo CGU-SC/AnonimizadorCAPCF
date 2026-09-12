@@ -259,6 +259,33 @@ def gerar_texto_embaralhado(caminho):
 
 
 # ---------------------------------------------------------------------------
+# 7. PDF com carimbo de lado na margem
+# ---------------------------------------------------------------------------
+def gerar_carimbo_lateral(caminho):
+    """Documento com o número do processo carimbado de lado, na margem.
+
+    É o formato que sai de sistema de processos, e foi o que quebrou o programa
+    em 11/09/2026: o carimbo tem palavras espalhadas verticalmente, e a conta de
+    entrelinha do programa se perdia com isso a ponto de fundir e intercalar as
+    linhas do corpo do documento. A massa não tinha nenhum caso assim.
+    """
+    documento = pymupdf.open()
+    total = 2
+    for numero in range(1, total + 1):
+        pagina = documento.new_page(width=LARGURA_DA_FOLHA, height=ALTURA_DA_FOLHA)
+        y = 70
+        for linha in _texto_da_pagina(numero, total):
+            pagina.insert_text((MARGEM_ESQUERDA + 40, y), linha,
+                               fontname="helv", fontsize=11)
+            y += 16
+        # O carimbo, virado um quarto de volta, encostado na margem esquerda.
+        pagina.insert_text((30, 500), "PROCESSO 23080.012345/2026-77",
+                           fontname="helv", fontsize=10, rotate=90)
+    documento.save(caminho)
+    documento.close()
+
+
+# ---------------------------------------------------------------------------
 # 5. Arquivo que não abre
 # ---------------------------------------------------------------------------
 def gerar_corrompido(caminho):
@@ -310,6 +337,7 @@ def main():
         ("04-texto-embaralhado.pdf", gerar_texto_embaralhado),
         ("05-corrompido.pdf", gerar_corrompido),
         ("06-protegido-por-senha.pdf", gerar_protegido),
+        ("07-carimbo-lateral.pdf", gerar_carimbo_lateral),
     ]:
         caminho = PASTA / nome
         gerar(caminho)

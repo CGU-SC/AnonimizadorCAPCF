@@ -16,6 +16,8 @@ import pymupdf
 import pytesseract
 from PIL import Image
 
+from disposicao import montar
+
 # 300 pontos por polegada é a densidade que o Tesseract recomenda para texto
 # impresso (regra RN-7 da spec 002). Abaixo disso ele erra mais; acima, fica
 # mais lento sem ganhar precisão.
@@ -177,7 +179,56 @@ def _ler_pagina(pagina):
     """Desenha a página como imagem, endireita o que estiver deitado, e lê."""
     imagem = _desenhar(pagina)
     imagem = _endireitar(imagem)
-    return pytesseract.image_to_string(imagem, lang=IDIOMA)
+    return _texto_com_a_disposicao_da_pagina(imagem)
+
+
+def _texto_com_a_disposicao_da_pagina(imagem):
+    """Lê a imagem pedindo a posição de cada palavra, e remonta as linhas.
+
+    Pedir só o texto pronto ao Tesseract devolveria a tabela como uma coisa por
+    linha, sem as colunas. Pedindo a posição, a tabela volta a parecer uma
+    tabela (regra RN-10 da spec 002).
+
+    O agrupamento em linhas usa o que o próprio Tesseract identificou: ele já
+    separa bloco, parágrafo e linha, e faz isso melhor que uma conta de altura
+    feita por fora.
+    """
+    dados = pytesseract.image_to_data(
+        imagem, lang=IDIOMA, output_type=pytesseract.Output.DICT
+    )
+
+    linhas = {}
+    ordem = []
+    for i, palavra in enumerate(dados["text"]):
+        if not palavra.strip():
+            continue
+        chave = (dados["block_num"][i], dados["par_num"][i], dados["line_num"][i])
+        if chave not in linhas:
+            linhas[chave] = []
+            ordem.append(chave)
+        x = dados["left"][i]
+        linhas[chave].append((x, x + dados["width"][i], palavra))
+
+    return "\n".join(montar(_com_as_separacoes_de_bloco(linhas, ordem)))
+
+
+def _com_as_separacoes_de_bloco(linhas, ordem):
+    """Põe uma linha em branco onde o documento muda de bloco.
+
+    O Tesseract já separa os blocos da página - o cabeçalho, o corpo, o rodapé -
+    e essa separação precisa sobreviver até o arquivo: em `.md`, linhas seguidas
+    sem uma linha vazia entre elas viram um parágrafo só, e o cabeçalho chegaria
+    colado ao corpo dentro da conversa com o assistente.
+    """
+    com_separacao = []
+    bloco_anterior = None
+    for chave in ordem:
+        bloco = chave[0]
+        if bloco_anterior is not None and bloco != bloco_anterior:
+            com_separacao.append([])
+        com_separacao.append(linhas[chave])
+        bloco_anterior = bloco
+    return com_separacao
 
 
 def _desenhar(pagina):

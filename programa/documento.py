@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pymupdf
 
+from disposicao import agrupar_por_altura, montar
+
 
 class DocumentoNaoAbre(Exception):
     """O arquivo escolhido não pôde ser lido como PDF.
@@ -83,12 +85,33 @@ def texto_da_camada(caminho):
     É o texto que a pessoa pode escolher aproveitar, em vez de mandar o programa
     reler as imagens. Separado por página como o do OCR (regra RN-8), porque a
     tela de conferência é a mesma nos dois caminhos.
+
+    O texto sai remontado pela posição das palavras na folha, e não na ordem
+    solta em que o PDF as guarda: é o que faz a tabela continuar parecendo uma
+    tabela (RN-10).
     """
     documento = pymupdf.open(caminho)
     try:
-        return [pagina.get_text() for pagina in documento]
+        return [
+            "\n".join(montar(_linhas_da_pagina(pagina))) for pagina in documento
+        ]
     finally:
         documento.close()
+
+
+def _linhas_da_pagina(pagina):
+    """Agrupa as palavras da página nas linhas a que elas pertencem.
+
+    O agrupamento é pela altura na folha, e não pelo que o PDF chama de linha:
+    numa tabela, cada célula costuma ter sido gravada como um texto separado, e
+    o arquivo não diz que elas formam uma linha só. Confiar nele ali devolveria
+    uma célula por linha, que é exatamente o problema que esta etapa resolve.
+    """
+    palavras = [
+        (x0, y0, y1, x1, texto)
+        for x0, y0, x1, y1, texto, *_ in pagina.get_text("words")
+    ]
+    return agrupar_por_altura(palavras)
 
 
 def primeiras_linhas(paginas, quantas=12):

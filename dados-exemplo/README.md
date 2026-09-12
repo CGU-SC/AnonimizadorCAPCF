@@ -29,6 +29,7 @@ com o CPF de ninguém.
 | `04-texto-embaralhado.pdf` | tem texto por dentro, mas o texto é lixo ilegível | o programa não julga se o texto presta: mostra as primeiras linhas e quem olha decide ignorar e ler as imagens |
 | `05-corrompido.pdf` | começa como PDF e termina no meio, sem fechar | arquivo que não abre: o programa explica em uma frase e volta, sem travar |
 | `06-protegido-por-senha.pdf` | PDF cifrado (a senha é `senha-de-teste`) | outro jeito de o arquivo não abrir |
+| `07-carimbo-lateral.pdf` | 2 páginas com o número do processo **carimbado de lado** na margem, como sai de sistema de processos | o carimbo tem palavras espalhadas verticalmente, e isso já quebrou a remontagem do texto: as linhas do corpo saíam fundidas e intercaladas. Entrou na massa em 11/09/2026, depois do defeito |
 
 ## Uma observação honesta sobre o `04`
 
