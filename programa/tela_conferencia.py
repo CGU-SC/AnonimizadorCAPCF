@@ -54,7 +54,7 @@ ESPERA_ANTES_DE_REDESENHAR = 150
 
 
 class TelaConferencia(QWidget):
-    def __init__(self, ao_processar_outro):
+    def __init__(self, ao_processar_outro, ao_conferir=None):
         super().__init__()
         self._paginas = []
         self._paginas_originais = []
@@ -106,7 +106,7 @@ class TelaConferencia(QWidget):
         layout.addSpacing(estilo.ESPACO_2)
         layout.addLayout(self._montar_metades(), stretch=1)
         layout.addSpacing(estilo.ESPACO_3)
-        layout.addLayout(self._montar_rodape(ao_processar_outro))
+        layout.addLayout(self._montar_rodape(ao_processar_outro, ao_conferir))
 
     # ------------------------------------------------------------- montagem
 
@@ -236,26 +236,27 @@ class TelaConferencia(QWidget):
         linha.addLayout(direita)
         return linha
 
-    def _montar_rodape(self, ao_processar_outro):
+    def _montar_rodape(self, ao_processar_outro, ao_conferir):
         linha = QHBoxLayout()
         linha.setSpacing(estilo.ESPACO_3)
 
         self.botao_conferido = QPushButton("Conferido")
+        self.botao_conferido.setCursor(Qt.PointingHandCursor)
         self.botao_conferido.setStyleSheet(estilo.estilo_botao(principal=True))
-        # A escolha da saída - salvar o arquivo ou seguir para o Anonimizar - é
-        # uma etapa própria. Até lá o botão fica apagado, com a explicação ao
-        # lado: botão que parece pronto e não faz nada é lido como defeito.
-        self.botao_conferido.setEnabled(False)
+        if ao_conferir is not None:
+            self.botao_conferido.clicked.connect(ao_conferir)
+        else:
+            # Sem ninguém esperando o texto conferido, o botão não teria para
+            # onde levar - e botão que parece pronto e não faz nada é lido
+            # como defeito.
+            self.botao_conferido.setEnabled(False)
 
         botao_outro = QPushButton("Processar outro documento")
         botao_outro.setCursor(Qt.PointingHandCursor)
         botao_outro.setStyleSheet(estilo.estilo_botao(principal=False))
         botao_outro.clicked.connect(ao_processar_outro)
 
-        aviso = QLabel(
-            "Nada é gravado até você escolher salvar — e o salvar entra numa "
-            "próxima etapa do projeto."
-        )
+        aviso = QLabel("Nada é gravado até você escolher salvar.")
         aviso.setWordWrap(True)
         aviso.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px;"

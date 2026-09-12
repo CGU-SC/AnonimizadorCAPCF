@@ -30,6 +30,14 @@ from documento import DocumentoNaoAbre, conferir, texto_da_camada
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
 from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
 from tela_decisao import TelaDecisao
+from arquivo_md import caminho_livre, caminho_sugerido, gravar, montar_conteudo
+from telas_de_salvar import (
+    TelaDescartar,
+    TelaGravado,
+    TelaSaida,
+    TelaSalvar,
+    TelaSobrescrever,
+)
 
 
 class PainelOcr(QWidget):
@@ -65,8 +73,38 @@ class PainelOcr(QWidget):
             ao_escolher_outro=self.voltar_para_escolher,
         )
         self.tela_conferencia = TelaConferencia(
-            ao_processar_outro=self.voltar_para_escolher
+            ao_processar_outro=self.voltar_para_escolher,
+            ao_conferir=self.seguir_para_a_saida,
         )
+        self.tela_saida = TelaSaida(
+            ao_salvar=self.escolher_onde_salvar,
+            ao_voltar=self.voltar_a_conferencia,
+            ao_processar_outro=self.voltar_para_escolher,
+        )
+        self.tela_salvar = TelaSalvar(
+            ao_salvar=self.tentar_salvar,
+            ao_voltar=self.voltar_a_saida,
+        )
+        self.tela_sobrescrever = TelaSobrescrever(
+            ao_escrever_por_cima=self.escrever_por_cima,
+            ao_outro_nome=self.salvar_com_outro_nome,
+        )
+        self.tela_gravado = TelaGravado(ao_processar_outro=self.voltar_para_escolher)
+        # O caminho que a pessoa pediu, guardado enquanto o programa pergunta se
+        # pode escrever por cima do arquivo que já existe ali.
+        self._caminho_pedido = None
+        self.tela_descartar = TelaDescartar(
+            ao_descartar=self._descartar_e_seguir,
+            ao_voltar=self._voltar_de_onde_estava,
+        )
+        # Se o texto que está na conferência já foi salvo. Começa como salvo
+        # porque, sem conferência nenhuma, não há o que perder.
+        self._texto_salvo = True
+        # O que a pessoa pediu para fazer quando a pergunta de descartar
+        # apareceu, e a tela em que ela estava - para seguir com o pedido se ela
+        # confirmar, ou voltar exatamente para onde estava se não.
+        self._acao_pendente = None
+        self._tela_antes_da_pergunta = None
         self.tela_erro = _TelaErro(
             ao_escolher_outro=self.voltar_para_escolher,
             ao_tentar_de_novo=self.tentar_ler_de_novo,
@@ -74,7 +112,8 @@ class PainelOcr(QWidget):
 
         for tela in (self.tela_escolher, self.tela_conferindo, self.tela_ficha,
                      self.tela_lendo, self.tela_decisao, self.tela_conferencia,
-                     self.tela_erro):
+                     self.tela_saida, self.tela_salvar, self.tela_sobrescrever,
+                     self.tela_gravado, self.tela_descartar, self.tela_erro):
             self.telas.addWidget(tela)
 
         layout.addWidget(self.telas)
@@ -300,7 +339,75 @@ class PainelOcr(QWidget):
         de uma imagem, mas erra - e quem diz se está bom é quem olha.
         """
         self.tela_conferencia.mostrar(ficha, paginas, origem=ORIGEM_CAMADA_DO_PDF)
+        self._texto_salvo = False
         self.telas.setCurrentWidget(self.tela_conferencia)
+
+    # ------------------------------------------------------------- salvar
+
+    def seguir_para_a_saida(self):
+        """Depois do "Conferido": as duas saídas do texto."""
+        self.tela_saida.mostrar(*self._resumo_do_que_foi_conferido())
+        self.telas.setCurrentWidget(self.tela_saida)
+
+    def escolher_onde_salvar(self):
+        self.tela_salvar.mostrar(
+            caminho_sugerido(self.ficha_atual.caminho),
+            *self._resumo_do_que_foi_conferido(),
+        )
+        self.telas.setCurrentWidget(self.tela_salvar)
+
+    def tentar_salvar(self, caminho):
+        """Grava, a não ser que já exista arquivo ali - aí pergunta antes (RN-16)."""
+        if caminho.exists():
+            self._caminho_pedido = caminho
+            self.tela_sobrescrever.mostrar(caminho)
+            self.telas.setCurrentWidget(self.tela_sobrescrever)
+            return
+        self._gravar(caminho)
+
+    def escrever_por_cima(self):
+        if self._caminho_pedido is not None:
+            self._gravar(self._caminho_pedido)
+
+    def salvar_com_outro_nome(self):
+        """Volta à tela de salvar com um nome que não apaga nada, já preenchido."""
+        sugestao = caminho_livre(self._caminho_pedido)
+        self.tela_salvar.mostrar(sugestao, *self._resumo_do_que_foi_conferido())
+        self.telas.setCurrentWidget(self.tela_salvar)
+
+    def voltar_a_conferencia(self):
+        self.telas.setCurrentWidget(self.tela_conferencia)
+
+    def voltar_a_saida(self):
+        self.telas.setCurrentWidget(self.tela_saida)
+
+    def _gravar(self, caminho):
+        conteudo = montar_conteudo(self.tela_conferencia.texto_conferido())
+        try:
+            gravar(caminho, conteudo)
+        except OSError:
+            # Pasta sem permissão, disco cheio, pasta de rede que saiu do ar: a
+            # pessoa continua na tela de salvar, com o caminho que escolheu, e
+            # pode tentar outro lugar. Nada do trabalho de conferência se perde.
+            self.tela_salvar.mostrar(caminho, *self._resumo_do_que_foi_conferido())
+            self.tela_salvar.avisar(
+                "Não foi possível gravar nesse lugar. A pasta pode estar "
+                "protegida, cheia ou fora do ar. Escolha outra pasta."
+            )
+            self.telas.setCurrentWidget(self.tela_salvar)
+            return
+
+        self._texto_salvo = True
+        _nome, paginas, corrigidas = self._resumo_do_que_foi_conferido()
+        self.tela_gravado.mostrar(caminho, paginas, corrigidas)
+        self.telas.setCurrentWidget(self.tela_gravado)
+
+    def _resumo_do_que_foi_conferido(self):
+        return (
+            self.ficha_atual.caminho.name,
+            len(self.tela_conferencia.texto_conferido()),
+            self.tela_conferencia.paginas_corrigidas(),
+        )
 
     def tentar_ler_de_novo(self):
         """Refaz a leitura do mesmo documento, depois de uma falha."""
@@ -354,6 +461,7 @@ class PainelOcr(QWidget):
         if not self._e_a_leitura_de_agora(leitura):
             return
         self.tela_conferencia.mostrar(ficha, paginas)
+        self._texto_salvo = False
         self.telas.setCurrentWidget(self.tela_conferencia)
         self.leitura = None
 
@@ -386,6 +494,13 @@ class PainelOcr(QWidget):
         self.leitura = None
 
     def receber_documento(self, caminho):
+        """Recebe outro documento - perguntando antes, se houver texto não salvo."""
+        if not self._perguntar_antes_de_descartar(
+            lambda: self._receber_documento(caminho)
+        ):
+            self._receber_documento(caminho)
+
+    def _receber_documento(self, caminho):
         """Mostra que está trabalhando e então confere o documento.
 
         A conferência é rápida, mas a tela precisa aparecer antes dela para não
@@ -426,8 +541,57 @@ class PainelOcr(QWidget):
         self.telas.setCurrentWidget(self.tela_erro)
 
     def voltar_para_escolher(self):
-        self.tela_conferencia.esquecer()
+        """Volta ao começo - perguntando antes, se houver texto não salvo."""
+        if not self._perguntar_antes_de_descartar(self._ir_para_escolher):
+            self._ir_para_escolher()
+
+    def _ir_para_escolher(self):
+        self._descartar_o_texto()
         self.telas.setCurrentWidget(self.tela_escolher)
+
+    # ----------------------------------------------- antes de descartar (RN-1)
+
+    def _ha_texto_nao_salvo(self):
+        return not self._texto_salvo and bool(self.tela_conferencia.texto_conferido())
+
+    def _perguntar_antes_de_descartar(self, acao):
+        """Segura a ação e pergunta, quando ela jogaria fora texto não salvo.
+
+        Devolve se perguntou. Quando não há o que perder - nada conferido ainda,
+        ou já salvo -, não pergunta nada: pergunta que aparece sem motivo ensina
+        a clicar em "sim" sem ler, e aí ela não protege quando importa.
+        """
+        if not self._ha_texto_nao_salvo():
+            return False
+        self._acao_pendente = acao
+        # Com a pergunta já na tela - a pessoa soltou outro documento por cima
+        # dela -, o lugar para onde voltar continua sendo o de antes. Guardar a
+        # própria pergunta como "de onde ela veio" deixava "Voltar e salvar"
+        # sem sair do lugar, e a única saída que funcionava era a que jogava o
+        # texto fora - exatamente a perda que esta pergunta existe para evitar.
+        if self.telas.currentWidget() is not self.tela_descartar:
+            self._tela_antes_da_pergunta = self.telas.currentWidget()
+        self.tela_descartar.mostrar(*self._resumo_do_que_foi_conferido())
+        self.telas.setCurrentWidget(self.tela_descartar)
+        return True
+
+    def _descartar_e_seguir(self):
+        acao = self._acao_pendente
+        self._acao_pendente = None
+        self._descartar_o_texto()
+        if acao is not None:
+            acao()
+
+    def _voltar_de_onde_estava(self):
+        """Volta exatamente para a tela em que a pessoa estava, com tudo intacto."""
+        self._acao_pendente = None
+        self.telas.setCurrentWidget(
+            self._tela_antes_da_pergunta or self.tela_conferencia
+        )
+
+    def _descartar_o_texto(self):
+        self.tela_conferencia.esquecer()
+        self._texto_salvo = True
 
     # ------------------------------------------------------ arrastar e soltar
 
