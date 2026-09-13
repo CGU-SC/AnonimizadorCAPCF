@@ -107,8 +107,11 @@ def _linhas_da_pagina(pagina):
     o arquivo não diz que elas formam uma linha só. Confiar nele ali devolveria
     uma célula por linha, que é exatamente o problema que esta etapa resolve.
     """
+    # O PyMuPDF entrega cada palavra com mais três números no fim - em que bloco,
+    # em que linha e em que posição dela o próprio PDF a guardou. A remontagem
+    # não usa nenhum dos três: ela decide a linha pela altura na folha.
     palavras = [
-        (x0, y0, y1, x1, texto)
+        (x0, y0, x1, y1, texto)
         for x0, y0, x1, y1, texto, *_ in pagina.get_text("words")
     ]
     return agrupar_por_altura(palavras)

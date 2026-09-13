@@ -23,7 +23,8 @@ class LeituraEmSegundoPlano(QThread):
     avancou = Signal(int, int)      # página atual, total de páginas
     terminou = Signal(list)         # o texto de cada página, em ordem
     cancelou = Signal(int)          # em que página parou
-    falhou = Signal(int, str)       # em que página, e o que dizer na tela
+    falhou = Signal(int, str)       # em que página (0 quando a falha não foi
+                                    # numa página), e o que dizer na tela
 
     def __init__(self, caminho):
         super().__init__()

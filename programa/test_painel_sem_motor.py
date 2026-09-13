@@ -34,7 +34,7 @@ def maquina(monkeypatch):
         lambda: TESSERACT_DE_MENTIRA if estado.tem_motor else None,
     )
     monkeypatch.setattr(
-        painel_ocr, "ha_tesseract_sem_portugues", lambda: estado.sem_portugues
+        painel_ocr, "ha_algum_tesseract", lambda: estado.sem_portugues
     )
     monkeypatch.setattr(painel_ocr, "localizar_instalador", lambda: estado.instalador)
     monkeypatch.setattr(painel_ocr, "abrir_instalador", estado.instaladores_abertos.append)

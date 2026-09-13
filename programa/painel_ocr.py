@@ -32,7 +32,7 @@ from leitura_em_segundo_plano import LeituraEmSegundoPlano
 from motor import (
     abrir_instalador,
     apontar_pasta,
-    ha_tesseract_sem_portugues,
+    ha_algum_tesseract,
     localizar_instalador,
     localizar_tesseract,
 )
@@ -73,7 +73,7 @@ class PainelOcr(QWidget):
 
         self.telas = QStackedWidget()
         self.tela_escolher = self._montar_tela_escolher()
-        self.tela_conferindo = self._montar_tela_conferindo()
+        self.tela_verificando = self._montar_tela_verificando()
         self.tela_ficha = _TelaFicha(
             ao_escolher_outro=self.voltar_para_escolher,
             ao_ler=self.seguir_a_partir_da_ficha,
@@ -128,7 +128,7 @@ class PainelOcr(QWidget):
             ao_escolher_outro=self.voltar_para_escolher,
         )
 
-        for tela in (self.tela_escolher, self.tela_conferindo, self.tela_ficha,
+        for tela in (self.tela_escolher, self.tela_verificando, self.tela_ficha,
                      self.tela_lendo, self.tela_decisao, self.tela_conferencia,
                      self.tela_saida, self.tela_salvar, self.tela_sobrescrever,
                      self.tela_gravado, self.tela_descartar, self.tela_erro,
@@ -294,7 +294,7 @@ class PainelOcr(QWidget):
         layout.addWidget(explicacao)
         return bloco
 
-    def _montar_tela_conferindo(self):
+    def _montar_tela_verificando(self):
         tela = QWidget()
         layout = QVBoxLayout(tela)
         layout.setAlignment(Qt.AlignCenter)
@@ -553,9 +553,11 @@ class PainelOcr(QWidget):
             pode_tentar = True
         else:
             titulo = "A leitura não pôde ser feita"
-            # Falta de motor de leitura não é passageiro: só instalando resolve.
-            # Oferecer "tentar de novo" aqui é oferecer uma saída falsa, que vai
-            # falhar igual e esconder a causa real.
+            # Página 0 quer dizer que a falha não aconteceu dentro de uma página:
+            # faltou o motor de leitura, ou deu um defeito não previsto. Os dois
+            # ficam sem "tentar de novo". Falta de motor não é passageira - só
+            # instalando resolve -, e oferecer "tentar de novo" ali seria oferecer
+            # uma saída falsa, que falharia igual e esconderia a causa real.
             pode_tentar = False
 
         self.tela_erro.mostrar_falha(titulo, motivo, pode_tentar_de_novo=pode_tentar)
@@ -573,14 +575,14 @@ class PainelOcr(QWidget):
         """Mostra que está trabalhando e então confere o documento.
 
         A conferência é rápida, mas a tela precisa aparecer antes dela para não
-        haver um instante de janela parada sem explicação. Por isso a leitura
+        haver um instante de janela parada sem explicação. Por isso a verificação
         acontece logo depois, quando o Qt já desenhou a tela de espera.
         """
         # Escolher outro documento no meio de uma leitura para a leitura antiga:
-        # ela seguiria gastando a maquina num documento que ninguem quer mais.
+        # ela seguiria gastando a máquina num documento que ninguém quer mais.
         self.abandonar_leitura()
         self.faixa_do_topo.esconder()
-        self.telas.setCurrentWidget(self.tela_conferindo)
+        self.telas.setCurrentWidget(self.tela_verificando)
         QTimer.singleShot(0, lambda: self._conferir(caminho))
 
     def _conferir(self, caminho):
@@ -684,7 +686,10 @@ class PainelOcr(QWidget):
             self._espaco_depois_do_aviso.setVisible(False)
             return True
         tem_instalador = localizar_instalador() is not None
-        self._motor_sem_portugues = ha_tesseract_sem_portugues()
+        # Chegando aqui, nenhum Tesseract achado tem o português: a procura logo
+        # acima teria parado no primeiro que tivesse. Havendo algum, então, o
+        # motor está na máquina e o que falta é só o pacote.
+        self._motor_sem_portugues = ha_algum_tesseract()
         self.aviso_do_motor.mostrar(tem_instalador, self._motor_sem_portugues)
         self._espaco_depois_do_aviso.setVisible(True)
         self.tela_sem_motor.saidas.atualizar(tem_instalador, self._motor_sem_portugues)

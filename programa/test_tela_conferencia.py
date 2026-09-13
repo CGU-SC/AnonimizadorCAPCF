@@ -324,8 +324,8 @@ def test_mudar_o_tamanho_da_janela_nao_redesenha_na_hora(aplicacao):
 
     tela = _tela_com_doze_paginas()
 
-    # O evento e entregue na mao: tela que nao esta a mostra nao recebe evento
-    # de tamanho do Qt, e o que se quer conferir aqui e o que o programa faz
+    # O evento é entregue na mão: tela que não está à mostra não recebe evento
+    # de tamanho do Qt, e o que se quer conferir aqui é o que o programa faz
     # quando ele chega.
     tela.resizeEvent(QResizeEvent(QSize(700, 500), QSize(1000, 640)))
 
