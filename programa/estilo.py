@@ -37,8 +37,13 @@ RAIO = 6
 LARGURA_MENU = 220
 
 
-def estilo_botao(principal=True):
-    """O visual dos botões, do jeito que o rascunho aprovado mostra."""
+def estilo_botao(principal=True, pequeno=False):
+    """O visual dos botões, do jeito que o rascunho aprovado mostra.
+
+    O pequeno é o de dentro de uma faixa de aviso: com o tamanho normal, três
+    botões lado a lado ali ocupariam mais espaço que o próprio aviso.
+    """
+    espaco, letra = ("6px 12px", TEXTO_PEQUENO) if pequeno else ("10px 18px", TEXTO_BASE)
     if principal:
         fundo, cor, borda, peso = COR_DESTAQUE, "#ffffff", "none", 600
         fundo_hover = COR_DESTAQUE_HOVER
@@ -52,8 +57,8 @@ def estilo_botao(principal=True):
             color: {cor};
             border: {borda};
             border-radius: {RAIO}px;
-            padding: 10px 18px;
-            font-size: {TEXTO_BASE}px;
+            padding: {espaco};
+            font-size: {letra}px;
             font-weight: {peso};
         }}
         QPushButton:hover {{

@@ -120,11 +120,19 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
 - O Tesseract pode estar instalado e mesmo assim o `pytesseract` dizer que não
   achou: ele procura só no caminho que o Windows conhece, e o instalador não
   põe o Tesseract lá. Antes de concluir que falta instalar, olhe em
-  `C:\Program Files\Tesseract-OCR\tesseract.exe`. A decisão do projeto é o
-  programa procurar nas pastas de sempre por conta própria — **isso ainda está
-  por construir**, na etapa do aviso de motor faltando (spec 002, RN-19). Mexer
-  no caminho do Windows resolveria só esta máquina, e as do núcleo continuariam
-  quebradas.
+  `C:\Program Files\Tesseract-OCR\tesseract.exe`. O programa procura nas
+  pastas de sempre por conta própria (`programa/motor.py`, desde 12/09/2026),
+  e numa máquina onde a TI instalou em outro lugar ela grava a pasta no `.env`,
+  em `TESSERACT_CAMINHO`. Mexer no caminho do Windows resolveria só esta
+  máquina, e as do núcleo continuariam quebradas.
+- Para ver na tela o aviso de motor faltando sem desinstalar nada, abra pelo
+  `abrir\abrir-sem-motor.bat` (ou `abrir\abrir-sem-portugues.bat`, para o
+  Tesseract instalado sem o pacote de português); o
+  `abrir\simular-instalacao.bat` faz o motor "aparecer" com o programa aberto.
+  Instalado sem o português, o Tesseract não serve — toda leitura falharia —,
+  e o programa o trata como motor faltando. No dia da entrega, o instalador do
+  Tesseract vai na pasta `instaladores`, ao lado do `.exe` — sem ele, o botão
+  "instalar agora" fica apagado.
 - Desenhar PDF com o Qt no modo "sem tela" (`QT_QPA_PLATFORM=offscreen`) sai
   com um quadradinho preto no lugar de cada letra: nesse modo o Qt não enxerga
   as fontes instaladas no Windows. A página fica cheia de caixas, o OCR não lê
