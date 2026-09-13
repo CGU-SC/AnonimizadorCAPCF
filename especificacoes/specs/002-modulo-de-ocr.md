@@ -7,6 +7,15 @@ conferência (escopo, RN-23, RN-24, dois critérios de aceite e um item de
 fora-de-escopo). O buraco apareceu construindo a etapa 3: a spec mandava
 construir uma tela para conferência humana e não dizia que a pessoa precisa
 conseguir enxergar o documento.
+**Emendada em:** 2026-09-12 — a premissa do instalador ganha lugar definido
+(a pasta `instaladores`, ao lado do programa), a RN-19 diz que apontar a pasta
+vale só com o programa aberto e que a TI pode gravar o caminho no `.env`, e o
+link de download entra no fora-de-escopo. Os três buracos apareceram ao começar
+a etapa 7.
+**Emendada em:** 2026-09-13 — o motor só conta como encontrado com o pacote de
+português junto (RN-19 e o caminho torto do Tesseract). O buraco apareceu na
+revisão da etapa 7: instalado sem o português, o aviso sumia e toda leitura de
+documento escaneado falhava sem dizer por quê.
 
 ## Objetivo
 
@@ -71,6 +80,10 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
   `skill-11-gerente-de-entrega`, no dia da entrega.
 - **Girar a página na tela de conferência**, e qualquer edição do documento
   original. O programa nunca escreve no PDF que recebeu (RN-17).
+- **Link para baixar o Tesseract dentro do programa.** O módulo não tem nenhum
+  endereço de internet, e é isso que permite provar, numa busca só, que ele
+  nunca fala com a internet (critério 22). O link vai para o documento de
+  instalação da TI, que se atualiza sem gerar programa novo.
 
 ## Premissas
 
@@ -91,8 +104,9 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
   OCR, e não etapa opcional.
 - premissa: as máquinas do núcleo são Windows.
 - premissa: o instalador do Tesseract estará disponível na máquina para o botão
-  "instalar agora" abrir. Não estando, o programa mostra o passo a passo escrito
-  e o botão fica apagado.
+  "instalar agora" abrir, **numa pasta chamada `instaladores`, ao lado do
+  programa**. Deixá-lo ali é combinado com o dia da entrega. Não estando, o
+  botão fica apagado e o passo a passo escrito diz para procurar a TI.
 
 ## Fluxos
 
@@ -152,6 +166,10 @@ documento segue pelo caminho do OCR.
 - Se ela ignorar o aviso e escolher mesmo assim um PDF sem texto, a tela cheia
   repete a explicação e as mesmas três saídas, agora sem ter o que fazer além
   disso.
+- O Tesseract instalado **sem o pacote de português** conta como motor
+  faltando: o aviso e a tela cheia aparecem do mesmo jeito, com as mesmas três
+  saídas, mas dizendo que o que falta é o pacote — e pedindo à TI que instale
+  de novo, marcando o português na lista de idiomas.
 
 ### Caminho torto — a pessoa cancela no meio
 
@@ -276,7 +294,12 @@ usado quando a IA local entrar, em spec própria.
   falta **já vem com a saída junto** — instalar, conferir de novo, ou apontar a
   pasta. Quem usa não precisa escolher um documento para descobrir que falta uma
   peça: o programa já sabia disso ao abrir a tela. O aviso não bloqueia nada, e
-  o caminho do PDF que já tem texto continua funcionando.
+  o caminho do PDF que já tem texto continua funcionando. Apontar a pasta vale
+  enquanto o programa estiver aberto — nada é guardado entre um uso e outro
+  (RN-22). Para valer sempre naquela máquina, a TI grava o caminho uma vez no
+  `.env` da instalação, na variável `TESSERACT_CAMINHO`. O motor só conta
+  como encontrado **com o pacote de português junto**: sem ele toda leitura
+  falha, e o aviso aparece do mesmo jeito, dizendo que é o pacote que falta.
 - RN-20: o programa **nunca baixa nem instala nada sozinho** e nunca manda
   documento para lugar nenhum. O botão "instalar agora" abre um instalador que
   já está na máquina, e a confirmação do Windows é clicada por uma pessoa.
