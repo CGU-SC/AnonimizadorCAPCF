@@ -9,6 +9,15 @@ Exemplos/
 # Artefatos gerados (instalador, .exe final) — nascem do código, não se editam à mão.
 builds/
 
+# O instalador do Tesseract, que fica ao lado do programa para o botão
+# "instalar agora" (spec 002). É programa de terceiros, vem do site dele no dia
+# da entrega - não é código deste projeto.
+instaladores/
+
+# A marca que o abrir-sem-motor.bat e o abrir-sem-portugues.bat criam para
+# fingir que o Tesseract não está pronto. Existe só enquanto a simulação dura.
+abrir/.motor-escondido
+
 # Saída padrão do PyInstaller ao gerar o executável.
 build/
 dist/

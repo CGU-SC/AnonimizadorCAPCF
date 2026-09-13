@@ -5,8 +5,8 @@ arquivo, ler, conferir o texto, ou explicar o que deu errado. Cada tela é uma
 peça à parte, e este arquivo é quem sabe a ordem entre elas.
 
 Segue os rascunhos aprovados mockups/ocr/03-escolher-o-documento.html (a
-escolha), 04-lendo-o-documento.html (a leitura) e 06-conferir-o-texto.html (a
-conferência).
+escolha), 04-lendo-o-documento.html (a leitura), 06-conferir-o-texto.html (a
+conferência) e 10-falta-o-motor.html (o motor de leitura faltando).
 """
 import time
 from pathlib import Path
@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QRadioButton,
+    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -28,6 +29,13 @@ from PySide6.QtWidgets import (
 import estilo
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
+from motor import (
+    abrir_instalador,
+    apontar_pasta,
+    ha_tesseract_sem_portugues,
+    localizar_instalador,
+    localizar_tesseract,
+)
 from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
 from tela_decisao import TelaDecisao
 from arquivo_md import caminho_livre, caminho_sugerido, gravar, montar_conteudo
@@ -38,6 +46,7 @@ from telas_de_salvar import (
     TelaSalvar,
     TelaSobrescrever,
 )
+from telas_do_motor import AvisoDoMotor, TelaSemMotor
 
 
 class PainelOcr(QWidget):
@@ -58,6 +67,9 @@ class PainelOcr(QWidget):
         # O documento em uso agora. É o que permite tentar de novo depois de
         # uma falha, sem a pessoa ter que escolher o arquivo outra vez.
         self.ficha_atual = None
+        # Se o que falta, na última procura, era só o pacote de português - e
+        # não o motor inteiro. Muda a frase do aviso, não as saídas.
+        self._motor_sem_portugues = False
 
         self.telas = QStackedWidget()
         self.tela_escolher = self._montar_tela_escolher()
@@ -109,20 +121,28 @@ class PainelOcr(QWidget):
             ao_escolher_outro=self.voltar_para_escolher,
             ao_tentar_de_novo=self.tentar_ler_de_novo,
         )
+        self.tela_sem_motor = TelaSemMotor(
+            ao_instalar=self.instalar_o_motor,
+            ao_conferir=self.conferir_o_motor_de_novo,
+            ao_apontar=self.apontar_a_pasta_do_motor,
+            ao_escolher_outro=self.voltar_para_escolher,
+        )
 
         for tela in (self.tela_escolher, self.tela_conferindo, self.tela_ficha,
                      self.tela_lendo, self.tela_decisao, self.tela_conferencia,
                      self.tela_saida, self.tela_salvar, self.tela_sobrescrever,
-                     self.tela_gravado, self.tela_descartar, self.tela_erro):
+                     self.tela_gravado, self.tela_descartar, self.tela_erro,
+                     self.tela_sem_motor):
             self.telas.addWidget(tela)
 
         layout.addWidget(self.telas)
+        self._conferir_o_motor()
 
     # ---------------------------------------------------------------- telas
 
     def _montar_tela_escolher(self):
-        tela = QWidget()
-        layout = QVBoxLayout(tela)
+        conteudo = QWidget()
+        layout = QVBoxLayout(conteudo)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
@@ -130,6 +150,20 @@ class PainelOcr(QWidget):
         layout.addWidget(_legenda(
             "Converte documento digitalizado em texto para conferência."))
         layout.addSpacing(estilo.ESPACO_4)
+
+        # O aviso vem já na tela de escolher, antes de qualquer documento: fazer
+        # a pessoa arrastar um PDF para só então contar que falta uma peça seria
+        # gastar o tempo dela com uma notícia que o programa já tinha.
+        self.aviso_do_motor = AvisoDoMotor(
+            ao_instalar=self.instalar_o_motor,
+            ao_conferir=self.conferir_o_motor_de_novo,
+            ao_apontar=self.apontar_a_pasta_do_motor,
+        )
+        layout.addWidget(self.aviso_do_motor)
+        self._espaco_depois_do_aviso = QWidget()
+        self._espaco_depois_do_aviso.setFixedHeight(estilo.ESPACO_3)
+        self._espaco_depois_do_aviso.setVisible(False)
+        layout.addWidget(self._espaco_depois_do_aviso)
 
         # A faixa só aparece quando há o que contar - hoje, quando a pessoa
         # cancela uma leitura. Voltar calada faria quem clicou sem querer não
@@ -141,6 +175,36 @@ class PainelOcr(QWidget):
         layout.addSpacing(estilo.ESPACO_4)
         layout.addWidget(self._montar_escolha_do_motor())
         layout.addStretch()
+
+        # Com o aviso do motor no alto, a tela passa da altura da janela. Sem a
+        # rolagem, o Qt espreme tudo para caber: as frases do aviso se
+        # sobrepõem e o botão de escolher o arquivo sai achatado. Com ela, cada
+        # coisa fica no tamanho certo, e o que sobra desce.
+        tela = QScrollArea()
+        tela.setWidget(conteudo)
+        tela.setWidgetResizable(True)
+        tela.setFrameShape(QFrame.NoFrame)
+        tela.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        tela.setStyleSheet(
+            f"""
+            QScrollBar:vertical {{
+                background: transparent;
+                width: 10px;
+                margin: 0;
+            }}
+            QScrollBar::handle:vertical {{
+                background: {estilo.COR_BORDA};
+                border-radius: 5px;
+                min-height: 30px;
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                height: 0;
+            }}
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+                background: none;
+            }}
+            """
+        )
         return tela
 
     def _montar_area_de_arrastar(self):
@@ -287,6 +351,11 @@ class PainelOcr(QWidget):
 
     def comecar_a_ler(self, ficha):
         """Manda a leitura acontecer ao lado, e passa a mostrar o andamento."""
+        if not self._conferir_o_motor():
+            # Chega aqui quem mandou ignorar o texto que já estava no documento,
+            # ou quem viu o motor sumir com o programa aberto.
+            self._mostrar_que_falta_o_motor(ficha)
+            return
         self.tela_lendo.comecar(ficha)
         self.telas.setCurrentWidget(self.tela_lendo)
 
@@ -533,6 +602,11 @@ class PainelOcr(QWidget):
             return
 
         self.ficha_atual = ficha
+        if not ficha.tem_camada_de_texto and not self._conferir_o_motor():
+            # Documento escaneado só se lê com o motor. A ficha ofereceria "ler
+            # as páginas" num botão que só poderia falhar.
+            self._mostrar_que_falta_o_motor(ficha)
+            return
         self.tela_ficha.mostrar(ficha)
         self.telas.setCurrentWidget(self.tela_ficha)
 
@@ -592,6 +666,122 @@ class PainelOcr(QWidget):
     def _descartar_o_texto(self):
         self.tela_conferencia.esquecer()
         self._texto_salvo = True
+
+    # ------------------------------------------------ o motor de leitura
+
+    def showEvent(self, evento):
+        # Procura de novo toda vez que a pessoa entra no módulo: o motor pode
+        # ter sido instalado com o programa aberto, e o aviso não deve continuar
+        # dizendo que falta uma peça que já está lá.
+        self._conferir_o_motor()
+        super().showEvent(evento)
+
+    def _conferir_o_motor(self):
+        """Procura o motor, acerta o aviso do alto, e diz se achou."""
+        if localizar_tesseract() is not None:
+            self._motor_sem_portugues = False
+            self.aviso_do_motor.esconder()
+            self._espaco_depois_do_aviso.setVisible(False)
+            return True
+        tem_instalador = localizar_instalador() is not None
+        self._motor_sem_portugues = ha_tesseract_sem_portugues()
+        self.aviso_do_motor.mostrar(tem_instalador, self._motor_sem_portugues)
+        self._espaco_depois_do_aviso.setVisible(True)
+        self.tela_sem_motor.saidas.atualizar(tem_instalador, self._motor_sem_portugues)
+        return False
+
+    def _mostrar_que_falta_o_motor(self, ficha):
+        self.tela_sem_motor.mostrar(
+            ficha, localizar_instalador() is not None, self._motor_sem_portugues
+        )
+        self.telas.setCurrentWidget(self.tela_sem_motor)
+
+    def instalar_o_motor(self):
+        """Abre o instalador que a TI deixou ao lado do programa.
+
+        Não espera a instalação terminar, e não confere sozinho depois: quem
+        sabe quando o instalador acabou é a pessoa, e é ela quem clica em
+        "conferir de novo".
+        """
+        instalador = localizar_instalador()
+        if instalador is None:
+            # O instalador sumiu depois de o aviso ter sido montado. O aviso se
+            # acerta, e o botão passa a aparecer apagado.
+            self._conferir_o_motor()
+            return
+        try:
+            abrir_instalador(instalador)
+        except OSError:
+            self._dar_recado(
+                "O instalador não chegou a abrir. Se o Windows perguntou se "
+                'podia, é preciso responder "Sim".',
+                erro=True,
+            )
+            return
+        self._dar_recado(
+            'O instalador foi aberto. Quando ele terminar, clique em "Conferir '
+            'de novo".'
+        )
+
+    def conferir_o_motor_de_novo(self):
+        if self._conferir_o_motor():
+            self._motor_resolvido()
+            return
+        falta = (
+            "O pacote de português continua faltando."
+            if self._motor_sem_portugues
+            else "O motor continua sem ser encontrado."
+        )
+        self._dar_recado(
+            f"{falta} Se a instalação ainda está em andamento, espere ela "
+            "terminar e confira de novo.",
+            erro=True,
+        )
+
+    def apontar_a_pasta_do_motor(self):
+        # A pasta inicial fica em branco pelo mesmo motivo da escolha do
+        # documento: nada é lembrado entre um uso e outro (RN-22).
+        pasta = QFileDialog.getExistingDirectory(
+            self, "Apontar a pasta do Tesseract", ""
+        )
+        if pasta:
+            self.usar_a_pasta_do_motor(Path(pasta))
+
+    def usar_a_pasta_do_motor(self, pasta):
+        if not apontar_pasta(pasta):
+            self._dar_recado(
+                f"A pasta {pasta} não tem o Tesseract. Procure a pasta onde está "
+                "o arquivo tesseract.exe.",
+                erro=True,
+            )
+            return
+        if self._conferir_o_motor():
+            self._motor_resolvido()
+            return
+        # A pasta tinha o Tesseract, só que sem o português. Dizer que ela "não
+        # tem o Tesseract" mandaria a pessoa procurar outra pasta à toa.
+        self._dar_recado(
+            f"O Tesseract da pasta {pasta} está sem o pacote de português.",
+            erro=True,
+        )
+
+    def _motor_resolvido(self):
+        """O motor apareceu: o aviso some, e quem estava na tela cheia segue.
+
+        Segue para a ficha do documento, e não direto para a leitura: começar a
+        ler sozinho, sem ela ter pedido, surpreenderia quem só clicou para
+        conferir.
+        """
+        self.tela_sem_motor.saidas.apagar_recado()
+        if self.telas.currentWidget() is self.tela_sem_motor and self.ficha_atual:
+            self.tela_ficha.mostrar(self.ficha_atual)
+            self.telas.setCurrentWidget(self.tela_ficha)
+
+    def _dar_recado(self, texto, erro=False):
+        # O recado vai para as duas telas: saindo da tela cheia para a de
+        # escolher, a resposta ao que a pessoa clicou continua à vista.
+        self.aviso_do_motor.saidas.dar_recado(texto, erro=erro)
+        self.tela_sem_motor.saidas.dar_recado(texto, erro=erro)
 
     # ------------------------------------------------------ arrastar e soltar
 

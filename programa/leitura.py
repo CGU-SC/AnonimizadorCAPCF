@@ -8,15 +8,13 @@ Nada aqui sai da máquina. O Tesseract é um programa instalado no próprio
 Windows, e o documento não viaja para lugar nenhum.
 """
 import io
-import os
-import shutil
-from pathlib import Path
 
 import pymupdf
 import pytesseract
 from PIL import Image
 
 from disposicao import montar
+from motor import localizar_tesseract
 
 # 300 pontos por polegada é a densidade que o Tesseract recomenda para texto
 # impresso (regra RN-7 da spec 002). Abaixo disso ele erra mais; acima, fica
@@ -25,15 +23,6 @@ PONTOS_POR_POLEGADA = 300
 
 # O pacote de português. Sem ele o OCR lê acentuação como lixo.
 IDIOMA = "por"
-
-# Onde o instalador do Tesseract costuma deixar o programa no Windows. Ele não
-# entra no caminho que o Windows procura sozinho, então procurar aqui é o que
-# faz o programa funcionar sem ninguém configurar nada em cada máquina do
-# núcleo.
-PASTAS_DE_COSTUME = [
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-]
 
 
 # Quanto uma página costuma levar para ser lida, medido nesta máquina em
@@ -75,35 +64,18 @@ class LeituraFalhou(Exception):
         self.pagina = pagina
 
 
-def localizar_tesseract():
-    """Devolve o caminho do Tesseract nesta máquina, ou None quando não acha."""
-    no_caminho_do_windows = shutil.which("tesseract")
-    if no_caminho_do_windows:
-        return Path(no_caminho_do_windows)
-
-    candidatos = list(PASTAS_DE_COSTUME)
-    pasta_do_usuario = os.environ.get("LOCALAPPDATA")
-    if pasta_do_usuario:
-        candidatos.append(
-            str(Path(pasta_do_usuario) / "Programs" / "Tesseract-OCR" / "tesseract.exe")
-        )
-
-    for candidato in candidatos:
-        if Path(candidato).exists():
-            return Path(candidato)
-    return None
-
-
 def preparar_motor():
     """Aponta o pytesseract para o Tesseract desta máquina.
 
-    Levanta MotorNaoEncontrado quando não há Tesseract instalado - o aviso na
-    tela e a instalação assistida são de uma etapa própria.
+    Levanta MotorNaoEncontrado quando não há Tesseract instalado. A tela já
+    avisa disso antes de a leitura começar; isto aqui é a última trava, para o
+    caso de o motor sumir com o programa aberto.
     """
     caminho = localizar_tesseract()
     if caminho is None:
         raise MotorNaoEncontrado(
-            "O motor de leitura (Tesseract) não foi encontrado nesta máquina."
+            "O motor de leitura (Tesseract) não foi encontrado nesta máquina, "
+            "ou está instalado sem o pacote de português."
         )
     pytesseract.pytesseract.tesseract_cmd = str(caminho)
     return caminho
