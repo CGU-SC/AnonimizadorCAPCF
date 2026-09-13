@@ -49,7 +49,7 @@ def localizar_tesseract():
     return None
 
 
-def ha_tesseract_sem_portugues():
+def ha_algum_tesseract():
     """Diz se há algum Tesseract nesta máquina, mesmo sem o português.
 
     Serve para o aviso dizer o que falta de verdade: pedir à TI que instale o

@@ -16,10 +16,10 @@ dois caminhos.
 """
 
 
-# Ate quantas letras de vao entre duas palavras ainda contam como um espaco
-# simples. Acima disso, o vao e mudanca de coluna. Dois e folgado o bastante
-# para o espaco depois de um ponto final, e apertado o bastante para nao comer a
-# separacao entre colunas de uma tabela.
+# Até quantas letras de vão entre duas palavras ainda contam como um espaço
+# simples. Acima disso, o vão é mudança de coluna. Dois é folgado o bastante
+# para o espaço depois de um ponto final, e apertado o bastante para não comer
+# a separação entre colunas de uma tabela.
 LARGURA_DE_UM_VAO_COMUM = 2.0
 
 
@@ -51,7 +51,8 @@ def agrupar_por_altura(palavras):
     Entre blocos separados por um vão grande entra uma linha em branco, que é o
     que mantém os parágrafos separados no arquivo final.
 
-    `palavras` é uma lista de `(x_inicial, y_topo, y_base, x_final, texto)`.
+    `palavras` é uma lista de `(x_inicial, y_topo, x_final, y_base, texto)` -
+    a mesma ordem em que o PyMuPDF entrega as palavras do PDF.
     """
     if not palavras:
         return []
@@ -62,8 +63,8 @@ def agrupar_por_altura(palavras):
     atual = []
     meio_da_linha = None
     meio_da_linha_anterior = None
-    for x0, y0, y1, x1, texto in sorted(
-        palavras, key=lambda p: ((p[1] + p[2]) / 2, p[0])
+    for x0, y0, x1, y1, texto in sorted(
+        palavras, key=lambda p: ((p[1] + p[3]) / 2, p[0])
     ):
         meio = (y0 + y1) / 2
         if meio_da_linha is None:
@@ -94,7 +95,7 @@ def _meia_altura_da_letra(palavras):
     o corpo do texto. A altura da letra não muda porque existe um carimbo na
     margem.
     """
-    alturas = sorted(abs(y1 - y0) for _x0, y0, y1, _x1, _t in palavras)
+    alturas = sorted(abs(y1 - y0) for _x0, y0, _x1, y1, _t in palavras)
     if not alturas:
         return 1.0
     tipica = alturas[len(alturas) // 2]

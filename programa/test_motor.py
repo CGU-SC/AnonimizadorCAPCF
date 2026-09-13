@@ -156,11 +156,11 @@ def test_tesseract_sem_portugues_nao_conta_como_encontrado(tmp_path, monkeypatch
     monkeypatch.setattr(motor, "PASTAS_DE_COSTUME", [executavel.parent])
 
     assert motor.localizar_tesseract() is None
-    assert motor.ha_tesseract_sem_portugues() is True
+    assert motor.ha_algum_tesseract() is True
 
 
 def test_sem_tesseract_nenhum_nao_e_caso_de_pacote_faltando(maquina_sem_tesseract):
-    assert motor.ha_tesseract_sem_portugues() is False
+    assert motor.ha_algum_tesseract() is False
 
 
 def test_um_tesseract_sem_portugues_nao_esconde_um_bom(tmp_path, monkeypatch,

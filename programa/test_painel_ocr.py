@@ -141,7 +141,7 @@ def test_sem_motor_de_leitura_nao_aparece_tentar_de_novo(aplicacao):
     quem usa e ainda esconde a causa real.
     """
     painel = painel_ocr.PainelOcr()
-    # O aviso carrega quem o mandou, para leitura abandonada nao sequestrar a
+    # O aviso carrega quem o mandou, para leitura abandonada não sequestrar a
     # tela; aqui a leitura de mentira faz esse papel.
     leitura = painel_ocr.LeituraEmSegundoPlano(Path("qualquer.pdf"))
     painel.leitura = leitura

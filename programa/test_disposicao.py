@@ -114,13 +114,13 @@ def test_palavras_na_mesma_altura_viram_uma_linha_so():
     exatamente o problema que esta etapa resolve. Quem diz que elas são a mesma
     linha é a altura.
     """
-    # (x inicial, y do topo, y da base, x final, texto)
+    # (x inicial, y do topo, x final, y da base, texto)
     palavras = [
-        (10, 100, 110, 30, "Item"),
-        (80, 100, 110, 160, "Descricao"),
-        (300, 100, 110, 330, "Valor"),
-        (10, 115, 125, 20, "1"),
-        (80, 115, 125, 200, "Material"),
+        (10, 100, 30, 110, "Item"),
+        (80, 100, 160, 110, "Descricao"),
+        (300, 100, 330, 110, "Valor"),
+        (10, 115, 20, 125, "1"),
+        (80, 115, 200, 125, "Material"),
     ]
 
     linhas = disposicao.agrupar_por_altura(palavras)
