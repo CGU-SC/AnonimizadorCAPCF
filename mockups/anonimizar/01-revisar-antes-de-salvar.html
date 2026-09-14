@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 01 — Revisar antes de salvar (Anonimizar)</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #14171c;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 900px; }
+
+  .rotulo-estado {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    margin: var(--espaco-5) 0 var(--espaco-2) 0;
+  }
+  .rotulo-estado .quando { font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .nota { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 1000px; margin-top: var(--espaco-2); line-height: 1.5; }
+  .nota strong { color: var(--cor-texto); }
+  code { font-family: var(--fonte-mono); background: var(--cor-fundo-elevado); padding: 1px 5px; border-radius: 3px; }
+
+  /* o caminho até esta tela, no alto da página */
+  .fluxo {
+    display: flex; gap: var(--espaco-2); align-items: center; flex-wrap: wrap;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    max-width: 1180px;
+  }
+  .caixa { background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno); }
+  .caixa.aqui { border-color: var(--cor-destaque); color: #7fb1e8; font-weight: 600; }
+  .caixa.depois { border-style: dashed; color: var(--cor-texto-secundario); }
+  .seta-fluxo { color: var(--cor-texto-secundario); }
+
+  /* janela simulada do programa */
+  .janela {
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-width: 1180px;
+    height: 660px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .janela.baixa { height: 460px; }
+  .menu-lateral {
+    width: 200px;
+    flex: 0 0 200px;
+    background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda);
+    padding: var(--espaco-4) 0;
+  }
+  .menu-nome-programa {
+    padding: 0 var(--espaco-3) var(--espaco-4) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: var(--espaco-3);
+  }
+  .menu-item { padding: var(--espaco-3); margin: 0 var(--espaco-2); border-radius: var(--raio); color: var(--cor-texto-secundario); }
+  .menu-item.ativo { background: var(--cor-destaque); color: #fff; font-weight: 600; }
+
+  .painel-principal {
+    flex: 1;
+    background: var(--cor-fundo);
+    padding: var(--espaco-3) var(--espaco-4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .centrado { align-items: center; justify-content: center; text-align: center; }
+
+  .cabecalho { display: flex; align-items: center; gap: var(--espaco-2); margin-bottom: var(--espaco-1); flex-wrap: wrap; }
+  .cabecalho .titulo { font-size: var(--texto-grande); font-weight: 600; margin-right: var(--espaco-2); }
+  .selo { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+  .selo.neutro { background: rgba(255,255,255,0.07); color: var(--cor-texto); }
+  .selo.alerta { background: rgba(217,164,65,0.16); color: var(--cor-alerta); }
+  .selo.info { background: rgba(59,110,165,0.22); color: #7fb1e8; }
+  .legenda { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-3); }
+
+  /* texto de um lado, lista do outro */
+  .area-revisao { display: flex; gap: var(--espaco-3); flex: 1; min-height: 0; }
+  .coluna-texto { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .coluna-lista { width: 290px; flex: 0 0 290px; display: flex; flex-direction: column; min-height: 0; }
+
+  .barra-texto {
+    display: flex; align-items: center; gap: var(--espaco-3);
+    margin-bottom: 6px; font-size: 12px; color: var(--cor-texto-secundario);
+    min-height: 30px;
+  }
+  .barra-texto .chave-cores { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .barra-texto .chave-cores span.m, .barra-texto .chave-cores span.liberado { font-family: var(--fonte-mono); }
+  .barra-texto .direita { margin-left: auto; display: flex; align-items: center; gap: var(--espaco-2); }
+  .recado-trecho { color: var(--cor-alerta); font-size: 12px; }
+
+  .titulo-coluna {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario); margin-bottom: 6px; min-height: 30px;
+    display: flex; align-items: center;
+  }
+
+  .quadro {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+  }
+  /* sem quebra automática de linha: tabela de texto que quebra deixa de ser tabela */
+  .quadro.texto {
+    padding: var(--espaco-3);
+    font-family: var(--fonte-mono);
+    font-size: 13px;
+    line-height: 1.8;
+    white-space: pre;
+    color: var(--cor-texto);
+  }
+  .quadro.texto.apagado { color: #b9bec6; }
+
+  /* as quatro marcas no texto — cor e também traço, para não depender só da cor */
+  .m { cursor: pointer; border-radius: 2px; text-underline-offset: 4px; }
+  .m.conta { background: rgba(76,175,109,0.20); text-decoration: underline solid var(--cor-sucesso); text-decoration-thickness: 2px; }
+  .m.suspeito { background: rgba(217,164,65,0.22); text-decoration: underline wavy var(--cor-alerta); text-decoration-thickness: 1px; }
+  .m.mao { background: rgba(79,134,191,0.30); text-decoration: underline double #7fb1e8; }
+  .liberado { cursor: pointer; outline: 1px dashed var(--cor-texto-secundario); outline-offset: 1px; border-radius: 2px; }
+  .quadro .selecionado { outline: 2px solid #7fb1e8; outline-offset: 2px; }
+  .trecho-marcado { background: rgba(59,110,165,0.65); color: #fff; }
+
+  /* a lista ao lado */
+  .lista {
+    flex: 1; min-height: 0; overflow: auto;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2);
+  }
+  .lista-secao {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 6px 6px 6px 4px;
+  }
+  .lista-secao + .item { margin-top: 2px; }
+  .lista-secao.alerta { color: var(--cor-alerta); }
+  .lista-secao.sucesso { color: var(--cor-sucesso); margin-top: var(--espaco-2); }
+  .lista-secao.mao { color: #7fb1e8; margin-top: var(--espaco-2); }
+  .lista-secao .qtd { font-weight: 400; color: var(--cor-texto-secundario); text-transform: none; letter-spacing: 0; }
+  .lista-explica { font-size: 12px; color: var(--cor-texto-secundario); padding: 0 6px 6px 4px; line-height: 1.4; }
+
+  .item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: var(--espaco-2);
+    background: var(--cor-fundo);
+    border: 1px solid transparent;
+    border-left: 3px solid var(--cor-borda);
+    border-radius: 4px;
+    padding: 7px 8px 7px 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+  }
+  .item.suspeito { border-left-color: var(--cor-alerta); }
+  .item.conta { border-left-color: var(--cor-sucesso); }
+  .item.mao { border-left-color: #7fb1e8; }
+  .item.foi-liberado { border-left-style: dashed; border-left-color: var(--cor-texto-secundario); background: rgba(30,34,40,0.55); }
+  .item.selecionado { border-color: #7fb1e8; border-left-width: 3px; }
+  .item .tipo { grid-column: 1; font-size: 11px; color: var(--cor-texto-secundario); }
+  .item .numero { grid-column: 1; font-family: var(--fonte-mono); font-size: 13px; margin: 1px 0; }
+  .item .contexto { grid-column: 1; font-size: 11px; color: var(--cor-texto-secundario); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item .mini { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+  .etiqueta-liberado { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; background: rgba(255,255,255,0.09); color: var(--cor-texto); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+
+  .lista-vazia { padding: var(--espaco-5) var(--espaco-3); text-align: center; color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); line-height: 1.5; }
+
+  .botao {
+    background: var(--cor-destaque);
+    color: #fff;
+    border: none;
+    border-radius: var(--raio);
+    padding: 9px 18px;
+    font-size: var(--texto-base);
+    font-family: inherit;
+    font-weight: 600;
+  }
+  .botao.secundario { background: transparent; color: var(--cor-texto); border: 1px solid var(--cor-borda); font-weight: 400; }
+  .botao.foco { box-shadow: 0 0 0 2px var(--cor-fundo-elevado), 0 0 0 4px #7fb1e8; }
+  .mini {
+    background: transparent; color: var(--cor-texto); border: 1px solid var(--cor-borda);
+    border-radius: var(--raio); padding: 4px 10px; font-size: 12px; font-family: inherit; white-space: nowrap;
+  }
+  .mini.aceso { background: var(--cor-destaque); border-color: var(--cor-destaque); color: #fff; font-weight: 600; }
+  .mini.apagado { color: #5d646e; background: var(--cor-fundo-elevado); }
+
+  .rodape-acoes { display: flex; gap: var(--espaco-3); align-items: center; margin-top: var(--espaco-3); }
+  .rodape-acoes .aviso-lateral { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+
+  /* o aviso de nenhum CPF */
+  .faixa-info {
+    border: 1px solid var(--cor-destaque);
+    background: rgba(59,110,165,0.14);
+    border-radius: var(--raio);
+    padding: 12px var(--espaco-3);
+    margin-bottom: var(--espaco-3);
+  }
+  .faixa-info .titulo { font-weight: 600; font-size: var(--texto-base); margin-bottom: 2px; }
+  .faixa-info .texto { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+
+  /* carregando e erro */
+  .barra-fina { height: 4px; border-radius: 2px; background: var(--cor-borda); overflow: hidden; margin: var(--espaco-3) auto 0 auto; width: 260px; }
+  .barra-fina .pedaco { width: 40%; height: 100%; background: var(--cor-destaque); border-radius: 2px; }
+  .caixa-erro {
+    border-left: 4px solid var(--cor-erro);
+    background: rgba(217,83,79,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    text-align: left;
+    max-width: 480px;
+    margin-bottom: var(--espaco-4);
+  }
+  .caixa-erro .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .caixa-erro .texto { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+
+  /* a dupla conferência, por cima da revisão */
+  .veu {
+    position: absolute; inset: 0;
+    background: rgba(10,12,15,0.66);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .caixa-dialogo {
+    width: 500px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-top: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+  .caixa-dialogo .titulo { font-size: var(--texto-grande); font-weight: 600; margin-bottom: var(--espaco-2); }
+  .numero-grande {
+    display: inline-block;
+    font-family: var(--fonte-mono); font-size: 22px; letter-spacing: 0.03em;
+    background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio);
+    padding: 8px 14px; margin: var(--espaco-1) 0 var(--espaco-3) 0;
+  }
+  .caixa-dialogo .texto { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); line-height: 1.55; margin-bottom: var(--espaco-4); }
+  .caixa-dialogo .texto strong { color: var(--cor-texto); }
+  .caixa-dialogo .acoes { display: flex; justify-content: flex-end; gap: var(--espaco-3); }
+
+  /* recortes: um pedaço da tela, sem a janela inteira */
+  .lado-a-lado { display: flex; gap: var(--espaco-4); flex-wrap: wrap; max-width: 1180px; }
+  .lado-a-lado > .coluna { flex: 1; min-width: 480px; }
+  .recorte {
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+  }
+  .recorte .quadro { flex: none; }
+  .recorte-titulo { font-weight: 700; margin-bottom: var(--espaco-2); }
+  .ganha-custa { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); margin-top: var(--espaco-2); line-height: 1.5; }
+  .ganha-custa b { color: var(--cor-texto); }
+  .balao {
+    position: absolute;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid #7fb1e8;
+    border-radius: var(--raio);
+    padding: 6px 10px;
+    font-family: var(--fonte-texto);
+    font-size: 12px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+    white-space: nowrap;
+  }
+
+  .aberto {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-alerta);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    max-width: 1180px;
+    margin-bottom: var(--espaco-3);
+    line-height: 1.5;
+  }
+  .aberto p { margin: 0 0 var(--espaco-2) 0; }
+  .aberto p:last-child { margin-bottom: 0; }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+    max-width: 1180px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 01 — Revisar antes de salvar</h1>
+<p class="subtitulo">
+  A tela que dá razão ao módulo: o texto <strong>já mascarado</strong>, cada troca
+  destacada no lugar onde aconteceu, e ao lado a lista do que o programa achou —
+  com os suspeitos primeiro. Ela aparece sempre, tenha o texto CPF ou não (RN-7),
+  e o botão de salvar está liberado desde o começo.
+</p>
+<p class="subtitulo">
+  Nas janelas dos estados 2 e 4, <strong>dá para clicar</strong> num item da lista
+  (o texto rola até ele) ou num número destacado no texto (a lista marca o item).
+</p>
+
+<div class="fluxo">
+  <span class="caixa">escolher o arquivo</span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa">se for PDF: ler e conferir, como no Gerar OCR</span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa aqui">procurar os CPFs</span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa aqui">revisar</span>
+  <span class="seta-fluxo">→</span>
+  <span class="caixa depois">salvar · próximo rascunho</span>
+</div>
+
+<!-- ================================================================ -->
+<div class="rotulo-estado">Estado 1 — procurando os CPFs <span class="quando">· carregando, dura um instante</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item ativo">Anonimizar</div>
+  </div>
+  <div class="painel-principal centrado">
+    <div>
+      <div class="cabecalho" style="justify-content: center;"><div class="titulo" style="margin: 0;">Procurando os CPFs no texto…</div></div>
+      <div class="legenda" style="margin: 0;">prestacao-contas-042-2026.pdf — 12 páginas, texto conferido por você</div>
+      <div class="barra-fina"><div class="pedaco"></div></div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  Sem botão de cancelar: procurar num texto já pronto é questão de um piscar, bem
+  diferente da leitura do PDF. Se um dia um documento enorme fizer esta tela durar,
+  o cancelar entra aqui do mesmo jeito que existe na leitura.
+</p>
+
+<!-- ================================================================ -->
+<!-- Os três CNPJs desta página falham na conta do CNPJ de propósito, como os
+     CPFs inventados. Um CNPJ que passa na conta pode estar registrado de verdade,
+     e o de um microempreendedor individual leva ao nome de uma pessoa (revisão 13). -->
+<div class="rotulo-estado">Estado 2 — revisão, com CPF <span class="quando">· com dados, o caminho normal</span></div>
+<div class="janela interativa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item ativo">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="cabecalho">
+      <div class="titulo">Revisar antes de salvar</div>
+      <span class="selo neutro">8 números mascarados</span>
+      <span class="selo alerta">5 suspeitos para olhar</span>
+    </div>
+    <div class="legenda">prestacao-contas-042-2026.pdf — texto conferido por você. Aqui não se digita: só se mascara e se desfaz a máscara.</div>
+
+    <div class="area-revisao">
+      <div class="coluna-texto">
+        <div class="barra-texto">
+          <div class="chave-cores">
+            <span><span class="m conta">***</span> passa na conta</span>
+            <span><span class="m suspeito">***</span> suspeito</span>
+            <span><span class="m mao">***</span> mascarado à mão</span>
+            <span><span class="liberado">123</span> liberado</span>
+          </div>
+          <div class="direita"><button class="mini apagado">Mascarar o trecho marcado</button></div>
+        </div>
+        <div class="quadro texto"># Prestação de Contas — Projeto 042/2026
+
+Fundação de Apoio Exemplo — CNPJ 12.345.678/0001-90
+Processo nº 23080.012345/2026-11
+
+## 1. Identificação
+
+Trata-se de prestação de contas referente ao projeto de pesquisa
+identificado abaixo, encaminhada pela fundação de apoio para análise
+desta Coordenadoria. O coordenador indicado no Termo de outorga nº
+<span class="m suspeito selecionado" data-id="s1">*** 813 579 **</span> é o servidor Fulano de Tal Exemplo, inscrito no CPF
+<span class="m conta" data-id="c1">***.111.111-**</span>, conforme documentação anexa aos autos.
+
+## 2. Equipe e bolsas pagas
+
+| Nome                   | CPF            | Função       | Valor       |
+| ---------------------- | -------------- | ------------ | ----------- |
+| Beltrana Exemplo Silva | <span class="m conta" data-id="c2">***.222.222-**</span> | Bolsista     | R$ 1.500,00 |
+| Ciclano Teste Souza    | <span class="m suspeito" data-id="s2">***.777.777-**</span> | Bolsista     | R$ 1.500,00 |
+| Maria Fictícia Andrade | <span class="m conta" data-id="c3">***444444**</span>    | Pesquisadora | R$ 4.200,00 |
+| João Inventado Lima    | <span class="m suspeito" data-id="s3">***.333.333-**</span> | Técnico      | R$ 2.800,00 |
+
+## 3. Despesas com pessoa física
+
+Pagamento de serviço de revisão de texto, conforme recibo assinado
+por Ana Suposta Ribeiro, CPF <span class="m suspeito" data-id="s4">***.456.789-**</span>, no valor de R$ 850,00.
+A declaração do prestador, preenchida à mão, informa o CPF nº
+1234 5678 910 e o endereço para correspondência.
+
+Diária paga ao colaborador externo Pedro Hipotético Costa, CPF <span class="m suspeito" data-id="s5">***.555.</span>
+<span class="m suspeito" data-id="s5">555-**</span>, referente à viagem de campo de 03/08/2026.
+
+## 4. Despesas com pessoa jurídica
+
+| Fornecedor               | CNPJ               | Valor       |
+| ------------------------ | ------------------ | ----------- |
+| Papelaria Inventada Ltda | 98.765.432/0001-10 | R$ 412,30   |
+| Gráfica Modelo S.A.      | 11.222.333/0001-80 | R$ 1.980,00 |
+
+## 5. Conclusão
+
+Os documentos apresentados guardam correspondência com o plano de
+trabalho aprovado. Encaminha-se para análise técnica da CAPCF.
+
+Florianópolis, 14 de setembro de 2026.
+
+Fulano de Tal Exemplo
+Coordenador do projeto</div>
+      </div>
+
+      <div class="coluna-lista">
+        <div class="titulo-coluna">O que o programa achou</div>
+        <div class="lista">
+          <div class="lista-secao alerta">Suspeitos — olhe estes <span class="qtd">5</span></div>
+          <div class="item suspeito selecionado" data-alvo="s1">
+            <span class="tipo">quase CPF · espaços no lugar dos pontos</span>
+            <span class="numero">246 813 579 12</span>
+            <span class="contexto">…indicado no Termo de outorga nº</span>
+            <button class="mini">Desfazer</button>
+          </div>
+          <div class="item suspeito" data-alvo="s2">
+            <span class="tipo">falha na conta</span>
+            <span class="numero">777.777.777-78</span>
+            <span class="contexto">…| Ciclano Teste Souza |</span>
+            <button class="mini">Desfazer</button>
+          </div>
+          <div class="item suspeito" data-alvo="s3">
+            <span class="tipo">falha na conta</span>
+            <span class="numero">333.333.333/34</span>
+            <span class="contexto">…| João Inventado Lima |</span>
+            <button class="mini">Desfazer</button>
+          </div>
+          <div class="item suspeito" data-alvo="s4">
+            <span class="tipo">quase CPF · letra no lugar de dígito</span>
+            <span class="numero">l23.456.789-1O</span>
+            <span class="contexto">…assinado por Ana Suposta Ribeiro, CPF</span>
+            <button class="mini">Desfazer</button>
+          </div>
+          <div class="item suspeito" data-alvo="s5">
+            <span class="tipo">quase CPF · partido em duas linhas</span>
+            <span class="numero">555.555. ↵ 555-55</span>
+            <span class="contexto">…Pedro Hipotético Costa, CPF</span>
+            <button class="mini">Desfazer</button>
+          </div>
+
+          <div class="lista-secao sucesso">Passam na conta <span class="qtd">3</span></div>
+          <div class="item conta" data-alvo="c1">
+            <span class="tipo">passa na conta</span>
+            <span class="numero">111.111.111-11</span>
+            <span class="contexto">…Fulano de Tal Exemplo, inscrito no CPF</span>
+            <button class="mini">Desfazer…</button>
+          </div>
+          <div class="item conta" data-alvo="c2">
+            <span class="tipo">passa na conta</span>
+            <span class="numero">222.222.222-22</span>
+            <span class="contexto">…| Beltrana Exemplo Silva |</span>
+            <button class="mini">Desfazer…</button>
+          </div>
+          <div class="item conta" data-alvo="c3">
+            <span class="tipo">passa na conta</span>
+            <span class="numero">44444444444</span>
+            <span class="contexto">…| Maria Fictícia Andrade |</span>
+            <button class="mini">Desfazer…</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape-acoes">
+      <button class="botao">Salvar o texto mascarado…</button>
+      <button class="botao secundario">Anonimizar outro documento</button>
+      <span class="aviso-lateral">Nada é gravado até você salvar.</span>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  <strong>A lista mostra o número como estava escrito</strong>, e não mascarado:
+  é olhando o original e as palavras antes dele que se decide se é CPF. O primeiro
+  suspeito mostra por quê — "Termo de outorga nº" diz que aquilo é número de
+  termo, e não de pessoa. O original aparece só aqui na tela; o arquivo sai com a
+  máscara.
+</p>
+<p class="nota">
+  <strong>Cada tipo tem cor e traço próprios</strong>: sublinhado reto para o que
+  passa na conta, ondulado para o suspeito (o mesmo recado do corretor de texto:
+  "confira isto"), duplo para o que foi mascarado à mão, e contorno tracejado para
+  o que foi liberado. O traço é para quem não distingue bem o verde do amarelo.
+</p>
+<p class="nota">
+  <strong>O quadro do texto não tem a borda azul</strong> que o texto da
+  conferência do OCR tem. Lá a borda azul dizia "dá para digitar aqui"; aqui não
+  dá (RN-8). Em "Desfazer…", os três pontos avisam que vem uma pergunta antes.
+  O CNPJ e o número do processo ficam inteiros e sem destaque (RN-3).
+</p>
+
+<!-- ================================================================ -->
+<div class="rotulo-estado">Estado 3 — marcando um trecho com o mouse <span class="quando">· recortes da barra acima do texto</span></div>
+<div class="lado-a-lado">
+  <div class="coluna">
+    <div class="recorte">
+      <div class="recorte-titulo">Marcou um número que ficou inteiro</div>
+      <div class="barra-texto">
+        <span>1 trecho marcado</span>
+        <div class="direita"><button class="mini aceso">Mascarar o trecho marcado</button></div>
+      </div>
+      <div class="quadro texto" style="height: 110px;">A declaração do prestador, preenchida à mão, informa o CPF nº
+<span class="trecho-marcado">1234 5678 910</span> e o endereço para correspondência.</div>
+    </div>
+    <p class="nota">
+      O botão só acende quando há trecho marcado. Clicado, esconde os 3 primeiros e
+      os 2 últimos dígitos do trecho: <code>1234 5678 910</code> vira
+      <code>***4 5678 9**</code> (RN-9) — o número que o programa não pegou porque
+      não tem a forma de um CPF.
+    </p>
+  </div>
+  <div class="coluna">
+    <div class="recorte">
+      <div class="recorte-titulo">Marcou um trecho sem nenhum número</div>
+      <div class="barra-texto">
+        <span class="recado-trecho">⚠ O trecho marcado não tem nenhum dígito. Nada foi mascarado.</span>
+        <div class="direita"><button class="mini aceso">Mascarar o trecho marcado</button></div>
+      </div>
+      <div class="quadro texto" style="height: 110px;">A declaração do prestador, preenchida à mão, informa o CPF nº
+1234 5678 910 e o <span class="trecho-marcado">endereço para correspondência</span>.</div>
+    </div>
+    <p class="nota">
+      Nada muda no texto, e a frase aparece <strong>ali mesmo, ao lado do
+      botão</strong>, onde o olho está — sem caixa por cima para fechar. Some
+      quando a pessoa marca outro trecho.
+    </p>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<div class="rotulo-estado">Estado 4 — depois de mexer <span class="quando">· um suspeito liberado e um número mascarado à mão</span></div>
+<div class="janela interativa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item ativo">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="cabecalho">
+      <div class="titulo">Revisar antes de salvar</div>
+      <span class="selo neutro">8 números mascarados</span>
+      <span class="selo alerta">4 suspeitos para olhar</span>
+      <span class="selo neutro">1 liberado por você</span>
+    </div>
+    <div class="legenda">prestacao-contas-042-2026.pdf — texto conferido por você. Aqui não se digita: só se mascara e se desfaz a máscara.</div>
+
+    <div class="area-revisao">
+      <div class="coluna-texto">
+        <div class="barra-texto">
+          <div class="chave-cores">
+            <span><span class="m conta">***</span> passa na conta</span>
+            <span><span class="m suspeito">***</span> suspeito</span>
+            <span><span class="m mao">***</span> mascarado à mão</span>
+            <span><span class="liberado">123</span> liberado</span>
+          </div>
+          <div class="direita"><button class="mini apagado">Mascarar o trecho marcado</button></div>
+        </div>
+        <div class="quadro texto"># Prestação de Contas — Projeto 042/2026
+
+Fundação de Apoio Exemplo — CNPJ 12.345.678/0001-90
+Processo nº 23080.012345/2026-11
+
+## 1. Identificação
+
+Trata-se de prestação de contas referente ao projeto de pesquisa
+identificado abaixo, encaminhada pela fundação de apoio para análise
+desta Coordenadoria. O coordenador indicado no Termo de outorga nº
+<span class="liberado" data-id="s1">246 813 579 12</span> é o servidor Fulano de Tal Exemplo, inscrito no CPF
+<span class="m conta" data-id="c1">***.111.111-**</span>, conforme documentação anexa aos autos.
+
+## 2. Equipe e bolsas pagas
+
+| Nome                   | CPF            | Função       | Valor       |
+| ---------------------- | -------------- | ------------ | ----------- |
+| Beltrana Exemplo Silva | <span class="m conta" data-id="c2">***.222.222-**</span> | Bolsista     | R$ 1.500,00 |
+| Ciclano Teste Souza    | <span class="m suspeito" data-id="s2">***.777.777-**</span> | Bolsista     | R$ 1.500,00 |
+| Maria Fictícia Andrade | <span class="m conta" data-id="c3">***444444**</span>    | Pesquisadora | R$ 4.200,00 |
+| João Inventado Lima    | <span class="m suspeito" data-id="s3">***.333.333-**</span> | Técnico      | R$ 2.800,00 |
+
+## 3. Despesas com pessoa física
+
+Pagamento de serviço de revisão de texto, conforme recibo assinado
+por Ana Suposta Ribeiro, CPF <span class="m suspeito" data-id="s4">***.456.789-**</span>, no valor de R$ 850,00.
+A declaração do prestador, preenchida à mão, informa o CPF nº
+<span class="m mao selecionado" data-id="h1">***4 5678 9**</span> e o endereço para correspondência.
+
+Diária paga ao colaborador externo Pedro Hipotético Costa, CPF <span class="m suspeito" data-id="s5">***.555.</span>
+<span class="m suspeito" data-id="s5">555-**</span>, referente à viagem de campo de 03/08/2026.
+
+## 4. Despesas com pessoa jurídica
+
+| Fornecedor               | CNPJ               | Valor       |
+| ------------------------ | ------------------ | ----------- |
+| Papelaria Inventada Ltda | 98.765.432/0001-10 | R$ 412,30   |
+| Gráfica Modelo S.A.      | 11.222.333/0001-80 | R$ 1.980,00 |
+
+## 5. Conclusão
+
+Os documentos apresentados guardam correspondência com o plano de
+trabalho aprovado. Encaminha-se para análise técnica da CAPCF.
+
+Florianópolis, 14 de setembro de 2026.
+
+Fulano de Tal Exemplo
+Coordenador do projeto</div>
+      </div>
+
+      <div class="coluna-lista">
+        <div class="titulo-coluna">O que o programa achou</div>
+        <div class="lista">
+          <div class="lista-secao alerta">Suspeitos — olhe estes <span class="qtd">5</span></div>
+          <div class="item suspeito foi-liberado" data-alvo="s1">
+            <span class="tipo">quase CPF · espaços <span class="etiqueta-liberado">liberado</span></span>
+            <span class="numero">246 813 579 12</span>
+            <span class="contexto">…indicado no Termo de outorga nº</span>
+            <button class="mini">Mascarar de novo</button>
+          </div>
+          <div class="item suspeito" data-alvo="s2">
+            <span class="tipo">falha na conta</span>
+            <span class="numero">777.777.777-78</span>
+            <span class="contexto">…| Ciclano Teste Souza |</span>
+            <button class="mini">Desfazer</button>
+          </div>
+          <div class="item suspeito" data-alvo="s3">
+            <span class="tipo">falha na conta</span>
+            <span class="numero">333.333.333/34</span>
+            <span class="contexto">…| João Inventado Lima |</span>
+            <button class="mini">Desfazer</button>
+          </div>
+          <div class="item suspeito" data-alvo="s4">
+            <span class="tipo">quase CPF · letra no lugar de dígito</span>
+            <span class="numero">l23.456.789-1O</span>
+            <span class="contexto">…assinado por Ana Suposta Ribeiro, CPF</span>
+            <button class="mini">Desfazer</button>
+          </div>
+          <div class="item suspeito" data-alvo="s5">
+            <span class="tipo">quase CPF · partido em duas linhas</span>
+            <span class="numero">555.555. ↵ 555-55</span>
+            <span class="contexto">…Pedro Hipotético Costa, CPF</span>
+            <button class="mini">Desfazer</button>
+          </div>
+
+          <div class="lista-secao mao">Mascarados à mão <span class="qtd">1</span></div>
+          <div class="item mao selecionado" data-alvo="h1">
+            <span class="tipo">mascarado à mão</span>
+            <span class="numero">1234 5678 910</span>
+            <span class="contexto">…preenchida à mão, informa o CPF nº</span>
+            <button class="mini">Desfazer</button>
+          </div>
+
+          <div class="lista-secao sucesso">Passam na conta <span class="qtd">3</span></div>
+          <div class="item conta" data-alvo="c1">
+            <span class="tipo">passa na conta</span>
+            <span class="numero">111.111.111-11</span>
+            <span class="contexto">…Fulano de Tal Exemplo, inscrito no CPF</span>
+            <button class="mini">Desfazer…</button>
+          </div>
+          <div class="item conta" data-alvo="c2">
+            <span class="tipo">passa na conta</span>
+            <span class="numero">222.222.222-22</span>
+            <span class="contexto">…| Beltrana Exemplo Silva |</span>
+            <button class="mini">Desfazer…</button>
+          </div>
+          <div class="item conta" data-alvo="c3">
+            <span class="tipo">passa na conta</span>
+            <span class="numero">44444444444</span>
+            <span class="contexto">…| Maria Fictícia Andrade |</span>
+            <button class="mini">Desfazer…</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape-acoes">
+      <button class="botao">Salvar o texto mascarado…</button>
+      <button class="botao secundario">Anonimizar outro documento</button>
+      <span class="aviso-lateral">Nada é gravado até você salvar.</span>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  <strong>O suspeito liberado não sai da lista.</strong> Ele fica no mesmo lugar,
+  com o traço apagado, a etiqueta "liberado" e o botão "Mascarar de novo" —
+  arrependimento custa um clique, sem caixa de confirmação (premissa nova da
+  spec). No texto, o número volta como estava, com contorno tracejado.
+</p>
+<p class="nota">
+  <strong>A contagem de mascarados continua em 8</strong>: saiu um (o liberado),
+  entrou um (o mascarado à mão). Os selos no alto contam o que está valendo agora,
+  e o terceiro selo só aparece quando algo foi liberado.
+</p>
+
+<!-- ================================================================ -->
+<div class="rotulo-estado">Estado 5 — dupla conferência <span class="quando">· ao clicar em "Desfazer…" num número que passa na conta</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item ativo">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="cabecalho">
+      <div class="titulo">Revisar antes de salvar</div>
+      <span class="selo neutro">8 números mascarados</span>
+      <span class="selo alerta">5 suspeitos para olhar</span>
+    </div>
+    <div class="legenda">prestacao-contas-042-2026.pdf — texto conferido por você. Aqui não se digita: só se mascara e se desfaz a máscara.</div>
+    <div class="area-revisao">
+      <div class="coluna-texto">
+        <div class="barra-texto"><div class="direita"><button class="mini apagado">Mascarar o trecho marcado</button></div></div>
+        <div class="quadro texto">## 2. Equipe e bolsas pagas
+
+| Nome                   | CPF            | Função       | Valor       |
+| ---------------------- | -------------- | ------------ | ----------- |
+| Beltrana Exemplo Silva | <span class="m conta selecionado">***.222.222-**</span> | Bolsista     | R$ 1.500,00 |
+| Ciclano Teste Souza    | <span class="m suspeito">***.777.777-**</span> | Bolsista     | R$ 1.500,00 |
+| Maria Fictícia Andrade | <span class="m conta">***444444**</span>    | Pesquisadora | R$ 4.200,00 |
+| João Inventado Lima    | <span class="m suspeito">***.333.333-**</span> | Técnico      | R$ 2.800,00 |</div>
+      </div>
+      <div class="coluna-lista">
+        <div class="titulo-coluna">O que o programa achou</div>
+        <div class="lista">
+          <div class="lista-secao sucesso" style="margin-top: 0;">Passam na conta <span class="qtd">3</span></div>
+          <div class="item conta selecionado">
+            <span class="tipo">passa na conta</span>
+            <span class="numero">222.222.222-22</span>
+            <span class="contexto">…| Beltrana Exemplo Silva |</span>
+            <button class="mini">Desfazer…</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rodape-acoes">
+      <button class="botao">Salvar o texto mascarado…</button>
+      <button class="botao secundario">Anonimizar outro documento</button>
+    </div>
+  </div>
+
+  <div class="veu">
+    <div class="caixa-dialogo">
+      <div class="titulo">Este número passa na conta do CPF</div>
+      <div class="numero-grande">222.222.222-22</div>
+      <div class="texto">
+        Os dois últimos dígitos batem com a conta do dígito verificador, feita a
+        partir dos nove primeiros. Por isso ele <strong>quase certamente é o CPF de
+        alguém</strong>. Liberado, ele vai inteiro para o arquivo — e do arquivo
+        para a conversa com o assistente de IA.
+      </div>
+      <div class="acoes">
+        <button class="botao secundario">Liberar mesmo assim</button>
+        <button class="botao foco">Manter a máscara</button>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  <strong>"Manter a máscara" já vem escolhido</strong> — é o botão com o anel em
+  volta. Apertar Enter ou Esc mantém a máscara; só o clique em "Liberar mesmo
+  assim" libera (RN-10). É o mesmo arranjo da pergunta de escrever por cima, no
+  Gerar OCR: o caminho que não expõe nada é o mais fácil de seguir.
+</p>
+<p class="nota">
+  <strong>A faixa do alto da caixa é verde</strong>, a cor que o sistema de design
+  dá a "o dígito verificador bateu" — e não vermelha, que é a cor de falha do
+  programa. Aqui nada falhou: o que a caixa pede é cuidado. Se ela for liberada,
+  na hora de salvar o programa mostra este número de novo e pergunta outra vez
+  (RN-11) — essa tela vem no próximo rascunho.
+</p>
+
+<!-- ================================================================ -->
+<div class="rotulo-estado">Estado 6 — revisão, sem CPF <span class="quando">· vazio: o arquivo já tinha sido anonimizado</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item ativo">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="cabecalho">
+      <div class="titulo">Revisar antes de salvar</div>
+      <span class="selo info">nenhum número mascarado</span>
+    </div>
+    <div class="legenda">prestacao-contas-042-2026 - sem CPF.md — arquivo de texto. Aqui não se digita: só se mascara e se desfaz a máscara.</div>
+
+    <div class="faixa-info">
+      <div class="titulo">Nenhum CPF encontrado neste texto</div>
+      <div class="texto">
+        O programa procurou nos quatro formatos combinados e nos números com letra
+        ou espaço no meio. Se você vir um número que deveria estar escondido,
+        marque-o com o mouse e clique em "Mascarar o trecho marcado".
+      </div>
+    </div>
+
+    <div class="area-revisao">
+      <div class="coluna-texto">
+        <div class="barra-texto">
+          <span>O texto está como veio do arquivo.</span>
+          <div class="direita"><button class="mini apagado">Mascarar o trecho marcado</button></div>
+        </div>
+        <div class="quadro texto apagado"># Prestação de Contas — Projeto 042/2026
+
+Fundação de Apoio Exemplo — CNPJ 12.345.678/0001-90
+Processo nº 23080.012345/2026-11
+
+## 1. Identificação
+
+Trata-se de prestação de contas referente ao projeto de pesquisa
+identificado abaixo, encaminhada pela fundação de apoio para análise
+desta Coordenadoria. O coordenador indicado no Termo de outorga nº
+*** 813 579 ** é o servidor Fulano de Tal Exemplo, inscrito no CPF
+***.111.111-**, conforme documentação anexa aos autos.
+
+## 2. Equipe e bolsas pagas
+
+| Nome                   | CPF            | Função       | Valor       |
+| ---------------------- | -------------- | ------------ | ----------- |
+| Beltrana Exemplo Silva | ***.222.222-** | Bolsista     | R$ 1.500,00 |
+| Ciclano Teste Souza    | ***.777.777-** | Bolsista     | R$ 1.500,00 |
+| Maria Fictícia Andrade | ***444444**    | Pesquisadora | R$ 4.200,00 |
+| João Inventado Lima    | ***.333.333-** | Técnico      | R$ 2.800,00 |</div>
+      </div>
+      <div class="coluna-lista">
+        <div class="titulo-coluna">O que o programa achou</div>
+        <div class="lista">
+          <div class="lista-vazia">
+            Nada para olhar aqui.<br><br>
+            Cada número que o programa mascarar — ou que você mascarar à mão —
+            aparece nesta lista.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape-acoes">
+      <button class="botao">Salvar o texto mascarado…</button>
+      <button class="botao secundario">Anonimizar outro documento</button>
+      <span class="aviso-lateral">Nada é gravado até você salvar.</span>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  <strong>O aviso é azul, e não verde.</strong> Verde diria "tudo certo", e
+  "nenhum CPF encontrado" não garante isso — num texto vindo do OCR, pode ser um
+  CPF que a leitura estragou demais para ser reconhecido. O aviso informa e
+  aponta a saída (mascarar à mão), sem tranquilizar.
+</p>
+<p class="nota">
+  O exemplo é o caso da premissa da spec: um arquivo que já passou pelo Anonimizar,
+  aberto de novo. Os asteriscos não se parecem com dígito, então nada é achado. O
+  salvar continua liberado (RN-7) — a pessoa pode estar ali só para mascarar à mão
+  um número que escapou da primeira vez.
+</p>
+
+<!-- ================================================================ -->
+<div class="rotulo-estado">Estado 7 — erro <span class="quando">· o arquivo não serve, e a tela volta à escolha</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item ativo">Anonimizar</div>
+  </div>
+  <div class="painel-principal centrado">
+    <div>
+      <div class="caixa-erro">
+        <div class="titulo">Não foi possível usar este arquivo</div>
+        <div class="texto">
+          O arquivo <strong>anotacoes-reuniao.md</strong> está vazio — não há texto
+          nele para procurar CPF.
+        </div>
+      </div>
+      <button class="botao">Escolher outro arquivo</button>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  O mesmo desenho do erro aprovado no Gerar OCR: uma frase dizendo o que houve e
+  o caminho de volta, sem travar. Para o arquivo que não é texto (algo renomeado
+  para <code>.md</code>), a frase muda para "<em>O arquivo planilha.md não parece
+  ser texto — pode ser outro tipo de arquivo com o nome trocado.</em>" PDF
+  corrompido ou com senha usa os avisos que o Gerar OCR já tem.
+</p>
+
+<!-- ================================================================ -->
+<div class="rotulo-estado">Uma escolha para você <span class="quando">· onde fica o "desfazer" dos números que passam na conta</span></div>
+<div class="aberto">
+  <p>
+    A spec diz "a lista de suspeitos ao lado", e também diz que um número que passa
+    na conta pode ser desfeito, com dupla conferência. Ela não diz <strong>onde a
+    pessoa clica</strong> para desfazer um desses, já que eles não são suspeitos.
+    O rascunho acima usa o jeito A. O B é a outra forma plausível.
+  </p>
+</div>
+<div class="lado-a-lado">
+  <div class="coluna">
+    <div class="recorte">
+      <div class="recorte-titulo">A — tudo na lista, em seções, suspeitos primeiro</div>
+      <div class="lista" style="height: 250px;">
+        <div class="lista-secao alerta">Suspeitos — olhe estes <span class="qtd">5</span></div>
+        <div class="item suspeito">
+          <span class="tipo">falha na conta</span>
+          <span class="numero">777.777.777-78</span>
+          <span class="contexto">…| Ciclano Teste Souza |</span>
+          <button class="mini">Desfazer</button>
+        </div>
+        <div class="lista-explica">… mais 4 suspeitos</div>
+        <div class="lista-secao sucesso">Passam na conta <span class="qtd">3</span></div>
+        <div class="item conta">
+          <span class="tipo">passa na conta</span>
+          <span class="numero">222.222.222-22</span>
+          <span class="contexto">…| Beltrana Exemplo Silva |</span>
+          <button class="mini">Desfazer…</button>
+        </div>
+      </div>
+    </div>
+    <p class="ganha-custa">
+      <b>Ganha:</b> tudo o que foi mascarado está num lugar só, a contagem do alto
+      bate com a lista, e todo "desfazer" é um botão à vista.<br>
+      <b>Custa:</b> num documento com uma tabela de 40 bolsistas, a lista ganha 40
+      itens abaixo dos suspeitos — que continuam no topo, mas a lista rola mais.
+    </p>
+  </div>
+  <div class="coluna">
+    <div class="recorte">
+      <div class="recorte-titulo">B — só suspeitos na lista; o resto se desfaz pelo texto</div>
+      <div class="quadro texto" style="height: 250px;">| Nome                   | CPF            |
+| ---------------------- | -------------- |
+| Beltrana Exemplo Silva | <span class="m conta selecionado">***.222.222-**</span> |
+| Ciclano Teste Souza    | <span class="m suspeito">***.777.777-**</span> |
+
+
+
+<span class="balao" style="top: 128px; left: 196px;">Desfazer esta máscara…</span></div>
+    </div>
+    <p class="ganha-custa">
+      <b>Ganha:</b> a lista fica curta e só com o que pede atenção, e o número
+      válido fica um passo mais longe de ser liberado por engano.<br>
+      <b>Custa:</b> desfazer um número que passa na conta depende de descobrir que
+      dá para clicar no destaque do texto — e isso quase ninguém descobre sozinho.
+    </p>
+  </div>
+</div>
+
+<div class="rotulo-estado">O que fica para o próximo rascunho</div>
+<p class="nota" style="margin-top: 0;">
+  <strong>Salvar</strong>: o caminho preenchido com <code>- sem CPF.md</code>, o
+  lembrete dos números válidos liberados (RN-11), a pergunta antes de escrever
+  por cima, e o "gravado" com o lembrete de que a origem continua na pasta com os
+  CPFs inteiros. E <strong>a tela de escolher o arquivo do Anonimizar</strong>,
+  que aceita PDF, <code>.md</code> e <code>.txt</code>. Os dois partem deste
+  rascunho, depois de aprovado.
+</p>
+
+<p class="rodape">
+  Rascunho gerado pela skill-07-designer-de-telas em 14/09/2026, para a spec
+  003, a partir dos rascunhos aprovados <code>mockups/ocr/06-conferir-o-texto.html</code>
+  e <code>mockups/ocr/08-salvar-o-arquivo.html</code> e do
+  <code>mockups/sistema-de-design.md</code>. Nomes, números e caminhos são
+  inventados. Os números que passam na conta são só de dígitos repetidos; os
+  suspeitos falham na conta, inclusive depois de trocar as letras de volta por
+  dígitos (RN-22).
+</p>
+
+<script>
+  // Só o necessário para a pessoa sentir a ligação entre a lista e o texto,
+  // que é a premissa "clicar num suspeito leva o texto até ele".
+  document.querySelectorAll('.janela.interativa').forEach(function (janela) {
+    var quadro = janela.querySelector('.quadro.texto');
+
+    function marcar(id) {
+      janela.querySelectorAll('.selecionado').forEach(function (e) { e.classList.remove('selecionado'); });
+      janela.querySelectorAll('[data-alvo="' + id + '"], [data-id="' + id + '"]').forEach(function (e) { e.classList.add('selecionado'); });
+    }
+
+    janela.querySelectorAll('.item[data-alvo]').forEach(function (item) {
+      item.addEventListener('click', function (ev) {
+        if (ev.target.closest('button')) return;
+        marcar(item.dataset.alvo);
+        var alvo = quadro.querySelector('[data-id="' + item.dataset.alvo + '"]');
+        if (alvo) quadro.scrollTo({ top: Math.max(alvo.offsetTop - 80, 0), behavior: 'smooth' });
+      });
+    });
+
+    quadro.querySelectorAll('[data-id]').forEach(function (trecho) {
+      trecho.addEventListener('click', function () {
+        marcar(trecho.dataset.id);
+        var item = janela.querySelector('.item[data-alvo="' + trecho.dataset.id + '"]');
+        if (item) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
