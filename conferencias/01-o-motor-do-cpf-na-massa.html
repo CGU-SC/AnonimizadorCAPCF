@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 01 — o motor do CPF na massa</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47;
+    --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5;
+    --cor-alerta: #d9a441;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto);
+         font-family: var(--fonte-texto); font-size: 15px; line-height: 1.55;
+         padding: 32px max(16px, calc((100vw - 1040px) / 2)); }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  code { font-family: var(--fonte-mono); font-size: 13px; }
+  .subtitulo, .nota { color: var(--cor-texto-secundario); }
+  .nota { font-size: 13px; }
+  .selos { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .selo { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+           border-radius: 12px; padding: 2px 12px; font-size: 13px; }
+  .caixa { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+            border-left: 4px solid var(--cor-destaque); border-radius: 6px;
+            padding: 16px 24px; margin: 16px 0; }
+  .rolar { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; font-size: 13px; }
+  .mono { font-family: var(--fonte-mono); white-space: nowrap; }
+  .forte { font-weight: 600; }
+  .quebra { color: var(--cor-texto-secundario); padding: 0 4px; }
+  .etq { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 10px;
+          padding: 1px 8px; margin: 1px 0; color: var(--cor-alerta); }
+  .etq.valido { border: 1px solid var(--cor-alerta); }
+  .etq.suspeito { border: 1px dashed var(--cor-alerta); }
+  pre.documento { font-family: var(--fonte-mono); font-size: 12.5px; background: var(--cor-fundo-elevado);
+                   border: 1px solid var(--cor-borda); border-radius: 6px; padding: 16px;
+                   overflow-x: auto; white-space: pre; }
+  .d-valido { color: var(--cor-alerta); text-decoration: underline solid var(--cor-alerta); text-underline-offset: 3px; }
+  .d-suspeito { color: var(--cor-alerta); text-decoration: underline wavy var(--cor-alerta); text-underline-offset: 3px; }
+  ol li { margin-bottom: 8px; }
+  .rodape { margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
+             font-size: 13px; color: var(--cor-texto-secundario); }
+</style>
+</head>
+<body>
+
+<h1>Conferência 01 — o motor do CPF na massa</h1>
+<p class="subtitulo">Etapa 1 de 7 do Anonimizador de CPF (spec 003). Esta página mostra o que a peça
+nova do programa — a que acha, confere e mascara o CPF — decidiu sobre cada número da massa de teste.
+Ela foi montada rodando o programa de verdade sobre os arquivos de <code>dados-exemplo/</code>, e não
+escrita à mão.</p>
+
+<div class="caixa"><strong>Na janela do programa, nada mudou ainda.</strong> O item "Anonimizar"
+continua com o aviso de "ainda não construído". Ver isto dentro do programa, na tela de revisão, é a
+etapa 2.</div>
+
+<h2>O documento principal, depois do motor</h2>
+<p class="nota">É o <code>10-prestacao-com-cpf.md</code> — o mesmo documento do rascunho de tela 01.
+Sublinhado reto: forma CPF válido. Ondulado: suspeito. Os números sem destaque ficaram inteiros de
+propósito.</p>
+<div class="selos">
+  <span class="selo">10 números mascarados</span>
+  <span class="selo">7 suspeitos</span>
+  <span class="selo">3 de forma CPF válido fora dos suspeitos</span>
+  <span class="selo">6 pedem a dupla conferência para liberar</span>
+</div>
+<pre class="documento"># Prestação de Contas — Projeto 042/2026
+
+Fundação de Apoio Exemplo — CNPJ 12.345.678/0001-90
+Processo nº 23080.012345/2026-11
+
+## 1. Identificação
+
+Trata-se de prestação de contas referente ao projeto de pesquisa
+identificado abaixo, encaminhada pela fundação de apoio para análise
+desta Coordenadoria. O coordenador indicado no Termo de outorga nº
+<span class="d-suspeito">*** 813 579 **</span> é o servidor Fulano de Tal Exemplo, inscrito no CPF
+<span class="d-valido">***.111.111-**</span>, conforme documentação anexa aos autos.
+
+## 2. Equipe e bolsas pagas
+
+| Nome                   | CPF            | Função       | Valor       |
+| ---------------------- | -------------- | ------------ | ----------- |
+| Beltrana Exemplo Silva | <span class="d-valido">***.222.222-**</span> | Bolsista     | R$ 1.500,00 |
+| Ciclano Teste Souza    | <span class="d-suspeito">***.777.777-**</span> | Bolsista     | R$ 1.500,00 |
+| Maria Fictícia Andrade | <span class="d-valido">***444444**</span>    | Pesquisadora | R$ 4.200,00 |
+| João Inventado Lima    | <span class="d-suspeito">***.333.333-**</span> | Técnico      | R$ 2.800,00 |
+
+## 3. Despesas com pessoa física
+
+Pagamento de serviço de revisão de texto, conforme recibo assinado
+por Ana Suposta Ribeiro, CPF <span class="d-suspeito">***.456.789-**</span>, no valor de R$ 850,00.
+A declaração do prestador, preenchida à mão, informa o CPF nº
+1234 5678 910 e o endereço para correspondência.
+Diária paga ao colaborador externo Pedro Hipotético Costa, CPF <span class="d-suspeito">***.555.
+555-**</span>, referente à viagem de campo de 03/08/2026.
+
+## 4. Despesas com pessoa jurídica
+
+| Fornecedor               | CNPJ               | Valor       |
+| ------------------------ | ------------------ | ----------- |
+| Papelaria Inventada Ltda | 98.765.432/0001-10 | R$ 412,30   |
+| Gráfica Modelo S.A.      | 11.222.333/0001-80 | R$ 1.980,00 |
+
+## 5. Observações da análise
+
+O boleto da taxa bancária foi pago pela linha digitável
+34191.79001 01043.510047 91020.150008 1 89410000026000.
+Consta ainda o recibo de Otávio Suposto Nunes, CPF <span class="d-suspeito">***.111.111-**</span>,
+lido com uma letra no lugar do primeiro dígito, e o de Rita Inventada
+Paes, CPF <span class="d-suspeito">*** 666 666 **</span>, lido com espaços no lugar dos pontos.
+O protocolo interno 9111.111.111-11 e a matrícula 111.111.111-119
+não são CPF. A ficha de Sônia Exemplo Dias traz o campo de CPF
+ilegível, lido como l23.4S6.789-1O.
+
+## 6. Conclusão
+
+Os documentos apresentados guardam correspondência com o plano de
+trabalho aprovado. Encaminha-se para análise técnica da CAPCF.
+
+Florianópolis, 14 de setembro de 2026.
+
+Fulano de Tal Exemplo
+Coordenador do projeto
+</pre>
+
+<h2>Cada número, antes e depois</h2>
+<p class="nota">O "como estava" só aparece aqui e na lista da tela de revisão, para a pessoa decidir
+olhando o original. O arquivo gravado leva só o "como ficou". O ↵ marca a quebra de linha.</p>
+<div class="rolar"><table>
+  <tr><th>Como estava</th><th>Como ficou</th><th>O que o programa decidiu</th><th>Desfazer pede confirmação?</th></tr>
+  <tr><td class='mono'>246 813 579 12</td><td class='mono forte'>*** 813 579 **</td><td><span class="etq suspeito">quase CPF · espaços no lugar dos pontos</span></td><td>não — um clique</td></tr><tr><td class='mono'>111.111.111-11</td><td class='mono forte'>***.111.111-**</td><td><span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>222.222.222-22</td><td class='mono forte'>***.222.222-**</td><td><span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>777.777.777-78</td><td class='mono forte'>***.777.777-**</td><td><span class="etq suspeito">suspeito · falha na conta</span></td><td>não — um clique</td></tr><tr><td class='mono'>44444444444</td><td class='mono forte'>***444444**</td><td><span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>333.333.333/34</td><td class='mono forte'>***.333.333-**</td><td><span class="etq suspeito">suspeito · falha na conta</span></td><td>não — um clique</td></tr><tr><td class='mono'>l23.456.789-1O</td><td class='mono forte'>***.456.789-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span></td><td>não — um clique</td></tr><tr><td class='mono'>555.555.<span class="quebra">↵</span>555-55</td><td class='mono forte'>***.555.<span class="quebra">↵</span>555-**</td><td><span class="etq suspeito">quase CPF · partido em duas linhas</span> <span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>l11.111.111-11</td><td class='mono forte'>***.111.111-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span> <span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>666 666 666 66</td><td class='mono forte'>*** 666 666 **</td><td><span class="etq suspeito">quase CPF · espaços no lugar dos pontos</span> <span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr>
+</table></div>
+
+<h2>O que ficou inteiro, e por quê</h2>
+<div class="rolar"><table>
+  <tr><th>No texto</th><th>Por que não foi mascarado</th></tr>
+  <tr><td class='mono'>12.345.678/0001-90</td><td>CNPJ — os números estão ligados a outros dígitos por ponto, barra e traço (RN-3)</td></tr><tr><td class='mono'>23080.012345/2026-11</td><td>número de processo — mais de 11 dígitos, ligados entre si (RN-3)</td></tr><tr><td class='mono'>34191.79001 01043.510047 91020.150008 1 89410000026000</td><td>linha do boleto — nenhum pedaço tem a forma solta de um CPF (RN-3)</td></tr><tr><td class='mono'>9111.111.111-11</td><td>um 9 colado antes do número — não é CPF (RN-3)</td></tr><tr><td class='mono'>111.111.111-119</td><td>um 9 colado depois do número — não é CPF (RN-3)</td></tr><tr><td class='mono'>l23.4S6.789-1O</td><td>três letras no lugar de dígito — mais provavelmente palavra que número (premissa da spec)</td></tr><tr><td class='mono'>1234 5678 910</td><td>não tem a forma de um CPF (grupos de 4, 4 e 3) — é o caso de mascarar à mão, na etapa 4</td></tr><tr><td class='mono'>R$ 1.500,00 · 03/08/2026 · 042/2026</td><td>valores, datas e números de projeto</td></tr>
+</table></div>
+
+<h2>Os outros arquivos da massa</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que o motor achou</th></tr>
+  <tr><td class="mono">14-folha-com-40-bolsistas.md</td><td>40 números: 20 de forma CPF válido e 20 que falham na conta</td></tr>
+  <tr><td class="mono">10-prestacao-com-cpf - sem CPF.md</td><td>0 números — o arquivo já anonimizado, aberto de novo, não tem CPF</td></tr>
+  <tr><td class="mono">11-sem-cpf.md</td><td>0 números — ata com CNPJ, processo e valores</td></tr>
+</table></div>
+
+<h2>O que conferir nesta página</h2>
+<ol>
+  <li>Na coluna "como ficou", <strong>nenhum número mostra os 3 primeiros nem os 2 últimos dígitos</strong>.</li>
+  <li>A pontuação de cada número ficou a mesma, menos a barra antes dos dois últimos, que virou traço
+      (<span class="mono">333.333.333/34</span> → <span class="mono">***.333.333-**</span>).</li>
+  <li>O Pedro, partido em duas linhas, aparece mascarado <strong>nas duas partes</strong>, e a quebra ficou onde estava.</li>
+  <li>Na tabela de bolsistas do documento, as colunas continuam alinhadas depois da máscara.</li>
+  <li>O CNPJ, o processo, o boleto e os números colados a outro dígito saíram inteiros.</li>
+  <li>Os "quase CPF" que passam na conta (<span class="mono">l11.111.111-11</span>, o do Pedro e
+      <span class="mono">666 666 666 66</span>) levam a etiqueta "forma CPF válido" e pedem a dupla conferência.</li>
+</ol>
+
+<p class="rodape">Página gerada em 15/09/2026 pela skill-07-designer-de-telas, a pedido da
+skill-08-construtor-de-funcionalidades, na etapa 1 do Anonimizador de CPF, a partir do resultado do
+motor sobre a massa. Todos os nomes e números são inventados; os que passam na conta são só de dígitos
+repetidos (RN-22).</p>
+</body>
+</html>

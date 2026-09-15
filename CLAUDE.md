@@ -45,6 +45,7 @@ dia o programa sair da universidade.
 | `especificacoes/` | `backlog.md` e `backlog.html` (o previsto), `specs/` (o combinado de cada funcionalidade) |
 | `mockups/` | rascundos de tela, sistema de design, mapa do entendimento — tudo desenhado pela `skill-07-designer-de-telas` |
 | `dados-exemplo/` | massa sintética para testar — nunca documento real |
+| `conferencias/` | as páginas que mostram o que o programa decidiu sobre a massa, para conferir sem abrir código (nasce na etapa 1 do Anonimizar) |
 | `abrir/` | atalho de abrir o programa em modo desenvolvimento (nasce quando houver algo para ver na tela) |
 | `builds/` | o `.exe` gerado no dia da entrega — conteúdo fora do histórico |
 | `.venv/` | ambiente virtual do Python — cada máquina cria o seu, fora do histórico |
@@ -151,6 +152,11 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
   desmontada quando o Python fecha, e aí o Qt já foi desligado. Resolvido em
   10/09/2026 com o `programa/conftest.py`, que desmonta as telas no fim de cada
   teste. Quem olha só o resultado do comando concluiria que a lista falhou.
+- Script provisório (gerar uma página, testar uma ideia) **não roda da pasta
+  temporária do sistema**: a cerca do agente bloqueia tudo fora do projeto, e
+  mandar o script inteiro direto para o terminal do Bash quebrou num script
+  longo, com "unexpected EOF" e nada rodado. Resolve gravando o script dentro
+  do projeto, rodando e apagando em seguida (etapa 1 do Anonimizar, 15/09/2026).
 - Trabalho que roda ao lado da janela (uma `QThread`) precisa ser **parado antes
   de a janela fechar**. Sem isso, fechar o programa no meio de uma leitura o faz
   estourar em vez de fechar limpo, e o Windows mostra a caixa de "o programa
