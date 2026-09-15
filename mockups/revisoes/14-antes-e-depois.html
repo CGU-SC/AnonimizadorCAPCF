@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 14 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre; overflow-x: auto; }
+  .lado-corpo pre { font-family: var(--fonte-mono); font-size: 12px; margin: var(--espaco-2) 0 0 0; white-space: pre; overflow-x: auto; color: var(--cor-texto-secundario); }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+
+<h1>Revisão 14 — antes e depois</h1>
+<p class="subtitulo">15/09/2026 — a etapa 1 do Anonimizador de CPF (o motor que acha e mascara o CPF, e a massa de teste), antes de ir para o histórico</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Revisei o que a etapa 1 construiu: o motor do CPF (<code>programa/cpf.py</code>) e os testes dele, o
+  script da massa de texto e os arquivos que ele gera, e a
+  <a href="../../conferencias/01-o-motor-do-cpf-na-massa.html">Conferência 01</a>. A pergunta era: em
+  que situação um CPF sai do programa sem máscara, ou o programa entrega um resultado errado sem avisar?
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">3</div><div class="contagem-label">achados</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">3</div><div class="contagem-label">aprovados e consertados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">0</div><div class="contagem-label">recusados</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">3</div><div class="contagem-label">suspeitas que não se sustentaram</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/cpf.py — a decisão sobre o que é CPF</div>
+  <div class="explicacao">
+    <strong>Um CPF inteiro podia sair do programa sem máscara e fora da lista.</strong> Havia uma
+    regra, inventada na construção e ausente da spec, que descartava o número quando a letra da ponta
+    dele encostava numa palavra — para o S de "…-1Sobre" não virar um 5. Mas ela descartava também o CPF
+    que a leitura grudou no "CPF" e cujo primeiro 1 virou "l". A regra saiu: vale a RN-2 ao pé da letra, e
+    o erro fica do lado seguro (RN-5). O preço é um alarme falso raro, que aparece na lista de suspeitos
+    e se desfaz com um clique.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">CPFl11.111.111-11</span>
+        Não era mascarado e não aparecia na lista. O CPF ia inteiro para o arquivo.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">CPF***.111.111-**</span>
+        Na lista, como "quase CPF · letra no lugar de dígito", com a marca "forma CPF válido": para
+        liberar, só pela caixa da dupla conferência.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/cpf.py — a montagem do texto que vai para o arquivo</div>
+  <div class="explicacao">
+    <strong>Uma máscara podia desfazer parte de outra.</strong> Ao marcar à mão um trecho que engloba um
+    CPF já mascarado, a máscara nova devolvia ao arquivo os dígitos do meio do trecho — e, com eles, os
+    dois últimos do CPF, enquanto a lista continuava dizendo que ele estava mascarado. Agora cada máscara
+    só escreve o que ela troca (o asterisco, e o traço no lugar da barra), e nunca devolve um dígito por
+    cima de outra. Na tela isso só apareceria na etapa 4, quando o "mascarar à mão" existir; o conserto
+    chega antes.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">CPF ***.111.111-11 e **</span>
+        Os dois últimos dígitos do CPF voltavam a aparecer.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">CPF ***.111.111-** e **</span>
+        As duas máscaras valem juntas, em qualquer ordem.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">dados-exemplo/README.md e dados-exemplo/gerar-massa-cpf.py — o aviso sobre números inventados</div>
+  <div class="explicacao">
+    <strong>A lista de testes terminava com uma falha, e um número que passa na conta do CPF ia para o
+    histórico.</strong> O aviso "cuidado com este número" citava, por inteiro, um número que passa na
+    conta e não é de dígitos repetidos — o tipo que a RN-22 proíbe, porque pode ser o CPF de alguém. O
+    teste que protege a massa varre a pasta inteira, README incluído, e acusou. O aviso ficou como regra,
+    sem o exemplo. O teste continua varrendo o README: foi assim que ele pegou este erro.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande omitido">(não reproduzido)</span>
+        O número não aparece aqui pelo mesmo motivo do conserto: esta página também vai para o histórico.
+        Lista de testes: 1 falha.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        "Cuidado com número 'de sequência' inventado na hora: nem todo falha na conta, e um que passe pode
+        ser o CPF de alguém."
+        <pre>Lista de testes: 172 de 172 passando.</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que aconteceu</th></tr>
+  <tr><td><code>programa/cpf.py</code></td><td>saiu a regra da letra colada a palavra; a montagem do texto de saída só escreve o que cada máscara troca. Os dois trechos ganharam comentário dizendo por quê</td></tr>
+  <tr><td><code>programa/test_cpf.py</code></td><td>o teste do "…-1Sobre" passou a esperar o suspeito; entraram dois testes de regressão, um para cada defeito consertado</td></tr>
+  <tr><td><code>dados-exemplo/README.md</code> e <code>dados-exemplo/gerar-massa-cpf.py</code></td><td>o aviso ficou sem o número; a massa foi gerada de novo e saiu igual</td></tr>
+  <tr><td><code>mockups/revisoes/14-antes-e-depois.html</code></td><td>novo: esta página</td></tr>
+  <tr><td><code>mockups/00-indice.html</code></td><td>ganhou a entrada desta revisão</td></tr>
+</table></div>
+
+<h2>O que foi achado e NÃO consertado</h2>
+<p class="intro-secao">
+  A varredura automática levantou três suspeitas que não se sustentaram como defeito do código: nas três,
+  o programa faz o que a spec manda. Duas delas pedem uma decisão na spec, que é da skill de
+  funcionalidade, e não da revisão.
+</p>
+<ul class="fora-lista">
+  <li><strong>O "mascarar à mão" olha só os dígitos, e não as letras no lugar deles.</strong> Marcar à mão
+    <code>l23.4S6.789-1O</code> esconde só os dígitos de verdade e deixa o "l" e o "O" à vista, que são o
+    primeiro e o último dígito lidos errado. É o que a regra da spec diz ("os 3 primeiros e os 2 últimos
+    dígitos"). Decidir se as letras contam é mudança na spec, antes da etapa 4.</li>
+  <li><strong>Traço e espaço "parecidos" não contam como separador.</strong> O traço que não quebra linha,
+    do Word, a meia-risca e o espaço que não quebra linha deixam um CPF igual na aparência sem máscara e
+    fora da lista. A spec deixa de fora, de propósito, os "dígitos separados por outros símbolos", e manda a
+    revisão humana e o "mascarar à mão" cuidarem deles. Se esses parecidos devem contar, é mudança na spec.</li>
+  <li><strong>A barra vertical de uma tabela compacta vira suspeita.</strong> Em <code>|123456789|</code>, as
+    duas barras contam como "1" (a RN-2 põe a barra vertical na lista das letras parecidas com 1), e o
+    número é mascarado com elas. Não é silencioso: aparece na lista de suspeitos, e sai com um clique. As
+    tabelas que o próprio programa monta nunca têm número encostado na barra.</li>
+</ul>
+
+<p class="rodape">
+  Uma lente só. As outras não rodaram. A de segredo e dado real também tem objeto nesta entrega: a massa
+  nova, com números com forma de CPF e nomes inventados. As de manutenção e clareza têm o motor novo para
+  olhar. A de critérios de aceite só cobriria, hoje, "Encontrar e conferir" e "Máscara". A de conferir na
+  tela ainda não tem o que ver: a etapa não mudou nada na janela.
+</p>
+
+</body>
+</html>

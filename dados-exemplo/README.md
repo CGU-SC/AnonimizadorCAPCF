@@ -15,9 +15,10 @@ projeto:
 .\.venv\Scripts\python.exe dados-exemplo\gerar-massa.py
 ```
 
-O único CPF que aparece nos textos é `123.456.789-10`. Ele foi escolhido de
+O único CPF que aparece nos PDFs é `123.456.789-10`. Ele foi escolhido de
 propósito com o dígito verificador **errado**: mesmo por acidente, ele não bate
-com o CPF de ninguém.
+com o CPF de ninguém. A massa de texto do Anonimizar tem outros números, todos
+com a mesma garantia — veja a seção dela, mais abaixo.
 
 ## O que é cada um
 
@@ -30,6 +31,47 @@ com o CPF de ninguém.
 | `05-corrompido.pdf` | começa como PDF e termina no meio, sem fechar | arquivo que não abre: o programa explica em uma frase e volta, sem travar |
 | `06-protegido-por-senha.pdf` | PDF cifrado (a senha é `senha-de-teste`) | outro jeito de o arquivo não abrir |
 | `07-carimbo-lateral.pdf` | 2 páginas com o número do processo **carimbado de lado** na margem, como sai de sistema de processos | o carimbo tem palavras espalhadas verticalmente, e isso já quebrou a remontagem do texto: as linhas do corpo saíam fundidas e intercaladas. Entrou na massa em 11/09/2026, depois do defeito |
+
+## A massa de texto com CPF, do Anonimizar
+
+Os arquivos de `10` a `16` são outra massa, gerada por outro script, para o
+módulo Anonimizar (spec 003). Para refazê-los, da raiz do projeto:
+
+```
+.\.venv\Scripts\python.exe dados-exemplo\gerar-massa-cpf.py
+```
+
+Ficam num script à parte para não regravar os PDFs a cada vez (veja o fim deste
+arquivo). Diferente dos PDFs, estes saem idênticos toda vez que o script roda.
+
+**Nenhum número desta massa pode ser de alguém** (regra RN-22 da spec 003):
+
+- os que **passam na conta** do dígito verificador são **só de dígitos
+  repetidos** — `111.111.111-11`, `222.222.222-22`, `44444444444`… —, que a
+  Receita não emite;
+- os **suspeitos** falham na conta: `123.456.789-10`, `777.777.777-78`,
+  `333.333.333/34`, `246 813 579 12`;
+- os **"quase CPF"** falham na conta mesmo com as letras trocadas de volta por
+  dígitos (`l23.456.789-1O`), ou partem de dígitos repetidos
+  (`l11.111.111-11`, `555.555.` / `555-55` partido em duas linhas,
+  `666 666 666 66`).
+
+Cuidado com número "de sequência" inventado na hora: nem todo falha na conta,
+e um que passe pode ser o CPF de alguém. Por isso nenhum número que passa na
+conta é escrito nesta pasta, nem como exemplo do que evitar. Um teste automático
+(`programa/test_cpf.py`) varre esta pasta inteira e falha se aparecer número
+que passa na conta sem ser de dígitos repetidos.
+
+| Arquivo | O que ele é | O que ele existe para testar |
+| --- | --- | --- |
+| `10-prestacao-com-cpf.md` | a prestação de contas do rascunho de tela 01 do Anonimizar, com tabela de bolsistas e observações da análise | todos os tipos de uma vez: forma CPF válido nos quatro formatos, falha na conta, os três jeitos de "quase CPF" (letra, espaços, partido em duas linhas), o "quase CPF" que passa na conta, três letras (não mascara), CNPJ, processo, boleto e número colado a outro dígito (ficam inteiros), e o `1234 5678 910` para mascarar à mão |
+| `10-prestacao-com-cpf - sem CPF.md` | o mesmo documento já mascarado, com o nome que o programa dá ao arquivo que grava | um arquivo já anonimizado, aberto de novo: "nenhum CPF encontrado" |
+| `11-sem-cpf.md` | ata de reunião com CNPJ, processo e valores, e nenhum CPF | a revisão sem CPF, com o aviso e o salvar liberado |
+| `12-acentos-bloco-de-notas-atual.txt` | texto com acentos, gravado como o Bloco de Notas grava hoje, com a quebra de linha do Windows | os acentos certos no jeito de hoje |
+| `13-acentos-bloco-de-notas-antigo.txt` | o mesmo texto, gravado no padrão antigo do Windows em português | os acentos certos no jeito antigo (RN-21) |
+| `14-folha-com-40-bolsistas.md` | tabela de 40 bolsistas, metade com CPF de forma válida e metade falhando na conta | a lista ao lado da revisão com muitos itens, e a tabela alinhada depois da máscara |
+| `15-vazio.md` | arquivo vazio | o erro de arquivo vazio, que volta à escolha |
+| `16-planilha-renomeada.md` | bytes de planilha com o nome trocado para `.md` | o erro de arquivo que não é texto |
 
 ## Uma observação honesta sobre o `04`
 
