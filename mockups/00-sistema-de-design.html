@@ -15,6 +15,7 @@
     --cor-sucesso: #4caf6d;
     --cor-alerta: #d9a441;
     --cor-erro: #d9534f;
+    --cor-erro-texto: #f08a86;
     --fonte-texto: "Segoe UI", system-ui, sans-serif;
     --fonte-mono: "Cascadia Mono", "Consolas", monospace;
     --texto-pequeno: 13px;
@@ -100,7 +101,10 @@
   .selo { display: inline-flex; align-items: center; gap: var(--espaco-1); padding: 2px var(--espaco-2); border-radius: 12px; font-size: var(--texto-pequeno); font-weight: 600; }
   .selo-sucesso { background: rgba(76,175,109,0.15); color: var(--cor-sucesso); }
   .selo-alerta { background: rgba(217,164,65,0.15); color: var(--cor-alerta); }
-  .selo-erro { background: rgba(217,83,79,0.15); color: var(--cor-erro); }
+  /* letra vermelha usa o tom mais claro: o #d9534f sobre o fundo escuro não chega ao contraste de leitura em letra pequena */
+  .selo-erro { background: rgba(217,83,79,0.15); color: var(--cor-erro-texto); }
+  .mudanca-sistema { max-width: 640px; margin-top: var(--espaco-3); padding: var(--espaco-3); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-alerta); border-radius: var(--raio); background: var(--cor-fundo-elevado); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); line-height: 1.5; }
+  .mudanca-sistema strong { color: var(--cor-texto); }
 
   table { border-collapse: collapse; width: 100%; max-width: 640px; }
   th, td {
@@ -121,7 +125,7 @@
 <body>
 
 <h1>AnomizadorCAPCF</h1>
-<p class="subtitulo">Sistema de design — tema escuro (único por enquanto), decidido em 03/09/2026</p>
+<p class="subtitulo">Sistema de design — tema escuro (único por enquanto), decidido em 03/09/2026, atualizado em 14/09/2026</p>
 
 <section>
   <h2>Paleta</h2>
@@ -133,6 +137,18 @@
     <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-sucesso)"></div><div class="cor-info"><div class="cor-nome">sucesso</div><div class="cor-valor">#4caf6d</div></div></div>
     <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta)"></div><div class="cor-info"><div class="cor-nome">alerta</div><div class="cor-valor">#d9a441</div></div></div>
     <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro)"></div><div class="cor-info"><div class="cor-nome">erro</div><div class="cor-valor">#d9534f</div></div></div>
+    <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro-texto)"></div><div class="cor-info"><div class="cor-nome">erro-texto</div><div class="cor-valor">#f08a86</div></div></div>
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou em 14/09/2026, nos rascunhos 06 e 07 do Anonimizar:</strong> o CPF que passa na
+    conta do dígito verificador deixou de ser verde. Na revisão ele é o número mais perigoso — quase
+    certamente o CPF de alguém —, e verde dava a impressão de coisa boa. Ele passa a aparecer como
+    <strong>"forma CPF válido", no amarelo de alerta</strong>, com sublinhado reto (o suspeito tem
+    o ondulado), e o <strong>vermelho fica para a caixa da dupla conferência</strong>, o momento em
+    que ele pode escapar. O verde fica só para "deu certo" (arquivo gravado). E entra o
+    <strong>erro-texto</strong>, um vermelho mais claro para letra: o
+    <code>#d9534f</code> sobre o fundo escuro tem contraste de 4:1, abaixo do mínimo de leitura para
+    letra pequena (3,6:1 sobre o fundo elevado); o <code>#f08a86</code> tem 6,6:1.
   </div>
 </section>
 
@@ -157,9 +173,10 @@
       <input type="text" value="C:\Documentos\sintese-01.pdf" readonly>
     </div>
     <div>
-      <span class="selo selo-sucesso">CPF conferido</span><br><br>
+      <span class="selo selo-alerta">forma CPF válido</span><br><br>
       <span class="selo selo-alerta">CPF suspeito</span><br><br>
-      <span class="selo selo-erro">Falha ao ler</span>
+      <span class="selo selo-erro">Falha ao ler</span><br><br>
+      <span class="selo selo-sucesso">Arquivo gravado</span>
     </div>
   </div>
 </section>
@@ -171,9 +188,9 @@
       <tr><th>Ocorrência</th><th>CPF encontrado</th><th>Situação</th></tr>
     </thead>
     <tbody>
-      <tr><td>Linha 12</td><td class="numero">***.456.789-**</td><td><span class="selo selo-sucesso">conferido</span></td></tr>
+      <tr><td>Linha 12</td><td class="numero">***.456.789-**</td><td><span class="selo selo-alerta">forma CPF válido</span></td></tr>
       <tr><td>Linha 47</td><td class="numero">***.1O2.345-**</td><td><span class="selo selo-alerta">suspeito</span></td></tr>
-      <tr><td>Linha 88</td><td class="numero">***.789.012-**</td><td><span class="selo selo-sucesso">conferido</span></td></tr>
+      <tr><td>Linha 88</td><td class="numero">***.789.012-**</td><td><span class="selo selo-alerta">forma CPF válido</span></td></tr>
     </tbody>
   </table>
 </section>
