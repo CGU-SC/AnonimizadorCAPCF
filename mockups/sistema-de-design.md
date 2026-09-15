@@ -28,9 +28,17 @@ papel.
 | `--cor-texto-secundario` | `#9aa1ac` | legenda, texto de apoio |
 | `--cor-destaque` | `#3b6ea5` | botão principal, item ativo do menu, links |
 | `--cor-destaque-hover` | `#4f86bf` | estado de passar o mouse sobre o destaque |
-| `--cor-sucesso` | `#4caf6d` | CPF conferido / dígito verificador bateu |
-| `--cor-alerta` | `#d9a441` | CPF suspeito — dígito verificador não bateu, indo para conferência humana |
-| `--cor-erro` | `#d9534f` | falha (arquivo inválido, OCR não rodou) |
+| `--cor-sucesso` | `#4caf6d` | o que deu certo (arquivo gravado) — **não** marca CPF desde 14/09/2026 |
+| `--cor-alerta` | `#d9a441` | CPF suspeito — dígito verificador não bateu, indo para conferência humana — e, desde 14/09/2026, o CPF que passa na conta, mostrado como **"forma CPF válido"** (o traço é que separa os dois: reto para "forma CPF válido", ondulado para o suspeito) |
+| `--cor-erro` | `#d9534f` | falha (arquivo inválido, OCR não rodou) e, desde 14/09/2026, a faixa da caixa da dupla conferência de um número com forma CPF válido — o momento de risco |
+| `--cor-erro-texto` | `#f08a86` | letra em vermelho sobre o fundo escuro (contraste 6,6:1). O `#d9534f` tem 4:1 sobre o fundo e 3,6:1 sobre o fundo elevado, abaixo do mínimo de 4,5:1 para letra pequena |
+
+**Mudou em 14/09/2026** (rascunhos 06 e 07 do Anonimizar): o CPF que passa na
+conta do dígito verificador deixou de ser verde. Na revisão do Anonimizar ele é
+o número mais perigoso — quase certamente o CPF de alguém —, e verde dava a
+impressão de coisa boa. Ele passa a ter o rótulo "forma CPF válido", no amarelo
+de alerta, e o vermelho fica para a caixa da dupla conferência, que é o momento
+em que ele pode escapar (decidido pela usuária). O verde fica só para "deu certo".
 
 ## Tipografia
 
