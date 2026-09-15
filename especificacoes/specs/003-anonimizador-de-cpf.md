@@ -3,6 +3,20 @@
 **Status:** aprovada
 **Data:** 2026-09-13
 **Aprovada em:** 2026-09-14
+**Emenda:** aprovada em 2026-09-14 — o "quase CPF" que passa na conta
+passa a pedir a dupla conferência para ser liberado, e entra no lembrete antes de
+salvar (RN-2, RN-10 e RN-11). Veio da revisão dos rascunhos de tela 02 e 03.
+**Segunda emenda, desfeita no mesmo dia:** o formato único `***.456.789-**`
+para todo número mascarado chegou a ser aprovado em 2026-09-14 e foi desfeito
+horas depois, a pedido da usuária. A máscara continua mantendo a pontuação
+original (RN-6), por dois motivos: preserva o formato do documento, e um número
+mascarado por engano como CPF continua reconhecível pelo formato que tinha.
+**Terceira emenda:** aprovada em 2026-09-14 — no "Anonimizar", a
+escolha do motor de leitura sai da tela de escolher o arquivo e aparece só
+quando o PDF vai ser lido como imagem (sem camada de texto, ou quando a pessoa
+escolhe ignorar a camada e ler as imagens). Na primeira tela ela confundia:
+parecia preciso escolher um motor até para anonimizar um `.md`. O aviso de motor
+faltando continua na primeira tela, e a tela do "Gerar OCR" não muda.
 **Origem:** levantamento detalhado de 13/09/2026, registrado em
 `mockups/requisitos/02-mapa-do-entendimento.html`. Uma resposta mudou na hora de
 escrever: a linha no topo do arquivo (R-11 do mapa) saiu, porque ia contra a
@@ -38,8 +52,9 @@ chatbot.
 - **Tela de revisão**, que aparece sempre: o texto já mascarado com cada troca
   destacada, e a lista de suspeitos ao lado.
 - Mascarar à mão o trecho que o programa não pegou.
-- Desfazer uma máscara: um clique para o suspeito e para a máscara feita à mão;
-  **dupla conferência** para o número que passa na conta.
+- Desfazer uma máscara: um clique para o suspeito que falha na conta e para a
+  máscara feita à mão; **dupla conferência** para todo número que passa na conta,
+  inclusive o "quase CPF" que passa.
 - Avisar quando **nenhum CPF** for encontrado.
 - Salvar como `<nome da origem> - sem CPF.md`, na pasta da origem, com o
   caminho preenchido e editável, perguntando antes de escrever por cima.
@@ -85,8 +100,9 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   onde estava.
 - premissa: número de dígitos repetidos (`111.111.111-11`) passa na conta e é
   tratado como CPF. A Receita não os emite, mas escondê-los não custa nada.
-- premissa: desfazer a máscara de um suspeito ou de uma máscara feita à mão é um
-  clique, sem caixa de confirmação.
+- premissa: desfazer a máscara de um suspeito que falha na conta ou de uma
+  máscara feita à mão é um clique, sem caixa de confirmação. O "quase CPF" que
+  passa na conta não entra aqui: ele pede a dupla conferência (RN-10).
 - premissa: a máscara troca cada dígito por um asterisco, um por um. O tamanho
   do número não muda, e a tabela de texto continua alinhada.
 - premissa: clicar num suspeito da lista leva o texto até ele.
@@ -106,9 +122,12 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   um uso e outro, e o arquivo de origem nunca é alterado.
 - premissa: o botão "Seguir para Anonimizar" do "Gerar OCR" acende, e o aviso da
   tela de salvar passa a apontar para o Anonimizar pronto.
-- premissa (*nova*): no "Anonimizar", a escolha do motor de leitura e o aviso de
-  motor faltando aparecem igual ao "Gerar OCR", porque o PDF passa pelo mesmo
-  caminho. Para `.md` e `.txt`, o motor não importa e o aviso não bloqueia nada.
+- premissa (*nova*, emendada em 14/09/2026): no "Anonimizar", o aviso de motor
+  faltando aparece igual ao "Gerar OCR", na primeira tela. A escolha do motor,
+  não: ela aparece só quando o PDF vai ser lido como imagem — sem camada de
+  texto, ou quando a pessoa escolhe ignorar a camada e ler as imagens —, com
+  "Tesseract (nesta máquina)" marcado. Para `.md` e `.txt`, o motor não importa e
+  o aviso não bloqueia nada.
 - premissa (*nova*): para contar como "quase CPF", **no máximo 2 das 11
   posições** podem ser letras no lugar de dígito. Com mais letras que isso, a
   sequência é mais provavelmente uma palavra do que um número, e marcá-la
@@ -125,11 +144,13 @@ apareceram ao escrever esta spec (marcadas com *nova*).
 
 1. A pessoa clica em "Anonimizar" no menu lateral.
 2. O painel mostra a área para escolher o arquivo, dizendo que aceita PDF,
-   `.md` e `.txt`, e a escolha do motor, com "Tesseract (nesta máquina)" marcado.
+   `.md` e `.txt`. A escolha do motor não aparece aqui.
 3. Ela escolhe um PDF.
-4. O documento segue o caminho da spec 002, sem tirar nem pôr: o programa
-   confere se há camada de texto, a pessoa decide sobre ela quando há, a leitura
-   roda com contagem de páginas e cancelar, e abre a tela de conferência.
+4. O documento segue o caminho da spec 002: o programa confere se há camada de
+   texto, a pessoa decide sobre ela quando há, a leitura roda com contagem de
+   páginas e cancelar, e abre a tela de conferência. A única diferença é o
+   motor: quando o PDF vai ser lido como imagem, a escolha dele aparece nessa
+   hora, antes de ler, com "Tesseract (nesta máquina)" marcado.
 5. Ela confere, corrige o que precisar e clica em "conferido".
 6. **O programa vai direto para a revisão.** A escolha entre "salvar o texto
    como está" e "seguir para o Anonimizar" não aparece.
@@ -161,14 +182,17 @@ apareceram ao escrever esta spec (marcadas com *nova*).
 
 ### Caminho torto — um suspeito que não é CPF
 
-Na lista, ela clica em "desfazer" num suspeito. O número volta a aparecer como
-estava no texto, e o item continua na lista, marcado como "liberado", com a
-opção de mascarar de novo. Nenhuma caixa de confirmação.
+Na lista, ela clica em "desfazer" num suspeito que falha na conta. O número
+volta a aparecer como estava no texto, e o item continua na lista, marcado como
+"liberado", com a opção de mascarar de novo. Nenhuma caixa de confirmação. Se o
+suspeito for um "quase CPF" que passa na conta, vale o caminho seguinte.
 
 ### Caminho torto — um número que passa na conta, e ela acha que não é CPF
 
-Ela clica em "desfazer" num número que passou na conta. Abre uma caixa com o
-número inteiro e a explicação de que ele passa na conta do CPF e por isso
+Ela clica em "desfazer" num número que passou na conta, seja do tipo "passa na
+conta", seja um "quase CPF" que passa depois de trocadas as letras e juntadas as
+partes. Abre uma caixa com o número como está escrito no texto (que é o que iria
+para o arquivo) e a explicação de que ele passa na conta do CPF e por isso
 quase certamente é um. O botão já escolhido é **"manter a máscara"**: apertar
 Enter ou Esc não libera nada. Só clicando em "liberar mesmo assim" o número
 volta. Na hora de salvar, se algum número desses foi liberado, o programa lista
@@ -222,7 +246,7 @@ memória durante o uso:
 | --- | --- | --- | --- |
 | arquivo de origem | a pessoa (botão ou arrastar), ou o PDF que veio do "Gerar OCR" | sim | PDF, `.md` ou `.txt`. Decide o caminho sugerido para salvar |
 | texto de entrada | a conferência do OCR, ou o conteúdo do `.md`/`.txt` | sim | nunca é gravado como está |
-| lista de ocorrências | derivada: busca no texto + ações da pessoa | sim | cada ocorrência tem: **onde** está no texto, **o que estava escrito**, o **tipo** (passa na conta · suspeito: falha na conta · suspeito: quase CPF · mascarado à mão) e a **situação** (mascarado · liberado) |
+| lista de ocorrências | derivada: busca no texto + ações da pessoa | sim | cada ocorrência tem: **onde** está no texto, **o que estava escrito**, o **tipo** (passa na conta · suspeito: falha na conta · suspeito: quase CPF · mascarado à mão), a **situação** (mascarado · liberado) e, para o quase CPF, se ele **passa na conta** depois de trocadas as letras e juntadas as partes. Na tela, "passa na conta" aparece como **"forma CPF válido"**, no amarelo de alerta, e a caixa da dupla conferência é vermelha: o número que passa na conta é o mais perigoso, e o verde de antes dava a impressão de coisa boa (decidido em 14/09/2026, nos rascunhos de tela 06 e 07) |
 | texto de saída | derivado | sim | o texto de entrada com a máscara aplicada a toda ocorrência "mascarada". É só isto que vai para o arquivo |
 | caminho de destino | sugerido pelo programa, alterável | sim, na hora de salvar | padrão: pasta da origem, nome da origem sem a terminação, mais ` - sem CPF.md` |
 
@@ -231,7 +255,7 @@ O `.env` não é usado neste módulo: não há segredo nenhum aqui.
 ## Estados da interface
 
 - **vazio:** a área de escolher o arquivo (botão e "arraste aqui"), dizendo que
-  aceita PDF, `.md` e `.txt`, e a escolha do motor. É o estado de quando ela
+  aceita PDF, `.md` e `.txt`, sem a escolha do motor. É o estado de quando ela
   clica em "Anonimizar".
 - **vazio, com o motor faltando:** o mesmo painel, mais o aviso no alto com as
   três saídas da spec 002. A escolha do arquivo continua funcionando.
@@ -241,7 +265,8 @@ O `.env` não é usado neste módulo: não há segredo nenhum aqui.
 - **procurando os CPFs:** dura um instante. A tela mostra que está trabalhando.
 - **revisão, com CPF:** o texto mascarado, cada troca destacada (distinguindo
   o que passa na conta do que é suspeito e do que foi feito à mão), a lista de
-  suspeitos ao lado, a contagem do que foi mascarado, e o salvar liberado.
+  suspeitos ao lado, com o "quase CPF" que passa na conta marcado assim, a
+  contagem do que foi mascarado, e o salvar liberado.
 - **revisão, sem CPF:** o texto como veio, o aviso bem visível de "nenhum CPF
   encontrado neste texto", a lista vazia, e o salvar liberado.
 - **dupla conferência:** a caixa com o número inteiro, a explicação e "manter a
@@ -270,7 +295,11 @@ aprovação própria, antes da construção.
   (`O o D Q` por 0, `l I i |` por 1, `Z` por 2, `S s` por 5, `G b` por 6, `T`
   por 7, `B` por 8, `g q` por 9); o separador é um espaço ou uma mistura fora
   dos formatos combinados; ou o número está quebrado entre duas linhas. O
-  "quase CPF" é sempre "suspeito: quase CPF", passe ou não na conta.
+  "quase CPF" é sempre "suspeito: quase CPF", passe ou não na conta. Mas ele
+  também é conferido pela conta, depois de trocadas as letras de volta por
+  dígitos e juntadas as partes: o que passa leva a marca "passa na conta" na
+  lista e segue a RN-10 e a RN-11 como número que passa na conta. É o CPF de
+  verdade que a leitura estragou, e é o que menos pode sair com um clique.
 - RN-3: **Número grudado num número maior não é CPF.** Só conta a sequência sem
   dígito colado antes ou depois, nem ligada a outro dígito por ponto, traço ou
   barra. É o que deixa inteiros o CNPJ (`12.345.678/0001-90`), o número de
@@ -293,13 +322,16 @@ aprovação própria, antes da construção.
 - RN-9: **Mascarar à mão** vale para o trecho marcado com o mouse, pela regra da
   premissa: esconde os 3 primeiros e os 2 últimos dígitos do trecho, ou todos
   se forem 5 ou menos.
-- RN-10: **Desfazer a máscara** de um suspeito ou de uma máscara feita à mão é
-  um clique. De um número do tipo "passa na conta", pede a dupla conferência: a
-  caixa com o número inteiro, a explicação, e **"manter a máscara" como botão
-  já escolhido**, de modo que Enter ou Esc não liberam nada.
-- RN-11: **Ao salvar**, se algum número do tipo "passa na conta" foi liberado, o
-  programa mostra quais foram antes de gravar, e a pessoa escolhe entre salvar
-  assim ou voltar à revisão.
+- RN-10: **Desfazer a máscara** de um suspeito que falha na conta ou de uma
+  máscara feita à mão é um clique. De **todo número que passa na conta** — do
+  tipo "passa na conta", ou "quase CPF" que passa (RN-2) —, pede a dupla
+  conferência: a caixa com o número como está escrito no texto, a explicação, e
+  **"manter a máscara" como botão já escolhido**, de modo que Enter ou Esc não
+  liberam nada.
+- RN-11: **Ao salvar**, se algum número que passa na conta foi liberado — do
+  tipo "passa na conta", ou "quase CPF" que passa —, o programa mostra quais
+  foram antes de gravar, e a pessoa escolhe entre salvar assim ou voltar à
+  revisão.
 - RN-12: **O arquivo de saída tem o texto e mais nada**, com as máscaras no
   lugar e as tabelas como tabelas. A RN-11 da spec 002 vale aqui: nenhuma linha
   escrita pelo programa entra no arquivo.
@@ -313,7 +345,9 @@ aprovação própria, antes da construção.
 - RN-15: **PDF pelo "Anonimizar"** passa pelo caminho inteiro da spec 002, com
   todas as regras dela, **conferência obrigatória inclusive**. No fim da
   conferência vai direto para a revisão, e a saída "salvar o texto como está"
-  **não é oferecida** nesse caminho.
+  **não é oferecida** nesse caminho. A escolha do motor é a única coisa que
+  muda de lugar: aparece quando o PDF vai ser lido como imagem, e não na
+  primeira tela (terceira emenda).
 - RN-16: **O botão "Seguir para Anonimizar"** do "Gerar OCR" funciona: leva o
   texto conferido para a revisão por dentro do programa, sem gravar arquivo, e
   marca "Anonimizar" no menu.
@@ -384,14 +418,19 @@ aprovação própria, antes da construção.
 - Dado que a pessoa tenta digitar dentro do texto da revisão, então nada muda.
 - Dado um suspeito na lista, quando a pessoa clica nele, então o texto rola até
   ele.
-- Dado um suspeito, quando a pessoa clica em "desfazer", então o número volta
-  ao original no texto, sem caixa de confirmação, e continua na lista como
-  "liberado", com a opção de mascarar de novo.
+- Dado um suspeito que falha na conta, quando a pessoa clica em "desfazer",
+  então o número volta ao original no texto, sem caixa de confirmação, e
+  continua na lista como "liberado", com a opção de mascarar de novo.
 - Dado um número do tipo "passa na conta", quando a pessoa clica em "desfazer",
   então abre a caixa com o número inteiro, e **apertar Enter mantém a máscara**.
-- Dado que a pessoa liberou um número do tipo "passa na conta", quando ela
-  clica em salvar, então o programa mostra esse número antes de gravar e deixa
-  voltar à revisão.
+- Dado `l11.111.111-11` e dado `555.555.` no fim de uma linha com `555-55` no
+  começo da seguinte ("quase CPF" que passa na conta), quando a revisão abre,
+  então os dois estão na lista de suspeitos com a marca "passa na conta"; e
+  quando a pessoa clica em "desfazer" num deles, então abre a caixa da dupla
+  conferência, e **apertar Enter mantém a máscara**.
+- Dado que a pessoa liberou um número que passa na conta — do tipo "passa na
+  conta", ou "quase CPF" que passa —, quando ela clica em salvar, então o
+  programa mostra esse número antes de gravar e deixa voltar à revisão.
 - Dado o trecho `1234 5678 910`, que não tem forma de CPF e por isso o programa
   não pega, quando ela o marca com o mouse e escolhe "mascarar", então ele vira
   `***4 5678 9**` e aparece na lista como "mascarado à mão".
@@ -420,6 +459,12 @@ aprovação própria, antes da construção.
 - Dado que o Tesseract não está instalado, quando a pessoa abre o "Anonimizar",
   então o aviso aparece com as três saídas, e um `.md` escolhido abre a revisão
   normalmente.
+- Dado que a pessoa abre o "Anonimizar", então a tela de escolher o arquivo não
+  mostra a escolha do motor. Dado um PDF sem camada de texto, ou um PDF com
+  camada em que a pessoa escolhe ler as imagens, então a escolha do motor
+  aparece antes da leitura, com "Tesseract (nesta máquina)" marcado. Dado um
+  `.md`, um `.txt` ou um PDF cuja camada de texto é aproveitada, então a escolha
+  do motor não aparece em momento nenhum.
 
 **Salvar**
 

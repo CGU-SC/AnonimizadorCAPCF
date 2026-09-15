@@ -216,7 +216,7 @@
 <body>
 
 <h1>Spec ilustrada 003 — Anonimizador de CPF</h1>
-<p class="subtitulo">O combinado do item 3 do backlog, desenhado — 13/09/2026 · situação: aprovada em 14/09/2026</p>
+<p class="subtitulo">O combinado do item 3 do backlog, desenhado — 13/09/2026 · situação: aprovada em 14/09/2026, emendada no mesmo dia</p>
 
 <div class="objetivo">
   <strong>Objetivo.</strong> Entregar um <code>.md</code> <strong>sem nenhum CPF inteiro</strong>,
@@ -233,6 +233,33 @@
   mapa 02) saiu, porque ia contra a RN-11 da spec 002. O arquivo que sai tem o texto e mais
   nada, igual ao do OCR. O formato <code>***.456.789-**</code> é o mesmo que portais do governo
   usam, e o assistente o reconhece sem aviso.
+</div>
+
+<div class="emenda">
+  <strong>Emenda de 14/09/2026, aprovada.</strong> O "quase CPF" que passa na conta — depois de
+  trocadas as letras de volta por dígitos e juntadas as partes quebradas — continua suspeito e na
+  lista, mas com a marca "passa na conta": liberá-lo pede a dupla conferência, e, liberado, ele
+  entra no lembrete antes de salvar (RN-2, RN-10 e RN-11). É o CPF de verdade que a leitura
+  estragou, e era o único número válido que saía com um clique. Veio da revisão dos rascunhos de
+  tela 02 e 03.
+</div>
+
+<div class="emenda">
+  <strong>Uma segunda emenda, desfeita no mesmo dia.</strong> O formato único
+  <code>***.456.789-**</code> para todo número mascarado chegou a ser aprovado e foi desfeito
+  horas depois. A máscara continua <strong>mantendo a pontuação original</strong> (RN-6): preserva
+  o formato do documento, e um número mascarado por engano como CPF continua reconhecível pelo
+  formato que tinha. Na tela, o tipo "passa na conta" aparece como <strong>"forma CPF
+  válido"</strong>, no amarelo de alerta, e a caixa da dupla conferência é vermelha — o verde de
+  antes dava a impressão de coisa boa.
+</div>
+
+<div class="emenda">
+  <strong>Terceira emenda de 14/09/2026, aprovada.</strong> No "Anonimizar", a escolha do motor
+  de leitura sai da tela de escolher o arquivo e aparece só quando o PDF vai ser lido como imagem —
+  sem camada de texto, ou quando a pessoa escolhe ler as imagens. Na primeira tela ela confundia:
+  parecia preciso escolher um motor até para anonimizar um <code>.md</code>. O aviso de motor
+  faltando continua na primeira tela, e o "Gerar OCR" não muda.
 </div>
 
 <h2>O percurso do texto</h2>
@@ -288,11 +315,12 @@
   </div>
   <div class="classe suspeito">
     <h3>Suspeito</h3>
-    <div class="destino">mascarado <strong>e</strong> na lista · desfazer é um clique</div>
+    <div class="destino">mascarado <strong>e</strong> na lista · desfazer é um clique, a não ser o quase CPF que passa na conta</div>
     <div class="exemplo"><span class="de">123.456.789-10</span><span class="para">→ ***.456.789-**</span><span class="porque">falha na conta: pode ser um CPF lido errado</span></div>
     <div class="exemplo"><span class="de">l23.456.789-1O</span><span class="para">→ ***.456.789-**</span><span class="porque">quase CPF: letra no lugar do dígito (no máximo 2)</span></div>
     <div class="exemplo"><span class="de">123 456 789 10</span><span class="para">→ *** 456 789 **</span><span class="porque">quase CPF: espaço no lugar da pontuação</span></div>
     <div class="exemplo"><span class="de">123.456.⏎789-10</span><span class="para">→ ***.456.⏎789-**</span><span class="porque">quase CPF: quebrado entre duas linhas</span></div>
+    <div class="exemplo"><span class="de">l11.111.111-11</span><span class="para">→ ***.111.111-**</span><span class="porque">quase CPF que <strong>passa na conta</strong> com o l trocado por 1: continua suspeito, mas desfazer pede dupla conferência (emenda)</span></div>
   </div>
   <div class="classe ignorado">
     <h3>Não é CPF</h3>
@@ -312,9 +340,9 @@
     <div class="fluxo-titulo"><span class="marca"></span>Normal — um PDF pelo "Anonimizar"</div>
     <div class="fluxo-quando">O caminho mais longo, e o mais comum</div>
     <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">Clica em "Anonimizar" no menu.</div></div>
-    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Vê a área de escolher arquivo (PDF, <code>.md</code>, <code>.txt</code>) e o motor.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Vê a área de escolher arquivo (PDF, <code>.md</code>, <code>.txt</code>). O motor não aparece aqui.</div></div>
     <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">Escolhe o PDF.</div></div>
-    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">Segue o caminho da spec 002: camada de texto, leitura, conferência.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">Segue o caminho da spec 002: camada de texto, leitura, conferência. Se o PDF vai ser lido como imagem, a escolha do motor aparece nessa hora.</div></div>
     <div class="passo"><div class="passo-numero">5</div><div class="passo-texto">Confere, corrige, clica em "conferido".</div></div>
     <div class="passo"><div class="passo-numero">6</div><div class="passo-texto">Vai direto para a revisão, sem a escolha de saída do OCR.</div></div>
     <div class="passo"><div class="passo-numero">7</div><div class="passo-texto">O programa acha, confere e mascara. A revisão abre.</div></div>
@@ -325,8 +353,8 @@
   <div class="fluxo-coluna torto">
     <div class="fluxo-titulo"><span class="marca"></span>Torto — a máscara que não devia</div>
     <div class="fluxo-quando">A pessoa acha que um número mascarado não é CPF</div>
-    <div class="passo"><div class="passo-numero">a</div><div class="passo-texto"><strong>Suspeito:</strong> "desfazer" é um clique. Ele fica na lista como "liberado", com a opção de mascarar de novo.</div></div>
-    <div class="passo"><div class="passo-numero">b</div><div class="passo-texto"><strong>Passa na conta:</strong> abre a caixa com o número inteiro, e o botão já escolhido é "manter a máscara". Enter e Esc não liberam nada.</div></div>
+    <div class="passo"><div class="passo-numero">a</div><div class="passo-texto"><strong>Suspeito que falha na conta:</strong> "desfazer" é um clique. Ele fica na lista como "liberado", com a opção de mascarar de novo.</div></div>
+    <div class="passo"><div class="passo-numero">b</div><div class="passo-texto"><strong>Passa na conta, ou quase CPF que passa:</strong> abre a caixa com o número como está escrito, e o botão já escolhido é "manter a máscara". Enter e Esc não liberam nada.</div></div>
     <div class="passo"><div class="passo-numero">c</div><div class="passo-texto">Ao salvar, se ela liberou algum que passa na conta, o programa mostra quais foram e deixa voltar.</div></div>
     <div class="fluxo-titulo" style="margin-top:16px"><span class="marca"></span>Torto — o CPF que escapou</div>
     <div class="passo"><div class="passo-numero">a</div><div class="passo-texto">Ela marca o trecho com o mouse e escolhe "mascarar". Ele aparece na lista como "mascarado à mão".</div></div>
@@ -358,7 +386,7 @@
 <div class="estados">
   <div class="estado-quadro">
     <div class="estado-cabecalho cab-vazio">vazio</div>
-    <div class="estado-corpo">A área de escolher o arquivo, dizendo que aceita PDF, <code>.md</code> e <code>.txt</code>, e a escolha do motor.</div>
+    <div class="estado-corpo">A área de escolher o arquivo, dizendo que aceita PDF, <code>.md</code> e <code>.txt</code>, sem a escolha do motor.</div>
   </div>
   <div class="estado-quadro">
     <div class="estado-cabecalho cab-vazio">vazio, com o motor faltando</div>
@@ -417,7 +445,7 @@
         <li>A conta do dígito verificador, feita pelo próprio programa</li>
         <li>Tudo o que foi achado sai mascarado, suspeitos inclusive</li>
         <li>A revisão sempre, com a lista de suspeitos</li>
-        <li>Mascarar à mão, e desfazer com dupla conferência para o número que passa na conta</li>
+        <li>Mascarar à mão, e desfazer com dupla conferência para todo número que passa na conta, inclusive o quase CPF</li>
         <li>O aviso "nenhum CPF encontrado"</li>
         <li><code>- sem CPF.md</code> na pasta da origem, com o lembrete de que a origem continua lá</li>
         <li>O aviso da tela de salvar do OCR, atualizado</li>
@@ -471,13 +499,13 @@
 <h2>Premissas — o que está sendo assumido</h2>
 <p class="nota">São 16. As 4 marcadas como "nova" apareceram ao escrever a spec, e você ainda não as viu no mapa.</p>
 <div class="cartoes">
-  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — No "Anonimizar", a escolha do motor e o aviso de motor faltando aparecem igual ao "Gerar OCR". Para <code>.md</code> e <code>.txt</code>, o motor não importa.</div>
+  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — No "Anonimizar", o aviso de motor faltando aparece igual ao "Gerar OCR", na primeira tela; a escolha do motor aparece só quando o PDF vai ser lido como imagem (terceira emenda). Para <code>.md</code> e <code>.txt</code>, o motor não importa.</div>
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — "Quase CPF" tem <strong>no máximo 2 letras</strong> no lugar de dígito. Com mais, é mais provável que seja palavra, e marcar encheria a lista.</div>
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — A máscara à mão esconde os 3 primeiros e os 2 últimos dígitos do trecho, ou todos se forem 5 ou menos. Trecho sem dígito não muda nada.</div>
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — Máscara desfeita pode ser refeita: o item fica na lista como "liberado".</div>
   <div class="cartao"><span class="chave">premissa</span> — No "quase CPF", a máscara cai nas 3 primeiras e nas 2 últimas posições, mesmo com letra ali. Quebrado entre linhas, as duas partes são mascaradas.</div>
   <div class="cartao"><span class="chave">premissa</span> — Dígitos repetidos (<code>111.111.111-11</code>) passam na conta e são tratados como CPF.</div>
-  <div class="cartao"><span class="chave">premissa</span> — Desfazer um suspeito ou uma máscara feita à mão é um clique.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Desfazer um suspeito que falha na conta ou uma máscara feita à mão é um clique. O quase CPF que passa na conta pede dupla conferência.</div>
   <div class="cartao"><span class="chave">premissa</span> — A máscara não muda o tamanho do número: a tabela continua alinhada.</div>
   <div class="cartao"><span class="chave">premissa</span> — Clicar num suspeito da lista leva o texto até ele.</div>
   <div class="cartao"><span class="chave">premissa</span> — Sair da revisão sem salvar pergunta antes de descartar.</div>
@@ -493,7 +521,7 @@
 <div class="cartoes">
   <div class="cartao regra"><span class="chave">RN-5</span> — Tudo o que foi achado é mascarado, inclusive o suspeito. O erro fica do lado seguro.</div>
   <div class="cartao regra"><span class="chave">RN-3</span> — Número grudado num número maior não é CPF. CNPJ, processo e boleto saem inteiros.</div>
-  <div class="cartao regra"><span class="chave">RN-10</span> — Desfazer um número que passa na conta pede dupla conferência, com "manter a máscara" já escolhido.</div>
+  <div class="cartao regra"><span class="chave">RN-10</span> — Desfazer todo número que passa na conta, inclusive o quase CPF que passa, pede dupla conferência, com "manter a máscara" já escolhido.</div>
   <div class="cartao regra"><span class="chave">RN-12</span> — O arquivo tem o texto e mais nada. A RN-11 da spec 002 vale nos dois arquivos.</div>
   <div class="cartao regra"><span class="chave">RN-15</span> — PDF pelo "Anonimizar" passa pela conferência obrigatória e nunca oferece o arquivo com CPF inteiro.</div>
   <div class="cartao regra"><span class="chave">RN-22</span> — A massa de teste nunca tem CPF que possa ser de alguém.</div>
