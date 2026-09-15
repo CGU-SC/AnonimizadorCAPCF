@@ -10,7 +10,13 @@ salvar (RN-2, RN-10 e RN-11). Veio da revisão dos rascunhos de tela 02 e 03.
 para todo número mascarado chegou a ser aprovado em 2026-09-14 e foi desfeito
 horas depois, a pedido da usuária. A máscara continua mantendo a pontuação
 original (RN-6), por dois motivos: preserva o formato do documento, e um número
-mascarado por engano como CPF continua reconhecível pelo formato que tinha.
+mascarado por engano como CPF continua reconhecível pelo formato que tinha — a
+não ser pela barra antes dos dois últimos, que continua virando traço.
+**Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
+contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
+mudam o combinado: o nome na tela do tipo "passa na conta" nos critérios, o que
+a caixa da dupla conferência mostra, o motor faltando num PDF com texto, e esta
+nota sobre a barra.
 **Terceira emenda:** aprovada em 2026-09-14 — no "Anonimizar", a
 escolha do motor de leitura sai da tela de escolher o arquivo e aparece só
 quando o PDF vai ser lido como imagem (sem camada de texto, ou quando a pessoa
@@ -230,7 +236,11 @@ antes: escrever por cima ou salvar com outro nome. Nunca sobrescreve calado.
 
 Igual ao "Gerar OCR" (spec 002): o aviso no alto já traz as três saídas
 ("instalar agora", "conferir de novo" e apontar a pasta). Um `.md`, um `.txt` ou
-um PDF com camada de texto seguem normalmente.
+um PDF com camada de texto seguem normalmente. Se, num PDF com camada de texto,
+ela escolher ignorar a camada e ler as imagens, vale a tela que o "Gerar OCR" já
+tem para esse caso: diz que ler aquele documento como imagem precisa do motor, e
+que o texto que já está por dentro dele continua podendo ser aproveitado — sem
+dizer que ele "não tem texto por dentro".
 
 ### Caminho torto — ela cancela a leitura do PDF
 
@@ -269,7 +279,7 @@ O `.env` não é usado neste módulo: não há segredo nenhum aqui.
   contagem do que foi mascarado, e o salvar liberado.
 - **revisão, sem CPF:** o texto como veio, o aviso bem visível de "nenhum CPF
   encontrado neste texto", a lista vazia, e o salvar liberado.
-- **dupla conferência:** a caixa com o número inteiro, a explicação e "manter a
+- **dupla conferência:** a caixa com o número como está escrito no texto, a explicação e "manter a
   máscara" já escolhido.
 - **salvando:** o caminho preenchido e editável. Havendo número que passa na
   conta liberado, o lembrete dele vem antes de gravar.
@@ -297,8 +307,8 @@ aprovação própria, antes da construção.
   dos formatos combinados; ou o número está quebrado entre duas linhas. O
   "quase CPF" é sempre "suspeito: quase CPF", passe ou não na conta. Mas ele
   também é conferido pela conta, depois de trocadas as letras de volta por
-  dígitos e juntadas as partes: o que passa leva a marca "passa na conta" na
-  lista e segue a RN-10 e a RN-11 como número que passa na conta. É o CPF de
+  dígitos e juntadas as partes: o que passa leva, na lista, a marca do tipo
+  "passa na conta" — na tela, "forma CPF válido" — e segue a RN-10 e a RN-11 como número que passa na conta. É o CPF de
   verdade que a leitura estragou, e é o que menos pode sair com um clique.
 - RN-3: **Número grudado num número maior não é CPF.** Só conta a sequência sem
   dígito colado antes ou depois, nem ligada a outro dígito por ponto, traço ou
@@ -378,7 +388,8 @@ aprovação própria, antes da construção.
 
 - Dado um texto com `111.111.111-11`, `11111111111`, `111111111-11` e
   `111.111.111/11`, quando ele passa pelo Anonimizar, então os quatro aparecem
-  mascarados e marcados como "passa na conta", e nenhum está na lista de
+  mascarados e marcados como "forma CPF válido" (o nome na tela do tipo "passa
+  na conta"), e nenhum está na lista de
   suspeitos.
 - Dado um texto com `123.456.789-10`, quando ele passa pelo Anonimizar, então o
   número aparece mascarado **e** está na lista de suspeitos, como "falha na
@@ -422,10 +433,11 @@ aprovação própria, antes da construção.
   então o número volta ao original no texto, sem caixa de confirmação, e
   continua na lista como "liberado", com a opção de mascarar de novo.
 - Dado um número do tipo "passa na conta", quando a pessoa clica em "desfazer",
-  então abre a caixa com o número inteiro, e **apertar Enter mantém a máscara**.
+  então abre a caixa com o número como está escrito no texto, e **apertar Enter
+  mantém a máscara**.
 - Dado `l11.111.111-11` e dado `555.555.` no fim de uma linha com `555-55` no
   começo da seguinte ("quase CPF" que passa na conta), quando a revisão abre,
-  então os dois estão na lista de suspeitos com a marca "passa na conta"; e
+  então os dois estão na lista de suspeitos com a marca "forma CPF válido"; e
   quando a pessoa clica em "desfazer" num deles, então abre a caixa da dupla
   conferência, e **apertar Enter mantém a máscara**.
 - Dado que a pessoa liberou um número que passa na conta — do tipo "passa na
