@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 15 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+
+<h1>Revisão 15 — antes e depois</h1>
+<p class="subtitulo">16/09/2026 — a etapa 2 do Anonimizador de CPF (o módulo no menu, a leitura do .md e do .txt e a tela de revisão), mais a quarta emenda da spec já aplicada no motor</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Revisei o que a etapa 2 construiu — a leitura do arquivo de texto, a tela de revisão e o painel do
+  Anonimizar — e o que a quarta emenda mudou no motor e na massa. A pergunta era: em que situação um CPF
+  vaza, um arquivo bom é recusado, ou o programa entrega um resultado errado sem avisar?
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">5</div><div class="contagem-label">achados</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">5</div><div class="contagem-label">aprovados e consertados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">0</div><div class="contagem-label">recusados</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">3</div><div class="contagem-label">suspeitas que não se sustentaram</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_texto.py — a conferência de "isto é texto?"</div>
+  <div class="explicacao">
+    <strong>Arquivo de texto legítimo era recusado.</strong> Bastava <em>uma</em> letra invisível de
+    controle para o programa dizer "não parece ser texto". O <code>.txt</code> tirado de um PDF traz o
+    avanço de página entre uma página e outra, e o <code>.md</code> salvo pelo Word usa um símbolo
+    próprio no marcador de lista — os dois eram recusados. E recusar um arquivo bom é o pior erro daqui:
+    a pessoa desiste do programa e manda o documento com os CPFs inteiros para o assistente. Agora as
+    marcas de texto de verdade são aceitas, e o que barra o arquivo é o byte zero ou mais de 1% de
+    letras estranhas — o caso da planilha renomeada, que continua recusada.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">"não parece ser texto"</span>
+        Para um .txt tirado de PDF, e para um .md do Word.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">abre na revisão</span>
+        Os dois abrem. A planilha renomeada continua recusada.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/test_cpf.py, a massa e o README dela — o teto de letras da quarta emenda</div>
+  <div class="explicacao">
+    <strong>O limite que acabou de ser decidido não tinha teste nenhum.</strong> O exemplo de "letras
+    demais" escolhido na hora, <code>SOL.IDA.DES-OS</code>, nem chega a ser considerado pelo programa:
+    A, E e L não estão na lista de letras que a leitura confunde com dígito. Ele era recusado por outro
+    motivo, e o teto de 4 letras ficava sem cobertura — subir de 4 para 11 não quebraria teste algum.
+    Entraram dois exemplos que exercitam o limite de verdade, nos dois lados dele, e a massa e o README
+    passaram a chamar cada coisa pelo nome certo.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">SOL.IDA.DES-OS</span>
+        Dito como "letras demais". Não testava o limite: não era nem considerado.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">l23.4S6.7B9-1O · lZ3.4S6.7B9-1O</span>
+        Quatro letras: mascarado. Cinco: inteiro. Subir o teto passa a quebrar a lista de testes.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/tela_revisao.py — onde o destaque é desenhado</div>
+  <div class="explicacao">
+    <strong>O destaque podia cair fora do número.</strong> O programa conta as posições do texto de um
+    jeito e a tela conta de outro: símbolo fora do comum — um emoji num título, um sinal colado de outro
+    lugar — vale duas casas para a tela e uma para o programa. Com um emoji antes do primeiro CPF, a
+    marca escorregava uma casa; com vários, ela sai inteira de cima do número, que aparece na tela sem
+    marca nenhuma. A máscara em si sempre esteve certa: o que errava era só a marca visual — que é
+    justamente o que se usa para conferir de relance.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande"> ***.111.111-*</span>
+        O destaque, deslocado uma casa: sobrando no espaço e faltando no fim.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">***.111.111-**</span>
+        A marca cobre o número inteiro, com emoji ou sem.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_texto.py — quando o arquivo conta como vazio</div>
+  <div class="explicacao">
+    <strong>Um arquivo praticamente vazio abria a revisão em branco.</strong> Um <code>.txt</code>
+    salvo pelo Bloco de Notas sem nada digitado não tem zero bytes: tem os três bytes invisíveis que ele
+    põe no começo de tudo o que grava. A trava de "está vazio" olhava os bytes antes de tirar essa marca,
+    e deixava passar — a revisão abria sem nada, com o aviso azul de "nenhum CPF encontrado neste texto"
+    falando de um documento que não existe. Na etapa 5, esse caminho gravaria um arquivo vazio. Agora a
+    conferência acontece depois da leitura.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">revisão em branco</span>
+        Com o aviso de "nenhum CPF encontrado".
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">"O arquivo está vazio"</span>
+        A mesma frase que o arquivo de zero bytes já dava, e o caminho de volta.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/painel_anonimizar.py — a frase de quem escolhe outro tipo de arquivo</div>
+  <div class="explicacao">
+    <strong>Um arquivo que nunca vai ser aceito recebia a promessa do PDF.</strong> Quem digitasse o nome
+    de um <code>.docx</code> ou de uma planilha lia que aquilo "entra numa etapa seguinte" — e Word e
+    planilha estão no fora-de-escopo da spec: não entram nesta versão nem nas seguintes. Agora cada caso
+    tem a sua frase, e só o PDF promete alguma coisa, porque no caso dele a promessa é verdadeira (etapa 6).
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">"entra numa etapa seguinte"</span>
+        Para .docx, .xlsx, qualquer coisa.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">"O Anonimizar abre PDF, .md e .txt"</span>
+        Sem promessa. O PDF continua com a dele.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que aconteceu</th></tr>
+  <tr><td><code>programa/arquivo_texto.py</code></td><td>a conferência de texto ganhou folga e passou a barrar pelo byte zero e pela proporção de letras estranhas; o "está vazio" passou para depois da leitura</td></tr>
+  <tr><td><code>programa/tela_revisao.py</code></td><td>o destaque converte a posição antes de marcar</td></tr>
+  <tr><td><code>programa/painel_anonimizar.py</code></td><td>duas frases, uma para o PDF e outra para os tipos fora do escopo</td></tr>
+  <tr><td><code>dados-exemplo/gerar-massa-cpf.py</code> e o README</td><td>entraram os exemplos de 4 e de 5 letras; a massa foi gerada de novo (o documento principal passou a ter 12 números mascarados, eram 11)</td></tr>
+  <tr><td><code>programa/test_cpf.py</code>, <code>test_arquivo_texto.py</code>, <code>test_painel_anonimizar.py</code></td><td>sete testes novos: um para cada conserto, e dois para o teto de letras</td></tr>
+  <tr><td><code>conferencias/01-o-motor-do-cpf-na-massa.html</code></td><td>refeita pelo script, com os exemplos novos</td></tr>
+  <tr><td><code>mockups/revisoes/15-antes-e-depois.html</code></td><td>novo: esta página</td></tr>
+</table></div>
+
+<h2>O que foi achado e NÃO consertado</h2>
+<p class="intro-secao">
+  Três suspeitas da varredura automática não se sustentaram na conferência. Duas caíram na medição, e uma
+  não tem como acontecer hoje.
+</p>
+<ul class="fora-lista">
+  <li><strong>"A tela congela em documento grande."</strong> A medição na máquina não confirmou: um texto
+    de 158 KB com 3.000 números leva 1,4 segundo, e 300 números levam 0,04. O tamanho em que isso
+    incomodaria não é o dos documentos deste programa. Fica anotado para o dia em que um PDF de dezenas
+    de documentos juntos aparecer.</li>
+  <li><strong>"A quarta emenda deixa CPF vazar."</strong> Não deixa: a varredura testou 120 mil casos com
+    lixo antes e depois do número, conferindo dígito a dígito o que ficou visível, e não achou vazamento.</li>
+  <li><strong>O "mascarado à mão" usaria o vermelho do "CPF válido"</strong> e não entraria na contagem
+    dele, e aí o texto e o selo do alto se contradiriam. Não tem como acontecer hoje: mascarar à mão só
+    ganha tela na etapa 4. Fica anotado como a primeira coisa a resolver lá — ele tem traço próprio no
+    rascunho aprovado.</li>
+</ul>
+
+<p class="rodape">
+  Uma lente só. As outras não rodaram. A de conferir na tela tem objeto agora que o módulo abre arquivo;
+  a de segredo e dado real tem a massa nova; as de manutenção e clareza têm o código da etapa 2; a de
+  critérios de aceite cobriria hoje "Encontrar e conferir", "Máscara" e parte de "Revisão" e "Entradas".
+</p>
+
+</body>
+</html>

@@ -29,9 +29,18 @@ papel.
 | `--cor-destaque` | `#3b6ea5` | botão principal, item ativo do menu, links |
 | `--cor-destaque-hover` | `#4f86bf` | estado de passar o mouse sobre o destaque |
 | `--cor-sucesso` | `#4caf6d` | o que deu certo (arquivo gravado) — **não** marca CPF desde 14/09/2026 |
-| `--cor-alerta` | `#d9a441` | CPF suspeito — dígito verificador não bateu, indo para conferência humana — e, desde 14/09/2026, o CPF que passa na conta, mostrado como **"forma CPF válido"** (o traço é que separa os dois: reto para "forma CPF válido", ondulado para o suspeito) |
-| `--cor-erro` | `#d9534f` | falha (arquivo inválido, OCR não rodou) e, desde 14/09/2026, a faixa da caixa da dupla conferência de um número com forma CPF válido — o momento de risco |
-| `--cor-erro-texto` | `#f08a86` | letra em vermelho sobre o fundo escuro (contraste 6,6:1). O `#d9534f` tem 4:1 sobre o fundo e 3,6:1 sobre o fundo elevado, abaixo do mínimo de 4,5:1 para letra pequena |
+| `--cor-alerta` | `#d9a441` | CPF **suspeito** — dígito verificador não bateu, indo para conferência humana. Traço ondulado. Entre 14 e 16/09/2026 marcou também o "forma CPF válido", que voltou ao vermelho |
+| `--cor-erro` | `#d9534f` | falha (arquivo inválido, OCR não rodou), a faixa da caixa da dupla conferência de um número com forma CPF válido — o momento de risco — e, desde 16/09/2026, o **"forma CPF válido"** na revisão, com traço reto |
+| `--cor-erro-texto` | `#f08a86` | letra em vermelho sobre o fundo escuro (contraste 6,6:1) — é este vermelho que marca o "forma CPF válido" no texto da revisão e o selo dele. O `#d9534f` tem 4:1 sobre o fundo e 3,6:1 sobre o fundo elevado, abaixo do mínimo de 4,5:1 para letra pequena |
+
+**Mudou em 16/09/2026** (conferência da etapa 2 do Anonimizar): o "forma CPF
+válido" **vira "CPF válido" e volta ao vermelho**, no tom de letra `--cor-erro-texto`, e o suspeito
+fica sozinho no amarelo. Marcados os dois na mesma cor, com a diferença só no
+traço, a distinção ficou sutil demais na tela de verdade — e é justamente o
+número que passa na conta, o mais perigoso, que precisa saltar aos olhos. O
+traço continua separando os dois: reto para o "forma CPF válido", ondulado para
+o suspeito, para quem não distingue bem as cores. A caixa da dupla conferência
+continua vermelha.
 
 **Mudou em 14/09/2026** (rascunhos 06 e 07 do Anonimizar): o CPF que passa na
 conta do dígito verificador deixou de ser verde. Na revisão do Anonimizar ele é

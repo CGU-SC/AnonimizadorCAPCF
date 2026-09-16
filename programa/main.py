@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
 )
 
 from estilo import (
-    COR_ALERTA,
     COR_BORDA,
     COR_DESTAQUE,
     COR_FUNDO,
@@ -23,6 +22,7 @@ from estilo import (
     COR_TEXTO_SECUNDARIO,
     LARGURA_MENU,
 )
+from painel_anonimizar import PainelAnonimizar
 from painel_ocr import PainelOcr
 
 NOME_PROGRAMA = "AnomizadorCAPCF"
@@ -109,35 +109,6 @@ class PainelVazio(QWidget):
         layout.addWidget(texto)
 
 
-class PainelModuloNaoConstruido(QWidget):
-    """Ocupa o lugar de um módulo que ainda não existe, para o encaixe futuro."""
-
-    def __init__(self, nome_modulo):
-        super().__init__()
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignCenter)
-        layout.setSpacing(8)
-
-        selo = QLabel("AINDA NÃO CONSTRUÍDO")
-        selo.setAlignment(Qt.AlignCenter)
-        selo.setStyleSheet(
-            f"font-size: 13px; font-weight: 700; color: {COR_ALERTA};"
-            "letter-spacing: 1px;"
-        )
-
-        titulo = QLabel(nome_modulo)
-        titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet(f"font-size: 20px; font-weight: 600; color: {COR_TEXTO};")
-
-        texto = QLabel("Este módulo entra numa próxima etapa do projeto.")
-        texto.setAlignment(Qt.AlignCenter)
-        texto.setStyleSheet(f"font-size: 15px; color: {COR_TEXTO_SECUNDARIO};")
-
-        layout.addWidget(selo)
-        layout.addWidget(titulo)
-        layout.addWidget(texto)
-
-
 class JanelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -170,8 +141,9 @@ class JanelaPrincipal(QMainWindow):
         self.itens_do_menu = []
         self.painel_ocr = PainelOcr()
         self._ligar_item_ao_painel(self.menu.botao_ocr, self.painel_ocr)
+        self.painel_anonimizar = PainelAnonimizar()
         self._ligar_item_ao_painel(
-            self.menu.botao_anonimizar, PainelModuloNaoConstruido("Anonimizar")
+            self.menu.botao_anonimizar, self.painel_anonimizar
         )
 
         self.setCentralWidget(raiz)
