@@ -267,6 +267,15 @@
   faltando continua na primeira tela, e o "Gerar OCR" não muda.
 </div>
 
+<div class="emenda">
+  <strong>Quarta emenda de 16/09/2026, aprovada.</strong> Quantas letras no lugar de dígito um
+  "quase CPF" aceita passa a depender da <strong>pontuação</strong>: com ponto, traço ou barra
+  separando os grupos, até <strong>4</strong> das 11 posições; sem separador nenhum, ou só com
+  espaços, até <strong>2</strong>, como era. Veio da conferência da construção: o
+  <code>l23.4S6.789-1O</code> saía inteiro, e o número continuava reconhecível. A pontuação exata de
+  um CPF quase nunca aparece em palavra ou código; sem ela, a sequência tem cara de código.
+</div>
+
 <h2>O percurso do texto</h2>
 <p class="nota">Três portas de entrada, e todas terminam na mesma revisão. O único momento em que algo vai para o disco é o último.</p>
 
@@ -322,9 +331,10 @@
     <h3>Suspeito</h3>
     <div class="destino">mascarado <strong>e</strong> na lista · desfazer é um clique, a não ser o quase CPF que passa na conta</div>
     <div class="exemplo"><span class="de">123.456.789-10</span><span class="para">→ ***.456.789-**</span><span class="porque">falha na conta: pode ser um CPF lido errado</span></div>
-    <div class="exemplo"><span class="de">l23.456.789-1O</span><span class="para">→ ***.456.789-**</span><span class="porque">quase CPF: letra no lugar do dígito (no máximo 2)</span></div>
+    <div class="exemplo"><span class="de">l23.456.789-1O</span><span class="para">→ ***.456.789-**</span><span class="porque">quase CPF: letra no lugar do dígito (até 4, com pontuação)</span></div>
     <div class="exemplo"><span class="de">123 456 789 10</span><span class="para">→ *** 456 789 **</span><span class="porque">quase CPF: espaço no lugar da pontuação</span></div>
     <div class="exemplo"><span class="de">123.456.⏎789-10</span><span class="para">→ ***.456.⏎789-**</span><span class="porque">quase CPF: quebrado entre duas linhas</span></div>
+    <div class="exemplo"><span class="de">l23.4S6.789-1O</span><span class="para">→ ***.4S6.789-**</span><span class="porque">quase CPF: três letras, mas com a pontuação de um CPF (quarta emenda)</span></div>
     <div class="exemplo"><span class="de">l11.111.111-11</span><span class="para">→ ***.111.111-**</span><span class="porque">quase CPF que <strong>passa na conta</strong> com o l trocado por 1: continua suspeito, mas desfazer pede dupla conferência (emenda)</span></div>
   </div>
   <div class="classe ignorado">
@@ -332,7 +342,8 @@
     <div class="destino">fica inteiro, como está</div>
     <div class="exemplo"><span class="de">12.345.678/0001-90</span><span class="para">CNPJ</span></div>
     <div class="exemplo"><span class="de">9111.111.111-11</span><span class="para">grudado em outro dígito</span></div>
-    <div class="exemplo"><span class="de">SOL.IDA.DES-OS</span><span class="para">letras demais</span></div>
+    <div class="exemplo"><span class="de">SOL.IDA.DES-OS</span><span class="para">letras demais, mesmo com pontuação</span></div>
+    <div class="exemplo"><span class="de">l234S67891O</span><span class="para">três letras e nenhum separador</span></div>
     <div class="exemplo"><span class="porque">Número de processo e linha de boleto também: o CPF de verdade não aparece grudado num número maior.</span></div>
   </div>
 </div>
@@ -505,7 +516,7 @@
 <p class="nota">São 16. As 4 marcadas como "nova" apareceram ao escrever a spec, e você ainda não as viu no mapa.</p>
 <div class="cartoes">
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — No "Anonimizar", o aviso de motor faltando aparece igual ao "Gerar OCR", na primeira tela; a escolha do motor aparece só quando o PDF vai ser lido como imagem (terceira emenda). Para <code>.md</code> e <code>.txt</code>, o motor não importa.</div>
-  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — "Quase CPF" tem <strong>no máximo 2 letras</strong> no lugar de dígito. Com mais, é mais provável que seja palavra, e marcar encheria a lista.</div>
+  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — "Quase CPF" tem o limite de letras no lugar de dígito <strong>depende da pontuação</strong>: até <strong>4</strong> com ponto, traço ou barra separando os grupos, e <strong>2</strong> sem separador ou só com espaços (quarta emenda).</div>
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — A máscara à mão esconde os 3 primeiros e os 2 últimos dígitos do trecho, ou todos se forem 5 ou menos. Trecho sem dígito não muda nada.</div>
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — Máscara desfeita pode ser refeita: o item fica na lista como "liberado".</div>
   <div class="cartao"><span class="chave">premissa</span> — No "quase CPF", a máscara cai nas 3 primeiras e nas 2 últimas posições, mesmo com letra ali. Quebrado entre linhas, as duas partes são mascaradas.</div>

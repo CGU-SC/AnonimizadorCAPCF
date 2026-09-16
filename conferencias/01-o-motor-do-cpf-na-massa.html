@@ -8,7 +8,7 @@
   :root {
     --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47;
     --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5;
-    --cor-alerta: #d9a441;
+    --cor-alerta: #d9a441; --cor-erro-texto: #f08a86;
     --fonte-texto: "Segoe UI", system-ui, sans-serif;
     --fonte-mono: "Cascadia Mono", "Consolas", monospace;
   }
@@ -36,12 +36,12 @@
   .quebra { color: var(--cor-texto-secundario); padding: 0 4px; }
   .etq { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 10px;
           padding: 1px 8px; margin: 1px 0; color: var(--cor-alerta); }
-  .etq.valido { border: 1px solid var(--cor-alerta); }
+  .etq.valido { border: 1px solid var(--cor-erro-texto); color: var(--cor-erro-texto); }
   .etq.suspeito { border: 1px dashed var(--cor-alerta); }
   pre.documento { font-family: var(--fonte-mono); font-size: 12.5px; background: var(--cor-fundo-elevado);
                    border: 1px solid var(--cor-borda); border-radius: 6px; padding: 16px;
                    overflow-x: auto; white-space: pre; }
-  .d-valido { color: var(--cor-alerta); text-decoration: underline solid var(--cor-alerta); text-underline-offset: 3px; }
+  .d-valido { color: var(--cor-erro-texto); text-decoration: underline solid var(--cor-erro-texto); text-underline-offset: 3px; }
   .d-suspeito { color: var(--cor-alerta); text-decoration: underline wavy var(--cor-alerta); text-underline-offset: 3px; }
   ol li { margin-bottom: 8px; }
   .rodape { margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
@@ -51,23 +51,22 @@
 <body>
 
 <h1>Conferência 01 — o motor do CPF na massa</h1>
-<p class="subtitulo">Etapa 1 de 7 do Anonimizador de CPF (spec 003). Esta página mostra o que a peça
-nova do programa — a que acha, confere e mascara o CPF — decidiu sobre cada número da massa de teste.
-Ela foi montada rodando o programa de verdade sobre os arquivos de <code>dados-exemplo/</code>, e não
-escrita à mão.</p>
+<p class="subtitulo">Anonimizador de CPF (spec 003). Esta página mostra o que a peça do programa que
+acha, confere e mascara o CPF decidiu sobre cada número da massa de teste. Ela foi montada rodando o
+programa de verdade sobre os arquivos de <code>dados-exemplo/</code>, e não escrita à mão.</p>
 
-<div class="caixa"><strong>Na janela do programa, nada mudou ainda.</strong> O item "Anonimizar"
-continua com o aviso de "ainda não construído". Ver isto dentro do programa, na tela de revisão, é a
-etapa 2.</div>
+<div class="caixa"><strong>Atualizada em 16/09/2026, com a quarta emenda da spec.</strong> Quantas letras no
+lugar de dígito um "quase CPF" aceita passa a depender da pontuação: até 4 com ponto, traço ou barra
+separando os grupos, e 2 sem separador nenhum ou só com espaços.</div>
 
 <h2>O documento principal, depois do motor</h2>
 <p class="nota">É o <code>10-prestacao-com-cpf.md</code> — o mesmo documento do rascunho de tela 01.
-Sublinhado reto: forma CPF válido. Ondulado: suspeito. Os números sem destaque ficaram inteiros de
+Sublinhado reto e vermelho: CPF válido. Ondulado e amarelo: suspeito. Os números sem destaque ficaram inteiros de
 propósito.</p>
 <div class="selos">
-  <span class="selo">10 números mascarados</span>
-  <span class="selo">7 suspeitos</span>
-  <span class="selo">3 de forma CPF válido fora dos suspeitos</span>
+  <span class="selo">12 números mascarados</span>
+  <span class="selo">9 suspeitos</span>
+  <span class="selo">3 com CPF válido fora dos suspeitos</span>
   <span class="selo">6 pedem a dupla conferência para liberar</span>
 </div>
 <pre class="documento"># Prestação de Contas — Projeto 042/2026
@@ -117,7 +116,11 @@ lido com uma letra no lugar do primeiro dígito, e o de Rita Inventada
 Paes, CPF <span class="d-suspeito">*** 666 666 **</span>, lido com espaços no lugar dos pontos.
 O protocolo interno 9111.111.111-11 e a matrícula 111.111.111-119
 não são CPF. A ficha de Sônia Exemplo Dias traz o campo de CPF
-ilegível, lido como l23.4S6.789-1O.
+ilegível, lido como <span class="d-suspeito">***.4S6.789-**</span>; noutra folha, com mais um dígito
+trocado por letra, <span class="d-suspeito">***.4S6.7B9-**</span>. Já o código de conferência
+l234S67891O, a chave lZ3.4S6.7B9-1O e a referência SOL.IDA.DES-OS não
+são CPF: o primeiro tem três letras e nenhuma pontuação, o segundo tem
+cinco letras, e o terceiro tem letras que não se confundem com dígito.
 
 ## 6. Conclusão
 
@@ -135,38 +138,29 @@ Coordenador do projeto
 olhando o original. O arquivo gravado leva só o "como ficou". O ↵ marca a quebra de linha.</p>
 <div class="rolar"><table>
   <tr><th>Como estava</th><th>Como ficou</th><th>O que o programa decidiu</th><th>Desfazer pede confirmação?</th></tr>
-  <tr><td class='mono'>246 813 579 12</td><td class='mono forte'>*** 813 579 **</td><td><span class="etq suspeito">quase CPF · espaços no lugar dos pontos</span></td><td>não — um clique</td></tr><tr><td class='mono'>111.111.111-11</td><td class='mono forte'>***.111.111-**</td><td><span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>222.222.222-22</td><td class='mono forte'>***.222.222-**</td><td><span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>777.777.777-78</td><td class='mono forte'>***.777.777-**</td><td><span class="etq suspeito">suspeito · falha na conta</span></td><td>não — um clique</td></tr><tr><td class='mono'>44444444444</td><td class='mono forte'>***444444**</td><td><span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>333.333.333/34</td><td class='mono forte'>***.333.333-**</td><td><span class="etq suspeito">suspeito · falha na conta</span></td><td>não — um clique</td></tr><tr><td class='mono'>l23.456.789-1O</td><td class='mono forte'>***.456.789-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span></td><td>não — um clique</td></tr><tr><td class='mono'>555.555.<span class="quebra">↵</span>555-55</td><td class='mono forte'>***.555.<span class="quebra">↵</span>555-**</td><td><span class="etq suspeito">quase CPF · partido em duas linhas</span> <span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>l11.111.111-11</td><td class='mono forte'>***.111.111-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span> <span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>666 666 666 66</td><td class='mono forte'>*** 666 666 **</td><td><span class="etq suspeito">quase CPF · espaços no lugar dos pontos</span> <span class="etq valido">forma CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr>
+  <tr><td class='mono'>246 813 579 12</td><td class='mono forte'>*** 813 579 **</td><td><span class="etq suspeito">quase CPF · espaços no lugar dos pontos</span></td><td>não — um clique</td></tr><tr><td class='mono'>111.111.111-11</td><td class='mono forte'>***.111.111-**</td><td><span class="etq valido">CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>222.222.222-22</td><td class='mono forte'>***.222.222-**</td><td><span class="etq valido">CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>777.777.777-78</td><td class='mono forte'>***.777.777-**</td><td><span class="etq suspeito">suspeito · falha na conta</span></td><td>não — um clique</td></tr><tr><td class='mono'>44444444444</td><td class='mono forte'>***444444**</td><td><span class="etq valido">CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>333.333.333/34</td><td class='mono forte'>***.333.333-**</td><td><span class="etq suspeito">suspeito · falha na conta</span></td><td>não — um clique</td></tr><tr><td class='mono'>l23.456.789-1O</td><td class='mono forte'>***.456.789-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span></td><td>não — um clique</td></tr><tr><td class='mono'>555.555.<span class="quebra">↵</span>555-55</td><td class='mono forte'>***.555.<span class="quebra">↵</span>555-**</td><td><span class="etq suspeito">quase CPF · partido em duas linhas</span> <span class="etq valido">CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>l11.111.111-11</td><td class='mono forte'>***.111.111-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span> <span class="etq valido">CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>666 666 666 66</td><td class='mono forte'>*** 666 666 **</td><td><span class="etq suspeito">quase CPF · espaços no lugar dos pontos</span> <span class="etq valido">CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>l23.4S6.789-1O</td><td class='mono forte'>***.4S6.789-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span></td><td>não — um clique</td></tr><tr><td class='mono'>l23.4S6.7B9-1O</td><td class='mono forte'>***.4S6.7B9-**</td><td><span class="etq suspeito">quase CPF · letra no lugar de dígito</span></td><td>não — um clique</td></tr>
 </table></div>
 
 <h2>O que ficou inteiro, e por quê</h2>
 <div class="rolar"><table>
   <tr><th>No texto</th><th>Por que não foi mascarado</th></tr>
-  <tr><td class='mono'>12.345.678/0001-90</td><td>CNPJ — os números estão ligados a outros dígitos por ponto, barra e traço (RN-3)</td></tr><tr><td class='mono'>23080.012345/2026-11</td><td>número de processo — mais de 11 dígitos, ligados entre si (RN-3)</td></tr><tr><td class='mono'>34191.79001 01043.510047 91020.150008 1 89410000026000</td><td>linha do boleto — nenhum pedaço tem a forma solta de um CPF (RN-3)</td></tr><tr><td class='mono'>9111.111.111-11</td><td>um 9 colado antes do número — não é CPF (RN-3)</td></tr><tr><td class='mono'>111.111.111-119</td><td>um 9 colado depois do número — não é CPF (RN-3)</td></tr><tr><td class='mono'>l23.4S6.789-1O</td><td>três letras no lugar de dígito — mais provavelmente palavra que número (premissa da spec)</td></tr><tr><td class='mono'>1234 5678 910</td><td>não tem a forma de um CPF (grupos de 4, 4 e 3) — é o caso de mascarar à mão, na etapa 4</td></tr><tr><td class='mono'>R$ 1.500,00 · 03/08/2026 · 042/2026</td><td>valores, datas e números de projeto</td></tr>
+  <tr><td class='mono'>12.345.678/0001-90</td><td>CNPJ — os números estão ligados a outros dígitos por ponto, barra e traço (RN-3)</td></tr><tr><td class='mono'>23080.012345/2026-11</td><td>número de processo — mais de 11 dígitos, ligados entre si (RN-3)</td></tr><tr><td class='mono'>34191.79001 01043.510047 91020.150008 1 89410000026000</td><td>linha do boleto — nenhum pedaço tem a forma solta de um CPF (RN-3)</td></tr><tr><td class='mono'>9111.111.111-11</td><td>um 9 colado antes do número — não é CPF (RN-3)</td></tr><tr><td class='mono'>111.111.111-119</td><td>um 9 colado depois do número — não é CPF (RN-3)</td></tr><tr><td class='mono'>l234S67891O</td><td>três letras e nenhuma pontuação — sem separador, a sequência tem cara de código (quarta emenda)</td></tr><tr><td class='mono'>lZ3.4S6.7B9-1O</td><td>cinco letras, mesmo com pontuação — o limite com ponto, traço ou barra é 4 das 11 posições (quarta emenda)</td></tr><tr><td class='mono'>SOL.IDA.DES-OS</td><td>letras que não se confundem com dígito — A, E e L não estão na lista das que a leitura troca por número</td></tr><tr><td class='mono'>1234 5678 910</td><td>não tem a forma de um CPF (grupos de 4, 4 e 3) — é o caso de mascarar à mão, na etapa 4</td></tr><tr><td class='mono'>R$ 1.500,00 · 03/08/2026 · 042/2026</td><td>valores, datas e números de projeto</td></tr>
 </table></div>
 
 <h2>Os outros arquivos da massa</h2>
 <div class="rolar"><table>
   <tr><th>Arquivo</th><th>O que o motor achou</th></tr>
-  <tr><td class="mono">14-folha-com-40-bolsistas.md</td><td>40 números: 20 de forma CPF válido e 20 que falham na conta</td></tr>
+  <tr><td class="mono">14-folha-com-40-bolsistas.md</td><td>40 números: 20 com CPF válido e 20 que falham na conta</td></tr>
   <tr><td class="mono">10-prestacao-com-cpf - sem CPF.md</td><td>0 números — o arquivo já anonimizado, aberto de novo, não tem CPF</td></tr>
   <tr><td class="mono">11-sem-cpf.md</td><td>0 números — ata com CNPJ, processo e valores</td></tr>
 </table></div>
 
 <h2>O que conferir nesta página</h2>
-<ol>
-  <li>Na coluna "como ficou", <strong>nenhum número mostra os 3 primeiros nem os 2 últimos dígitos</strong>.</li>
-  <li>A pontuação de cada número ficou a mesma, menos a barra antes dos dois últimos, que virou traço
-      (<span class="mono">333.333.333/34</span> → <span class="mono">***.333.333-**</span>).</li>
-  <li>O Pedro, partido em duas linhas, aparece mascarado <strong>nas duas partes</strong>, e a quebra ficou onde estava.</li>
-  <li>Na tabela de bolsistas do documento, as colunas continuam alinhadas depois da máscara.</li>
-  <li>O CNPJ, o processo, o boleto e os números colados a outro dígito saíram inteiros.</li>
-  <li>Os "quase CPF" que passam na conta (<span class="mono">l11.111.111-11</span>, o do Pedro e
-      <span class="mono">666 666 666 66</span>) levam a etiqueta "forma CPF válido" e pedem a dupla conferência.</li>
-</ol>
+<ol><li>Na coluna "como ficou", <strong>nenhum número mostra os 3 primeiros nem os 2 últimos dígitos</strong>.</li><li>A pontuação de cada número ficou a mesma, menos a barra antes dos dois últimos, que virou traço (<span class="mono">333.333.333/34</span> → <span class="mono">***.333.333-**</span>).</li><li>O Pedro, partido em duas linhas, aparece mascarado <strong>nas duas partes</strong>, e a quebra ficou onde estava.</li><li>Na tabela de bolsistas do documento, as colunas continuam alinhadas depois da máscara.</li><li>O CNPJ, o processo, o boleto e os números colados a outro dígito saíram inteiros.</li><li>Os "quase CPF" que passam na conta (<span class="mono">l11.111.111-11</span>, o do Pedro e <span class="mono">666 666 666 66</span>) levam a etiqueta "CPF válido" e pedem a dupla conferência.</li><li>O <span class="mono">l23.4S6.789-1O</span> e o <span class="mono">l23.4S6.7B9-1O</span>, com três e quatro letras <strong>e pontuação de CPF</strong>, aparecem mascarados (quarta emenda); o <span class="mono">l234S67891O</span>, com três letras e nenhuma pontuação, e o <span class="mono">lZ3.4S6.7B9-1O</span>, com cinco letras, continuam inteiros.</li></ol>
 
-<p class="rodape">Página gerada em 15/09/2026 pela skill-07-designer-de-telas, a pedido da
-skill-08-construtor-de-funcionalidades, na etapa 1 do Anonimizador de CPF, a partir do resultado do
-motor sobre a massa. Todos os nomes e números são inventados; os que passam na conta são só de dígitos
-repetidos (RN-22).</p>
+<p class="rodape">Página gerada em 16/09/2026 pela skill-07-designer-de-telas, a pedido da
+skill-08-construtor-de-funcionalidades, a partir do resultado do motor sobre a massa
+(<code>conferencias/gerar-01-o-motor-do-cpf-na-massa.py</code>). Todos os nomes e números são
+inventados; os que passam na conta são só de dígitos repetidos (RN-22).</p>
 </body>
 </html>
