@@ -45,7 +45,11 @@ lido com uma letra no lugar do primeiro dígito, e o de Rita Inventada
 Paes, CPF 666 666 666 66, lido com espaços no lugar dos pontos.
 O protocolo interno 9111.111.111-11 e a matrícula 111.111.111-119
 não são CPF. A ficha de Sônia Exemplo Dias traz o campo de CPF
-ilegível, lido como l23.4S6.789-1O.
+ilegível, lido como l23.4S6.789-1O; noutra folha, com mais um dígito
+trocado por letra, l23.4S6.7B9-1O. Já o código de conferência
+l234S67891O, a chave lZ3.4S6.7B9-1O e a referência SOL.IDA.DES-OS não
+são CPF: o primeiro tem três letras e nenhuma pontuação, o segundo tem
+cinco letras, e o terceiro tem letras que não se confundem com dígito.
 
 ## 6. Conclusão
 

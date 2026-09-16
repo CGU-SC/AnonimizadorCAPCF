@@ -12,6 +12,7 @@ horas depois, a pedido da usuária. A máscara continua mantendo a pontuação
 original (RN-6), por dois motivos: preserva o formato do documento, e um número
 mascarado por engano como CPF continua reconhecível pelo formato que tinha — a
 não ser pela barra antes dos dois últimos, que continua virando traço.
+**Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
 **Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
 contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
 mudam o combinado: o nome na tela do tipo "passa na conta" nos critérios, o que
@@ -23,6 +24,13 @@ quando o PDF vai ser lido como imagem (sem camada de texto, ou quando a pessoa
 escolhe ignorar a camada e ler as imagens). Na primeira tela ela confundia:
 parecia preciso escolher um motor até para anonimizar um `.md`. O aviso de motor
 faltando continua na primeira tela, e a tela do "Gerar OCR" não muda.
+**Quarta emenda:** aprovada em 2026-09-16 — o limite de letras no lugar de
+dígito do "quase CPF" passa a depender da pontuação: até 4 letras quando ponto,
+traço ou barra separam os grupos, e 2 quando não há separador nenhum ou só
+espaços (premissa das letras, RN-2 e o critério de aceite correspondente). Veio
+da conferência da etapa 2 da construção: `l23.4S6.789-1O` saía inteiro, e o
+número continuava reconhecível. Pontuação nos lugares exatos de um CPF quase
+nunca aparece em palavra ou código; sem ela, a sequência tem cara de código.
 **Origem:** levantamento detalhado de 13/09/2026, registrado em
 `mockups/requisitos/02-mapa-do-entendimento.html`. Uma resposta mudou na hora de
 escrever: a linha no topo do arquivo (R-11 do mapa) saiu, porque ia contra a
@@ -134,10 +142,13 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   texto, ou quando a pessoa escolhe ignorar a camada e ler as imagens —, com
   "Tesseract (nesta máquina)" marcado. Para `.md` e `.txt`, o motor não importa e
   o aviso não bloqueia nada.
-- premissa (*nova*): para contar como "quase CPF", **no máximo 2 das 11
-  posições** podem ser letras no lugar de dígito. Com mais letras que isso, a
-  sequência é mais provavelmente uma palavra do que um número, e marcá-la
-  encheria a lista de alarmes.
+- premissa (*nova*, emendada em 16/09/2026): para contar como "quase CPF", o
+  limite de letras no lugar de dígito **depende da pontuação**. Havendo ponto,
+  traço ou barra separando os grupos, cabem **até 4 das 11 posições**: sobram 7
+  dígitos certos, e a pontuação exata de um CPF quase nunca aparece numa palavra
+  ou num código. Sem separador nenhum, ou só com espaços, o limite é **2**: ali a
+  sequência tem cara de código, protocolo ou lista de números, e marcar com mais
+  letras encheria a lista de alarmes.
 - premissa (*nova*): a máscara feita à mão esconde os 3 primeiros e os 2 últimos
   dígitos do trecho marcado. Se o trecho tiver 5 dígitos ou menos, esconde
   todos. Trecho sem nenhum dígito não muda nada, e a tela diz por quê.
@@ -256,7 +267,7 @@ memória durante o uso:
 | --- | --- | --- | --- |
 | arquivo de origem | a pessoa (botão ou arrastar), ou o PDF que veio do "Gerar OCR" | sim | PDF, `.md` ou `.txt`. Decide o caminho sugerido para salvar |
 | texto de entrada | a conferência do OCR, ou o conteúdo do `.md`/`.txt` | sim | nunca é gravado como está |
-| lista de ocorrências | derivada: busca no texto + ações da pessoa | sim | cada ocorrência tem: **onde** está no texto, **o que estava escrito**, o **tipo** (passa na conta · suspeito: falha na conta · suspeito: quase CPF · mascarado à mão), a **situação** (mascarado · liberado) e, para o quase CPF, se ele **passa na conta** depois de trocadas as letras e juntadas as partes. Na tela, "passa na conta" aparece como **"forma CPF válido"**, no amarelo de alerta, e a caixa da dupla conferência é vermelha: o número que passa na conta é o mais perigoso, e o verde de antes dava a impressão de coisa boa (decidido em 14/09/2026, nos rascunhos de tela 06 e 07) |
+| lista de ocorrências | derivada: busca no texto + ações da pessoa | sim | cada ocorrência tem: **onde** está no texto, **o que estava escrito**, o **tipo** (passa na conta · suspeito: falha na conta · suspeito: quase CPF · mascarado à mão), a **situação** (mascarado · liberado) e, para o quase CPF, se ele **passa na conta** depois de trocadas as letras e juntadas as partes. Na tela, "passa na conta" aparece como **"CPF válido"**, em vermelho (nome encurtado e cor trocada em 16/09/2026, na conferência da construção: entre 14 e 16/09 o rótulo era "forma CPF válido", no mesmo amarelo do suspeito, e na tela de verdade a diferença entre os dois ficou sutil demais). O suspeito fica no amarelo de alerta, e a caixa da dupla conferência continua vermelha: o número que passa na conta é o mais perigoso, e o verde de antes dava a impressão de coisa boa (decidido em 14/09/2026, nos rascunhos de tela 06 e 07) |
 | texto de saída | derivado | sim | o texto de entrada com a máscara aplicada a toda ocorrência "mascarada". É só isto que vai para o arquivo |
 | caminho de destino | sugerido pelo programa, alterável | sim, na hora de salvar | padrão: pasta da origem, nome da origem sem a terminação, mais ` - sem CPF.md` |
 
@@ -301,7 +312,9 @@ aprovação própria, antes da construção.
   conta".
 - RN-2: **O "quase CPF"** é a sequência com a forma de um CPF (três grupos de
   3 e um de 2, com ou sem separador) em que acontece pelo menos uma destas
-  coisas: **até 2 posições** trazem uma letra parecida com dígito no lugar dele
+  coisas: **até 4 posições** — ou **até 2**, quando não há separador nenhum ou
+  só espaços, como manda a premissa das letras — trazem uma letra parecida com
+  dígito no lugar dele
   (`O o D Q` por 0, `l I i |` por 1, `Z` por 2, `S s` por 5, `G b` por 6, `T`
   por 7, `B` por 8, `g q` por 9); o separador é um espaço ou uma mistura fora
   dos formatos combinados; ou o número está quebrado entre duas linhas. O
@@ -398,8 +411,14 @@ aprovação própria, antes da construção.
   `123.456.` no fim de uma linha e `789-10` no começo da seguinte, quando ele
   passa pelo Anonimizar, então os três aparecem mascarados e na lista, como
   "quase CPF".
-- Dado um texto com uma sequência de forma de CPF em que 3 posições são letras,
-  quando ele passa pelo Anonimizar, então ela não é mascarada.
+- Dado um texto com `l23.4S6.789-1O`, com três letras e a pontuação de um CPF,
+  quando ele passa pelo Anonimizar, então ele aparece mascarado como
+  `***.4S6.789-**` e está na lista, como "quase CPF".
+- Dado um texto com `l234S67891O`, com as mesmas três letras e **sem separador
+  nenhum**, quando ele passa pelo Anonimizar, então ele não é mascarado.
+- Dado um texto com uma sequência pontuada em que 5 posições são letras
+  (`SOL.IDA.DES-OS`), quando ele passa pelo Anonimizar, então ela não é
+  mascarada.
 - Dado um texto com o CNPJ `12.345.678/0001-90`, um número de processo com mais
   de 11 dígitos e uma linha digitável de boleto, quando ele passa pelo
   Anonimizar, então os três saem inteiros.

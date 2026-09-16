@@ -82,8 +82,47 @@ def test_os_tres_jeitos_de_quase_cpf():
     assert not any(a.passa_na_conta for a in achados)
 
 
-def test_tres_letras_no_lugar_de_digito_nao_e_mascarado():
-    assert procurar("sequencia l23.4S6.789-1O no texto") == []
+def test_tres_letras_com_pontuacao_de_cpf_sao_mascaradas():
+    """Quarta emenda: com ponto, traço ou barra, cabem até 4 letras.
+
+    A pontuação nos lugares exatos de um CPF quase nunca aparece numa palavra
+    ou num código, e ainda sobram 7 dígitos certos sustentando a suspeita.
+    """
+    achado = _unica("campo ilegível l23.4S6.789-1O no texto")
+    assert achado.tipo == QUASE_CPF
+    assert achado.mascara == "***.4S6.789-**"
+
+
+def test_tres_letras_sem_nenhuma_pontuacao_nao_sao_mascaradas():
+    # Sem separador, a sequência tem cara de código ou protocolo.
+    assert procurar("codigo l234S67891O no texto") == []
+
+
+def test_quatro_letras_com_pontuacao_ainda_sao_mascaradas():
+    """O teto da quarta emenda, pelo lado de dentro."""
+    achado = _unica("folha l23.4S6.7B9-1O no texto")
+    assert achado.tipo == QUASE_CPF
+    assert achado.mascara == "***.4S6.7B9-**"
+
+
+def test_cinco_letras_com_pontuacao_nao_sao_mascaradas():
+    """O teto da quarta emenda, pelo lado de fora.
+
+    Este é o teste que segura o limite: com ele, subir o teto de 4 para 5 passa
+    a quebrar a lista. O exemplo de antes (SOL.IDA.DES-OS) não servia para
+    isso - ele nem chega a ser considerado, porque A, E e L não são letras que
+    a leitura confunde com dígito.
+    """
+    assert procurar("chave lZ3.4S6.7B9-1O no texto") == []
+
+
+def test_letras_que_nao_se_confundem_com_digito_nao_contam():
+    assert procurar("referencia SOL.IDA.DES-OS no texto") == []
+
+
+def test_o_espaco_nao_conta_como_pontuacao():
+    """Documento de contas é cheio de número separado por espaço."""
+    assert procurar("quantidades l23 4S6 789 1O somadas") == []
 
 
 @pytest.mark.parametrize("texto", [
@@ -277,6 +316,8 @@ def test_o_documento_principal_da_massa():
         ("555.555.\n555-55", QUASE_CPF, True),
         ("l11.111.111-11", QUASE_CPF, True),
         ("666 666 666 66", QUASE_CPF, True),
+        ("l23.4S6.789-1O", QUASE_CPF, False),
+        ("l23.4S6.7B9-1O", QUASE_CPF, False),
     ]
     anonimizado = (MASSA / "10-prestacao-com-cpf - sem CPF.md").read_text(
         encoding="utf-8")

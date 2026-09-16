@@ -42,9 +42,19 @@ LETRA_PARECIDA_COM_DIGITO = {
     "g": "9", "q": "9",
 }
 
-# Com mais de 2 letras nas 11 posições, a sequência é mais provavelmente uma
-# palavra que um número (premissa nova da spec 003).
-MAXIMO_DE_LETRAS = 2
+# Quantas letras no lugar de dígito uma sequência aceita antes de deixar de
+# contar como "quase CPF". O limite depende da pontuação (quarta emenda da spec
+# 003, de 16/09/2026): ponto, traço ou barra nos lugares exatos de um CPF quase
+# nunca aparecem numa palavra ou num código, e ali cabem 4 letras - ainda sobram
+# 7 dígitos certos. Sem separador nenhum, ou só com espaços, a sequência tem
+# cara de código ou de lista de números, e o limite continua em 2.
+MAXIMO_DE_LETRAS_COM_PONTUACAO = 4
+MAXIMO_DE_LETRAS_SEM_PONTUACAO = 2
+
+# Os separadores que contam como pontuação de CPF. O espaço fica de fora de
+# propósito: documento de prestação de contas é cheio de número separado por
+# espaço, e ali a chance de não ser CPF é bem maior.
+PONTUACAO_DE_CPF = ".-/"
 
 # Os quatro jeitos combinados de escrever um CPF (regra RN-1), pelos três
 # separadores entre os grupos: 123.456.789-10, 123456789-10, 12345678910 e
@@ -221,10 +231,10 @@ def _avaliar(encontro):
     """
     posicoes = "".join(encontro.group(g) for g in _GRUPOS_DE_DIGITOS)
     letras = sum(1 for letra in posicoes if not letra.isdigit())
-    if letras > MAXIMO_DE_LETRAS:
+    separadores = tuple(encontro.group(g) for g in _GRUPOS_DE_SEPARADOR)
+    if letras > _maximo_de_letras(separadores):
         return None
 
-    separadores = tuple(encontro.group(g) for g in _GRUPOS_DE_SEPARADOR)
     digitos = "".join(LETRA_PARECIDA_COM_DIGITO.get(l, l) for l in posicoes)
     conta = passa_na_conta(digitos)
 
@@ -242,6 +252,15 @@ def _avaliar(encontro):
         passa_na_conta=conta,
         motivo=motivo,
     )
+
+
+def _maximo_de_letras(separadores):
+    """Quantas letras esta sequência aceita, pela pontuação que ela tem."""
+    tem_pontuacao = any(
+        letra in PONTUACAO_DE_CPF for separador in separadores for letra in separador
+    )
+    return (MAXIMO_DE_LETRAS_COM_PONTUACAO if tem_pontuacao
+            else MAXIMO_DE_LETRAS_SEM_PONTUACAO)
 
 
 def _por_que_e_quase(separadores, letras):
