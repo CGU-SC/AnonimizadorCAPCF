@@ -140,6 +140,14 @@
     <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro-texto)"></div><div class="cor-info"><div class="cor-nome">erro-texto</div><div class="cor-valor">#f08a86</div></div></div>
   </div>
   <div class="mudanca-sistema">
+    <strong>Mudou em 16/09/2026, na conferência da etapa 2 do Anonimizar:</strong> o
+    <strong>"forma CPF válido" vira "CPF válido" e volta ao vermelho</strong>, no tom de letra <code>#f08a86</code>, e o
+    suspeito fica sozinho no amarelo. Com os dois na mesma cor, separados só pelo traço, a diferença
+    ficou sutil demais na tela de verdade — e é o número que passa na conta, o mais perigoso, que
+    precisa saltar aos olhos. O traço continua separando os dois: reto para o "forma CPF válido",
+    ondulado para o suspeito. A caixa da dupla conferência continua vermelha.
+  </div>
+  <div class="mudanca-sistema">
     <strong>Mudou em 14/09/2026, nos rascunhos 06 e 07 do Anonimizar:</strong> o CPF que passa na
     conta do dígito verificador deixou de ser verde. Na revisão ele é o número mais perigoso — quase
     certamente o CPF de alguém —, e verde dava a impressão de coisa boa. Ele passa a aparecer como
@@ -173,7 +181,7 @@
       <input type="text" value="C:\Documentos\sintese-01.pdf" readonly>
     </div>
     <div>
-      <span class="selo selo-alerta">forma CPF válido</span><br><br>
+      <span class="selo selo-erro">CPF válido</span><br><br>
       <span class="selo selo-alerta">CPF suspeito</span><br><br>
       <span class="selo selo-erro">Falha ao ler</span><br><br>
       <span class="selo selo-sucesso">Arquivo gravado</span>
@@ -188,9 +196,9 @@
       <tr><th>Ocorrência</th><th>CPF encontrado</th><th>Situação</th></tr>
     </thead>
     <tbody>
-      <tr><td>Linha 12</td><td class="numero">***.456.789-**</td><td><span class="selo selo-alerta">forma CPF válido</span></td></tr>
+      <tr><td>Linha 12</td><td class="numero">***.456.789-**</td><td><span class="selo selo-erro">CPF válido</span></td></tr>
       <tr><td>Linha 47</td><td class="numero">***.1O2.345-**</td><td><span class="selo selo-alerta">suspeito</span></td></tr>
-      <tr><td>Linha 88</td><td class="numero">***.789.012-**</td><td><span class="selo selo-alerta">forma CPF válido</span></td></tr>
+      <tr><td>Linha 88</td><td class="numero">***.789.012-**</td><td><span class="selo selo-erro">CPF válido</span></td></tr>
     </tbody>
   </table>
 </section>

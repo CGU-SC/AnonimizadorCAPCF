@@ -19,6 +19,10 @@ COR_DESTAQUE_HOVER = "#4f86bf"
 COR_SUCESSO = "#4caf6d"
 COR_ALERTA = "#d9a441"
 COR_ERRO = "#d9534f"
+# O vermelho de letra: o #d9534f sobre o fundo escuro tem contraste de 4:1,
+# abaixo do mínimo de leitura para letra pequena. Este tem 6,6:1. É ele que
+# marca o "forma CPF válido" na revisão.
+COR_ERRO_TEXTO = "#f08a86"
 
 FONTE_MONO = '"Cascadia Mono", "Consolas", monospace'
 

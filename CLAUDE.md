@@ -157,6 +157,17 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
   mandar o script inteiro direto para o terminal do Bash quebrou num script
   longo, com "unexpected EOF" e nada rodado. Resolve gravando o script dentro
   do projeto, rodando e apagando em seguida (etapa 1 do Anonimizar, 15/09/2026).
+- **Traço ondulado não sai por folha de estilo no Qt.** O
+  `text-decoration: underline wave` é ignorado num `QLabel`: o traço sai reto,
+  igual ao do outro tipo, e a tela perde justamente a diferença que ela existe
+  para mostrar — e nada acusa erro. Só o texto rico faz ondulado
+  (`QTextCharFormat.WaveUnderline`). Por isso a chave de cores da revisão é um
+  pedacinho de texto, e não um rótulo comum (`programa/tela_revisao.py`, etapa 2
+  do Anonimizar, 16/09/2026).
+- **A janela não recarrega o código sozinha.** O atalho de abrir sobe o programa
+  em modo de desenvolvimento, mas o Qt não troca o código com a janela de pé:
+  toda conferência de tela depois de uma alteração pede fechar e abrir de novo.
+  Sem isso, a pessoa confere a versão velha achando que é a nova.
 - Trabalho que roda ao lado da janela (uma `QThread`) precisa ser **parado antes
   de a janela fechar**. Sem isso, fechar o programa no meio de uma leitura o faz
   estourar em vez de fechar limpo, e o Windows mostra a caixa de "o programa
