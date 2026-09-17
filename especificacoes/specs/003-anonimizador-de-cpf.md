@@ -12,12 +12,6 @@ horas depois, a pedido da usuária. A máscara continua mantendo a pontuação
 original (RN-6), por dois motivos: preserva o formato do documento, e um número
 mascarado por engano como CPF continua reconhecível pelo formato que tinha — a
 não ser pela barra antes dos dois últimos, que continua virando traço.
-**Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
-**Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
-contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
-mudam o combinado: o nome na tela do tipo "passa na conta" nos critérios, o que
-a caixa da dupla conferência mostra, o motor faltando num PDF com texto, e esta
-nota sobre a barra.
 **Terceira emenda:** aprovada em 2026-09-14 — no "Anonimizar", a
 escolha do motor de leitura sai da tela de escolher o arquivo e aparece só
 quando o PDF vai ser lido como imagem (sem camada de texto, ou quando a pessoa
@@ -31,6 +25,26 @@ espaços (premissa das letras, RN-2 e o critério de aceite correspondente). Vei
 da conferência da etapa 2 da construção: `l23.4S6.789-1O` saía inteiro, e o
 número continuava reconhecível. Pontuação nos lugares exatos de um CPF quase
 nunca aparece em palavra ou código; sem ela, a sequência tem cara de código.
+**Quinta emenda:** aprovada em 2026-09-17 — letra no fim do número, grudada numa
+palavra, não conta como dígito **quando o número não tem pontuação de CPF**
+(premissa das letras e critério de aceite). Veio do teste da usuária com um
+documento de verdade, na própria máquina: "Número:" seguido de 9 dígitos no fim
+da linha e "Situação:" na linha de baixo dava um "quase CPF partido em duas
+linhas" a cada ocorrência — 18 num documento só. A ressalva da pontuação entrou
+na revisão da mesma etapa, horas depois: sem ela, um CPF pontuado cuja última
+letra encostava numa palavra saía inteiro e fora da lista.
+**Acréscimo:** em 2026-09-17, a pedido da usuária na conferência da etapa 3 —
+a navegação "‹ anterior · N de M · próximo ›" na revisão (escopo e critério de
+aceite), o filtro dela pelos selos, e os selos contando grupos separados cuja
+soma dá o total — o primeiro selo passa de "números mascarados" a "números
+encontrados", porque, com algo liberado, nem tudo o que foi encontrado está
+mascarado. Não muda regra nenhuma de máscara.
+**Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
+**Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
+contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
+mudam o combinado: o nome na tela do tipo "passa na conta" nos critérios, o que
+a caixa da dupla conferência mostra, o motor faltando num PDF com texto, e esta
+nota sobre a barra.
 **Origem:** levantamento detalhado de 13/09/2026, registrado em
 `mockups/requisitos/02-mapa-do-entendimento.html`. Uma resposta mudou na hora de
 escrever: a linha no topo do arquivo (R-11 do mapa) saiu, porque ia contra a
@@ -149,6 +163,16 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   ou num código. Sem separador nenhum, ou só com espaços, o limite é **2**: ali a
   sequência tem cara de código, protocolo ou lista de números, e marcar com mais
   letras encheria a lista de alarmes.
+- premissa (*nova*, quinta emenda, 17/09/2026): **letra no fim do número,
+  grudada numa palavra, é começo de palavra, e não dígito** — e a sequência não
+  conta como "quase CPF". É o caso de um número de 9 dígitos no fim de uma linha
+  seguido de "Situação", "Solicitante" ou "Objeto" na linha de baixo: o "Si", o
+  "So" e o "Ob" fechavam as 11 posições. **Duas ressalvas, e as duas existem
+  para não deixar CPF escapar:** a regra vale só quando o número **não tem
+  pontuação de CPF** (com ponto, traço ou barra nas posições exatas, como em
+  `111.111.111-1lAssinado`, ele continua sendo achado), e vale só para a ponta
+  final — na ponta do começo, a letra grudada continua contando, porque a
+  leitura cola o "CPF" no número (`CPFl11.111.111-11`).
 - premissa (*nova*): a máscara feita à mão esconde os 3 primeiros e os 2 últimos
   dígitos do trecho marcado. Se o trecho tiver 5 dígitos ou menos, esconde
   todos. Trecho sem nenhum dígito não muda nada, e a tela diz por quê.
@@ -416,6 +440,13 @@ aprovação própria, antes da construção.
   `***.4S6.789-**` e está na lista, como "quase CPF".
 - Dado um texto com `l234S67891O`, com as mesmas três letras e **sem separador
   nenhum**, quando ele passa pelo Anonimizar, então ele não é mascarado.
+- Dado um texto com um número de 9 dígitos no fim de uma linha e "Situação:" no
+  começo da seguinte, quando ele passa pelo Anonimizar, então nada é mascarado
+  ali. Dado `123.456.` no fim de uma linha e `789-1O,` na seguinte, então ele
+  continua mascarado, como "quase CPF". Dado `111.111.111-1lAssinado`, com
+  pontuação de CPF e a letra final grudada na palavra, então ele **também**
+  continua mascarado, e pede a dupla conferência para ser liberado (quinta
+  emenda, com a ressalva da revisão da etapa 3).
 - Dado um texto com uma sequência pontuada em que 5 posições são letras
   (`SOL.IDA.DES-OS`), quando ele passa pelo Anonimizar, então ela não é
   mascarada.

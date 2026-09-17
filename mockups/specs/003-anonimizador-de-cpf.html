@@ -276,6 +276,26 @@
   um CPF quase nunca aparece em palavra ou código; sem ela, a sequência tem cara de código.
 </div>
 
+<div class="emenda">
+  <strong>Quinta emenda de 17/09/2026, aprovada.</strong> <strong>Letra no fim do número, grudada numa
+  palavra, é começo de palavra</strong>, e não dígito. Veio do teste com um documento de verdade: um número
+  de 9 dígitos no fim da linha, com "Situação" na linha de baixo, fechava as 11 posições com o "Si" — 18
+  alarmes falsos num documento só. Vale só para a ponta final: na do começo, a letra grudada continua
+  contando, porque é assim que a leitura cola o "CPF" no número (<code>CPFl11.111.111-11</code>).
+</div>
+
+<div class="emenda">
+  <strong>Acréscimo de 17/09/2026.</strong> Na revisão, a navegação
+  <strong>"‹ anterior · N de M · próximo ›"</strong>, acima do texto, para passar o documento de cima a
+  baixo sem rolar. Ela percorre todos os números da lista, liberados inclusive, na ordem do texto; cada
+  passo leva o texto até o número e marca o item dele na lista, e a navegação dá a volta nas duas pontas.
+  Clicar num selo do alto — "CPFs válidos", "suspeitos" ou "liberados por você" — leva ao primeiro número
+  daquele grupo e faz a navegação andar só por ele, sem esconder nada do texto nem da lista; clicar de novo, ou no "números encontrados", volta a percorrer todos. Os
+  selos contam <strong>grupos separados, e a soma fecha</strong>: "12 números encontrados" fica fixo, e
+  "CPFs válidos" + "suspeitos" + "liberados por você" dá 12 — liberar um suspeito tira um de "suspeitos"
+  e põe em "liberados". Não muda regra nenhuma de máscara.
+</div>
+
 <h2>O percurso do texto</h2>
 <p class="nota">Três portas de entrada, e todas terminam na mesma revisão. O único momento em que algo vai para o disco é o último.</p>
 
@@ -344,6 +364,7 @@
     <div class="exemplo"><span class="de">9111.111.111-11</span><span class="para">grudado em outro dígito</span></div>
     <div class="exemplo"><span class="de">SOL.IDA.DES-OS</span><span class="para">letras demais, mesmo com pontuação</span></div>
     <div class="exemplo"><span class="de">l234S67891O</span><span class="para">três letras e nenhum separador</span></div>
+    <div class="exemplo"><span class="de">123456789 ⏎ Situação</span><span class="para">o "Si" é começo de palavra (quinta emenda)</span></div>
     <div class="exemplo"><span class="porque">Número de processo e linha de boleto também: o CPF de verdade não aparece grudado num número maior.</span></div>
   </div>
 </div>

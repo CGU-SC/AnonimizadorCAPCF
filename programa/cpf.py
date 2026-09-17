@@ -152,7 +152,7 @@ def procurar(texto):
         encontro = _PADRAO.search(texto, posicao)
         if encontro is None:
             return achados
-        ocorrencia = _avaliar(encontro)
+        ocorrencia = _avaliar(texto, encontro)
         if ocorrencia is None:
             # Recusado, procura de novo uma letra adiante, e não do fim do
             # recusado: um CPF de verdade pode começar dentro dele.
@@ -218,21 +218,34 @@ def aplicar(texto, ocorrencias):
     return "".join(letras)
 
 
-def _avaliar(encontro):
+def _avaliar(texto, encontro):
     """Decide o que é o número achado, ou devolve None se ele não conta.
 
-    Letra na ponta do número conta mesmo quando está grudada numa palavra. Já
-    houve aqui uma regra que descartava esse caso, para o S de
-    "111.111.111-1Sobre" não virar um 5 - e ela deixava sair inteiro, sem
-    máscara e fora da lista, o CPF que a leitura grudou no "CPF" e cujo
-    primeiro 1 virou "l" ("CPFl11.111.111-11"). Entre um alarme falso, que a
-    pessoa desfaz com um clique, e um CPF que escapa calado, fica o alarme
-    (regra RN-5: o erro fica do lado seguro).
+    As duas pontas do número são tratadas de jeitos diferentes, e de propósito.
+
+    Na ponta do começo, letra grudada numa palavra continua contando. Já houve
+    aqui uma regra que descartava esse caso, e ela deixava sair inteiro, sem
+    máscara e fora da lista, o CPF que a leitura grudou no "CPF" e cujo primeiro
+    1 virou "l" ("CPFl11.111.111-11"). Entre um alarme falso e um CPF que escapa
+    calado, fica o alarme (regra RN-5).
+
+    Na ponta final, letra grudada numa palavra é começo de palavra, e o número
+    não conta (quinta emenda da spec 003) - **mas só quando não há pontuação de
+    CPF**. Um número de 9 dígitos no fim da linha, com "Situação" na linha de
+    baixo, fechava as 11 posições com o "Si", e num documento de verdade isso deu
+    18 alarmes falsos; todos eram sem pontuação. Com ponto, traço ou barra nas
+    posições exatas, a regra não vale: "CPF 111.111.111-1SAssinado" é um CPF que
+    a leitura estragou e colou na palavra seguinte, e soltá-lo seria deixá-lo
+    sair inteiro, calado (revisão da etapa 3).
     """
     posicoes = "".join(encontro.group(g) for g in _GRUPOS_DE_DIGITOS)
     letras = sum(1 for letra in posicoes if not letra.isdigit())
     separadores = tuple(encontro.group(g) for g in _GRUPOS_DE_SEPARADOR)
     if letras > _maximo_de_letras(separadores):
+        return None
+    depois = texto[encontro.end()] if encontro.end() < len(texto) else ""
+    if (not _tem_pontuacao(separadores)
+            and not encontro.group(0)[-1].isdigit() and depois.isalpha()):
         return None
 
     digitos = "".join(LETRA_PARECIDA_COM_DIGITO.get(l, l) for l in posicoes)
@@ -254,12 +267,20 @@ def _avaliar(encontro):
     )
 
 
-def _maximo_de_letras(separadores):
-    """Quantas letras esta sequência aceita, pela pontuação que ela tem."""
-    tem_pontuacao = any(
+def _tem_pontuacao(separadores):
+    """Diz se os grupos estão separados por ponto, traço ou barra.
+
+    É a evidência mais forte de que aquilo é um CPF: a pontuação nas posições
+    exatas quase nunca aparece dentro de uma palavra ou de um código.
+    """
+    return any(
         letra in PONTUACAO_DE_CPF for separador in separadores for letra in separador
     )
-    return (MAXIMO_DE_LETRAS_COM_PONTUACAO if tem_pontuacao
+
+
+def _maximo_de_letras(separadores):
+    """Quantas letras esta sequência aceita, pela pontuação que ela tem."""
+    return (MAXIMO_DE_LETRAS_COM_PONTUACAO if _tem_pontuacao(separadores)
             else MAXIMO_DE_LETRAS_SEM_PONTUACAO)
 
 

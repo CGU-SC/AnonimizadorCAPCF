@@ -81,6 +81,10 @@ l234S67891O, a chave lZ3.4S6.7B9-1O e a referência SOL.IDA.DES-OS não
 são CPF: o primeiro tem três letras e nenhuma pontuação, o segundo tem
 cinco letras, e o terceiro tem letras que não se confundem com dígito.
 
+Termo aditivo vinculado ao projeto
+Número: 202600042
+Situação: em análise
+
 ## 6. Conclusão
 
 Os documentos apresentados guardam correspondência com o plano de
