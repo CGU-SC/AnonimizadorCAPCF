@@ -43,7 +43,7 @@ def test_a_contagem_bate_com_o_que_esta_mascarado_no_texto(aplicacao):
 
     # O mesmo número por dois caminhos: o selo da tela, e a contagem de trechos
     # mascarados no próprio texto que está na tela.
-    assert revisao.selo_mascarados.text() == "12 números mascarados"
+    assert revisao.selo_encontrados.text() == "12 números encontrados"
     assert revisao.selo_suspeitos.text() == "9 suspeitos"
     assert revisao.texto_mascarado().count("***") == 12
 
@@ -79,9 +79,31 @@ def test_o_aviso_de_nenhum_cpf_aparece_e_o_texto_fica_como_veio(aplicacao):
     revisao = painel.tela_revisao
 
     assert revisao.aviso_sem_cpf.isVisible() or revisao.aviso_sem_cpf.isVisibleTo(painel)
-    assert not revisao.selo_mascarados.isVisibleTo(painel)
+    assert not revisao.selo_encontrados.isVisibleTo(painel)
     assert revisao.texto_mascarado() == (MASSA / "11-sem-cpf.md").read_text(
         encoding="utf-8")
+
+
+def test_os_avisos_da_revisao_cabem_inteiros(aplicacao):
+    """Regressão da revisão da etapa 3: o aviso reservava 32 e precisava de 34.
+
+    É a classe de defeito que o CLAUDE.md registra: a última linha some para
+    fora da borda sem nada acusar. Este teste percorre as frases de largura fixa
+    da revisão e falha se alguma reservar menos do que precisa.
+    """
+    from lista_de_achados import LARGURA, _nada_para_olhar
+    import estilo as _estilo
+
+    revisao = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    revisao.mostrar("sem.md", "Ata sem número nenhum.", [])
+
+    avisos = [
+        (revisao.explicacao_sem_cpf, revisao.LARGURA_DO_TEXTO_DO_AVISO),
+        (_nada_para_olhar(), LARGURA - _estilo.ESPACO_4),
+    ]
+    for rotulo, largura in avisos:
+        assert rotulo.minimumHeight() >= rotulo.heightForWidth(largura), (
+            f"a frase '{rotulo.text()[:30]}…' vai sair cortada")
 
 
 def test_arquivo_ja_anonimizado_nao_acha_nada(aplicacao):

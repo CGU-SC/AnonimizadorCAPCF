@@ -79,6 +79,12 @@ chatbot.
 - **Mascarar tudo o que foi encontrado**, suspeitos inclusive.
 - **Tela de revisão**, que aparece sempre: o texto já mascarado com cada troca
   destacada, e a lista de suspeitos ao lado.
+- **Navegar pelos números sem rolar a tela** (acréscimo de 17/09/2026):
+  "‹ anterior · N de M · próximo ›" acima do texto, percorrendo todos os números
+  da lista na ordem em que aparecem no texto. Cada passo leva o texto até o
+  número e marca o item dele na lista, como o clique na lista. Clicar num selo
+  do alto ("CPFs válidos", "suspeitos", "liberados por você") faz a navegação
+  percorrer só aquele grupo; o texto e a lista continuam inteiros.
 - Mascarar à mão o trecho que o programa não pegou.
 - Desfazer uma máscara: um clique para o suspeito que falha na conta e para a
   máscara feita à mão; **dupla conferência** para todo número que passa na conta,
@@ -345,7 +351,7 @@ aprovação própria, antes da construção.
   "quase CPF" é sempre "suspeito: quase CPF", passe ou não na conta. Mas ele
   também é conferido pela conta, depois de trocadas as letras de volta por
   dígitos e juntadas as partes: o que passa leva, na lista, a marca do tipo
-  "passa na conta" — na tela, "forma CPF válido" — e segue a RN-10 e a RN-11 como número que passa na conta. É o CPF de
+  "passa na conta" — na tela, a etiqueta **"válido se corrigido"**, em vermelho, ao lado da etiqueta do "quase CPF" (nome escolhido em 17/09/2026: "CPF válido" é o nome da seção dos que a leitura pegou certinho, e repeti-lo aqui confundia) — e segue a RN-10 e a RN-11 como número que passa na conta. É o CPF de
   verdade que a leitura estragou, e é o que menos pode sair com um clique.
 - RN-3: **Número grudado num número maior não é CPF.** Só conta a sequência sem
   dígito colado antes ou depois, nem ligada a outro dígito por ponto, traço ou
@@ -479,6 +485,27 @@ aprovação própria, antes da construção.
 - Dado que a pessoa tenta digitar dentro do texto da revisão, então nada muda.
 - Dado um suspeito na lista, quando a pessoa clica nele, então o texto rola até
   ele.
+- Dado um texto com CPFs, quando a pessoa clica em "próximo", então o texto vai
+  até o número seguinte na ordem do texto, o item dele se marca na lista e a
+  posição "N de M" avança. A navegação dá a volta: do último número, o "próximo"
+  leva ao primeiro, e do primeiro, o "anterior" leva ao último. Clicar num item
+  da lista também acerta a posição. M
+  conta todos os números da lista, liberados inclusive. Sem nenhum CPF, a
+  navegação não aparece.
+- Dado que a pessoa clica no selo "CPFs válidos" (ou "suspeitos", ou "liberados
+  por você"), então o selo fica aceso, o texto vai direto ao primeiro número
+  daquele grupo ("1 de 3 CPFs válidos"), e o "anterior" e o "próximo" pulam só
+  entre os números do grupo, sem esconder nada do texto nem da lista. Clicar no
+  "números encontrados" leva ao primeiro número de todos. Clicar de novo no selo
+  aceso desliga o filtro sem sair do número em que a pessoa está. O que sai do grupo no
+  meio da navegação sai da contagem, e o "próximo" segue a partir dele.
+- Dado um texto com CPFs, então os selos do alto contam grupos separados, e a
+  soma fecha: "N números encontrados" fica fixo; "CPFs válidos" e "suspeitos"
+  contam só o que continua mascarado; "liberados por você" conta o que foi
+  liberado. Liberar um suspeito tira um de "suspeitos" e põe um em "liberados";
+  mascarar de novo desfaz isso. A navegação pelos suspeitos não passa pelos
+  liberados, e o título da seção da lista acompanha o selo ("Suspeitos — olhe
+  estes 7"), com o item liberado continuando no mesmo lugar da lista.
 - Dado um suspeito que falha na conta, quando a pessoa clica em "desfazer",
   então o número volta ao original no texto, sem caixa de confirmação, e
   continua na lista como "liberado", com a opção de mascarar de novo.

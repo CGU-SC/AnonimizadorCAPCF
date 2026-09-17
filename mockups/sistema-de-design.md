@@ -28,7 +28,7 @@ papel.
 | `--cor-texto-secundario` | `#9aa1ac` | legenda, texto de apoio |
 | `--cor-destaque` | `#3b6ea5` | botão principal, item ativo do menu, links |
 | `--cor-destaque-hover` | `#4f86bf` | estado de passar o mouse sobre o destaque |
-| `--cor-sucesso` | `#4caf6d` | o que deu certo (arquivo gravado) — **não** marca CPF desde 14/09/2026 |
+| `--cor-sucesso` | `#4caf6d` | o que deu certo (arquivo gravado) — **não** marca CPF desde 14/09/2026. **Uma exceção, desde 17/09/2026:** o que a pessoa **liberou** na revisão é verde — o selo "N liberados por você", o número liberado no texto (com traço tracejado) e a etiqueta "liberado" na lista —, a pedido da usuária: marca uma decisão dela, e num documento com muitos liberados o cinza ficava difícil de achar depois. O traço tracejado é o que separa o liberado dos outros tipos para quem não distingue bem as cores |
 | `--cor-alerta` | `#d9a441` | CPF **suspeito** — dígito verificador não bateu, indo para conferência humana. Traço ondulado. Entre 14 e 16/09/2026 marcou também o "forma CPF válido", que voltou ao vermelho |
 | `--cor-erro` | `#d9534f` | falha (arquivo inválido, OCR não rodou), a faixa da caixa da dupla conferência de um número com forma CPF válido — o momento de risco — e, desde 16/09/2026, o **"forma CPF válido"** na revisão, com traço reto |
 | `--cor-erro-texto` | `#f08a86` | letra em vermelho sobre o fundo escuro (contraste 6,6:1) — é este vermelho que marca o "forma CPF válido" no texto da revisão e o selo dele. O `#d9534f` tem 4:1 sobre o fundo e 3,6:1 sobre o fundo elevado, abaixo do mínimo de 4,5:1 para letra pequena |
