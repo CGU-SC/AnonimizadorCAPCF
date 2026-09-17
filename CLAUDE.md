@@ -112,6 +112,18 @@ muda e ele não, passa a mentir. Comenta-se a decisão que não está escrita em
 lugar nenhum: por que este número, por que este caso é tratado à parte, de
 onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
 
+## Como cada rodada fecha
+
+Combinado em 17/09/2026, e vale sem perguntar de novo: **etapa conferida na tela
+fecha com a revisão pela lente crítica** (`skill-09-revisor-de-codigo`) **e, em
+seguida, o commit** (`skill-10-controlador-de-versoes`), com a fatia e a mensagem
+apresentadas antes de gravar, e o push depois do ok.
+
+A lente crítica é a que achou defeito em todas as rodadas até aqui — CPF
+escapando inteiro, arquivo de texto bom recusado, o texto inteiro sublinhado
+depois de um clique. As outras lentes continuam sendo oferta, e não rotina: ao
+fim da revisão, diga quais ficaram de fora e o que elas veriam.
+
 ## O que já nos mordeu
 
 - Instalar programa em `Program Files` (como o Tesseract) exige confirmação do
@@ -145,7 +157,10 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
   na caixa de erro do Módulo de OCR em 10/09/2026. Resolve dando largura fixa
   ao texto e calculando a altura a partir dela (`heightForWidth`), e
   recalculando sempre que a frase mudar. Vale para toda caixa de aviso, erro ou
-  explicação que o programa vier a ter.
+  explicação que o programa vier a ter. **E a conta precisa de um
+  `ensurePolished()` antes dela**: sem isso o Qt mede a frase com a fonte padrão,
+  e não com a do estilo que acabou de ser posto — a diferença é a última linha,
+  que some (caixa da dupla conferência, etapa 3 do Anonimizar, 16/09/2026).
 - Tela do Qt criada dentro de um teste e deixada para trás faz a lista inteira
   de testes **terminar com erro mesmo passando**: todos os testes passam, e o
   comando devolve código de erro na saída, sem nenhuma mensagem. A tela só é
@@ -168,6 +183,19 @@ onde veio esta regra. Linguagem do dia a dia — quem lê pode não programar.
   em modo de desenvolvimento, mas o Qt não troca o código com a janela de pé:
   toda conferência de tela depois de uma alteração pede fechar e abrir de novo.
   Sem isso, a pessoa confere a versão velha achando que é a nova.
+- **Pôr texto novo num `QTextEdit` herda a formatação que está debaixo do
+  cursor.** Se o cursor tinha acabado de passar por um trecho destacado, o texto
+  inteiro sai com aquele destaque - foi o que aconteceu na revisão do Anonimizar
+  depois de um "Desfazer": tudo ficou amarelo e sublinhado. Resolve devolvendo a
+  formatação comum ao documento inteiro antes de pintar os destaques
+  (`programa/tela_revisao.py`, etapa 3, 17/09/2026).
+- **Lista com conteúdo mais largo que a coluna desliza para o lado sozinha.**
+  Numa área de rolagem, quando algum item pede mais largura do que cabe, o
+  programa rola para os lados ao mostrar um item - e a primeira letra de tudo
+  fica cortada, sem nada acusar. Resolve de duas formas, e as duas valem: não
+  deixar o conteúdo passar da largura (uma etiqueta comprida desce para a linha
+  de baixo) e rolar só na vertical (`programa/lista_de_achados.py`, etapa 3 do
+  Anonimizar, 17/09/2026).
 - Trabalho que roda ao lado da janela (uma `QThread`) precisa ser **parado antes
   de a janela fechar**. Sem isso, fechar o programa no meio de uma leitura o faz
   estourar em vez de fechar limpo, e o Windows mostra a caixa de "o programa

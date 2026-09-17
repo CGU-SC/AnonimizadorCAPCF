@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 16 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+<h1>Revisão 16 — antes e depois</h1>
+<p class="subtitulo">17/09/2026 — a etapa 3 do Anonimizador de CPF (a lista do que o programa achou, o desfazer, a caixa da dupla conferência e a navegação), mais a quinta emenda da spec</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Revisei o que a etapa 3 construiu — a lista ao lado do texto, a caixa da dupla conferência, a navegação
+  com filtro pelos selos — e a quinta emenda no motor, aprovada hoje. A pergunta era a de sempre: em que
+  situação um CPF sai do programa sem máscara, ou a tela mostra uma coisa e o arquivo leva outra?
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">2</div><div class="contagem-label">achados</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">2</div><div class="contagem-label">aprovados e consertados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">0</div><div class="contagem-label">recusados</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">3</div><div class="contagem-label">suspeitas que não viraram achado</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/cpf.py — a ressalva da quinta emenda</div>
+  <div class="explicacao">
+    <strong>A regra aprovada hoje deixava um CPF inteiro escapar.</strong> A quinta emenda diz que letra no
+    fim do número, grudada numa palavra, é começo de palavra — e foi aplicada a todos os casos. Só que os
+    18 alarmes falsos do documento de verdade eram todos <strong>sem pontuação</strong>
+    (<code>123456789 ⏎ Situação</code>). Com pontuação, a história é outra: em
+    <code>CPF 111.111.111-1lAssinado</code>, a leitura trocou o último dígito por letra e colou a palavra
+    seguinte — e o programa não mascarava nem punha na lista. O número ia inteiro para o arquivo, calado.
+    Agora a regra vale só quando o número não tem ponto, traço ou barra nas posições de um CPF.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">CPF 111.111.111-1lAssinado</span>
+        Nada mascarado, nada na lista. O CPF saía inteiro.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">CPF ***.111.111-**Assinado</span>
+        Mascarado e na lista, como "quase CPF · válido se corrigido" — e só sai pela caixa vermelha.
+        Os 18 casos sem pontuação continuam fora.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/tela_revisao.py e programa/lista_de_achados.py — a altura dos avisos</div>
+  <div class="explicacao">
+    <strong>A última linha do aviso "Nenhum CPF encontrado neste texto" saía cortada.</strong> A caixa
+    reservava 32 pontos de altura e a frase precisa de 34, e o que sobra some para fora da borda sem nada
+    indicar que faltou pedaço. É a classe de defeito que o <code>CLAUDE.md</code> já registra: a altura
+    era medida antes de o Qt aplicar a fonte do estilo. O "Nada para olhar aqui" da lista vazia recebeu a
+    mesma proteção — ele não está cortado hoje, mas está a um ajuste de texto de ficar.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">32 reservados · 34 necessários</span>
+        A frase termina fora da borda.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">34 reservados · 34 necessários</span>
+        E um teste percorre os avisos da revisão, falhando se algum reservar menos do que precisa.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que aconteceu</th></tr>
+  <tr><td><code>programa/cpf.py</code></td><td>a regra da letra final passou a valer só sem pontuação de CPF; a conferência da pontuação virou uma peça com nome, usada também pelo limite de letras</td></tr>
+  <tr><td><code>programa/tela_revisao.py</code> e <code>programa/lista_de_achados.py</code></td><td>a altura dos dois avisos passou a ser medida depois de o Qt aplicar o estilo</td></tr>
+  <tr><td><code>especificacoes/specs/003-anonimizador-de-cpf.md</code></td><td>a quinta emenda e a premissa das letras ganharam a ressalva da pontuação, e um critério de aceite novo</td></tr>
+  <tr><td><code>programa/test_cpf.py</code> e <code>programa/test_painel_anonimizar.py</code></td><td>três testes novos: o CPF pontuado que escapava, o mesmo caso com pontuação discreta, e os avisos que precisam caber</td></tr>
+  <tr><td><code>mockups/revisoes/16-antes-e-depois.html</code></td><td>novo: esta página</td></tr>
+</table></div>
+
+<h2>O que foi achado e NÃO consertado</h2>
+<p class="intro-secao">
+  Três coisas apareceram e não viraram conserto agora. Nenhuma delas deixa CPF escapar hoje.
+</p>
+<ul class="fora-lista">
+  <li><strong>Os grupos dos selos não têm o "mascarado à mão".</strong> Enquanto mascarar à mão não existe
+    na tela, a soma dos selos fecha. No dia em que existir — a etapa 4 —, ela deixa de fechar, e nenhum
+    filtro navega por esses itens. Fica anotado como a segunda coisa a resolver lá, junto com o traço
+    próprio do "mascarado à mão", que a revisão 15 já havia anotado.</li>
+  <li><strong>O "Nada para olhar aqui" não está cortado hoje</strong> (mede 48 para 48). Ele recebeu a
+    proteção junto com o outro aviso, mas não era defeito visível.</li>
+  <li><strong>Um comentário impreciso</strong> em <code>lista_de_achados.py</code>: ele diz que a
+    comparação é "por igualdade, e não por identidade", quando comparar dois números de identidade com
+    <code>==</code> é, na prática, comparar identidade. O código está certo; a frase é que pode confundir
+    quem ler depois. Assunto da lente de clareza, não da crítica.</li>
+</ul>
+
+<p class="rodape">
+  Uma lente só. As outras não rodaram, e é bom dizer o que elas veriam: a de segredo e dado real ganhou
+  motivo novo, já que a usuária passou a testar com documento de verdade na máquina dela; a de conferir na
+  tela olharia o conjunto, e não a etapa isolada; a de critérios de aceite já cobriria "Encontrar e
+  conferir", "Máscara" e quase toda a "Revisão"; e as de manutenção e clareza têm as três peças novas
+  desta etapa.
+</p>
+
+</body>
+</html>
