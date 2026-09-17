@@ -19,7 +19,7 @@ sys.path.insert(0, str(RAIZ / "programa"))
 from cpf import FALHA_NA_CONTA, PASSA_NA_CONTA, procurar  # noqa: E402
 
 MASSA = RAIZ / "dados-exemplo"
-DATA = "16/09/2026"
+DATA = "17/09/2026"
 
 # O que a massa tem de propósito e o motor NÃO pode mascarar, com o motivo em
 # linguagem de quem lê. Fica escrito aqui porque é uma decisão da spec, e não
@@ -42,6 +42,9 @@ INTEIROS = [
     ("SOL.IDA.DES-OS",
      "letras que não se confundem com dígito — A, E e L não estão na lista das "
      "que a leitura troca por número"),
+    ("Número: 202600042 ↵ Situação",
+     "letra no fim do número grudada numa palavra — o \"Si\" de \"Situação\" é "
+     "começo de palavra, e não dígito (quinta emenda)"),
     ("1234 5678 910",
      "não tem a forma de um CPF (grupos de 4, 4 e 3) — é o caso de mascarar à "
      "mão, na etapa 4"),
@@ -56,7 +59,7 @@ CONFERIR = [
     'Na tabela de bolsistas do documento, as colunas continuam alinhadas depois da máscara.',
     'O CNPJ, o processo, o boleto e os números colados a outro dígito saíram inteiros.',
     'Os "quase CPF" que passam na conta (<span class="mono">l11.111.111-11</span>, o do Pedro e '
-    '<span class="mono">666 666 666 66</span>) levam a etiqueta "CPF válido" e pedem a dupla conferência.',
+    '<span class="mono">666 666 666 66</span>) levam a etiqueta "válido se corrigido" e pedem a dupla conferência.',
     'O <span class="mono">l23.4S6.789-1O</span> e o <span class="mono">l23.4S6.7B9-1O</span>, com três e '
     'quatro letras <strong>e pontuação de CPF</strong>, aparecem mascarados (quarta emenda); o '
     '<span class="mono">l234S67891O</span>, com três letras e nenhuma pontuação, e o '
@@ -77,7 +80,8 @@ def rotulo(achado):
         return '<span class="etq valido">CPF válido</span>'
     if achado.tipo == FALHA_NA_CONTA:
         return '<span class="etq suspeito">suspeito · falha na conta</span>'
-    extra = ' <span class="etq valido">CPF válido</span>' if achado.passa_na_conta else ""
+    extra = (' <span class="etq valido">válido se corrigido</span>'
+             if achado.passa_na_conta else "")
     return f'<span class="etq suspeito">quase CPF · {e(achado.motivo)}</span>{extra}'
 
 

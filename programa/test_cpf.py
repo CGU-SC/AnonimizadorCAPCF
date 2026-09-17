@@ -144,12 +144,58 @@ def test_arquivo_ja_anonimizado_nao_tem_cpf():
     assert procurar(texto) == []
 
 
-def test_letra_da_ponta_colada_a_uma_palavra_vira_suspeito():
-    # O "S" de "Sobre" provavelmente é pedaço da palavra, e não um 5. Mesmo
-    # assim o número vai para a lista de suspeitos: um alarme falso sai com um
-    # clique, e um CPF que escapa calado não volta (RN-5).
+@pytest.mark.parametrize("texto", [
+    "Número: 123456789\nSituação: em análise",
+    "Processo 987654321\nSolicitante: Fulano",
+    "Termo 555444333\nObjeto: pesquisa",
+])
+def test_letra_no_fim_grudada_numa_palavra_nao_conta(texto):
+    """Quinta emenda: a letra final grudada numa palavra é começo de palavra.
+
+    São o formato que deu 18 alarmes falsos num documento de verdade testado
+    pela usuária - aqui, com números inventados. Todos sem pontuação: é só aí
+    que a regra vale (revisão da etapa 3).
+    """
+    assert procurar(texto) == []
+
+
+def test_cpf_pontuado_com_letra_no_fim_grudada_continua_mascarado():
+    """Regressão da revisão da etapa 3: este CPF escapava inteiro.
+
+    A regra da quinta emenda vale só sem pontuação de CPF. Com ponto e traço nas
+    posições exatas, a letra final grudada numa palavra é um dígito que a leitura
+    trocou - e soltá-lo deixaria o CPF sair calado.
+    """
+    # O "l" vira 1, então este passa na conta: é o caso mais perigoso, porque
+    # quase certamente é o CPF de alguém.
+    texto = "CPF 111.111.111-1lAssinado por Fulano"
+    achado = _unica(texto)
+    assert achado.tipo == QUASE_CPF and achado.pede_dupla_conferencia
+    assert achado.original not in aplicar(texto, [achado])
+    # E o mesmo com a pontuação mais discreta, só o traço.
+    assert _unica("CPF 111111111-1lAssinado").pede_dupla_conferencia
+
+
+def test_letra_no_fim_grudada_numa_palavra_com_pontuacao_continua_suspeita():
+    """Com pontuação, a regra da quinta emenda não vale - e é de propósito.
+
+    O "S" de "Sobre" provavelmente é pedaço da palavra, mas o número é pontuado:
+    entre um alarme falso, que sai com um clique, e um CPF que escapa calado,
+    fica o alarme (RN-5).
+    """
     achado = _unica("111.111.111-1Sobre o assunto")
     assert achado.tipo == QUASE_CPF and achado.mascara == "***.111.111-**"
+
+
+def test_cpf_partido_com_letra_no_fim_continua_mascarado():
+    """A regra da quinta emenda não pode soltar o CPF partido de verdade.
+
+    Aqui a letra no fim é um dígito que a leitura trocou, e depois dela vem uma
+    vírgula - e não o resto de uma palavra.
+    """
+    achado = _unica("CPF 123.456.\n789-1O, referente à viagem")
+    assert achado.tipo == QUASE_CPF
+    assert achado.mascara == "***.456.\n789-**"
 
 
 def test_cpf_grudado_na_palavra_com_letra_na_ponta_e_achado():
