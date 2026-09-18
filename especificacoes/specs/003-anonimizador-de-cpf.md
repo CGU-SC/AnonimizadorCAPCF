@@ -36,7 +36,7 @@ letra encostava numa palavra saía inteiro e fora da lista.
 **Sexta emenda:** aprovada em 2026-09-17 — na máscara feita à mão, a letra
 parecida com dígito conta como posição quando o trecho marcado é só um número
 (premissa da máscara à mão, RN-9 e critério de aceite). Contando só dígitos, o
-`l23.4S6.789-1O` viraria `l**.*S6.78*-*O`, com o primeiro e o último dígito do
+`l23.4S6.789-1O` viraria `lXX.XS6.78X-XO`, com o primeiro e o último dígito do
 número à vista — e é justamente esse caso que leva alguém a mascarar à mão.
 **Acréscimo:** em 2026-09-17, a pedido da usuária na conferência da etapa 3 —
 a navegação "‹ anterior · N de M · próximo ›" na revisão (escopo e critério de
@@ -44,6 +44,18 @@ aceite), o filtro dela pelos selos, e os selos contando grupos separados cuja
 soma dá o total — o primeiro selo passa de "números mascarados" a "números
 encontrados", porque, com algo liberado, nem tudo o que foi encontrado está
 mascarado. Não muda regra nenhuma de máscara.
+**Sétima emenda:** aprovada em 2026-09-18 — a máscara passa a ser o `X`
+maiúsculo no lugar do asterisco (RN-6): `123.456.789-10` → `XXX.456.789-XX`.
+Veio da conferência da etapa 5, ao abrir o arquivo gravado: num `.md`, `***` e
+`**` são a marcação de negrito e itálico, e o visualizador — o próprio Bloco de
+Notas do Windows abre `.md` formatado — engolia os asteriscos grudados na
+pontuação e mostrava `*.222.222-` no lugar da máscara. O arquivo estava certo por
+dentro, mas quem o recebesse veria a tarja quebrada. Testadas cinco formas num
+arquivo aberto no Bloco de Notas: o `X` é a única que fica igual nas duas visões
+— texto cru e formatado —, em qualquer posição, e não exige escrever no documento
+nenhum sinal que não estava nele (RN-12). Os exemplos deste documento foram
+reescritos com a máscara nova, menos o registro da segunda emenda, que fica como
+foi discutido na época.
 **Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
 **Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
 contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
@@ -134,7 +146,7 @@ Inferências do levantamento que você leu e não derrubou, mais três que
 apareceram ao escrever esta spec (marcadas com *nova*).
 
 - premissa: no "quase CPF", a máscara cai nas 3 primeiras e nas 2 últimas
-  posições, mesmo que haja letra ali (`l23.456.789-1O` → `***.456.789-**`). O
+  posições, mesmo que haja letra ali (`l23.456.789-1O` → `XXX.456.789-XX`). O
   CPF quebrado entre duas linhas é mascarado nas duas partes, e a quebra fica
   onde estava.
 - premissa: número de dígitos repetidos (`111.111.111-11`) passa na conta e é
@@ -190,7 +202,7 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   tela diz por quê. **O que conta como posição depende do trecho:** num trecho
   que é só um número — dígitos, letras parecidas com dígito e pontuação, como
   `l23.4S6.789-1O` —, a letra conta como posição, igual à máscara automática, e
-  ele vira `***.4S6.789-**`; num trecho que traz palavras, contam só os dígitos,
+  ele vira `XXX.4S6.789-XX`; num trecho que traz palavras, contam só os dígitos,
   senão o programa mascararia o "S" e o "o" de "Sobre" e deixaria dígitos à
   vista. É justamente o número que a leitura estragou demais que a pessoa vai
   querer mascarar à mão, e contar só dígitos ali deixaria o primeiro e o último
@@ -376,9 +388,9 @@ aprovação própria, antes da construção.
 - RN-5: **Tudo o que foi encontrado é mascarado**, inclusive os suspeitos. O erro
   fica do lado seguro: um CPF de verdade lido com um dígito trocado falha na
   conta, e sem máscara sairia quase inteiro.
-- RN-6: **A máscara** troca por `*` as 3 primeiras e as 2 últimas posições de
+- RN-6: **A máscara** troca por `X` as 3 primeiras e as 2 últimas posições de
   dígito (ou da letra no lugar dele), e mantém os separadores. A barra antes dos
-  dois últimos vira traço (`123.456.789/10` → `***.456.789-**`). Nenhum
+  dois últimos vira traço (`123.456.789/10` → `XXX.456.789-XX`). Nenhum
   outro caractere muda, e o comprimento do número também não muda.
 - RN-7: **A revisão aparece sempre**, com CPF ou sem, e o salvar fica liberado
   desde o começo. O suspeito que ninguém mexeu sai mascarado.
@@ -457,7 +469,7 @@ aprovação própria, antes da construção.
   "quase CPF".
 - Dado um texto com `l23.4S6.789-1O`, com três letras e a pontuação de um CPF,
   quando ele passa pelo Anonimizar, então ele aparece mascarado como
-  `***.4S6.789-**` e está na lista, como "quase CPF".
+  `XXX.4S6.789-XX` e está na lista, como "quase CPF".
 - Dado um texto com `l234S67891O`, com as mesmas três letras e **sem separador
   nenhum**, quando ele passa pelo Anonimizar, então ele não é mascarado.
 - Dado um texto com um número de 9 dígitos no fim de uma linha e "Situação:" no
@@ -480,10 +492,10 @@ aprovação própria, antes da construção.
 
 **Máscara**
 
-- Dado `111.111.111-11`, então ele vira `***.111.111-**`. Dado `11111111111`,
-  então ele vira `***111111**`. Dado `111.111.111/11`, então ele vira
-  `***.111.111-**`.
-- Dado `l23.456.789-1O`, então ele vira `***.456.789-**`.
+- Dado `111.111.111-11`, então ele vira `XXX.111.111-XX`. Dado `11111111111`,
+  então ele vira `XXX111111XX`. Dado `111.111.111/11`, então ele vira
+  `XXX.111.111-XX`.
+- Dado `l23.456.789-1O`, então ele vira `XXX.456.789-XX`.
 - Dado um CPF quebrado entre duas linhas, então as duas partes aparecem
   mascaradas e a quebra de linha continua no mesmo lugar.
 - Dado um documento com um CPF dentro de uma tabela, quando o arquivo é salvo,
@@ -536,10 +548,10 @@ aprovação própria, antes da construção.
   programa mostra esse número antes de gravar e deixa voltar à revisão.
 - Dado o trecho `1234 5678 910`, que não tem forma de CPF e por isso o programa
   não pega, quando ela o marca com o mouse e escolhe "mascarar", então ele vira
-  `***4 5678 9**` e aparece na lista como "mascarado à mão".
+  `XXX4 5678 9XX` e aparece na lista como "mascarado à mão".
 - Dado o trecho `l23.4S6.789-1O`, um número que a leitura estragou demais para o
   programa pegar, quando ela o marca e escolhe "mascarar", então ele vira
-  `***.4S6.789-**` — a letra conta como posição. Dado um trecho que traz
+  `XXX.4S6.789-XX` — a letra conta como posição. Dado um trecho que traz
   palavras junto, então contam só os dígitos (sexta emenda).
 - Dado um trecho marcado sem nenhum dígito, quando ela escolhe "mascarar",
   então nada muda, e a tela diz por quê.

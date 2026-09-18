@@ -429,7 +429,7 @@ def test_mascarar_o_trecho_marcado(aplicacao):
     tela.botao_mascarar.click()
 
     assert "lZ3.4S6.7B9-1O" not in tela.texto_mascarado()
-    assert "***.4S6.7B9-**" in tela.texto_mascarado()
+    assert "XXX.4S6.7B9-XX" in tela.texto_mascarado()
     assert tela.selo_a_mao.text() == "1 mascarado à mão"
     assert _titulos_da_lista(tela)[-1] == "Mascarados à mão 1"
 

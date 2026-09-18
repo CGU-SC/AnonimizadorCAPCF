@@ -231,7 +231,7 @@
 <div class="emenda">
   <strong>Uma resposta mudou na hora de escrever.</strong> A linha no topo do arquivo (R-11 do
   mapa 02) saiu, porque ia contra a RN-11 da spec 002. O arquivo que sai tem o texto e mais
-  nada, igual ao do OCR. O formato <code>***.456.789-**</code> é o mesmo que portais do governo
+  nada, igual ao do OCR. O formato <code>XXX.456.789-XX</code> é o mesmo que portais do governo
   usam, e o assistente o reconhece sem aviso.
 </div>
 
@@ -282,6 +282,25 @@
   de 9 dígitos no fim da linha, com "Situação" na linha de baixo, fechava as 11 posições com o "Si" — 18
   alarmes falsos num documento só. Vale só para a ponta final: na do começo, a letra grudada continua
   contando, porque é assim que a leitura cola o "CPF" no número (<code>CPFl11.111.111-11</code>).
+</div>
+
+<div class="emenda">
+  <strong>Sexta emenda de 17/09/2026, aprovada.</strong> Na máscara feita à mão, a
+  <strong>letra parecida com dígito conta como posição</strong> quando o trecho marcado é só um número.
+  Contando só os dígitos, o <code>l23.4S6.789-1O</code> viraria <code>lXX.XS6.78X-XO</code>, com o
+  primeiro e o último dígito à vista — e é justamente esse caso que leva alguém a mascarar à mão. Num
+  trecho que traz palavras junto, continuam contando só os dígitos.
+</div>
+
+<div class="emenda">
+  <strong>Sétima emenda de 18/09/2026, aprovada.</strong> A máscara passa a ser o <strong>X maiúsculo</strong>
+  no lugar do asterisco: <code>123.456.789-10</code> → <code>XXX.456.789-XX</code>, na tela e no arquivo.
+  Veio da conferência da etapa 5, ao abrir o arquivo gravado: num <code>.md</code>, <code>***</code> e
+  <code>**</code> são a marcação de negrito e itálico, e o visualizador — o próprio Bloco de Notas do
+  Windows abre <code>.md</code> já formatado — engolia os asteriscos grudados na pontuação, mostrando
+  <code>*.222.222-</code> no lugar da máscara. O arquivo estava certo por dentro, mas quem o recebesse
+  veria a tarja quebrada. O X não significa nada em Markdown, em posição nenhuma, e não exige escrever
+  no documento nenhum sinal que não estava nele.
 </div>
 
 <div class="emenda">
@@ -342,20 +361,20 @@
   <div class="classe">
     <h3>Passa na conta</h3>
     <div class="destino">mascarado · fora da lista de suspeitos · desfazer pede dupla conferência</div>
-    <div class="exemplo"><span class="de">111.111.111-11</span><span class="para">→ ***.111.111-**</span></div>
-    <div class="exemplo"><span class="de">11111111111</span><span class="para">→ ***111111**</span></div>
-    <div class="exemplo"><span class="de">111.111.111/11</span><span class="para">→ ***.111.111-**</span><span class="porque">a barra vira traço</span></div>
+    <div class="exemplo"><span class="de">111.111.111-11</span><span class="para">→ XXX.111.111-XX</span></div>
+    <div class="exemplo"><span class="de">11111111111</span><span class="para">→ XXX111111XX</span></div>
+    <div class="exemplo"><span class="de">111.111.111/11</span><span class="para">→ XXX.111.111-XX</span><span class="porque">a barra vira traço</span></div>
     <div class="exemplo"><span class="porque">Os quatro formatos combinados, só com dígitos, e os dois últimos batendo com a conta.</span></div>
   </div>
   <div class="classe suspeito">
     <h3>Suspeito</h3>
     <div class="destino">mascarado <strong>e</strong> na lista · desfazer é um clique, a não ser o quase CPF que passa na conta</div>
-    <div class="exemplo"><span class="de">123.456.789-10</span><span class="para">→ ***.456.789-**</span><span class="porque">falha na conta: pode ser um CPF lido errado</span></div>
-    <div class="exemplo"><span class="de">l23.456.789-1O</span><span class="para">→ ***.456.789-**</span><span class="porque">quase CPF: letra no lugar do dígito (até 4, com pontuação)</span></div>
-    <div class="exemplo"><span class="de">123 456 789 10</span><span class="para">→ *** 456 789 **</span><span class="porque">quase CPF: espaço no lugar da pontuação</span></div>
-    <div class="exemplo"><span class="de">123.456.⏎789-10</span><span class="para">→ ***.456.⏎789-**</span><span class="porque">quase CPF: quebrado entre duas linhas</span></div>
-    <div class="exemplo"><span class="de">l23.4S6.789-1O</span><span class="para">→ ***.4S6.789-**</span><span class="porque">quase CPF: três letras, mas com a pontuação de um CPF (quarta emenda)</span></div>
-    <div class="exemplo"><span class="de">l11.111.111-11</span><span class="para">→ ***.111.111-**</span><span class="porque">quase CPF que <strong>passa na conta</strong> com o l trocado por 1: continua suspeito, mas desfazer pede dupla conferência (emenda)</span></div>
+    <div class="exemplo"><span class="de">123.456.789-10</span><span class="para">→ XXX.456.789-XX</span><span class="porque">falha na conta: pode ser um CPF lido errado</span></div>
+    <div class="exemplo"><span class="de">l23.456.789-1O</span><span class="para">→ XXX.456.789-XX</span><span class="porque">quase CPF: letra no lugar do dígito (até 4, com pontuação)</span></div>
+    <div class="exemplo"><span class="de">123 456 789 10</span><span class="para">→ XXX 456 789 XX</span><span class="porque">quase CPF: espaço no lugar da pontuação</span></div>
+    <div class="exemplo"><span class="de">123.456.⏎789-10</span><span class="para">→ XXX.456.⏎789-XX</span><span class="porque">quase CPF: quebrado entre duas linhas</span></div>
+    <div class="exemplo"><span class="de">l23.4S6.789-1O</span><span class="para">→ XXX.4S6.789-XX</span><span class="porque">quase CPF: três letras, mas com a pontuação de um CPF (quarta emenda)</span></div>
+    <div class="exemplo"><span class="de">l11.111.111-11</span><span class="para">→ XXX.111.111-XX</span><span class="porque">quase CPF que <strong>passa na conta</strong> com o l trocado por 1: continua suspeito, mas desfazer pede dupla conferência (emenda)</span></div>
   </div>
   <div class="classe ignorado">
     <h3>Não é CPF</h3>

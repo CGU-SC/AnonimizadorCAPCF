@@ -33,6 +33,17 @@ papel.
 | `--cor-erro` | `#d9534f` | falha (arquivo inválido, OCR não rodou), a faixa da caixa da dupla conferência de um número com forma CPF válido — o momento de risco — e, desde 16/09/2026, o **"forma CPF válido"** na revisão, com traço reto |
 | `--cor-erro-texto` | `#f08a86` | letra em vermelho sobre o fundo escuro (contraste 6,6:1) — é este vermelho que marca o "forma CPF válido" no texto da revisão e o selo dele. O `#d9534f` tem 4:1 sobre o fundo e 3,6:1 sobre o fundo elevado, abaixo do mínimo de 4,5:1 para letra pequena |
 
+**Mudou em 18/09/2026** (conferência da etapa 5 do Anonimizar, sétima emenda da
+spec 003): a máscara do CPF passa de `***.456.789-**` para **`XXX.456.789-XX`**,
+na tela e no arquivo gravado. O asterisco é a marcação de negrito e itálico do
+Markdown, e o arquivo que o programa grava é um `.md`: aberto no Bloco de Notas
+do Windows, que mostra `.md` já formatado, a máscara aparecia quebrada —
+`*.222.222-`, com os asteriscos engolidos. O `X` não significa nada em Markdown
+em posição nenhuma, fica igual no texto cru e no formatado, e é como documento
+brasileiro costuma mostrar CPF tarjado. Os rascunhos desenhados antes desta data
+continuam mostrando o asterisco: eles são o registro do que foi aprovado na
+época, e o que vale é esta linha.
+
 **Mudou em 16/09/2026** (conferência da etapa 2 do Anonimizar): o "forma CPF
 válido" **vira "CPF válido" e volta ao vermelho**, no tom de letra `--cor-erro-texto`, e o suspeito
 fica sozinho no amarelo. Marcados os dois na mesma cor, com a diferença só no

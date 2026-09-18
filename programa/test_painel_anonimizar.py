@@ -45,7 +45,7 @@ def test_a_contagem_bate_com_o_que_esta_mascarado_no_texto(aplicacao):
     # mascarados no próprio texto que está na tela.
     assert revisao.selo_encontrados.text() == "12 números encontrados"
     assert revisao.selo_suspeitos.text() == "9 suspeitos"
-    assert revisao.texto_mascarado().count("***") == 12
+    assert revisao.texto_mascarado().count("XXX") == 12
 
 
 def test_o_selo_dos_validos_conta_o_que_o_texto_marca_de_vermelho(aplicacao):
