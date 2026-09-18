@@ -127,6 +127,20 @@ escapando inteiro, arquivo de texto bom recusado, o texto inteiro sublinhado
 depois de um clique. As outras lentes continuam sendo oferta, e não rotina: ao
 fim da revisão, diga quais ficaram de fora e o que elas veriam.
 
+## Decidido antes de esquecer
+
+- **A etapa do PDF pelo Anonimizar (etapa 7) começa extraindo o caminho do PDF,
+  e não o copiando.** Hoje a verificação da camada de texto, a escolha do motor,
+  a leitura em segundo plano com progresso e cancelamento, a falha de leitura e
+  a conferência moram dentro do `programa/painel_ocr.py` (1.246 linhas),
+  amarrados às telas e ao estado dele. A spec 003 (RN-15) manda esse mesmo
+  caminho rodar dentro do Anonimizar. Copiar deixaria duas cópias de umas 600
+  linhas, que divergem na primeira correção — foi o que quase aconteceu em
+  18/09/2026, quando a janela do Windows precisou do mesmo conserto nos dois
+  módulos. Então: a primeira fatia da etapa 7 é tirar o caminho do PDF para uma
+  peça própria, usada pelos dois painéis, antes de qualquer tela nova
+  (revisão pela lente de manutenção, 18/09/2026).
+
 ## O que já nos mordeu
 
 - Instalar programa em `Program Files` (como o Tesseract) exige confirmação do

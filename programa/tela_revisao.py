@@ -26,12 +26,27 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from dataclasses import dataclass
+
 import cpf
 import estilo
+import tipos_na_tela
 from dupla_conferencia import liberar_mesmo_assim
-from lista_de_achados import ListaDeAchados
+from lista_de_achados import ListaDeAchados, contexto
 
 AVISO_SEM_CPF = "Nenhum CPF encontrado neste texto"
+
+
+@dataclass(frozen=True)
+class Liberado:
+    """Um número que passa na conta e vai inteiro para o arquivo (regra RN-11).
+
+    A tela de salvar mostra os três pedaços: o número como está escrito no
+    texto, o que vem antes dele, e o nome do tipo.
+    """
+    original: str
+    contexto: str
+    etiqueta: str
 
 # Os grupos dos selos e da navegação, cada um com quem pertence a ele e como ele
 # se chama na posição ("2 de 3 CPFs válidos"). Eles são separados: cada número
@@ -43,14 +58,20 @@ VALIDOS = "validos"
 SUSPEITOS = "suspeitos"
 LIBERADOS = "liberados"
 A_MAO = "a_mao"
+# O nome e a cor de cada grupo saem do `tipos_na_tela`, e não são escritos aqui:
+# o nome de um tipo já mudou duas vezes em quatro dias, e com ele escrito em
+# cada tela a lista e o aviso de antes de gravar podiam divergir.
+_VALIDO = tipos_na_tela.POR_TIPO[cpf.PASSA_NA_CONTA]
+_A_MAO = tipos_na_tela.POR_TIPO[cpf.MASCARADO_A_MAO]
 GRUPOS = {
     VALIDOS: (lambda o: o.tipo == cpf.PASSA_NA_CONTA and o.situacao == cpf.MASCARADO,
-              "CPF válido", "CPFs válidos"),
+              _VALIDO.nome, _VALIDO.plural),
     SUSPEITOS: (lambda o: o.suspeito and o.situacao == cpf.MASCARADO,
-                "suspeito", "suspeitos"),
+                tipos_na_tela.SUSPEITO.nome, tipos_na_tela.SUSPEITO.plural),
     A_MAO: (lambda o: o.tipo == cpf.MASCARADO_A_MAO and o.situacao == cpf.MASCARADO,
-            "mascarado à mão", "mascarados à mão"),
-    LIBERADOS: (lambda o: o.situacao == cpf.LIBERADO, "liberado", "liberados"),
+            _A_MAO.nome, _A_MAO.plural),
+    LIBERADOS: (lambda o: o.situacao == cpf.LIBERADO,
+                tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.plural),
 }
 
 
@@ -61,7 +82,7 @@ class TelaRevisao(QWidget):
     LARGURA_DO_AVISO = 620
     LARGURA_DO_TEXTO_DO_AVISO = 580
 
-    def __init__(self, ao_anonimizar_outro):
+    def __init__(self, ao_anonimizar_outro, ao_salvar=None):
         super().__init__()
         self._ocorrencias = []
         self._texto = ""
@@ -131,6 +152,19 @@ class TelaRevisao(QWidget):
 
         rodape = QHBoxLayout()
         rodape.setSpacing(estilo.ESPACO_3)
+        # O salvar fica liberado desde o começo, sem exigir passar por todos os
+        # números (regra RN-7): o programa já mascarou tudo o que achou, e quem
+        # confia no que viu não precisa ser obrigado a clicar mais.
+        self.botao_salvar = QPushButton("Salvar o texto mascarado…")
+        self.botao_salvar.setCursor(Qt.PointingHandCursor)
+        self.botao_salvar.setStyleSheet(estilo.estilo_botao(principal=True))
+        if ao_salvar is not None:
+            # O clique do Qt manda um argumento junto ("o botão está apertado?"),
+            # e ele chegaria no lugar do primeiro parâmetro de quem for chamado.
+            # Foi o que aconteceu aqui: o argumento caía no caminho de destino e
+            # a tela de salvar morria calada, sem nada acontecer no clique.
+            self.botao_salvar.clicked.connect(lambda _=False: ao_salvar())
+        rodape.addWidget(self.botao_salvar)
         botao_outro = QPushButton("Anonimizar outro documento")
         botao_outro.setCursor(Qt.PointingHandCursor)
         botao_outro.setStyleSheet(estilo.estilo_botao(principal=False))
@@ -159,15 +193,15 @@ class TelaRevisao(QWidget):
         # da spec 003, 17/09/2026). O dos encontrados volta a percorrer todos.
         self.selo_encontrados = _Selo(ao_clicar=lambda: self.filtrar(None))
         # Cada selo na cor do que ele conta, para bater com o texto ao lado.
-        self.selo_validos = _Selo(cor=estilo.COR_ERRO_TEXTO,
+        self.selo_validos = _Selo(cor=_VALIDO.cor,
                                   ao_clicar=lambda: self.filtrar(VALIDOS))
-        self.selo_suspeitos = _Selo(cor=estilo.COR_ALERTA,
+        self.selo_suspeitos = _Selo(cor=tipos_na_tela.SUSPEITO.cor,
                                     ao_clicar=lambda: self.filtrar(SUSPEITOS))
         # Azul: o "à mão" é marca de quem revisa, e não do que o programa achou.
-        self.selo_a_mao = _Selo(cor=estilo.COR_DESTAQUE_HOVER,
+        self.selo_a_mao = _Selo(cor=_A_MAO.cor,
                                 ao_clicar=lambda: self.filtrar(A_MAO))
         # Verde a pedido da usuária (17/09/2026): marca uma decisão da pessoa.
-        self.selo_liberados = _Selo(cor=estilo.COR_SUCESSO,
+        self.selo_liberados = _Selo(cor=tipos_na_tela.LIBERADO.cor,
                                     ao_clicar=lambda: self.filtrar(LIBERADOS))
 
         linha.addWidget(titulo)
@@ -183,12 +217,12 @@ class TelaRevisao(QWidget):
         linha = QHBoxLayout()
         linha.setSpacing(estilo.ESPACO_4)
         self.chave_valido = _amostra_da_chave(
-            "CPF válido", ondulado=False, cor=estilo.COR_ERRO_TEXTO)
+            _VALIDO.nome, ondulado=False, cor=_VALIDO.cor)
         self.chave_suspeito = _amostra_da_chave(
-            "suspeito", ondulado=True, cor=estilo.COR_ALERTA)
+            tipos_na_tela.SUSPEITO.nome, ondulado=True,
+            cor=tipos_na_tela.SUSPEITO.cor)
         self.chave_a_mao = _amostra_da_chave(
-            "mascarado à mão", ondulado=False, cor=estilo.COR_DESTAQUE_HOVER,
-            pontilhado=True)
+            _A_MAO.nome, ondulado=False, cor=_A_MAO.cor, pontilhado=True)
         linha.addWidget(self.chave_valido)
         linha.addWidget(self.chave_suspeito)
         linha.addWidget(self.chave_a_mao)
@@ -465,8 +499,78 @@ class TelaRevisao(QWidget):
         self._atualizar_navegacao()
 
     def texto_mascarado(self):
-        """O texto como ele está na tela - o que vai para o arquivo."""
+        """O texto como ele está na tela."""
         return self.texto.toPlainText()
+
+    def texto_para_o_arquivo(self):
+        """O texto que vai para o arquivo: o do documento, com as máscaras.
+
+        Calculado do texto de origem, e não copiado da caixa de leitura da tela
+        (revisão da etapa 5). A caixa é um desenho: ela troca o separador de
+        linha U+2028, que aparece em texto copiado de PDF, por uma quebra de
+        linha comum - e o arquivo sairia diferente do documento num ponto que
+        ninguém mandou mudar, sem nada acusar. Quem manda no arquivo é o motor,
+        que promete devolver o texto inteiro com as máscaras no lugar (RN-12).
+        """
+        return cpf.aplicar(self._texto, self._ocorrencias)
+
+    def liberados_que_passam_na_conta(self):
+        """Os números que a pessoa soltou e que passam na conta (regra RN-11).
+
+        São os que a tela de salvar mostra antes de gravar, um a um, com as
+        palavras que vêm antes deles no texto - as mesmas da lista, que é como
+        a pessoa reconhece qual número é qual. Os que falham na conta ficam de
+        fora: soltar um deles é o caso comum, e listar todos ensinaria a passar
+        direto pelo aviso.
+        """
+        return [
+            Liberado(
+                original=o.original,
+                contexto=contexto(self._texto, o),
+                # O "quase CPF" que passa na conta leva a etiqueta que ele tem
+                # na lista, e não o nome do tipo: os dois nomes tratam do mesmo
+                # número, e trocar de nome entre uma tela e outra confunde.
+                etiqueta=(tipos_na_tela.VALIDO_SE_CORRIGIDO.nome
+                          if o.tipo == cpf.QUASE_CPF else _VALIDO.nome),
+            )
+            for o in self._em_ordem_no_texto()
+            if o.situacao == cpf.LIBERADO and o.passa_na_conta
+        ]
+
+    def resumo_do_que_sai(self, por_tipo=True):
+        """Uma frase com o que vai mascarado no arquivo.
+
+        Vai na tela de salvar, que é a última em que dá para voltar atrás: a
+        contagem ali é o que permite perceber, antes de gravar, que o documento
+        tinha bem mais CPF do que o programa achou. Na tela de sucesso ela vem
+        sem a separação por tipo (`por_tipo=False`): lá já não há o que decidir.
+        """
+        pertence_a = {grupo: regra for grupo, (regra, _, _) in GRUPOS.items()}
+        contas = {grupo: sum(1 for o in self._ocorrencias if pertence_a[grupo](o))
+                  for grupo in (VALIDOS, SUSPEITOS, A_MAO)}
+        mascarados = sum(contas.values())
+        if not mascarados:
+            return "Nenhum número foi mascarado neste texto."
+        quantos = (f"{mascarados} números mascarados" if mascarados != 1
+                   else "1 número mascarado")
+        if not por_tipo:
+            return f"{quantos}."
+        partes = []
+        for grupo in (VALIDOS, SUSPEITOS, A_MAO):
+            if contas[grupo]:
+                _, singular, plural = GRUPOS[grupo]
+                partes.append(f"{contas[grupo]} "
+                              f"{singular if contas[grupo] == 1 else plural}")
+        frase = f"{quantos}: {_juntar(partes)}."
+        # A frase do caso bom é dita com todas as letras, e não pelo silêncio:
+        # sem ela, não dava para diferenciar "nada foi liberado" de "o programa
+        # não conferiu isso" (rascunho 08, estado 6).
+        if not self.liberados_que_passam_na_conta():
+            frase += f" Nenhum número com {_VALIDO.nome} foi liberado."
+        return frase
+
+    def _em_ordem_no_texto(self):
+        return sorted(self._ocorrencias, key=lambda o: o.inicio)
 
     def esquecer(self):
         self._ocorrencias = []
@@ -567,6 +671,13 @@ class TelaRevisao(QWidget):
         self.selo_liberados.setVisible(bool(liberados))
 
 
+def _juntar(partes):
+    """Junta com vírgula e um "e" no fim, como se escreve em português."""
+    if len(partes) == 1:
+        return partes[0]
+    return ", ".join(partes[:-1]) + f" e {partes[-1]}"
+
+
 def _formato_de_liberado():
     """O traço de quem voltou ao original: tracejado, e verde.
 
@@ -578,8 +689,9 @@ def _formato_de_liberado():
     bem as cores.
     """
     formato = QTextCharFormat()
-    formato.setForeground(QColor(estilo.COR_SUCESSO))
-    formato.setUnderlineColor(QColor(estilo.COR_SUCESSO))
+    cor = QColor(tipos_na_tela.LIBERADO.cor)
+    formato.setForeground(cor)
+    formato.setUnderlineColor(cor)
     formato.setUnderlineStyle(QTextCharFormat.DashUnderline)
     return formato
 
@@ -625,13 +737,13 @@ def _formato(ocorrencia):
         # Traço próprio para o que a pessoa mascarou: azul e duplo, como o
         # rascunho aprovado mostra. Ele não é achado do programa, e misturá-lo
         # com o vermelho do "CPF válido" faria a contagem do alto mentir.
-        cor = QColor(estilo.COR_DESTAQUE_HOVER)
+        cor = QColor(tipos_na_tela.POR_TIPO[cpf.MASCARADO_A_MAO].cor)
         traco = QTextCharFormat.DotLine
     elif ocorrencia.suspeito:
-        cor = QColor(estilo.COR_ALERTA)
+        cor = QColor(tipos_na_tela.SUSPEITO.cor)
         traco = QTextCharFormat.WaveUnderline
     else:
-        cor = QColor(estilo.COR_ERRO_TEXTO)
+        cor = QColor(tipos_na_tela.POR_TIPO[cpf.PASSA_NA_CONTA].cor)
         traco = QTextCharFormat.SingleUnderline
     formato.setForeground(cor)
     formato.setUnderlineColor(cor)
@@ -673,7 +785,7 @@ class _Selo(QLabel):
 
 
 def _amostra_da_chave(nome, ondulado, cor, pontilhado=False):
-    """Um pedacinho "***" com o traço do tipo, e o nome dele ao lado.
+    """Um pedacinho "XXX" com o traço do tipo, e o nome dele ao lado.
 
     É um pedaço de texto, e não um rótulo comum, porque o traço ondulado só
     existe no texto do Qt: por folha de estilo, os dois tipos sairiam com o
@@ -704,6 +816,6 @@ def _amostra_da_chave(nome, ondulado, cor, pontilhado=False):
     comum.setForeground(QColor(estilo.COR_TEXTO_SECUNDARIO))
 
     cursor = amostra.textCursor()
-    cursor.insertText("***", marcado)
+    cursor.insertText(cpf.MASCARA * 3, marcado)
     cursor.insertText(f"  {nome}", comum)
     return amostra

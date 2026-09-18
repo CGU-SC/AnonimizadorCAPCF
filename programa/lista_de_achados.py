@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 
 import cpf
 import estilo
+import tipos_na_tela
 
 LARGURA = 330
 
@@ -85,10 +86,14 @@ class ListaDeAchados(QScrollArea):
         # mascarado de novo com um clique (conferência da etapa 3, 17/09/2026).
         # Os suspeitos vêm primeiro, sempre: são os que pedem decisão.
         self._montar_secao(
-            f"Suspeitos — olhe estes {_ainda_mascarados(suspeitos)}", suspeitos, texto)
-        self._montar_secao(f"CPF válido {_ainda_mascarados(validos)}", validos, texto)
+            f"{tipos_na_tela.SUSPEITO.plural.capitalize()} — olhe estes "
+            f"{_ainda_mascarados(suspeitos)}", suspeitos, texto)
         self._montar_secao(
-            f"Mascarados à mão {_ainda_mascarados(a_mao)}", a_mao, texto)
+            f"{tipos_na_tela.POR_TIPO[cpf.PASSA_NA_CONTA].nome} "
+            f"{_ainda_mascarados(validos)}", validos, texto)
+        self._montar_secao(
+            f"{tipos_na_tela.POR_TIPO[cpf.MASCARADO_A_MAO].plural.capitalize()} "
+            f"{_ainda_mascarados(a_mao)}", a_mao, texto)
         self._layout.addStretch()
 
     def marcar(self, ocorrencia):
@@ -196,13 +201,13 @@ class _Item(QFrame):
         )
         layout.addWidget(numero)
 
-        contexto = QLabel(_contexto(texto, ocorrencia))
-        contexto.setStyleSheet(
+        ao_redor = QLabel(contexto(texto, ocorrencia))
+        ao_redor.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
             f"color: {estilo.COR_TEXTO_SECUNDARIO};"
             "border: none; background: transparent;"
         )
-        layout.addWidget(contexto)
+        layout.addWidget(ao_redor)
 
         self.botao = QPushButton(_nome_do_botao(ocorrencia))
         self.botao.setCursor(Qt.PointingHandCursor)
@@ -256,7 +261,7 @@ def _etiquetas(ocorrencia):
         # texto: numa lista longa, é o que deixa achar de relance o que foi
         # solto (pedido na conferência da etapa 3, em 17/09/2026).
         return [(_nome_do_tipo(ocorrencia), estilo.COR_TEXTO_SECUNDARIO),
-                ("liberado", estilo.COR_SUCESSO)]
+                (tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.cor)]
     etiquetas = [(_nome_do_tipo(ocorrencia), _cor_do_tipo(ocorrencia))]
     # O "quase CPF" que passa na conta leva as duas: ele continua suspeito, e
     # também é um número que quase certamente é o CPF de alguém (RN-2).
@@ -266,28 +271,22 @@ def _etiquetas(ocorrencia):
     # que a leitura pegou certinho ou o que só fecha a conta depois de
     # corrigido (conferência da etapa 3, 17/09/2026).
     if ocorrencia.tipo == cpf.QUASE_CPF and ocorrencia.passa_na_conta:
-        etiquetas.append(("válido se corrigido", estilo.COR_ERRO_TEXTO))
+        etiquetas.append((tipos_na_tela.VALIDO_SE_CORRIGIDO.nome,
+                          tipos_na_tela.VALIDO_SE_CORRIGIDO.cor))
     return etiquetas
 
 
 def _nome_do_tipo(ocorrencia):
-    if ocorrencia.tipo == cpf.PASSA_NA_CONTA:
-        return "CPF válido"
-    if ocorrencia.tipo == cpf.FALHA_NA_CONTA:
-        return "falha na conta"
-    if ocorrencia.tipo == cpf.MASCARADO_A_MAO:
-        return "mascarado à mão"
-    return f"quase CPF · {ocorrencia.motivo}"
+    nome = tipos_na_tela.POR_TIPO[ocorrencia.tipo].nome
+    # Só o "quase CPF" leva o motivo junto: é o que explica o que a leitura
+    # estragou naquele número.
+    if ocorrencia.tipo == cpf.QUASE_CPF:
+        return f"{nome} · {ocorrencia.motivo}"
+    return nome
 
 
 def _cor_do_tipo(ocorrencia):
-    if ocorrencia.tipo == cpf.PASSA_NA_CONTA:
-        return estilo.COR_ERRO_TEXTO
-    if ocorrencia.tipo == cpf.MASCARADO_A_MAO:
-        # Azul, como o traço no texto, o selo e a chave de cores. De amarelo, o
-        # item parecia pedir decisão - e ele já é a decisão da pessoa.
-        return estilo.COR_DESTAQUE_HOVER
-    return estilo.COR_ALERTA
+    return tipos_na_tela.POR_TIPO[ocorrencia.tipo].cor
 
 
 def _cor_da_barra(ocorrencia):
@@ -304,7 +303,7 @@ def _nome_do_botao(ocorrencia):
     return "Desfazer…" if ocorrencia.pede_dupla_conferencia else "Desfazer"
 
 
-def _contexto(texto, ocorrencia):
+def contexto(texto, ocorrencia):
     """As palavras que vêm antes do número, que são o que ajuda a decidir."""
     antes = texto[max(0, ocorrencia.inicio - LETRAS_DE_CONTEXTO):ocorrencia.inicio]
     antes = " ".join(antes.split())

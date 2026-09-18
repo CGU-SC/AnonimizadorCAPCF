@@ -12,6 +12,7 @@ Nesta etapa o painel abre `.md` e `.txt`. O caminho do PDF - leitura,
 conferência e a escolha do motor - entra numa etapa seguinte, e até lá o PDF
 escolhido aqui recebe um aviso dizendo isso.
 """
+import os
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -26,10 +27,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import arquivo_md
+import arquivo_texto
 import cpf
 import estilo
-from arquivo_texto import ArquivoNaoServe, ler
+from arquivo_texto import ArquivoNaoServe, ler, quebra_de_linha
 from tela_revisao import TelaRevisao
+from telas_de_salvar import TelaSobrescrever
+from telas_de_salvar_sem_cpf import TelaGravadoSemCpf, TelaSalvarSemCpf
 
 EXTENSOES_DE_TEXTO = (".md", ".txt")
 EXTENSOES_ACEITAS = EXTENSOES_DE_TEXTO + (".pdf",)
@@ -47,12 +52,35 @@ OUTRO_TIPO = (
 )
 
 
+TITULO_DA_RECUSA = "Este é o arquivo de origem"
+RECUSA_DA_ORIGEM = (
+    "O caminho escolhido é o do próprio {nome}, o arquivo com os CPFs inteiros. "
+    "O programa nunca grava por cima da origem: o original se perderia, e só "
+    "sobraria a versão mascarada. Escolha outro nome ou outra pasta — nada foi "
+    "gravado."
+)
+
+TITULO_DO_ERRO = "Não foi possível gravar nesta pasta"
+ERRO_AO_GRAVAR = (
+    "A pasta {pasta} não aceitou o arquivo. Ela pode estar protegida, sem "
+    "espaço, ou a unidade de rede pode estar desconectada. Escolha outra pasta "
+    "e tente de novo — nada foi gravado, e a revisão continua como estava."
+)
+
+
 class PainelAnonimizar(QWidget):
     def __init__(self):
         super().__init__()
         # Arrastar o arquivo para dentro da janela é uma das duas formas de
         # escolher, como no "Gerar OCR"; a outra é o botão.
         self.setAcceptDrops(True)
+        # De onde veio o texto que está na revisão, para sugerir o destino ao
+        # lado dele e para recusar gravar por cima dele (RN-13 e RN-14).
+        self._origem = None
+        # A quebra de linha que o documento usava, para o arquivo sair com ela.
+        self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
+        # O destino que espera a resposta da pergunta de escrever por cima.
+        self._destino_pendente = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(estilo.ESPACO_4, estilo.ESPACO_4,
@@ -61,9 +89,24 @@ class PainelAnonimizar(QWidget):
 
         self.telas = QStackedWidget()
         self.tela_escolher = self._montar_tela_escolher()
-        self.tela_revisao = TelaRevisao(ao_anonimizar_outro=self.voltar_para_escolher)
+        self.tela_revisao = TelaRevisao(
+            ao_anonimizar_outro=self.voltar_para_escolher,
+            ao_salvar=self.abrir_o_salvar,
+        )
+        self.tela_salvar = TelaSalvarSemCpf(
+            ao_salvar=self.gravar, ao_voltar=self.voltar_para_revisao)
+        # A pergunta de escrever por cima é a mesma do "Gerar OCR", inteira:
+        # é o mesmo risco, e duas perguntas diferentes para a mesma coisa
+        # obrigariam a pessoa a ler duas vezes o que já sabe.
+        self.tela_sobrescrever = TelaSobrescrever(
+            ao_escrever_por_cima=self._escrever_por_cima,
+            ao_outro_nome=self._sugerir_outro_nome,
+        )
+        self.tela_gravado = TelaGravadoSemCpf(
+            ao_anonimizar_outro=self.voltar_para_escolher)
         self.tela_erro = _TelaErro(ao_escolher_outro=self.voltar_para_escolher)
-        for tela in (self.tela_escolher, self.tela_revisao, self.tela_erro):
+        for tela in (self.tela_escolher, self.tela_revisao, self.tela_salvar,
+                     self.tela_sobrescrever, self.tela_gravado, self.tela_erro):
             self.telas.addWidget(tela)
 
         layout.addWidget(self.telas)
@@ -191,12 +234,93 @@ class PainelAnonimizar(QWidget):
             )
             return
 
+        self._origem = caminho
+        # A quebra de linha do documento fica guardada agora, com o arquivo em
+        # mãos: o arquivo gravado sai com a mesma, e não com a do programa.
+        self._quebra_da_origem = quebra_de_linha(caminho)
         self.tela_revisao.mostrar(caminho.name, texto, cpf.procurar(texto))
         self.telas.setCurrentWidget(self.tela_revisao)
 
     def voltar_para_escolher(self):
         self.tela_revisao.esquecer()
+        self._origem = None
+        self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
+        self._destino_pendente = None
         self.telas.setCurrentWidget(self.tela_escolher)
+
+    # --------------------------------------------------------------- salvar
+
+    def abrir_o_salvar(self, destino=None):
+        """A tela de onde salvar, com o caminho já preenchido (regra RN-13)."""
+        if self._origem is None:
+            return
+        if destino is None:
+            destino = arquivo_md.caminho_sem_cpf(self._origem)
+        self.tela_salvar.mostrar(
+            destino,
+            self._origem.name,
+            self.tela_revisao.resumo_do_que_sai(),
+            self.tela_revisao.liberados_que_passam_na_conta(),
+        )
+        self.telas.setCurrentWidget(self.tela_salvar)
+
+    def voltar_para_revisao(self):
+        self._destino_pendente = None
+        self.telas.setCurrentWidget(self.tela_revisao)
+
+    def gravar(self, destino):
+        """Confere o destino e grava - ou pergunta antes, quando é o caso."""
+        if _e_o_mesmo_arquivo(destino, self._origem):
+            # Gravar por cima da origem apagaria o documento com os CPFs
+            # inteiros, que é o que a pessoa ainda precisa para trabalhar - e
+            # a spec promete que ele nunca é alterado (RN-14).
+            self.tela_salvar.avisar(
+                TITULO_DA_RECUSA, RECUSA_DA_ORIGEM.format(nome=self._origem.name))
+            return
+        if destino.exists():
+            self._destino_pendente = destino
+            self.tela_sobrescrever.mostrar(destino)
+            self.telas.setCurrentWidget(self.tela_sobrescrever)
+            return
+        self._gravar_de_verdade(destino)
+
+    def _escrever_por_cima(self):
+        destino = self._destino_pendente
+        self._destino_pendente = None
+        if destino is not None:
+            self._gravar_de_verdade(destino)
+
+    def _sugerir_outro_nome(self):
+        destino = self._destino_pendente
+        self._destino_pendente = None
+        # Volta à tela de salvar já com um nome que não apaga nada: quem quer
+        # outro nome quer trocar o nome, e não digitar a pasta de novo.
+        self.abrir_o_salvar(arquivo_md.caminho_livre(destino))
+
+    def _gravar_de_verdade(self, destino):
+        texto = self.tela_revisao.texto_para_o_arquivo()
+        # A última linha termina com quebra, como todo arquivo de texto: sem
+        # ela, alguns programas juntam a última linha com o que vier depois.
+        if not texto.endswith("\n"):
+            texto += "\n"
+        try:
+            arquivo_md.gravar(destino, texto, self._quebra_da_origem)
+        except OSError:
+            # Nada da revisão se perde: a tela de salvar volta com o aviso, e a
+            # pessoa troca a pasta sem refazer o trabalho.
+            self.telas.setCurrentWidget(self.tela_salvar)
+            self.tela_salvar.avisar(
+                TITULO_DO_ERRO, ERRO_AO_GRAVAR.format(pasta=destino.parent))
+            return
+        self.tela_gravado.mostrar(
+            destino,
+            self._origem.name,
+            # Na tela de sucesso a contagem vem sem a separação por tipo: aqui
+            # já não há o que decidir, e o que importa é onde o arquivo ficou.
+            self.tela_revisao.resumo_do_que_sai(por_tipo=False),
+            self.tela_revisao.liberados_que_passam_na_conta(),
+        )
+        self.telas.setCurrentWidget(self.tela_gravado)
 
     def _mostrar_erro(self, motivo):
         self.tela_erro.mostrar(motivo)
@@ -229,6 +353,22 @@ class PainelAnonimizar(QWidget):
             return None
         caminho = Path(url.toLocalFile())
         return caminho if caminho.suffix.lower() in EXTENSOES_ACEITAS else None
+
+
+def _e_o_mesmo_arquivo(destino, origem):
+    """Diz se os dois caminhos são o mesmo arquivo em disco.
+
+    Comparar o texto dos caminhos não basta: o Windows não liga para maiúsculas,
+    e a mesma pasta chega escrita de jeitos diferentes conforme a pessoa digite,
+    arraste ou use o seletor.
+    """
+    if origem is None:
+        return False
+    try:
+        destino, origem = Path(destino).resolve(), Path(origem).resolve()
+    except OSError:
+        return False
+    return os.path.normcase(str(destino)) == os.path.normcase(str(origem))
 
 
 class _TelaErro(QWidget):

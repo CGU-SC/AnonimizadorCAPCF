@@ -376,3 +376,29 @@ def test_o_md_nunca_cai_por_cima_do_pdf_de_origem():
     for nome in ["doc.pdf", "doc.PDF", "relatorio.final.pdf"]:
         pdf = Path("C:/processos") / nome
         assert arquivo_md.caminho_sugerido(pdf) != pdf
+
+
+def test_a_janela_do_windows_nao_pergunta_sobre_substituir(aplicacao, copia_do_pdf,
+                                                           monkeypatch):
+    """Quem pergunta sobre apagar o arquivo é a tela do programa, e mais ninguém.
+
+    A janela do Windows perguntava "deseja substituir?" e, respondido que sim,
+    só devolvia o caminho - nada era gravado. Quem respondeu achava ter mandado
+    salvar, e o programa parecia não fazer nada (achado na conferência da etapa
+    5 do Anonimizar, em 18/09/2026, e igual aqui).
+    """
+    from PySide6.QtWidgets import QFileDialog
+
+    pedidos = {}
+
+    def falsa_janela(*args, **kwargs):
+        pedidos.update(kwargs)
+        return "", ""
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", falsa_janela)
+    painel = _painel_na_conferencia(copia_do_pdf)
+    painel.seguir_para_a_saida()
+    painel.escolher_onde_salvar()
+    painel.tela_salvar._escolher_pasta()
+
+    assert pedidos["options"] == QFileDialog.Option.DontConfirmOverwrite

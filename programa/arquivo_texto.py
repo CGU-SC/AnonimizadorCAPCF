@@ -26,6 +26,12 @@ BRANCOS_DE_TEXTO = "\n\r\t\f\v"
 PROPORCAO_DE_ESTRANHOS = 0.01
 
 
+# As duas quebras de linha que um documento pode usar: a do Windows, de duas
+# letras invisíveis, e a simples.
+QUEBRA_DO_WINDOWS = "\r\n"
+QUEBRA_SIMPLES = "\n"
+
+
 class ArquivoNaoServe(Exception):
     """O arquivo escolhido não tem texto que dê para procurar CPF."""
 
@@ -66,6 +72,23 @@ def ler(caminho):
             "procurar CPF."
         )
     return texto
+
+
+def quebra_de_linha(caminho):
+    """Qual quebra de linha o documento usa, para o arquivo sair igual a ele.
+
+    O programa lê tudo com a quebra simples, para o resto dele não precisar
+    saber de qual máquina o arquivo veio - mas o arquivo gravado precisa voltar
+    à quebra do documento (revisão da etapa 5). Sem isso, todo documento escrito
+    no Windows saía com as quebras trocadas, o que a RN-12 não permite: o
+    arquivo tem o texto do documento, com as máscaras, e nada mais mudado.
+
+    Achando qualquer quebra do Windows, o arquivo inteiro sai com ela: documento
+    de quebra misturada é defeito de quem o gerou, e escolher uma é o que deixa
+    o arquivo abrir igual em qualquer programa.
+    """
+    return (QUEBRA_DO_WINDOWS if b"\r\n" in Path(caminho).read_bytes()
+            else QUEBRA_SIMPLES)
 
 
 def _parece_texto(texto):

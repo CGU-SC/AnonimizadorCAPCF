@@ -20,6 +20,17 @@ def caminho_sugerido(pdf):
     return Path(pdf).with_suffix(".md")
 
 
+def caminho_sem_cpf(origem):
+    """Onde o arquivo do Anonimizar é sugerido: ao lado da origem (regra RN-13).
+
+    Mesma pasta, mesmo nome, mais " - sem CPF.md". O nome diz o que o arquivo é
+    no momento em que mais importa: na hora de arrastar um dos dois para a
+    conversa com o assistente, com os dois lado a lado na pasta.
+    """
+    origem = Path(origem)
+    return origem.with_name(f"{origem.stem} - sem CPF.md")
+
+
 def caminho_livre(caminho):
     """Um nome parecido que ainda não existe na pasta: `nome (2).md`, `nome (3).md`.
 
@@ -33,6 +44,43 @@ def caminho_livre(caminho):
         if not candidato.exists():
             return candidato
         numero += 1
+
+
+# O que pode estar errado no caminho que a pessoa digitou. As telas escrevem a
+# frase de cada um com as palavras delas; aqui fica só a decisão, que é a mesma
+# nos dois módulos (revisão pela lente de manutenção, 18/09/2026: o conserto da
+# janela do Windows precisou ser escrito duas vezes, e as duas telas já tinham
+# frases diferentes para a mesma situação).
+FALTA_O_CAMINHO = "falta o caminho"
+FALTA_A_PASTA = "falta a pasta"
+PASTA_NAO_EXISTE = "pasta não existe"
+
+
+def conferir_destino(digitado, pasta_sugerida):
+    """Devolve (caminho pronto, None) ou (None, o que está errado).
+
+    Três coisas são acertadas em silêncio, porque reclamar delas seria implicar
+    com quem está certo: o espaço sobrando nas pontas, o caminho sem pasta - que
+    vai para a pasta sugerida, e não para a pasta de onde o programa foi aberto,
+    que quem usa nem sabe qual é - e a terminação `.md` que faltou, que voltaria
+    como um arquivo que nenhum programa sabe abrir.
+    """
+    digitado = digitado.strip()
+    if not digitado:
+        return None, FALTA_O_CAMINHO
+    caminho = Path(digitado)
+    if not caminho.is_absolute():
+        if pasta_sugerida is None:
+            return None, FALTA_A_PASTA
+        caminho = Path(pasta_sugerida) / caminho
+    if caminho.suffix.lower() != ".md":
+        caminho = caminho.with_name(caminho.name + ".md")
+    # A pasta que não existe volta junto com o caminho montado, e não só com o
+    # problema: é dela que a tela precisa para dizer qual pasta não achou. Quem
+    # chama olha o problema primeiro, e por isso nunca grava sem querer.
+    if not caminho.parent.exists():
+        return caminho, PASTA_NAO_EXISTE
+    return caminho, None
 
 
 def montar_conteudo(paginas):
@@ -49,7 +97,7 @@ def montar_conteudo(paginas):
     return "\n\n".join(pagina.strip("\n") for pagina in paginas) + "\n"
 
 
-def gravar(caminho, conteudo):
+def gravar(caminho, conteudo, fim_de_linha="\n"):
     """Grava o arquivo inteiro, ou não grava nada.
 
     O texto é escrito primeiro num arquivo provisório na mesma pasta, e só
@@ -57,13 +105,19 @@ def gravar(caminho, conteudo):
     interrompida no meio - disco cheio, pasta de rede que caiu, programa
     fechado -, o que fica é o provisório apagado, e não um `.md` pela metade
     que a pessoa arrastaria para a conversa achando que está inteiro.
+
+    O `fim_de_linha` é a quebra com que o arquivo é escrito. O Anonimizar manda
+    a do documento de origem, para o arquivo sair com a quebra que ele usava
+    (revisão da etapa 5); o texto vindo do OCR não tem documento de texto atrás
+    dele, e fica com a quebra simples.
     """
     caminho = Path(caminho)
     descritor, provisorio = tempfile.mkstemp(
         dir=caminho.parent, prefix=".gravando-", suffix=".md"
     )
     try:
-        with os.fdopen(descritor, "w", encoding="utf-8", newline="\n") as arquivo:
+        with os.fdopen(descritor, "w", encoding="utf-8",
+                       newline=fim_de_linha) as arquivo:
             arquivo.write(conteudo)
         os.replace(provisorio, caminho)
     except BaseException:

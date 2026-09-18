@@ -457,9 +457,8 @@ aprovação própria, antes da construção.
 
 - Dado um texto com `111.111.111-11`, `11111111111`, `111111111-11` e
   `111.111.111/11`, quando ele passa pelo Anonimizar, então os quatro aparecem
-  mascarados e marcados como "forma CPF válido" (o nome na tela do tipo "passa
-  na conta"), e nenhum está na lista de
-  suspeitos.
+  mascarados e marcados como "CPF válido" (o nome na tela do tipo "passa na
+  conta"), e nenhum está na lista de suspeitos.
 - Dado um texto com `123.456.789-10`, quando ele passa pelo Anonimizar, então o
   número aparece mascarado **e** está na lista de suspeitos, como "falha na
   conta".
@@ -540,7 +539,8 @@ aprovação própria, antes da construção.
   mantém a máscara**.
 - Dado `l11.111.111-11` e dado `555.555.` no fim de uma linha com `555-55` no
   começo da seguinte ("quase CPF" que passa na conta), quando a revisão abre,
-  então os dois estão na lista de suspeitos com a marca "forma CPF válido"; e
+  então os dois estão na lista de suspeitos com a etiqueta "válido se
+  corrigido" ao lado da etiqueta de "quase CPF" (nome escolhido em 17/09/2026); e
   quando a pessoa clica em "desfazer" num deles, então abre a caixa da dupla
   conferência, e **apertar Enter mantém a máscara**.
 - Dado que a pessoa liberou um número que passa na conta — do tipo "passa na

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 18 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head><body>
+<h1>Revisão 18 — antes e depois</h1>
+<p class="subtitulo">18/09/2026 — a etapa 5 do Anonimizador de CPF: salvar o arquivo sem CPF, e a sétima emenda da spec (a máscara passou de asterisco a X)</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Revisei o que a etapa 5 construiu: a tela de onde salvar, a recusa de gravar por cima do documento de
+  origem, a pergunta de escrever por cima, o erro ao gravar e o arquivo que sai do programa. A pergunta:
+  o arquivo gravado é mesmo o documento com as máscaras no lugar — e nada mais mudado?
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">2</div><div class="contagem-label">achados apresentados</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">2</div><div class="contagem-label">aprovados e consertados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">3</div><div class="contagem-label">suspeitas derrubadas</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">1</div><div class="contagem-label">devolvida à etapa 6</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/painel_anonimizar.py e programa/tela_revisao.py — de onde sai o texto do arquivo</div>
+  <div class="explicacao">
+    <strong>O arquivo era copiado da caixa de leitura da tela, e não calculado pelo motor.</strong> A caixa
+    que mostra o texto é um desenho: ela guarda o texto do jeito dela, e devolve o que guardou. Um documento
+    com o separador de linha <code>U+2028</code> — que aparece em texto copiado de dentro de PDF — saía do
+    programa com aquele caractere trocado por uma quebra de linha comum, sem nada avisar. Era pouco hoje, e
+    nada garantia que continuasse pouco: bastava o Qt mudar de comportamento numa atualização para o
+    arquivo salvo mudar junto. Agora o arquivo vem do mesmo cálculo que desenha a tela — o texto do
+    documento, com as máscaras no lugar, letra por letra.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">documento → tela → arquivo</span>
+        Quem decidia o conteúdo do arquivo era a caixa de texto da tela.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">documento → motor → arquivo</span>
+        A tela continua sendo desenho; o arquivo é o documento com as máscaras.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_texto.py e programa/arquivo_md.py — a quebra de linha do documento</div>
+  <div class="explicacao">
+    <strong>Todo documento escrito no Windows saía com as quebras de linha trocadas.</strong> O programa lê
+    tudo com a quebra simples, para o resto dele não precisar saber de qual máquina o arquivo veio — e
+    gravava sempre com ela, mesmo quando o documento usava a quebra do Windows, que são duas letras
+    invisíveis em vez de uma. O arquivo abria certo no Bloco de Notas de hoje e na conversa com o
+    assistente, mas era mais uma coisa mudada sem ninguém pedir. Agora a leitura também diz qual quebra o
+    documento usava, e a gravação escreve com aquela.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">9 quebras do Windows → 9 simples</span>
+        Medido no <code>12-acentos-bloco-de-notas-atual.txt</code> da massa.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">9 quebras do Windows → 9 do Windows</span>
+        E documento de quebra simples continua saindo com a simples.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que aconteceu</th></tr>
+  <tr><td><code>programa/tela_revisao.py</code></td><td>ganhou o método que devolve o texto do arquivo, calculado do documento e não copiado da tela</td></tr>
+  <tr><td><code>programa/painel_anonimizar.py</code></td><td>grava a partir desse texto, e guarda a quebra de linha do documento para usar na gravação</td></tr>
+  <tr><td><code>programa/arquivo_texto.py</code></td><td>passou a dizer qual quebra de linha o documento usa</td></tr>
+  <tr><td><code>programa/arquivo_md.py</code></td><td>a gravação aceita a quebra do documento; sem ela dito, continua a simples, como o Gerar OCR usa</td></tr>
+  <tr><td><code>programa/test_salvar_sem_cpf.py</code></td><td>dois testes novos: o documento com o separador de linha de PDF, e o documento do Windows saindo com a quebra dele</td></tr>
+  <tr><td><code>mockups/revisoes/18-antes-e-depois.html</code></td><td>novo: esta página</td></tr>
+</table></div>
+
+<h2>O que foi achado e NÃO consertado</h2>
+<p class="intro-secao">
+  A varredura automática levantou quatro suspeitas. Três caíram quando fui atrás delas, e uma é trabalho
+  já previsto para a etapa seguinte.
+</p>
+<ul class="fora-lista">
+  <li>
+    <strong>Arrastar outro arquivo, ou trocar de item no menu, descarta a revisão sem perguntar.</strong>
+    É verdade, e é exatamente o que a <strong>etapa 6</strong> vai construir: a pergunta antes de
+    descartar. Consertar aqui seria construir funcionalidade dentro de uma revisão.
+  </li>
+  <li>
+    <strong>A caixa "Escrever por cima" poderia sair com o texto cortado.</strong> Medi: a altura que ela
+    reserva e a altura de que a frase precisa deram o mesmo número. Não corta hoje — e a tela nova desta
+    etapa já faz a conta do jeito certo.
+  </li>
+  <li>
+    <strong>Um caminho de código poderia estourar com um valor vazio</strong> (o "Salvar com outro nome"
+    sem destino guardado). Procurei por onde se chega nesse estado e não achei nenhum: a tela só aparece
+    depois que o destino foi guardado.
+  </li>
+  <li>
+    <strong>Ler a data do arquivo que já existe, sem proteção contra ele sumir no meio.</strong> Entre
+    conferir que o arquivo existe e ler a data dele passam microssegundos, dentro da mesma função. Não
+    consegui descrever uma situação concreta em que isso morde alguém.
+  </li>
+</ul>
+
+<h2>O que veio da sua conferência, e não desta revisão</h2>
+<p class="intro-secao">
+  Estes dois entram no mesmo registro, mas foram achados por você, abrindo o programa — e não por esta
+  lente. Ficam anotados aqui porque a página é o que conta a rodada inteira.
+</p>
+<ul class="fora-lista">
+  <li>
+    <strong>O botão "Salvar o texto mascarado…" não fazia nada.</strong> O clique do Qt manda um argumento
+    junto, que caía no lugar do caminho de destino e derrubava a tela em silêncio. Os testes chamavam a
+    função por dentro, e por isso passavam com o defeito de pé; agora há um que clica no botão de verdade.
+  </li>
+  <li>
+    <strong>A janela do Windows perguntava sobre substituir, e nada era gravado.</strong> Quem respondia
+    "sim" achava ter mandado salvar. A pergunta agora fica só na tela do programa, que mostra a data do
+    arquivo que está lá. O mesmo defeito existia no Gerar OCR, e foi consertado junto.
+  </li>
+</ul>
+
+<p class="rodape">
+  Uma lente só. As outras não rodaram, e continua valendo o que elas veriam: a de critérios de aceite
+  cobriria a spec 003 quase inteira, que já tem o que conferir; a de conferir na tela olharia o conjunto,
+  e não etapa por etapa; a de segredo e dado real tem a massa e o uso com documento de verdade; as de
+  manutenção e clareza têm as peças das etapas 3, 4 e 5.
+</p>
+
+</body>
+</html>
