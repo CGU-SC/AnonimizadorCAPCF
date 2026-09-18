@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 17 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+<h1>Revisão 17 — antes e depois</h1>
+<p class="subtitulo">17/09/2026 — a etapa 4 do Anonimizador de CPF: mascarar à mão o trecho marcado com o mouse, e a sexta emenda da spec</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Revisei o que a etapa 4 construiu: a máscara feita à mão, o botão que a dispara, o traço e o selo
+  próprios dela, e a regra nova de quais posições são escondidas. A pergunta: em que situação a máscara
+  cai no lugar errado, ou a tela diz uma coisa e o arquivo leva outra?
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">3</div><div class="contagem-label">achados</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">3</div><div class="contagem-label">aprovados e consertados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">0</div><div class="contagem-label">recusados</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">0</div><div class="contagem-label">suspeitas descartadas</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/cpf.py — onde os asteriscos caem no trecho marcado</div>
+  <div class="explicacao">
+    <strong>A máscara à mão gastava os asteriscos fora do número e deixava dígitos à vista.</strong> Para
+    decidir se contava as letras que a leitura troca por dígito, o programa olhava o trecho inteiro — e
+    dois casos passavam: a barra vertical de uma tabela, que ele conta como "1", e a palavra feita só de
+    letras parecidas, como "isso" (i, s, s, o). Agora a conta é feita pedaço por pedaço: pedaço com dígito
+    conta dígitos e letras; pedaço sem dígito nenhum não conta nada. E a barra vertical saiu da conta na
+    máscara à mão — em documento, ela separa coluna muito mais vezes do que vale por "1".
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">* **3.4S6.789-1* *</span>
+        A célula de tabela: as barras comeram uma posição de cada ponta, e o fim do número foi inteiro
+        para o arquivo.
+        <span class="numero-grande">***o 1234 5678 9**</span>
+        A palavra "isso": os asteriscos caíram nela, e os três primeiros dígitos ficaram à mostra.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">***.4S6.789-**</span>
+        <span class="numero-grande">isso ***4 5678 9**</span>
+        Em ambos, os asteriscos caem nas pontas do número, e só nelas.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/tela_revisao.py — quando o botão de mascarar acende</div>
+  <div class="explicacao">
+    <strong>O botão acendia sozinho.</strong> Quando o programa seleciona um número no texto — no
+    "próximo", no clique da lista, ao liberar —, a tela entendia aquilo como "a pessoa marcou um trecho".
+    Clicando ali, aparecia o aviso de que o trecho encosta num número da lista, que não faz sentido nenhum:
+    quem selecionou foi o próprio programa. Agora só a marcação feita com o mouse acende o botão.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">um "próximo" → botão aceso</span>
+        E o clique nele dava um aviso sem sentido.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">um "próximo" → botão apagado</span>
+        Marcar com o mouse continua acendendo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/lista_de_achados.py e programa/tela_revisao.py — a cor e a ordem do "à mão"</div>
+  <div class="explicacao">
+    <strong>Dois acertos pequenos, do mesmo assunto.</strong> Na lista, a etiqueta e a barra do "mascarado
+    à mão" saíam amarelas — a cor de suspeito —, enquanto o traço no texto, o selo e a chave de cores são
+    azuis: o item parecia pedir decisão, quando ele já <em>é</em> a decisão da pessoa. E cada máscara nova
+    entrava no fim da lista, e não no lugar dela na ordem do texto; com duas ou mais, a navegação apontava
+    para um item diferente do que estava aceso.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">amarelo na lista, azul no texto</span>
+        E a seção "Mascarados à mão" na ordem em que a pessoa clicou.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">azul nos quatro lugares</span>
+        E a lista na ordem do texto, igual à navegação.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que aconteceu</th></tr>
+  <tr><td><code>programa/cpf.py</code></td><td>a escolha das posições da máscara à mão passou a ser por pedaço do trecho, e a barra vertical saiu da conta</td></tr>
+  <tr><td><code>programa/tela_revisao.py</code></td><td>a seleção feita pelo programa não acende o botão; a máscara nova entra na ordem do texto</td></tr>
+  <tr><td><code>programa/lista_de_achados.py</code></td><td>a etiqueta e a barra do "mascarado à mão" passaram ao azul</td></tr>
+  <tr><td><code>programa/test_cpf.py</code> e <code>programa/test_lista_de_achados.py</code></td><td>cinco testes novos: os dois trechos que vazavam, o botão que não pode acender sozinho, a cor e a ordem</td></tr>
+  <tr><td><code>mockups/revisoes/17-antes-e-depois.html</code></td><td>novo: esta página</td></tr>
+</table></div>
+
+<h2>O que foi achado e NÃO consertado</h2>
+<p class="intro-secao">
+  Nada ficou de fora nesta rodada: as quatro suspeitas da varredura se confirmaram na conferência, e as
+  três decisões cobriram todas elas.
+</p>
+
+<p class="rodape">
+  Uma lente só. As outras não rodaram, e continua valendo o que elas veriam: a de segredo e dado real tem
+  a massa e o uso com documento de verdade; a de conferir na tela olharia o conjunto; a de critérios de
+  aceite já cobriria "Encontrar e conferir", "Máscara" e a "Revisão" quase inteira; as de manutenção e
+  clareza têm as peças das etapas 3 e 4.
+</p>
+
+</body>
+</html>

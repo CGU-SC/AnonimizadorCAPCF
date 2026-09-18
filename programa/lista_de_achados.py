@@ -283,6 +283,10 @@ def _nome_do_tipo(ocorrencia):
 def _cor_do_tipo(ocorrencia):
     if ocorrencia.tipo == cpf.PASSA_NA_CONTA:
         return estilo.COR_ERRO_TEXTO
+    if ocorrencia.tipo == cpf.MASCARADO_A_MAO:
+        # Azul, como o traço no texto, o selo e a chave de cores. De amarelo, o
+        # item parecia pedir decisão - e ele já é a decisão da pessoa.
+        return estilo.COR_DESTAQUE_HOVER
     return estilo.COR_ALERTA
 
 

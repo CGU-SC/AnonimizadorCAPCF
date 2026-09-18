@@ -173,9 +173,10 @@ def mascarar_a_mao(texto, inicio, fim):
     espaço pego sem querer na ponta da seleção não precisa ficar destacado.
     """
     trecho = texto[inicio:fim]
-    digitos = [i for i, letra in enumerate(trecho) if letra.isdigit()]
-    if not digitos:
+    if not any(letra.isdigit() for letra in trecho):
         return None
+
+    digitos = _posicoes_do_trecho(trecho)
     primeiro, ultimo = digitos[0], digitos[-1]
     original = trecho[primeiro:ultimo + 1]
     posicoes = [i - primeiro for i in digitos]
@@ -265,6 +266,45 @@ def _avaliar(texto, encontro):
         passa_na_conta=conta,
         motivo=motivo,
     )
+
+
+def _posicoes_do_trecho(trecho):
+    """Onde os asteriscos podem cair no trecho marcado à mão (regra RN-9).
+
+    A conta é feita pedaço por pedaço, e não pelo trecho inteiro. **Pedaço com
+    dígito** - `l23.4S6.789-1O` - conta dígito e letra parecida com dígito, como
+    a sexta emenda decidiu: senão o "l" e o "O", que são o primeiro e o último
+    dígito do número, ficariam à vista. **Pedaço sem nenhum dígito** - `|`,
+    `isso`, `Sobre` - não conta nada.
+
+    Olhando o trecho inteiro, dois casos gastavam os asteriscos fora do número e
+    deixavam dígitos à mostra (revisão da etapa 4): a barra de tabela em volta da
+    célula (`| l23.4S6.789-1O |`) e a palavra feita só de letras parecidas
+    ("isso" é i, s, s, o). A barra vertical fica de fora da conta aqui: em
+    documento, ela separa coluna muito mais vezes do que vale por "1".
+    """
+    parecidas = set(LETRA_PARECIDA_COM_DIGITO) - {"|"}
+    posicoes = []
+    for pedaco in _pedacos(trecho):
+        letras = trecho[pedaco.start:pedaco.stop]
+        if any(letra.isdigit() for letra in letras):
+            posicoes.extend(
+                pedaco.start + i for i, letra in enumerate(letras)
+                if letra.isdigit() or letra in parecidas
+            )
+    return posicoes
+
+
+def _pedacos(trecho):
+    """Os pedaços do trecho, separados por espaço ou quebra de linha."""
+    pedaco = None
+    for i, letra in enumerate(trecho + " "):
+        if letra.isspace():
+            if pedaco is not None:
+                yield range(pedaco, i)
+                pedaco = None
+        elif pedaco is None:
+            pedaco = i
 
 
 def _tem_pontuacao(separadores):

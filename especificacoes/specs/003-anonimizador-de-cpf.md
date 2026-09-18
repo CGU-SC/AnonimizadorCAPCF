@@ -33,6 +33,11 @@ da linha e "Situação:" na linha de baixo dava um "quase CPF partido em duas
 linhas" a cada ocorrência — 18 num documento só. A ressalva da pontuação entrou
 na revisão da mesma etapa, horas depois: sem ela, um CPF pontuado cuja última
 letra encostava numa palavra saía inteiro e fora da lista.
+**Sexta emenda:** aprovada em 2026-09-17 — na máscara feita à mão, a letra
+parecida com dígito conta como posição quando o trecho marcado é só um número
+(premissa da máscara à mão, RN-9 e critério de aceite). Contando só dígitos, o
+`l23.4S6.789-1O` viraria `l**.*S6.78*-*O`, com o primeiro e o último dígito do
+número à vista — e é justamente esse caso que leva alguém a mascarar à mão.
 **Acréscimo:** em 2026-09-17, a pedido da usuária na conferência da etapa 3 —
 a navegação "‹ anterior · N de M · próximo ›" na revisão (escopo e critério de
 aceite), o filtro dela pelos selos, e os selos contando grupos separados cuja
@@ -179,9 +184,17 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   `111.111.111-1lAssinado`, ele continua sendo achado), e vale só para a ponta
   final — na ponta do começo, a letra grudada continua contando, porque a
   leitura cola o "CPF" no número (`CPFl11.111.111-11`).
-- premissa (*nova*): a máscara feita à mão esconde os 3 primeiros e os 2 últimos
-  dígitos do trecho marcado. Se o trecho tiver 5 dígitos ou menos, esconde
-  todos. Trecho sem nenhum dígito não muda nada, e a tela diz por quê.
+- premissa (*nova*, emendada em 17/09/2026): a máscara feita à mão esconde as 3
+  primeiras e as 2 últimas **posições** do trecho marcado. Se o trecho tiver 5
+  posições ou menos, esconde todas. Trecho sem nenhum dígito não muda nada, e a
+  tela diz por quê. **O que conta como posição depende do trecho:** num trecho
+  que é só um número — dígitos, letras parecidas com dígito e pontuação, como
+  `l23.4S6.789-1O` —, a letra conta como posição, igual à máscara automática, e
+  ele vira `***.4S6.789-**`; num trecho que traz palavras, contam só os dígitos,
+  senão o programa mascararia o "S" e o "o" de "Sobre" e deixaria dígitos à
+  vista. É justamente o número que a leitura estragou demais que a pessoa vai
+  querer mascarar à mão, e contar só dígitos ali deixaria o primeiro e o último
+  do número à mostra.
 - premissa (*nova*): máscara desfeita pode ser refeita. O item continua na
   lista, marcado como "liberado", com a opção de mascarar de novo.
 
@@ -373,8 +386,9 @@ aprovação própria, antes da construção.
   mascarar e desfazer máscara. A correção da leitura acontece na conferência do
   OCR.
 - RN-9: **Mascarar à mão** vale para o trecho marcado com o mouse, pela regra da
-  premissa: esconde os 3 primeiros e os 2 últimos dígitos do trecho, ou todos
-  se forem 5 ou menos.
+  premissa: esconde as 3 primeiras e as 2 últimas posições do trecho, ou todas
+  se forem 5 ou menos. Num trecho que é só um número, a letra parecida com
+  dígito conta como posição; num trecho com palavras, contam só os dígitos.
 - RN-10: **Desfazer a máscara** de um suspeito que falha na conta ou de uma
   máscara feita à mão é um clique. De **todo número que passa na conta** — do
   tipo "passa na conta", ou "quase CPF" que passa (RN-2) —, pede a dupla
@@ -523,6 +537,10 @@ aprovação própria, antes da construção.
 - Dado o trecho `1234 5678 910`, que não tem forma de CPF e por isso o programa
   não pega, quando ela o marca com o mouse e escolhe "mascarar", então ele vira
   `***4 5678 9**` e aparece na lista como "mascarado à mão".
+- Dado o trecho `l23.4S6.789-1O`, um número que a leitura estragou demais para o
+  programa pegar, quando ela o marca e escolhe "mascarar", então ele vira
+  `***.4S6.789-**` — a letra conta como posição. Dado um trecho que traz
+  palavras junto, então contam só os dígitos (sexta emenda).
 - Dado um trecho marcado sem nenhum dígito, quando ela escolhe "mascarar",
   então nada muda, e a tela diz por quê.
 
