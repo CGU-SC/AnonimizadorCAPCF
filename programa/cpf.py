@@ -51,6 +51,15 @@ LETRA_PARECIDA_COM_DIGITO = {
 MAXIMO_DE_LETRAS_COM_PONTUACAO = 4
 MAXIMO_DE_LETRAS_SEM_PONTUACAO = 2
 
+# O que fica no lugar do dígito escondido (regra RN-6, sétima emenda da spec
+# 003, de 18/09/2026). Era o asterisco, e ele quebrava na tela de quem abria o
+# arquivo: num `.md`, `***` e `**` são a marcação de negrito e itálico, então o
+# visualizador - o próprio Bloco de Notas do Windows faz isso - engolia os
+# asteriscos grudados na pontuação e mostrava `*.222.222-` no lugar da máscara.
+# O X não significa nada em Markdown, em posição nenhuma, e é como documento
+# brasileiro costuma mostrar CPF tarjado.
+MASCARA = "X"
+
 # Os separadores que contam como pontuação de CPF. O espaço fica de fora de
 # propósito: documento de prestação de contas é cheio de número separado por
 # espaço, e ali a chance de não ser CPF é bem maior.
@@ -182,7 +191,7 @@ def mascarar_a_mao(texto, inicio, fim):
     posicoes = [i - primeiro for i in digitos]
     esconder = posicoes if len(posicoes) <= 5 else posicoes[:3] + posicoes[-2:]
     mascara = "".join(
-        "*" if i in esconder else letra for i, letra in enumerate(original)
+        MASCARA if i in esconder else letra for i, letra in enumerate(original)
     )
     return Ocorrencia(
         inicio=inicio + primeiro,
@@ -338,7 +347,7 @@ def _mascarar(encontro):
     """A máscara da regra RN-6: asterisco nas 3 primeiras e nas 2 últimas posições.
 
     Os separadores ficam como estavam, com uma exceção: a barra antes dos dois
-    últimos vira traço (123.456.789/10 vira ***.456.789-**). Nenhuma outra
+    últimos vira traço (123.456.789/10 vira XXX.456.789-XX). Nenhuma outra
     letra muda, e o tamanho do número também não.
     """
     comeco = encontro.start()
@@ -349,7 +358,7 @@ def _mascarar(encontro):
         for i in range(*encontro.span(g))
     ]
     for i in posicoes[:3] + posicoes[-2:]:
-        letras[i] = "*"
+        letras[i] = MASCARA
     inicio_do_ultimo_separador = encontro.start(6) - comeco
     for i in range(inicio_do_ultimo_separador, encontro.end(6) - comeco):
         if letras[i] == "/":

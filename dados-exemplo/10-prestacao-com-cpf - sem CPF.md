@@ -8,26 +8,26 @@ Processo nº 23080.012345/2026-11
 Trata-se de prestação de contas referente ao projeto de pesquisa
 identificado abaixo, encaminhada pela fundação de apoio para análise
 desta Coordenadoria. O coordenador indicado no Termo de outorga nº
-*** 813 579 ** é o servidor Fulano de Tal Exemplo, inscrito no CPF
-***.111.111-**, conforme documentação anexa aos autos.
+XXX 813 579 XX é o servidor Fulano de Tal Exemplo, inscrito no CPF
+XXX.111.111-XX, conforme documentação anexa aos autos.
 
 ## 2. Equipe e bolsas pagas
 
 | Nome                   | CPF            | Função       | Valor       |
 | ---------------------- | -------------- | ------------ | ----------- |
-| Beltrana Exemplo Silva | ***.222.222-** | Bolsista     | R$ 1.500,00 |
-| Ciclano Teste Souza    | ***.777.777-** | Bolsista     | R$ 1.500,00 |
-| Maria Fictícia Andrade | ***444444**    | Pesquisadora | R$ 4.200,00 |
-| João Inventado Lima    | ***.333.333-** | Técnico      | R$ 2.800,00 |
+| Beltrana Exemplo Silva | XXX.222.222-XX | Bolsista     | R$ 1.500,00 |
+| Ciclano Teste Souza    | XXX.777.777-XX | Bolsista     | R$ 1.500,00 |
+| Maria Fictícia Andrade | XXX444444XX    | Pesquisadora | R$ 4.200,00 |
+| João Inventado Lima    | XXX.333.333-XX | Técnico      | R$ 2.800,00 |
 
 ## 3. Despesas com pessoa física
 
 Pagamento de serviço de revisão de texto, conforme recibo assinado
-por Ana Suposta Ribeiro, CPF ***.456.789-**, no valor de R$ 850,00.
+por Ana Suposta Ribeiro, CPF XXX.456.789-XX, no valor de R$ 850,00.
 A declaração do prestador, preenchida à mão, informa o CPF nº
 1234 5678 910 e o endereço para correspondência.
-Diária paga ao colaborador externo Pedro Hipotético Costa, CPF ***.555.
-555-**, referente à viagem de campo de 03/08/2026.
+Diária paga ao colaborador externo Pedro Hipotético Costa, CPF XXX.555.
+555-XX, referente à viagem de campo de 03/08/2026.
 
 ## 4. Despesas com pessoa jurídica
 
@@ -40,13 +40,13 @@ Diária paga ao colaborador externo Pedro Hipotético Costa, CPF ***.555.
 
 O boleto da taxa bancária foi pago pela linha digitável
 34191.79001 01043.510047 91020.150008 1 89410000026000.
-Consta ainda o recibo de Otávio Suposto Nunes, CPF ***.111.111-**,
+Consta ainda o recibo de Otávio Suposto Nunes, CPF XXX.111.111-XX,
 lido com uma letra no lugar do primeiro dígito, e o de Rita Inventada
-Paes, CPF *** 666 666 **, lido com espaços no lugar dos pontos.
+Paes, CPF XXX 666 666 XX, lido com espaços no lugar dos pontos.
 O protocolo interno 9111.111.111-11 e a matrícula 111.111.111-119
 não são CPF. A ficha de Sônia Exemplo Dias traz o campo de CPF
-ilegível, lido como ***.4S6.789-**; noutra folha, com mais um dígito
-trocado por letra, ***.4S6.7B9-**. Já o código de conferência
+ilegível, lido como XXX.4S6.789-XX; noutra folha, com mais um dígito
+trocado por letra, XXX.4S6.7B9-XX. Já o código de conferência
 l234S67891O, a chave lZ3.4S6.7B9-1O e a referência SOL.IDA.DES-OS não
 são CPF: o primeiro tem três letras e nenhuma pontuação, o segundo tem
 cinco letras, e o terceiro tem letras que não se confundem com dígito.

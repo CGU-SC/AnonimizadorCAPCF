@@ -59,9 +59,12 @@ dia o programa sair da universidade.
   O programa detecta sozinho se há texto, e só roda o OCR quando não há.
 - **Saída**: `.md`, com as tabelas preservadas como tabelas de texto — para a
   pessoa arrastar para dentro da conversa com o assistente.
-- **Máscara do CPF**: 3 primeiros dígitos → `***`, 2 últimos → `**`, mantendo a
-  pontuação original (`123.456.789-10` → `***.456.789-**`; barra também vira
+- **Máscara do CPF**: 3 primeiros dígitos → `XXX`, 2 últimos → `XX`, mantendo a
+  pontuação original (`123.456.789-10` → `XXX.456.789-XX`; barra também vira
   traço). Reconhece CPF com pontos e traço, sem pontos, sem nada, e com barra.
+  Era asterisco até 18/09/2026, e ele quebrava na tela de quem abre o arquivo:
+  num `.md`, `***` e `**` são a marcação de negrito e itálico (sétima emenda da
+  spec 003).
 - **Motor de OCR**: dois no menu — Tesseract local, e (fora do escopo desta
   primeira versão) uma LLM remota, apontando para um servidor que a TI da UFSC
   pretende montar dentro da rede da universidade. **Nunca** um serviço de

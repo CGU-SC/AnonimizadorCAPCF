@@ -54,7 +54,7 @@ INTEIROS = [
 CONFERIR = [
     'Na coluna "como ficou", <strong>nenhum número mostra os 3 primeiros nem os 2 últimos dígitos</strong>.',
     'A pontuação de cada número ficou a mesma, menos a barra antes dos dois últimos, que virou traço '
-    '(<span class="mono">333.333.333/34</span> → <span class="mono">***.333.333-**</span>).',
+    '(<span class="mono">333.333.333/34</span> → <span class="mono">XXX.333.333-XX</span>).',
     'O Pedro, partido em duas linhas, aparece mascarado <strong>nas duas partes</strong>, e a quebra ficou onde estava.',
     'Na tabela de bolsistas do documento, as colunas continuam alinhadas depois da máscara.',
     'O CNPJ, o processo, o boleto e os números colados a outro dígito saíram inteiros.',

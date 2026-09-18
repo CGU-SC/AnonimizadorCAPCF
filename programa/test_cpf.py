@@ -56,7 +56,7 @@ def test_os_quatro_formatos_combinados_passam_na_conta_e_nao_sao_suspeitos():
     assert all(a.tipo == PASSA_NA_CONTA for a in achados)
     assert not any(a.suspeito for a in achados)
     assert aplicar(texto, achados) == (
-        "a ***.111.111-**, b ***111111**, c ***111111-**, d ***.111.111-**."
+        "a XXX.111.111-XX, b XXX111111XX, c XXX111111-XX, d XXX.111.111-XX."
     )
 
 
@@ -64,7 +64,7 @@ def test_numero_que_falha_na_conta_e_mascarado_e_suspeito():
     achado = _unica("recibo de Ana, CPF 123.456.789-10, valor")
     assert achado.tipo == FALHA_NA_CONTA
     assert achado.suspeito
-    assert achado.mascara == "***.456.789-**"
+    assert achado.mascara == "XXX.456.789-XX"
 
 
 def test_os_tres_jeitos_de_quase_cpf():
@@ -90,7 +90,7 @@ def test_tres_letras_com_pontuacao_de_cpf_sao_mascaradas():
     """
     achado = _unica("campo ilegível l23.4S6.789-1O no texto")
     assert achado.tipo == QUASE_CPF
-    assert achado.mascara == "***.4S6.789-**"
+    assert achado.mascara == "XXX.4S6.789-XX"
 
 
 def test_tres_letras_sem_nenhuma_pontuacao_nao_sao_mascaradas():
@@ -102,7 +102,7 @@ def test_quatro_letras_com_pontuacao_ainda_sao_mascaradas():
     """O teto da quarta emenda, pelo lado de dentro."""
     achado = _unica("folha l23.4S6.7B9-1O no texto")
     assert achado.tipo == QUASE_CPF
-    assert achado.mascara == "***.4S6.7B9-**"
+    assert achado.mascara == "XXX.4S6.7B9-XX"
 
 
 def test_cinco_letras_com_pontuacao_nao_sao_mascaradas():
@@ -140,7 +140,7 @@ def test_cpf_colado_a_outro_digito_nao_e_mascarado():
 
 
 def test_arquivo_ja_anonimizado_nao_tem_cpf():
-    texto = "CPF ***.111.111-**, ***111111** e ***.456.\n789-**"
+    texto = "CPF XXX.111.111-XX, XXX111111XX e XXX.456.\n789-XX"
     assert procurar(texto) == []
 
 
@@ -184,7 +184,7 @@ def test_letra_no_fim_grudada_numa_palavra_com_pontuacao_continua_suspeita():
     fica o alarme (RN-5).
     """
     achado = _unica("111.111.111-1Sobre o assunto")
-    assert achado.tipo == QUASE_CPF and achado.mascara == "***.111.111-**"
+    assert achado.tipo == QUASE_CPF and achado.mascara == "XXX.111.111-XX"
 
 
 def test_cpf_partido_com_letra_no_fim_continua_mascarado():
@@ -195,7 +195,7 @@ def test_cpf_partido_com_letra_no_fim_continua_mascarado():
     """
     achado = _unica("CPF 123.456.\n789-1O, referente à viagem")
     assert achado.tipo == QUASE_CPF
-    assert achado.mascara == "***.456.\n789-**"
+    assert achado.mascara == "XXX.456.\n789-XX"
 
 
 def test_cpf_grudado_na_palavra_com_letra_na_ponta_e_achado():
@@ -237,18 +237,18 @@ def test_so_o_que_passa_na_conta_pede_a_dupla_conferencia():
 # ------------------------------------------------------------ a máscara (RN-6)
 
 @pytest.mark.parametrize("original, mascarado", [
-    ("111.111.111-11", "***.111.111-**"),
-    ("11111111111", "***111111**"),
-    ("111.111.111/11", "***.111.111-**"),
-    ("l23.456.789-1O", "***.456.789-**"),
-    ("123 456 789 10", "*** 456 789 **"),
+    ("111.111.111-11", "XXX.111.111-XX"),
+    ("11111111111", "XXX111111XX"),
+    ("111.111.111/11", "XXX.111.111-XX"),
+    ("l23.456.789-1O", "XXX.456.789-XX"),
+    ("123 456 789 10", "XXX 456 789 XX"),
 ])
 def test_a_mascara_de_cada_formato(original, mascarado):
     assert _unica(f"CPF {original} fim").mascara == mascarado
 
 
 def test_cpf_partido_e_mascarado_nas_duas_partes_e_a_quebra_fica():
-    texto = "Pedro, CPF ***.555.\n555-** fim"
+    texto = "Pedro, CPF XXX.555.\n555-XX fim"
     original = "Pedro, CPF 555.555.\n555-55 fim"
     assert aplicar(original, procurar(original)) == texto
 
@@ -261,7 +261,7 @@ def test_a_mascara_nao_muda_o_tamanho_e_a_tabela_fica_alinhada():
         "| Maria    | 44444444444    | 4.200 |\n"
     )
     saida = aplicar(tabela, procurar(tabela))
-    assert saida.count("*") == 10
+    assert saida.count("X") == 10
     assert [len(l) for l in saida.splitlines()] == [len(l) for l in tabela.splitlines()]
     assert [l.count("|") for l in saida.splitlines()] == [4, 4, 4, 4]
 
@@ -270,7 +270,7 @@ def test_numero_liberado_volta_ao_original_no_texto_de_saida():
     texto = "CPF 111.111.111-11 e 123.456.789-10."
     valido, falha = procurar(texto)
     falha.situacao = LIBERADO
-    assert aplicar(texto, [valido, falha]) == "CPF ***.111.111-** e 123.456.789-10."
+    assert aplicar(texto, [valido, falha]) == "CPF XXX.111.111-XX e 123.456.789-10."
 
 
 # ----------------------------------------------------- a máscara à mão (RN-9)
@@ -279,10 +279,10 @@ def test_mascarar_a_mao_esconde_tres_primeiros_e_dois_ultimos_digitos():
     texto = "informa o CPF nº 1234 5678 910 e o endereço"
     inicio = texto.index("1234")
     achado = mascarar_a_mao(texto, inicio, inicio + len("1234 5678 910"))
-    assert achado.mascara == "***4 5678 9**"
+    assert achado.mascara == "XXX4 5678 9XX"
     assert achado.tipo == MASCARADO_A_MAO
     assert not achado.pede_dupla_conferencia
-    assert aplicar(texto, [achado]) == "informa o CPF nº ***4 5678 9** e o endereço"
+    assert aplicar(texto, [achado]) == "informa o CPF nº XXX4 5678 9XX e o endereço"
 
 
 def test_mascarar_a_mao_conta_letra_quando_o_trecho_e_so_um_numero():
@@ -294,7 +294,7 @@ def test_mascarar_a_mao_conta_letra_quando_o_trecho_e_so_um_numero():
     texto = "campo ilegível l23.4S6.789-1O no texto"
     inicio = texto.index("l23")
     achado = mascarar_a_mao(texto, inicio, inicio + len("l23.4S6.789-1O"))
-    assert achado.mascara == "***.4S6.789-**"
+    assert achado.mascara == "XXX.4S6.789-XX"
 
 
 def test_mascarar_a_mao_com_palavras_no_trecho_conta_so_digitos():
@@ -302,13 +302,13 @@ def test_mascarar_a_mao_com_palavras_no_trecho_conta_so_digitos():
     texto = "Sobre 1234 5678 910 no texto"
     achado = mascarar_a_mao(texto, 0, texto.index(" no"))
     assert achado.original == "1234 5678 910"
-    assert achado.mascara == "***4 5678 9**"
+    assert achado.mascara == "XXX4 5678 9XX"
 
 
 def test_mascarar_a_mao_com_cinco_digitos_ou_menos_esconde_todos():
     texto = "codigo 12-345 aqui"
     achado = mascarar_a_mao(texto, 7, 13)
-    assert achado.mascara == "**-***"
+    assert achado.mascara == "XX-XXX"
 
 
 def test_mascarar_a_mao_sem_digito_nao_muda_nada():
@@ -321,7 +321,7 @@ def test_mascara_a_mao_por_cima_de_um_cpf_nao_desfaz_a_mascara_dele():
     texto = "CPF 111.111.111-11 e 22 fim"
     automatico = procurar(texto)
     a_mao = mascarar_a_mao(texto, texto.index("111"), texto.index(" fim"))
-    esperado = "CPF ***.111.111-** e ** fim"
+    esperado = "CPF XXX.111.111-XX e XX fim"
     assert aplicar(texto, automatico + [a_mao]) == esperado
     assert aplicar(texto, [a_mao] + automatico) == esperado
 
