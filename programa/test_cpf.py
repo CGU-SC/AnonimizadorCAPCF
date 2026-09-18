@@ -285,6 +285,26 @@ def test_mascarar_a_mao_esconde_tres_primeiros_e_dois_ultimos_digitos():
     assert aplicar(texto, [achado]) == "informa o CPF nº ***4 5678 9** e o endereço"
 
 
+def test_mascarar_a_mao_conta_letra_quando_o_trecho_e_so_um_numero():
+    """Sexta emenda: é o número que a leitura estragou demais que se mascara à mão.
+
+    Contando só dígitos, o "l" e o "O" - que são o primeiro e o último dígito do
+    número - ficariam à vista.
+    """
+    texto = "campo ilegível l23.4S6.789-1O no texto"
+    inicio = texto.index("l23")
+    achado = mascarar_a_mao(texto, inicio, inicio + len("l23.4S6.789-1O"))
+    assert achado.mascara == "***.4S6.789-**"
+
+
+def test_mascarar_a_mao_com_palavras_no_trecho_conta_so_digitos():
+    """Senão o programa mascararia o "S" e o "o" de "Sobre"."""
+    texto = "Sobre 1234 5678 910 no texto"
+    achado = mascarar_a_mao(texto, 0, texto.index(" no"))
+    assert achado.original == "1234 5678 910"
+    assert achado.mascara == "***4 5678 9**"
+
+
 def test_mascarar_a_mao_com_cinco_digitos_ou_menos_esconde_todos():
     texto = "codigo 12-345 aqui"
     achado = mascarar_a_mao(texto, 7, 13)

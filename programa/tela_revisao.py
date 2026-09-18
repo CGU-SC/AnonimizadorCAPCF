@@ -42,11 +42,14 @@ AVISO_SEM_CPF = "Nenhum CPF encontrado neste texto"
 VALIDOS = "validos"
 SUSPEITOS = "suspeitos"
 LIBERADOS = "liberados"
+A_MAO = "a_mao"
 GRUPOS = {
     VALIDOS: (lambda o: o.tipo == cpf.PASSA_NA_CONTA and o.situacao == cpf.MASCARADO,
               "CPF válido", "CPFs válidos"),
     SUSPEITOS: (lambda o: o.suspeito and o.situacao == cpf.MASCARADO,
                 "suspeito", "suspeitos"),
+    A_MAO: (lambda o: o.tipo == cpf.MASCARADO_A_MAO and o.situacao == cpf.MASCARADO,
+            "mascarado à mão", "mascarados à mão"),
     LIBERADOS: (lambda o: o.situacao == cpf.LIBERADO, "liberado", "liberados"),
 }
 
@@ -65,6 +68,10 @@ class TelaRevisao(QWidget):
         # Qual número da lista a navegação está mostrando. Começa sem nenhum:
         # o primeiro "próximo" leva ao primeiro número do texto.
         self._atual = None
+        # Liga enquanto o programa mexe na seleção do texto. Sem isso, a seleção
+        # que ele faz para mostrar um número acenderia o botão de mascarar à mão
+        # como se a pessoa tivesse marcado algo (revisão da etapa 4).
+        self._selecionando = False
         # O grupo que a navegação está percorrendo; None é todos.
         self._filtro = None
 
@@ -108,6 +115,7 @@ class TelaRevisao(QWidget):
         # A borda azul do editor da conferência do OCR não entra aqui de
         # propósito: lá ela dizia "dá para digitar"; aqui não dá (RN-8).
         self.texto.setFont(QFont("Cascadia Mono", 11))
+        self.texto.selectionChanged.connect(self._trecho_marcado_mudou)
 
         self.lista = ListaDeAchados(
             ao_ir_para=self.ir_para,
@@ -155,6 +163,9 @@ class TelaRevisao(QWidget):
                                   ao_clicar=lambda: self.filtrar(VALIDOS))
         self.selo_suspeitos = _Selo(cor=estilo.COR_ALERTA,
                                     ao_clicar=lambda: self.filtrar(SUSPEITOS))
+        # Azul: o "à mão" é marca de quem revisa, e não do que o programa achou.
+        self.selo_a_mao = _Selo(cor=estilo.COR_DESTAQUE_HOVER,
+                                ao_clicar=lambda: self.filtrar(A_MAO))
         # Verde a pedido da usuária (17/09/2026): marca uma decisão da pessoa.
         self.selo_liberados = _Selo(cor=estilo.COR_SUCESSO,
                                     ao_clicar=lambda: self.filtrar(LIBERADOS))
@@ -163,6 +174,7 @@ class TelaRevisao(QWidget):
         linha.addWidget(self.selo_encontrados)
         linha.addWidget(self.selo_validos)
         linha.addWidget(self.selo_suspeitos)
+        linha.addWidget(self.selo_a_mao)
         linha.addWidget(self.selo_liberados)
         linha.addStretch()
         return linha
@@ -174,9 +186,32 @@ class TelaRevisao(QWidget):
             "CPF válido", ondulado=False, cor=estilo.COR_ERRO_TEXTO)
         self.chave_suspeito = _amostra_da_chave(
             "suspeito", ondulado=True, cor=estilo.COR_ALERTA)
+        self.chave_a_mao = _amostra_da_chave(
+            "mascarado à mão", ondulado=False, cor=estilo.COR_DESTAQUE_HOVER,
+            pontilhado=True)
         linha.addWidget(self.chave_valido)
         linha.addWidget(self.chave_suspeito)
+        linha.addWidget(self.chave_a_mao)
         linha.addStretch()
+
+        # O aviso de trecho sem dígito fica ao lado do botão, onde o olho está,
+        # e não numa caixa por cima para fechar. Some quando a pessoa marca
+        # outro trecho (rascunho 01, estado 3).
+        self.aviso_do_trecho = QLabel()
+        self.aviso_do_trecho.setVisible(False)
+        self.aviso_do_trecho.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px; color: {estilo.COR_ALERTA};"
+        )
+        self.botao_mascarar = QPushButton("Mascarar o trecho marcado")
+        self.botao_mascarar.setCursor(Qt.PointingHandCursor)
+        self.botao_mascarar.setStyleSheet(estilo.estilo_botao(principal=False,
+                                                              pequeno=True))
+        self.botao_mascarar.clicked.connect(self.mascarar_o_trecho_marcado)
+        # Botão que parece pronto e não faz nada é lido como defeito: ele só
+        # acende quando há trecho marcado.
+        self.botao_mascarar.setEnabled(False)
+        linha.addWidget(self.aviso_do_trecho)
+        linha.addWidget(self.botao_mascarar)
 
         # A navegação pelos números, para passar o documento de cima a baixo
         # sem rolar (acréscimo da spec 003, de 17/09/2026). Ela percorre a lista
@@ -271,7 +306,9 @@ class TelaRevisao(QWidget):
         cursor.setPosition(_posicao_no_qt(self._texto, ocorrencia.inicio))
         cursor.setPosition(
             _posicao_no_qt(self._texto, ocorrencia.fim), QTextCursor.KeepAnchor)
+        self._selecionando = True
         self.texto.setTextCursor(cursor)
+        self._selecionando = False
         self.texto.ensureCursorVisible()
         self.lista.marcar(ocorrencia)
         self._atual = ocorrencia
@@ -335,7 +372,8 @@ class TelaRevisao(QWidget):
         if self._filtro is not None and not self._em_ordem():
             self._filtro = None
         for grupo, selo in ((None, self.selo_encontrados), (VALIDOS, self.selo_validos),
-                            (SUSPEITOS, self.selo_suspeitos), (LIBERADOS, self.selo_liberados)):
+                            (SUSPEITOS, self.selo_suspeitos), (A_MAO, self.selo_a_mao),
+                            (LIBERADOS, self.selo_liberados)):
             selo.acender(self._filtro is not None and grupo == self._filtro)
 
         # Sem nenhum número, a navegação não tem para onde ir - e botão que não
@@ -370,6 +408,49 @@ class TelaRevisao(QWidget):
         ocorrencia.situacao = cpf.LIBERADO
         self._desenhar()
         self.ir_para(ocorrencia)
+
+    def mascarar_o_trecho_marcado(self):
+        """Mascara o que a pessoa marcou com o mouse (regra RN-9).
+
+        É a rede para o CPF que o programa não pegou - escrito de um jeito que
+        a spec deixou de fora, ou estragado demais pela leitura.
+        """
+        cursor = self.texto.textCursor()
+        if not cursor.hasSelection():
+            return
+        inicio = _posicao_no_texto(self._texto, cursor.selectionStart())
+        fim = _posicao_no_texto(self._texto, cursor.selectionEnd())
+
+        # Trecho que encosta num número já mascarado fica de fora: duas máscaras
+        # em cima do mesmo pedaço deixariam a lista dizendo duas coisas sobre o
+        # mesmo número, e não há nada a ganhar - aquele número já está escondido.
+        if any(o.inicio < fim and inicio < o.fim for o in self._ocorrencias):
+            self._avisar_sobre_o_trecho(
+                "⚠ Esse trecho encosta num número que já está na lista.")
+            return
+
+        ocorrencia = cpf.mascarar_a_mao(self._texto, inicio, fim)
+        if ocorrencia is None:
+            self._avisar_sobre_o_trecho(
+                "⚠ O trecho marcado não tem nenhum dígito. Nada foi mascarado.")
+            return
+        self._ocorrencias.append(ocorrencia)
+        # Na ordem do texto, e não na de criação: a lista e a navegação andam
+        # por essa ordem, e fora dela o item aceso deixa de ser o que a posição
+        # "N de M" indica (revisão da etapa 4).
+        self._ocorrencias.sort(key=lambda o: o.inicio)
+        self._desenhar()
+        self.ir_para(ocorrencia)
+
+    def _avisar_sobre_o_trecho(self, frase):
+        self.aviso_do_trecho.setText(frase)
+        self.aviso_do_trecho.setVisible(True)
+
+    def _trecho_marcado_mudou(self):
+        if self._selecionando:
+            return
+        self.botao_mascarar.setEnabled(self.texto.textCursor().hasSelection())
+        self.aviso_do_trecho.setVisible(False)
 
     def mascarar_de_novo(self, ocorrencia):
         """Arrependimento custa um clique, sem pergunta nenhuma."""
@@ -447,6 +528,7 @@ class TelaRevisao(QWidget):
         pertence_a = {grupo: regra for grupo, (regra, _, _) in GRUPOS.items()}
         validos = [o for o in self._ocorrencias if pertence_a[VALIDOS](o)]
         suspeitos = [o for o in self._ocorrencias if pertence_a[SUSPEITOS](o)]
+        a_mao = [o for o in self._ocorrencias if pertence_a[A_MAO](o)]
         liberados = [o for o in self._ocorrencias if pertence_a[LIBERADOS](o)]
 
         tem_cpf = bool(self._ocorrencias)
@@ -471,6 +553,11 @@ class TelaRevisao(QWidget):
             else "1 suspeito"
         )
         self.selo_suspeitos.setVisible(bool(suspeitos))
+        self.selo_a_mao.setText(
+            f"{len(a_mao)} mascarados à mão" if len(a_mao) != 1
+            else "1 mascarado à mão"
+        )
+        self.selo_a_mao.setVisible(bool(a_mao))
         self.selo_liberados.setText(
             f"{len(liberados)} liberados por você" if len(liberados) != 1
             else "1 liberado por você"
@@ -497,6 +584,21 @@ def _formato_de_liberado():
     return formato
 
 
+def _posicao_no_texto(texto, posicao_no_qt):
+    """O caminho de volta: a posição do Qt virando posição do texto.
+
+    Serve para o trecho que a pessoa marcou com o mouse - o Qt diz onde a
+    seleção começa e termina na conta dele, e o resto do programa conta do
+    jeito do Python.
+    """
+    andado = 0
+    for indice, letra in enumerate(texto):
+        if andado >= posicao_no_qt:
+            return indice
+        andado += 2 if ord(letra) > 0xFFFF else 1
+    return len(texto)
+
+
 def _posicao_no_qt(texto, indice):
     """A mesma posição, contada do jeito do Qt.
 
@@ -519,13 +621,21 @@ def _formato(ocorrencia):
     o mais perigoso, que precisa saltar aos olhos.
     """
     formato = QTextCharFormat()
-    cor = QColor(estilo.COR_ALERTA if ocorrencia.suspeito else estilo.COR_ERRO_TEXTO)
+    if ocorrencia.tipo == cpf.MASCARADO_A_MAO:
+        # Traço próprio para o que a pessoa mascarou: azul e duplo, como o
+        # rascunho aprovado mostra. Ele não é achado do programa, e misturá-lo
+        # com o vermelho do "CPF válido" faria a contagem do alto mentir.
+        cor = QColor(estilo.COR_DESTAQUE_HOVER)
+        traco = QTextCharFormat.DotLine
+    elif ocorrencia.suspeito:
+        cor = QColor(estilo.COR_ALERTA)
+        traco = QTextCharFormat.WaveUnderline
+    else:
+        cor = QColor(estilo.COR_ERRO_TEXTO)
+        traco = QTextCharFormat.SingleUnderline
     formato.setForeground(cor)
     formato.setUnderlineColor(cor)
-    formato.setUnderlineStyle(
-        QTextCharFormat.WaveUnderline if ocorrencia.suspeito
-        else QTextCharFormat.SingleUnderline
-    )
+    formato.setUnderlineStyle(traco)
     return formato
 
 
@@ -562,7 +672,7 @@ class _Selo(QLabel):
         super().mousePressEvent(evento)
 
 
-def _amostra_da_chave(nome, ondulado, cor):
+def _amostra_da_chave(nome, ondulado, cor, pontilhado=False):
     """Um pedacinho "***" com o traço do tipo, e o nome dele ao lado.
 
     É um pedaço de texto, e não um rótulo comum, porque o traço ondulado só
@@ -583,10 +693,13 @@ def _amostra_da_chave(nome, ondulado, cor):
     marcado = QTextCharFormat()
     marcado.setForeground(QColor(cor))
     marcado.setUnderlineColor(QColor(cor))
-    marcado.setUnderlineStyle(
-        QTextCharFormat.WaveUnderline if ondulado
-        else QTextCharFormat.SingleUnderline
-    )
+    if pontilhado:
+        traco = QTextCharFormat.DotLine
+    elif ondulado:
+        traco = QTextCharFormat.WaveUnderline
+    else:
+        traco = QTextCharFormat.SingleUnderline
+    marcado.setUnderlineStyle(traco)
     comum = QTextCharFormat()
     comum.setForeground(QColor(estilo.COR_TEXTO_SECUNDARIO))
 

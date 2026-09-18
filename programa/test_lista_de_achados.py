@@ -402,6 +402,168 @@ def test_o_conteudo_da_lista_cabe_na_largura_da_coluna(aplicacao):
         assert lista.horizontalScrollBar().value() == 0
 
 
+# --------------------------------------------------- mascarar à mão (etapa 4)
+
+def _marcar_no_texto(tela, trecho):
+    """Marca um trecho com o mouse, do jeito que a pessoa faz."""
+    from tela_revisao import _posicao_no_qt
+    inicio = tela._texto.index(trecho)
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(_posicao_no_qt(tela._texto, inicio))
+    cursor.setPosition(_posicao_no_qt(tela._texto, inicio + len(trecho)),
+                       QTextCursor.KeepAnchor)
+    tela.texto.setTextCursor(cursor)
+
+
+def test_mascarar_o_trecho_marcado(aplicacao):
+    """O caminho da etapa 4: a rede para o CPF que o programa não pegou."""
+    # Cinco letras: o programa não pega de propósito (quarta emenda), e é
+    # justamente esse número que sobra para a pessoa mascarar à mão.
+    texto = TEXTO + "\nNa ficha, o CPF ilegível lZ3.4S6.7B9-1O, sem mais."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, cpf.procurar(texto))
+    assert not tela.botao_mascarar.isEnabled()
+
+    _marcar_no_texto(tela, "lZ3.4S6.7B9-1O")
+    assert tela.botao_mascarar.isEnabled()
+    tela.botao_mascarar.click()
+
+    assert "lZ3.4S6.7B9-1O" not in tela.texto_mascarado()
+    assert "***.4S6.7B9-**" in tela.texto_mascarado()
+    assert tela.selo_a_mao.text() == "1 mascarado à mão"
+    assert _titulos_da_lista(tela)[-1] == "Mascarados à mão 1"
+
+
+def test_o_trecho_mascarado_a_mao_tem_traco_proprio(aplicacao):
+    """Azul e pontilhado: não é achado do programa, e não pode virar vermelho."""
+    import estilo
+
+    texto = "O código 1234 5678 910 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+
+    achado = tela._ocorrencias[0]
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(_posicao_no_qt(texto, achado.inicio) + 1)
+    formato = cursor.charFormat()
+    assert formato.foreground().color().name() == estilo.COR_DESTAQUE_HOVER
+    assert formato.underlineStyle() == QTextCharFormat.DotLine
+
+
+def test_trecho_sem_digito_nao_muda_nada_e_a_tela_diz_por_que(aplicacao):
+    tela = _revisao()
+    _marcar_no_texto(tela, "Fulano de Tal")
+    antes = tela.texto_mascarado()
+    tela.botao_mascarar.click()
+
+    assert tela.texto_mascarado() == antes
+    assert "não tem nenhum dígito" in tela.aviso_do_trecho.text()
+    assert tela.aviso_do_trecho.isVisibleTo(tela)
+    # O aviso some quando a pessoa marca outro trecho.
+    _marcar_no_texto(tela, "Ciclano")
+    assert not tela.aviso_do_trecho.isVisibleTo(tela)
+
+
+def test_trecho_que_encosta_num_numero_da_lista_e_recusado(aplicacao):
+    """Duas máscaras no mesmo pedaço fariam a lista dizer duas coisas dele."""
+    tela = _revisao()
+    quantos = len(tela._ocorrencias)
+    _marcar_no_texto(tela, "CPF 111.111.111-11")
+    tela.botao_mascarar.click()
+
+    assert len(tela._ocorrencias) == quantos
+    assert "já está na lista" in tela.aviso_do_trecho.text()
+
+
+def test_desfazer_uma_mascara_a_mao_e_um_clique_so(aplicacao):
+    texto = "O código 1234 5678 910 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+    achado = tela._ocorrencias[0]
+    assert not achado.pede_dupla_conferencia
+
+    tela.lista._itens[id(achado)].botao.click()
+    assert "1234 5678 910" in tela.texto_mascarado()
+    assert tela.selo_liberados.text() == "1 liberado por você"
+    assert not tela.selo_a_mao.isVisibleTo(tela)
+
+
+def test_a_soma_dos_selos_continua_fechando_com_o_a_mao(aplicacao):
+    texto = "O código 1234 5678 910, e o CPF 111.111.111-11 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, cpf.procurar(texto))
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+
+    def numero(selo):
+        return int(selo.text().split()[0]) if selo.isVisibleTo(tela) else 0
+
+    grupos = (tela.selo_validos, tela.selo_suspeitos, tela.selo_a_mao,
+              tela.selo_liberados)
+    assert sum(numero(s) for s in grupos) == numero(tela.selo_encontrados) == 2
+
+
+def test_a_selecao_feita_pelo_programa_nao_acende_o_botao(aplicacao):
+    """Regressão da revisão da etapa 4: o botão acendia sozinho.
+
+    O programa seleciona o número no texto para mostrar onde ele está - no
+    "próximo", no clique da lista, ao liberar. Isso não é a pessoa marcando um
+    trecho, e clicar no botão ali só produzia um aviso sem sentido.
+    """
+    tela = _revisao()
+    assert not tela.botao_mascarar.isEnabled()
+    tela.botao_proximo.click()
+    assert not tela.botao_mascarar.isEnabled()
+    tela.ir_para(_achado(tela, "777.777.777-78"))
+    assert not tela.botao_mascarar.isEnabled()
+
+    # E a marcação de verdade continua acendendo.
+    _marcar_no_texto(tela, "Fulano")
+    assert tela.botao_mascarar.isEnabled()
+
+
+def test_a_etiqueta_do_mascarado_a_mao_e_azul(aplicacao):
+    """A mesma cor do traço no texto, do selo e da chave: é decisão da pessoa."""
+    import estilo
+
+    texto = "O código 1234 5678 910 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+
+    item = tela.lista._itens[id(tela._ocorrencias[0])]
+    etiqueta = _etiquetas_do_item(item)[0]
+    assert etiqueta.text() == "mascarado à mão"
+    assert estilo.COR_DESTAQUE_HOVER in etiqueta.styleSheet()
+
+
+def test_as_mascaras_a_mao_entram_na_ordem_do_texto(aplicacao):
+    """Regressão da revisão da etapa 4: elas entravam na ordem de criação."""
+    texto = "Primeiro 111 222 333 44, depois 555 666 777 88, fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    # A segunda ocorrência do texto é mascarada primeiro, de propósito.
+    for trecho in ("555 666 777 88", "111 222 333 44"):
+        _marcar_no_texto(tela, trecho)
+        tela.botao_mascarar.click()
+
+    assert [o.inicio for o in tela._ocorrencias] == sorted(
+        o.inicio for o in tela._ocorrencias)
+    # A última mascarada é a primeira do texto, então a navegação está em "1 de
+    # 2"; daqui, o "próximo" vai ao segundo e a volta traz de novo ao primeiro.
+    assert tela.posicao.text() == "1 de 2"
+    tela.botao_proximo.click()
+    assert tela.posicao.text() == "2 de 2"
+    assert tela.texto.textCursor().selectedText() == tela._ocorrencias[1].mascara
+    tela.botao_proximo.click()
+    assert tela.texto.textCursor().selectedText() == tela._ocorrencias[0].mascara
+
+
 # ------------------------------------------- a caixa da dupla conferência
 
 def test_a_caixa_vem_com_manter_a_mascara_escolhido(aplicacao):
