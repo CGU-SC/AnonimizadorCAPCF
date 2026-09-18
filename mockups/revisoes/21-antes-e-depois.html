@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 21 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+<h1>Revisão 21 — antes e depois</h1>
+<p class="subtitulo">18/09/2026 — a etapa 6 do Anonimizador de CPF: a pergunta antes de descartar a revisão</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Revisei o que a etapa 6 construiu: a pergunta que aparece nas quatro saídas — o botão do rodapé,
+  arrastar outro arquivo, trocar de item no menu e fechar a janela. A pergunta: em que situação ela
+  <strong>falha</strong>, e o trabalho se perde mesmo assim?
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">3</div><div class="contagem-label">achados apresentados</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">3</div><div class="contagem-label">aprovados e consertados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">1</div><div class="contagem-label">suspeita derrubada</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">1</div><div class="contagem-label">teste que passava pelo motivo errado</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/painel_anonimizar.py — quando o programa acha que há algo a perder</div>
+  <div class="explicacao">
+    <strong>A proteção sumia justamente enquanto estava sendo usada.</strong> Com a pergunta na tela, o
+    programa deixava de enxergar a revisão — e aí fechar a janela fechava o programa com tudo perdido, e
+    soltar outro arquivo o abria por cima do trabalho anterior. Reproduzi os dois. A causa era a
+    conferência olhar <em>em que tela a pessoa está</em>, e a tela da pergunta não estava na lista.
+    Agora ela olha o que existe: uma revisão com texto, ainda não gravada.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">pergunta na tela → X → fechou</span>
+        E a revisão inteira se perdia, sem uma palavra.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">pergunta na tela → X → continua lá</span>
+        A pergunta segue esperando resposta, com o trabalho intacto.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/painel_anonimizar.py — onde o painel fica depois de descartar</div>
+  <div class="explicacao">
+    <strong>Quem descartava pelo menu reencontrava a pergunta velha ao voltar.</strong> Descartando a
+    revisão para ir ao "Gerar OCR", o painel do Anonimizar ficava parado na pergunta já respondida.
+    Voltando ao módulo minutos depois, a pessoa era recebida por uma tela em que <em>nenhum dos dois
+    botões</em> levava a lugar nenhum: "Descartar e seguir" não fazia nada, e "Voltar e salvar" ia para
+    uma revisão vazia. A saída era clicar duas vezes no menu — e isso ninguém descobre; a leitura natural
+    é que o programa travou. Agora, ao descartar, o painel volta à tela de escolher o arquivo.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">voltar ao Anonimizar → a pergunta morta</span>
+        Dois botões, nenhuma saída.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">voltar ao Anonimizar → "Arraste o arquivo aqui"</span>
+        O módulo pronto para o próximo documento.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/tela_revisao.py e painel_anonimizar.py — quando a pergunta não aparece</div>
+  <div class="explicacao">
+    <strong>Um documento sem nenhum CPF perguntava do mesmo jeito, e dizia "0 números mascarados".</strong>
+    Perguntar ali não protege nada — abrir o documento de novo é imediato —, e tem um custo real: quem vê
+    a pergunta aparecer à toa aprende a clicar em "Descartar" sem ler, e aí ela não protege na vez em que
+    importa. A pergunta agora aparece quando há o que perder: algum número encontrado, ou algum trecho
+    mascarado à mão. Com o PDF da etapa 7 a conta muda sozinha — achado um número que seja, ela volta.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">"0 números mascarados"</span>
+        Uma pergunta sobre descartar o nada.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">sai direto</span>
+        E um único trecho mascarado à mão já faz a pergunta voltar.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que aconteceu</th></tr>
+  <tr><td><code>programa/painel_anonimizar.py</code></td><td>a conferência do que há a perder, e o painel voltando ao começo depois de descartar</td></tr>
+  <tr><td><code>programa/tela_revisao.py</code></td><td>passou a dizer se há o que perder, além de contar o que se perde</td></tr>
+  <tr><td><code>programa/test_antes_de_descartar.py</code></td><td>um teste que passava pelo motivo errado foi corrigido, e entraram quatro novos: o descarte silencioso com a pergunta na tela, a volta ao módulo, o documento sem número e o trecho mascarado à mão</td></tr>
+  <tr><td><code>mockups/revisoes/21-antes-e-depois.html</code></td><td>novo: esta página</td></tr>
+</table></div>
+
+<h2>O que foi achado e NÃO consertado</h2>
+<ul class="fora-lista">
+  <li>
+    <strong>Fechar a janela, ou trocar de item no menu, com texto de OCR conferido e não salvo continua
+    descartando calado.</strong> É verdade — e é decisão registrada, não descuido: o rascunho aprovado 08,
+    na tabela do estado 11, diz que essas duas saídas perguntam <em>no Anonimizar</em>, e nomeia isso como
+    a diferença que esta spec traz em relação ao Gerar OCR. Mudar o outro módulo seria ampliar o escopo
+    dele dentro de uma revisão, sem passar pela spec 002.
+  </li>
+</ul>
+
+<p class="rodape">
+  Uma lente por rodada. Nesta sessão rodaram cinco: a crítica duas vezes (revisões 18 e 21), a de segredo
+  e dado real, a de critérios de aceite (19) e a de manutenção (20). Continua sem rodar a de
+  <strong>clareza</strong>. Os três consertos desta rodada mudam o que a tela faz em situações que a
+  conferência normal não alcança — a pergunta na tela, a volta pelo menu, o documento sem CPF —, e por
+  isso eles pedem uma segunda olhada sua, curta, no programa aberto.
+</p>
+
+</body>
+</html>

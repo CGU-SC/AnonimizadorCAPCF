@@ -569,6 +569,39 @@ class TelaRevisao(QWidget):
             frase += f" Nenhum número com {_VALIDO.nome} foi liberado."
         return frase
 
+    def tem_o_que_perder(self):
+        """Há algo nesta revisão que valha uma pergunta antes de descartar?
+
+        Nenhum número encontrado e nada mascarado à mão: não há. O texto do
+        documento não se perde - ele continua no arquivo de origem, que o
+        programa nunca altera.
+        """
+        return bool(self._ocorrencias)
+
+    def resumo_do_que_se_perde(self):
+        """O que some se a revisão for descartada, contado por tipo.
+
+        O que a pessoa fez à mão vem separado do que o programa fez sozinho:
+        máscara que o programa refaz em um instante não é perda, e decisão dela
+        - um número liberado, um trecho mascarado à mão - é.
+        """
+        pertence_a = {grupo: regra for grupo, (regra, _, _) in GRUPOS.items()}
+        contas = {grupo: sum(1 for o in self._ocorrencias if pertence_a[grupo](o))
+                  for grupo in GRUPOS}
+        mascarados = contas[VALIDOS] + contas[SUSPEITOS] + contas[A_MAO]
+        frase = (f"{mascarados} números mascarados" if mascarados != 1
+                 else "1 número mascarado")
+        dela = []
+        if contas[LIBERADOS]:
+            dela.append(f"{contas[LIBERADOS]} liberado"
+                        + ("s" if contas[LIBERADOS] > 1 else ""))
+        if contas[A_MAO]:
+            dela.append(f"{contas[A_MAO]} mascarado"
+                        + ("s" if contas[A_MAO] > 1 else "") + " à mão")
+        if dela:
+            frase += f", {_juntar(dela)} por você"
+        return frase
+
     def _em_ordem_no_texto(self):
         return sorted(self._ocorrencias, key=lambda o: o.inicio)
 

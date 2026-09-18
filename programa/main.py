@@ -149,15 +149,34 @@ class JanelaPrincipal(QMainWindow):
         self.setCentralWidget(raiz)
 
     def closeEvent(self, evento):
-        """Antes de fechar, para o que estiver rodando.
+        """Antes de fechar, pergunta o que fecharia trabalho não salvo e para o
+        que estiver rodando.
+
+        Fechar a janela com a revisão do Anonimizar aberta jogava fora tudo o
+        que a pessoa tinha decidido, sem uma palavra (premissa de sair sem
+        salvar, spec 003). Agora a janela fica de pé, a pergunta aparece no
+        painel, e o botão dela diz "Fechar sem salvar" - que é o que a pessoa
+        acabou de pedir.
 
         Fechar a janela no meio de uma leitura fazia o programa estourar em vez
         de fechar limpo, e o Windows mostrava a caixa de "o programa parou de
         funcionar" - que assusta e ainda deixa a dúvida de se o documento foi
         mexido (não foi, nunca é).
         """
+        if self.painel_anonimizar.perguntar_antes_de_descartar(
+                self.close, rotulo_descartar="Fechar sem salvar"):
+            # A pergunta está no painel do Anonimizar: o item do menu vai para
+            # ele, senão a pessoa ouve a pergunta sem ver de onde ela veio.
+            self._ir_para_o_anonimizar()
+            evento.ignore()
+            return
         self.painel_ocr.encerrar()
         super().closeEvent(evento)
+
+    def _ir_para_o_anonimizar(self):
+        for item in self.itens_do_menu:
+            item.setChecked(item is self.menu.botao_anonimizar)
+        self.painel.setCurrentWidget(self.painel_anonimizar)
 
     def _ligar_item_ao_painel(self, botao, painel_do_modulo):
         """Faz o item do menu se marcar e trazer o painel daquele módulo."""
@@ -171,17 +190,38 @@ class JanelaPrincipal(QMainWindow):
 
     def _ao_clicar_no_item(self, botao_clicado, painel_do_modulo):
         # O clique já marcou ou desmarcou o item antes de chegar aqui, então é o
-        # estado novo do botão que diz para onde o painel vai.
-        if botao_clicado.isChecked():
-            # Só um item marcado por vez - regra RN-2 da spec 001.
-            for outro in self.itens_do_menu:
-                if outro is not botao_clicado:
-                    outro.setChecked(False)
-            self.painel.setCurrentWidget(painel_do_modulo)
-        else:
-            # Clicar no item já marcado é o jeito de sair do módulo sem precisar
-            # entrar no outro - regra RN-3 da spec 001.
-            self.painel.setCurrentWidget(self.painel_vazio)
+        # estado novo do botão que diz para onde o painel vai. Clicar no item já
+        # marcado é o jeito de sair do módulo sem entrar no outro (RN-3 da spec
+        # 001), e leva ao painel vazio.
+        destino = (painel_do_modulo if botao_clicado.isChecked()
+                   else self.painel_vazio)
+
+        # Saindo do Anonimizar com revisão não salva, a pergunta vem primeiro, e
+        # o menu volta a marcar o Anonimizar enquanto ela está na tela: item
+        # marcado num módulo e pergunta de outro na tela é o tipo de tela que
+        # ninguém entende (premissa de sair sem salvar, spec 003).
+        if (self.painel.currentWidget() is self.painel_anonimizar
+                and destino is not self.painel_anonimizar):
+            if self.painel_anonimizar.perguntar_antes_de_descartar(
+                    lambda: self._mostrar_modulo(botao_clicado, destino)):
+                self._ir_para_o_anonimizar()
+                return
+
+        self._mostrar_modulo(botao_clicado, destino)
+
+    def _mostrar_modulo(self, botao_clicado, destino):
+        """Marca o item certo no menu e traz o painel dele.
+
+        O destino vem decidido de fora, e não do estado do botão: passando pela
+        pergunta de descartar, o menu volta a marcar o Anonimizar enquanto ela
+        está na tela, e lendo o botão de novo o programa acabava no painel vazio
+        em vez de no módulo que a pessoa tinha pedido.
+        """
+        # Só um item marcado por vez - regra RN-2 da spec 001.
+        for item in self.itens_do_menu:
+            item.setChecked(destino is not self.painel_vazio
+                            and item is botao_clicado)
+        self.painel.setCurrentWidget(destino)
 
 
 def main():
