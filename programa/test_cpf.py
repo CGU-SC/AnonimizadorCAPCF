@@ -4,6 +4,7 @@ Cada teste é um critério de "Encontrar e conferir" ou de "Máscara", com os
 números da própria spec. Os que passam na conta são só de dígitos repetidos, e
 os suspeitos falham na conta mesmo com as letras trocadas de volta (RN-22).
 """
+import ast
 from pathlib import Path
 
 import pytest
@@ -405,8 +406,42 @@ def test_o_modulo_de_ocr_nao_usa_nada_de_cpf():
         assert "passa_na_conta" not in codigo, nome
 
 
-def test_o_motor_do_cpf_nao_fala_com_a_internet():
-    """RN-20: nenhum código do Anonimizar fala com serviço fora da máquina."""
-    codigo = (PROGRAMA / "cpf.py").read_text(encoding="utf-8").lower()
-    for sinal in ("http", "socket", "urllib", "requests"):
-        assert sinal not in codigo, sinal
+def _arquivos_do_anonimizar():
+    """Todo arquivo do módulo, seguindo o que o painel do Anonimizar importa.
+
+    A lista não é escrita à mão de propósito: escrita à mão, ela envelhece no
+    dia em que alguém acrescenta um arquivo ao módulo e esquece de incluí-lo -
+    e o teste continuaria passando sobre um módulo que ele não olha inteiro.
+    """
+    encontrados, a_visitar = set(), ["painel_anonimizar"]
+    while a_visitar:
+        nome = a_visitar.pop()
+        arquivo = PROGRAMA / f"{nome}.py"
+        if nome in encontrados or not arquivo.exists():
+            continue
+        encontrados.add(nome)
+        arvore = ast.parse(arquivo.read_text(encoding="utf-8"))
+        for no in ast.walk(arvore):
+            if isinstance(no, ast.Import):
+                a_visitar += [apelido.name for apelido in no.names]
+            elif isinstance(no, ast.ImportFrom) and no.module and no.level == 0:
+                a_visitar.append(no.module)
+    return sorted(encontrados)
+
+
+def test_o_anonimizar_inteiro_nao_fala_com_a_internet():
+    """RN-20: nenhum código deste módulo fala com serviço fora da máquina.
+
+    Antes da revisão da etapa 5 este teste lia só o `cpf.py`, e o critério de
+    aceite fala do módulo inteiro: uma linha nova em qualquer outro arquivo
+    passaria sem nada acusar.
+    """
+    arquivos = _arquivos_do_anonimizar()
+    # A varredura só vale se ela estiver mesmo pegando o módulo, e não um
+    # arquivo solto: as peças centrais têm que estar na lista.
+    for peca in ("cpf", "tela_revisao", "telas_de_salvar_sem_cpf", "arquivo_md"):
+        assert peca in arquivos, peca
+    for nome in arquivos:
+        codigo = (PROGRAMA / f"{nome}.py").read_text(encoding="utf-8").lower()
+        for sinal in ("http", "socket", "urllib", "requests", "ftplib"):
+            assert sinal not in codigo, f"{nome}.py: {sinal}"

@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import arquivo_md
 import estilo
 
 
@@ -166,44 +167,50 @@ class TelaSalvar(QWidget):
         self.problema.setVisible(True)
 
     def _escolher_pasta(self):
-        atual = Path(self.campo.text())
-        # A janela do Windows começa na pasta do caminho que já está no campo,
-        # e não numa pasta lembrada de outro uso: nada é guardado entre um uso e
-        # outro (RN-22).
-        caminho, _ = QFileDialog.getSaveFileName(
-            self, "Salvar como", str(atual), "Arquivo de texto Markdown (*.md)"
-        )
-        if caminho:
-            self.campo.setText(caminho)
+        escolhido = escolher_onde_salvar(self, self.campo.text())
+        if escolhido:
+            self.campo.setText(escolhido)
 
     def _salvar(self):
-        texto = self.campo.text().strip()
-        if not texto:
+        caminho, problema = arquivo_md.conferir_destino(
+            self.campo.text(), self._pasta_sugerida)
+        if problema == arquivo_md.FALTA_O_CAMINHO:
             self.avisar("Escreva onde o arquivo vai ser salvo.")
             return
-        caminho = Path(texto)
-        # Só um nome, sem pasta - "saida.md" - é o jeito natural de quem quer
-        # trocar só o nome. Sem isto, o arquivo ia parar na pasta de onde o
-        # programa foi aberto: aqui, a raiz do projeto, dentro do repositório;
-        # nas máquinas do núcleo, uma pasta que a pessoa nem sabe qual é. Um
-        # arquivo com os CPFs inteiros, perdido onde ninguém vai procurar. Ele
-        # vai para a pasta do documento, que é onde o programa já sugeria.
-        if not caminho.is_absolute():
-            if self._pasta_sugerida is None:
-                self.avisar("Escreva o caminho completo, com a pasta.")
-                return
-            caminho = self._pasta_sugerida / caminho
-        # Quem apaga o ".md" do nome sem querer ganharia um arquivo que nenhum
-        # programa sabe abrir. Fica a terminação de volta, em vez de reclamar.
-        if caminho.suffix.lower() != ".md":
-            caminho = caminho.with_name(caminho.name + ".md")
-        if not caminho.parent.exists():
+        if problema == arquivo_md.FALTA_A_PASTA:
+            self.avisar("Escreva o caminho completo, com a pasta.")
+            return
+        if problema == arquivo_md.PASTA_NAO_EXISTE:
             self.avisar(
                 "A pasta escolhida não existe. Escolha outra pelo botão "
                 "\"Escolher pasta…\"."
             )
             return
         self._ao_salvar(caminho)
+
+
+def escolher_onde_salvar(tela, caminho_atual):
+    """Abre a janela do Windows e devolve o caminho escolhido, ou "".
+
+    Ela começa na pasta do caminho que já está no campo, e não numa pasta
+    lembrada de outro uso: nada é guardado entre um uso e outro.
+
+    E ela **não** pergunta sobre substituir (achado na conferência da etapa 5 do
+    Anonimizar, 18/09/2026): escolhendo um arquivo que já existe, ela perguntava
+    "deseja substituir?" e, respondido que sim, só devolvia o caminho - nada era
+    gravado. Quem respondeu achava ter mandado salvar, e o programa parecia não
+    fazer nada. A pergunta fica só na tela do programa, que mostra a data do
+    arquivo que está lá.
+
+    Os dois módulos abrem a mesma janela daqui: escrita em cada tela, ela já
+    precisou do mesmo conserto duas vezes no mesmo dia.
+    """
+    caminho, _ = QFileDialog.getSaveFileName(
+        tela, "Escolher onde salvar", caminho_atual,
+        "Arquivo de texto Markdown (*.md)",
+        options=QFileDialog.Option.DontConfirmOverwrite,
+    )
+    return caminho
 
 
 class TelaSobrescrever(QWidget):

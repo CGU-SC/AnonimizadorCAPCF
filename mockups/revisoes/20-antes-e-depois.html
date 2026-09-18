@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 20 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+<h1>Revisão 20 — antes e depois</h1>
+<p class="subtitulo">18/09/2026 — o Anonimizador de CPF pela lente de manutenção: o que ia encarecer as etapas 6, 7 e 8</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: manutenção</div>
+  Esta lente não procura defeito: procura o que vai deixar a <strong>próxima mudança</strong> cara. A trava
+  é dupla — só entra o que tem uma mudança futura nomeada e um custo concreto, e no máximo três por
+  rodada, as mais caras. Nenhum dos três achados era defeito: o programa fazia tudo certo nos três.
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">3</div><div class="contagem-label">achados apresentados</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">3</div><div class="contagem-label">aprovados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">2</div><div class="contagem-label">deixados de fora pelo limite</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">0</div><div class="contagem-label">mudanças no que você vê</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">CLAUDE.md — a decisão de como a etapa 7 começa</div>
+  <div class="explicacao">
+    <strong>O caminho do PDF mora inteiro dentro do painel do "Gerar OCR", e a etapa 7 precisa dele no
+    Anonimizar.</strong> São 1.246 linhas onde vivem a verificação da camada de texto, a escolha do motor,
+    a leitura em segundo plano com progresso e cancelamento, a falha de leitura e a conferência. Copiar
+    isso para o outro painel deixaria duas cópias de umas 600 linhas, que divergem na primeira correção —
+    exatamente o que quase aconteceu hoje, quando a janela do Windows precisou do mesmo conserto nos dois
+    módulos. Nenhuma linha de código mudou aqui: o que mudou foi a decisão ficar escrita, para não ser
+    tomada por omissão quando a etapa 7 começar.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">decidir na hora</span>
+        Com o relógio andando e o impulso de copiar o que já funciona.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">decidido antes</span>
+        A primeira fatia da etapa 7 é extrair o caminho do PDF, e não copiá-lo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/tipos_na_tela.py (novo), tela_revisao.py e lista_de_achados.py</div>
+  <div class="explicacao">
+    <strong>O nome e a cor de cada tipo de número eram escritos em três telas diferentes.</strong> Trocar o
+    nome de um tipo não é hipótese: aconteceu duas vezes em quatro dias — "forma CPF válido" virou "CPF
+    válido" em 16/09, e o "quase CPF" que passa na conta ganhou "válido se corrigido" em 17/09. Cada troca
+    dessas passava por dois ou três arquivos, mais os testes, mais a spec; dois critérios de aceite ficaram
+    quatro dias com o nome velho. O risco real não é o trabalho: é o mesmo número passar a se chamar uma
+    coisa na lista e outra no aviso de antes de gravar — bem na hora em que a pessoa decide se solta um CPF.
+    Agora há um lugar só que diz como cada tipo se chama e de que cor ele é, e as telas leem dele.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">"CPF válido" escrito em 5 lugares</span>
+        E a cor dele, em 4. Trocar o nome era caçar todos.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">escrito em 1</span>
+        Selo, chave de cores, lista, texto e aviso do salvar leem do mesmo lugar.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_md.py, telas_de_salvar.py e telas_de_salvar_sem_cpf.py</div>
+  <div class="explicacao">
+    <strong>As duas telas de salvar repetiam as mesmas quatro conferências do caminho, e a abertura da
+    janela do Windows.</strong> O custo apareceu hoje, na frente de todo mundo: o conserto da janela que
+    não pode mais perguntar "deseja substituir?" precisou ser escrito nos dois módulos. E as duas já tinham
+    divergido sem ninguém decidir — a mesma situação, um caminho sem pasta, tinha frases diferentes em cada
+    tela. Agora a <em>decisão</em> (o caminho está pronto, ou o que está errado nele) mora com quem já
+    cuida de gravar, e a janela do Windows tem um lugar só. Cada tela continua escrevendo a frase dela, com
+    as mesmas palavras de antes.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">Antes</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">2 lugares por regra</span>
+        E um conserto que só chegou ao segundo lugar porque alguém perguntou.
+      </div>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">Depois</div>
+      <div class="lado-corpo">
+        <span class="numero-grande">1 lugar por regra</span>
+        As frases das duas telas continuam exatamente como eram.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que aconteceu</th></tr>
+  <tr><td><code>programa/tipos_na_tela.py</code></td><td>novo: o nome, o plural e a cor de cada tipo de número, num lugar só</td></tr>
+  <tr><td><code>programa/tela_revisao.py</code></td><td>selos, chave de cores, cores do texto e a etiqueta do aviso passaram a ler dessa tabela</td></tr>
+  <tr><td><code>programa/lista_de_achados.py</code></td><td>títulos das seções, nomes e cores dos itens, idem</td></tr>
+  <tr><td><code>programa/arquivo_md.py</code></td><td>ganhou a conferência do caminho digitado, que era repetida nas duas telas</td></tr>
+  <tr><td><code>programa/telas_de_salvar.py</code></td><td>a abertura da janela do Windows virou uma função que os dois módulos usam</td></tr>
+  <tr><td><code>programa/telas_de_salvar_sem_cpf.py</code></td><td>passou a usar as duas peças comuns, mantendo as frases dela</td></tr>
+  <tr><td><code>CLAUDE.md</code></td><td>a decisão sobre o começo da etapa 7; e a linha da máscara, que ainda falava em asterisco, passou a dizer X</td></tr>
+  <tr><td><code>mockups/revisoes/20-antes-e-depois.html</code></td><td>novo: esta página</td></tr>
+</table></div>
+
+<h2>O que ficou de fora</h2>
+<p class="intro-secao">
+  A lente admite três por rodada, as mais caras. Duas menores ficaram para outra vez, e ficam nomeadas
+  aqui para não sumirem:
+</p>
+<ul class="fora-lista">
+  <li>
+    <strong>Três telas têm, cada uma, a própria função de montar botão</strong> (<code>telas_de_salvar</code>,
+    <code>telas_de_salvar_sem_cpf</code> e <code>telas_do_motor</code>). Encarece pouco: mudar o desenho do
+    botão já é feito num lugar só, no sistema de design.
+  </li>
+  <li>
+    <strong>Os arquivos de teste repetem o preparo do painel</strong> (abrir a massa, chegar na revisão).
+    Encarece pouco, e mexer em teste que está passando tem o seu próprio risco.
+  </li>
+</ul>
+
+<p class="rodape">
+  Uma lente por rodada. Nesta sessão rodaram quatro: a crítica (revisão 18), a de segredo e dado real (nada
+  encontrado), a de critérios de aceite (revisão 19) e esta. Continua sem rodar a de <strong>clareza</strong>
+  — o trecho que funciona mas que ninguém lê depois — e a de <strong>conferir na tela</strong>, que olharia
+  o conjunto em vez de etapa por etapa. Nada do que mudou nesta rodada aparece na tela; o que prova isso
+  são os 277 testes, que continuam passando sem nenhum deles ter sido alterado.
+</p>
+
+</body>
+</html>
