@@ -84,7 +84,7 @@ class TelaSaida(QWidget):
         layout.addLayout(rodape)
 
     def mostrar(self, nome_do_documento, paginas, corrigidas):
-        self.legenda.setText(_resumo(nome_do_documento, paginas, corrigidas))
+        self.legenda.setText(resumo_do_documento(nome_do_documento, paginas, corrigidas))
 
 
 class TelaSalvar(QWidget):
@@ -154,7 +154,7 @@ class TelaSalvar(QWidget):
         layout.addLayout(acoes)
 
     def mostrar(self, caminho, nome_do_documento, paginas, corrigidas):
-        self.legenda.setText(_resumo(nome_do_documento, paginas, corrigidas))
+        self.legenda.setText(resumo_do_documento(nome_do_documento, paginas, corrigidas))
         self.campo.setText(str(caminho))
         # A pasta sugerida fica guardada para o caso de a pessoa digitar só um
         # nome, sem pasta nenhuma - ver _salvar.
@@ -323,7 +323,11 @@ class TelaDescartar(QWidget):
                                   estilo.ESPACO_4, estilo.ESPACO_3)
         dentro.setSpacing(estilo.ESPACO_2)
 
-        titulo = QLabel("O texto deste documento ainda não foi salvo")
+        # O título e o rótulo do botão mudam conforme quem pergunta: o Gerar OCR
+        # fala do texto conferido, o Anonimizar fala da revisão, e fechando a
+        # janela o botão diz "Fechar sem salvar". A caixa é a mesma nos três.
+        self.titulo = QLabel()
+        titulo = self.titulo
         titulo.setStyleSheet(
             f"font-size: {estilo.TEXTO_BASE}px; font-weight: 600;"
             f"color: {estilo.COR_TEXTO}; border: none;"
@@ -347,20 +351,25 @@ class TelaDescartar(QWidget):
         acoes.addStretch()
         # Como na pergunta de sobrescrever: o caminho que não destrói nada é o
         # que fica em destaque, e mais fácil de clicar sem pensar.
-        acoes.addWidget(_botao("Descartar e seguir", ao_descartar, principal=False))
+        self.botao_descartar = _botao("Descartar e seguir", ao_descartar,
+                                      principal=False)
+        acoes.addWidget(self.botao_descartar)
         acoes.addWidget(_botao("Voltar e salvar", ao_voltar, principal=True))
         acoes.addStretch()
         layout.addLayout(acoes)
 
-    def mostrar(self, nome_do_documento, paginas, corrigidas):
-        # Dizer quantas páginas foram corrigidas é o que deixa decidir num
-        # olhar: nenhuma correção perde pouco, trinta correções perdem uma tarde.
-        self.explicacao.setText(
-            f"{_resumo(nome_do_documento, paginas, corrigidas)}.\n\n"
-            "Se você seguir, o texto e as correções são descartados, e isso não "
-            "se desfaz. Para ter o texto de volta, seria preciso ler o documento "
-            "de novo e refazer as correções."
-        )
+    def mostrar(self, titulo, explicacao, rotulo_descartar="Descartar e seguir"):
+        """A pergunta, com as palavras de quem está perguntando.
+
+        Os dois módulos usam esta caixa: o Gerar OCR fala do texto conferido, o
+        Anonimizar fala da revisão, e quem fecha a janela vê "Fechar sem salvar"
+        no lugar de "Descartar e seguir". O que se perde é sempre dito com
+        número, porque é isso que deixa decidir num olhar: nada mexido perde
+        pouco, uma tarde de trabalho perde uma tarde.
+        """
+        self.titulo.setText(titulo)
+        self.explicacao.setText(explicacao)
+        self.botao_descartar.setText(rotulo_descartar)
         self.explicacao.setMinimumHeight(
             self.explicacao.heightForWidth(self.LARGURA_DO_TEXTO)
         )
@@ -417,7 +426,7 @@ class TelaGravado(QWidget):
     def mostrar(self, caminho, paginas, corrigidas):
         self._caminho = Path(caminho)
         self.caminho.setText(str(self._caminho))
-        self.legenda.setText(_resumo(None, paginas, corrigidas))
+        self.legenda.setText(resumo_do_documento(None, paginas, corrigidas))
 
     def _abrir_a_pasta(self):
         if self._caminho is not None:
@@ -426,7 +435,7 @@ class TelaGravado(QWidget):
 
 # --------------------------------------------------------------- pedaços
 
-def _resumo(nome_do_documento, paginas, corrigidas):
+def resumo_do_documento(nome_do_documento, paginas, corrigidas):
     partes = []
     if nome_do_documento:
         partes.append(nome_do_documento)

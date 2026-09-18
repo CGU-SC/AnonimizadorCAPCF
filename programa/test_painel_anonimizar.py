@@ -176,9 +176,14 @@ def test_arquivo_de_outro_tipo_nao_promete_etapa_seguinte(aplicacao, tmp_path):
 
 
 def test_sair_da_revisao_solta_o_texto(aplicacao):
-    """Sem isto, o texto do documento anterior ficaria guardado na tela."""
+    """Sem isto, o texto do documento anterior ficaria guardado na tela.
+
+    Desde a etapa 6, sair pergunta antes: o texto só é solto depois de a pessoa
+    dizer que pode descartar.
+    """
     painel = _painel_com("10-prestacao-com-cpf.md", aplicacao)
     painel.voltar_para_escolher()
+    painel.tela_descartar.botao_descartar.click()
     assert painel.tela_revisao.texto_mascarado() == ""
 
 

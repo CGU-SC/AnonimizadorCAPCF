@@ -33,7 +33,7 @@ import cpf
 import estilo
 from arquivo_texto import ArquivoNaoServe, ler, quebra_de_linha
 from tela_revisao import TelaRevisao
-from telas_de_salvar import TelaSobrescrever
+from telas_de_salvar import TelaDescartar, TelaSobrescrever
 from telas_de_salvar_sem_cpf import TelaGravadoSemCpf, TelaSalvarSemCpf
 
 EXTENSOES_DE_TEXTO = (".md", ".txt")
@@ -81,6 +81,12 @@ class PainelAnonimizar(QWidget):
         self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
         # O destino que espera a resposta da pergunta de escrever por cima.
         self._destino_pendente = None
+        # Esta revisão já virou arquivo? Salva, não há o que perder ao sair.
+        self._salvo = False
+        # O que fazer depois de a pessoa responder à pergunta de descartar, e
+        # para onde voltar se ela desistir.
+        self._acao_pendente = None
+        self._tela_antes_da_pergunta = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(estilo.ESPACO_4, estilo.ESPACO_4,
@@ -104,9 +110,16 @@ class PainelAnonimizar(QWidget):
         )
         self.tela_gravado = TelaGravadoSemCpf(
             ao_anonimizar_outro=self.voltar_para_escolher)
+        # A mesma caixa do "Gerar OCR", com as palavras desta tela (RN-1 da
+        # spec 002, e a premissa de sair sem salvar da spec 003).
+        self.tela_descartar = TelaDescartar(
+            ao_descartar=self._descartar_e_seguir,
+            ao_voltar=self._voltar_de_onde_estava,
+        )
         self.tela_erro = _TelaErro(ao_escolher_outro=self.voltar_para_escolher)
         for tela in (self.tela_escolher, self.tela_revisao, self.tela_salvar,
-                     self.tela_sobrescrever, self.tela_gravado, self.tela_erro):
+                     self.tela_sobrescrever, self.tela_gravado,
+                     self.tela_descartar, self.tela_erro):
             self.telas.addWidget(tela)
 
         layout.addWidget(self.telas)
@@ -214,7 +227,14 @@ class PainelAnonimizar(QWidget):
             self.receber_arquivo(Path(caminho))
 
     def receber_arquivo(self, caminho):
-        """Abre o arquivo escolhido e leva o texto dele para a revisão."""
+        """Abre o arquivo escolhido e leva o texto dele para a revisão.
+
+        Havendo revisão aberta e não salva, a pergunta vem antes: o arquivo novo
+        só é aberto depois de a pessoa dizer que pode jogar fora o anterior.
+        """
+        if self.perguntar_antes_de_descartar(
+                lambda: self.receber_arquivo(caminho)):
+            return
         if caminho.suffix.lower() not in EXTENSOES_DE_TEXTO:
             aviso = (AINDA_SEM_PDF if caminho.suffix.lower() == ".pdf"
                      else OUTRO_TIPO)
@@ -235,6 +255,7 @@ class PainelAnonimizar(QWidget):
             return
 
         self._origem = caminho
+        self._salvo = False
         # A quebra de linha do documento fica guardada agora, com o arquivo em
         # mãos: o arquivo gravado sai com a mesma, e não com a do programa.
         self._quebra_da_origem = quebra_de_linha(caminho)
@@ -242,10 +263,17 @@ class PainelAnonimizar(QWidget):
         self.telas.setCurrentWidget(self.tela_revisao)
 
     def voltar_para_escolher(self):
+        """Volta à escolha do arquivo - perguntando antes, quando há o que perder."""
+        if self.perguntar_antes_de_descartar(self._voltar_para_escolher_agora):
+            return
+        self._voltar_para_escolher_agora()
+
+    def _voltar_para_escolher_agora(self):
         self.tela_revisao.esquecer()
         self._origem = None
         self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
         self._destino_pendente = None
+        self._salvo = False
         self.telas.setCurrentWidget(self.tela_escolher)
 
     # --------------------------------------------------------------- salvar
@@ -312,6 +340,7 @@ class PainelAnonimizar(QWidget):
             self.tela_salvar.avisar(
                 TITULO_DO_ERRO, ERRO_AO_GRAVAR.format(pasta=destino.parent))
             return
+        self._salvo = True
         self.tela_gravado.mostrar(
             destino,
             self._origem.name,
@@ -325,6 +354,88 @@ class PainelAnonimizar(QWidget):
     def _mostrar_erro(self, motivo):
         self.tela_erro.mostrar(motivo)
         self.telas.setCurrentWidget(self.tela_erro)
+
+    # ------------------------------------------- antes de descartar a revisão
+
+    TITULO_DA_PERGUNTA = "A revisão deste documento ainda não foi salva"
+    O_QUE_SE_PERDE = (
+        "{resumo}.\n\nSe você seguir, a revisão é descartada, e isso não se "
+        "desfaz. O documento de origem continua intacto, mas, para ter a "
+        "revisão de volta, seria preciso abri-lo de novo e refazer o que você "
+        "decidiu."
+    )
+
+    def tem_revisao_nao_salva(self):
+        """Há trabalho de revisão que se perderia agora?
+
+        A conferência olha o que existe - uma revisão com texto, ainda não
+        gravada -, e não em que tela a pessoa está. Olhando a tela, a proteção
+        sumia no pior momento: com a própria pergunta na tela, fechar a janela
+        ou soltar outro arquivo descartava tudo em silêncio, porque a tela da
+        pergunta não era nenhuma das que contavam (revisão da etapa 6).
+
+        Salva, não há o que perder; descartada, também não - nos dois casos o
+        texto da revisão já saiu de cena.
+
+        Num documento em que nada foi encontrado e nada foi mascarado à mão
+        também não há o que perder: abri-lo de novo é imediato. Perguntar ali
+        seria a pergunta que aparece sem motivo, e é ela que ensina a clicar em
+        "descartar" sem ler - aí, na vez em que houver o que perder, ninguém lê
+        (revisão da etapa 6). Com o PDF da etapa 7 a conta muda sozinha: achado
+        um número que seja, a pergunta volta a aparecer.
+        """
+        if self._salvo or not self.tela_revisao.texto_mascarado():
+            return False
+        return bool(self.tela_revisao.tem_o_que_perder())
+
+    def perguntar_antes_de_descartar(self, acao,
+                                     rotulo_descartar="Descartar e seguir"):
+        """Segura a ação e pergunta, quando ela jogaria fora a revisão.
+
+        Devolve se perguntou. Sem nada a perder não pergunta nada: pergunta que
+        aparece sem motivo ensina a clicar em "sim" sem ler, e aí ela não
+        protege na vez em que importa.
+
+        Quem fecha a janela vê "Fechar sem salvar" no lugar de "Descartar e
+        seguir": é o mesmo risco, dito com a palavra do que a pessoa pediu.
+        """
+        if not self.tem_revisao_nao_salva():
+            return False
+        self._acao_pendente = acao
+        # Com a pergunta já na tela - outro arquivo solto por cima dela -, o
+        # lugar para onde voltar continua sendo o de antes. Guardar a própria
+        # pergunta deixaria "Voltar e salvar" sem sair do lugar, e a única saída
+        # seria a que joga fora o trabalho (lição do "Gerar OCR").
+        if self.telas.currentWidget() is not self.tela_descartar:
+            self._tela_antes_da_pergunta = self.telas.currentWidget()
+        self.tela_descartar.mostrar(
+            self.TITULO_DA_PERGUNTA,
+            self.O_QUE_SE_PERDE.format(
+                resumo=f"{self._origem.name} — "
+                       f"{self.tela_revisao.resumo_do_que_se_perde()}"),
+            rotulo_descartar,
+        )
+        self.telas.setCurrentWidget(self.tela_descartar)
+        return True
+
+    def _descartar_e_seguir(self):
+        acao = self._acao_pendente
+        self._acao_pendente = None
+        # A revisão sai de cena antes de a ação rodar, e o painel volta ao
+        # começo. Duas razões: a ação - abrir outro arquivo, trocar de módulo,
+        # fechar a janela - não esbarra de novo na mesma pergunta; e quem sai
+        # para outro módulo e volta encontra a tela de escolher o arquivo, e
+        # não a pergunta velha, que já não leva a lugar nenhum (revisão da
+        # etapa 6).
+        self._voltar_para_escolher_agora()
+        if acao is not None:
+            acao()
+
+    def _voltar_de_onde_estava(self):
+        """Volta exatamente para a tela em que a pessoa estava, com tudo intacto."""
+        self._acao_pendente = None
+        self.telas.setCurrentWidget(
+            self._tela_antes_da_pergunta or self.tela_revisao)
 
     # ------------------------------------------------------ arrastar e soltar
 

@@ -45,6 +45,7 @@ from telas_de_salvar import (
     TelaSaida,
     TelaSalvar,
     TelaSobrescrever,
+    resumo_do_documento,
 )
 from telas_do_motor import AvisoDoMotor, TelaSemMotor
 
@@ -647,7 +648,15 @@ class PainelOcr(QWidget):
         # texto fora - exatamente a perda que esta pergunta existe para evitar.
         if self.telas.currentWidget() is not self.tela_descartar:
             self._tela_antes_da_pergunta = self.telas.currentWidget()
-        self.tela_descartar.mostrar(*self._resumo_do_que_foi_conferido())
+        # As mesmas palavras de sempre: a caixa passou a servir aos dois
+        # módulos, e quem escreve a frase agora é quem pergunta.
+        self.tela_descartar.mostrar(
+            "O texto deste documento ainda não foi salvo",
+            f"{resumo_do_documento(*self._resumo_do_que_foi_conferido())}.\n\n"
+            "Se você seguir, o texto e as correções são descartados, e isso não "
+            "se desfaz. Para ter o texto de volta, seria preciso ler o documento "
+            "de novo e refazer as correções.",
+        )
         self.telas.setCurrentWidget(self.tela_descartar)
         return True
 
