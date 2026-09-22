@@ -56,6 +56,25 @@ arquivo aberto no Bloco de Notas: o `X` é a única que fica igual nas duas vis�
 nenhum sinal que não estava nele (RN-12). Os exemplos deste documento foram
 reescritos com a máscara nova, menos o registro da segunda emenda, que fica como
 foi discutido na época.
+**Oitava emenda:** aprovada em 2026-09-18 — as duas decisões que faltavam para
+as etapas 7 e 8 poderem ser construídas sem adivinhação. **(a) No Anonimizar, o
+PDF segue o desenho do rascunho 08, sem o cartão do Gerar OCR no meio**: o PDF
+sem texto por dentro abre a tela "Este documento precisa ser lido", com o nome,
+as páginas e a escolha do motor logo acima do botão de ler (estado 3a); o PDF com
+texto por dentro vai direto para a tela de decidir, que já mostra nome, páginas,
+letras e as primeiras linhas (estado 3b); e "Ignorar e ler as imagens" leva à
+mesma tela de ler, dizendo que o texto de dentro será ignorado (estado 3c). Nos
+dois caminhos o tamanho do documento aparece antes de qualquer leitura. *Parte
+corrigida em 21/09/2026:* a primeira versão pedia o cartão do Gerar OCR também
+aqui, e foi decidida sem reler os estados 3a e 3b do rascunho aprovado, que já
+respondiam a pergunta - e com um clique a menos. **(b) Depois do "Seguir para
+Anonimizar", o Gerar OCR fica
+exatamente como estava**: o texto conferido continua na tela de escolher a saída,
+e voltando pelo menu dá para salvar o texto como está ou seguir de novo. Um
+clique por engano não joga fora uma leitura de PDF, que custa minutos — e é
+justamente o que a pergunta antes de descartar existe para proteger. Um segundo
+"Seguir para Anonimizar", com revisão aberta e não salva do outro lado, passa por
+essa pergunta.
 **Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
 **Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
 contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
@@ -218,21 +237,25 @@ apareceram ao escrever esta spec (marcadas com *nova*).
 2. O painel mostra a área para escolher o arquivo, dizendo que aceita PDF,
    `.md` e `.txt`. A escolha do motor não aparece aqui.
 3. Ela escolhe um PDF.
-4. O documento segue o caminho da spec 002: o programa confere se há camada de
-   texto, a pessoa decide sobre ela quando há, a leitura roda com contagem de
+4. O programa confere o documento. Sem texto por dentro, abre a tela "Este
+   documento precisa ser lido", com o nome, as páginas e a escolha do motor
+   acima do botão de ler. Com texto por dentro, vai direto para a tela de
+   decidir, que já mostra nome, páginas, letras e as primeiras linhas (oitava
+   emenda, rascunho 08).
+5. O documento segue o caminho da spec 002: a leitura roda com contagem de
    páginas e cancelar, e abre a tela de conferência. A única diferença é o
    motor: quando o PDF vai ser lido como imagem, a escolha dele aparece nessa
    hora, antes de ler, com "Tesseract (nesta máquina)" marcado.
-5. Ela confere, corrige o que precisar e clica em "conferido".
-6. **O programa vai direto para a revisão.** A escolha entre "salvar o texto
+6. Ela confere, corrige o que precisar e clica em "conferido".
+7. **O programa vai direto para a revisão.** A escolha entre "salvar o texto
    como está" e "seguir para o Anonimizar" não aparece.
-7. O programa procura os CPFs, confere cada um pela conta, mascara todos e abre
+8. O programa procura os CPFs, confere cada um pela conta, mascara todos e abre
    a revisão: o texto mascarado, com cada troca destacada, e a lista de
    suspeitos ao lado.
-8. Ela passa o olho no texto e na lista.
-9. Ela clica em salvar. O caminho aparece preenchido (a pasta do PDF, o nome
-   dele com `- sem CPF.md`) e pode ser trocado.
-10. Ela confirma. O arquivo é gravado, e a tela diz onde, lembra que o PDF de
+9. Ela passa o olho no texto e na lista.
+10. Ela clica em salvar. O caminho aparece preenchido (a pasta do PDF, o nome
+    dele com `- sem CPF.md`) e pode ser trocado.
+11. Ela confirma. O arquivo é gravado, e a tela diz onde, lembra que o PDF de
     origem continua na pasta com os CPFs inteiros, e traz o botão de abrir a
     pasta e o de anonimizar outro documento.
 
@@ -250,7 +273,11 @@ apareceram ao escrever esta spec (marcadas com *nova*).
     Anonimizar".
 1b. O menu passa a marcar "Anonimizar", e o texto conferido chega à revisão por
     dentro do programa (passo 7), sem arquivo no meio.
-1c. O caminho sugerido no passo 9 usa a pasta e o nome do PDF que foi lido.
+1c. O caminho sugerido ao salvar usa a pasta e o nome do PDF que foi lido.
+1d. O "Gerar OCR" fica como estava: o texto conferido continua na tela de
+    escolher a saída, e voltando pelo menu dá para salvar o texto como está ou
+    seguir de novo — e o segundo "Seguir", com a revisão aberta e não salva,
+    passa pela pergunta antes de descartar (oitava emenda).
 
 ### Caminho torto — um suspeito que não é CPF
 
@@ -429,7 +456,8 @@ aprovação própria, antes da construção.
   primeira tela (terceira emenda).
 - RN-16: **O botão "Seguir para Anonimizar"** do "Gerar OCR" funciona: leva o
   texto conferido para a revisão por dentro do programa, sem gravar arquivo, e
-  marca "Anonimizar" no menu.
+  marca "Anonimizar" no menu. O "Gerar OCR" **fica como estava**, com o texto
+  conferido na tela de escolher a saída (oitava emenda).
 - RN-17: **O aviso da tela de salvar do "Gerar OCR"** continua dizendo que o
   arquivo sai com os CPFs inteiros, e deixa de dizer que o Anonimizar "ainda
   vai ser construído": passa a dizer que, para mascarar, o caminho é "Seguir
@@ -561,6 +589,11 @@ aprovação própria, antes da construção.
 - Dado um PDF sem camada de texto, quando a pessoa o escolhe no "Anonimizar",
   então ele passa pela leitura e pela conferência, e depois de "conferido" vai
   **direto para a revisão**, sem aparecer a opção "salvar o texto como está".
+- Dado um PDF sem texto por dentro escolhido no "Anonimizar", então antes de
+  qualquer leitura aparece a tela "Este documento precisa ser lido", com o nome,
+  o número de páginas e a escolha do motor acima do botão de ler. Dado um PDF com
+  texto por dentro, então a tela seguinte é a de decidir sobre o texto, sem
+  nenhuma tela no meio (oitava emenda, rascunho 08).
 - Dado um `.md` e um `.txt`, quando a pessoa escolhe um deles no "Anonimizar",
   então a revisão abre sem passar por leitura nem conferência.
 - Dado um `.txt` com acentos, gravado nos dois jeitos do Bloco de Notas, quando
@@ -571,6 +604,10 @@ aprovação própria, antes da construção.
 - Dado que a pessoa está na escolha da saída do "Gerar OCR", quando ela clica em
   "Seguir para Anonimizar", então o menu passa a marcar "Anonimizar" e a
   revisão abre com o texto conferido, sem que nenhum arquivo tenha sido gravado.
+- Dado que ela seguiu para o Anonimizar, quando volta ao "Gerar OCR" pelo menu,
+  então o texto conferido continua lá, na escolha da saída, e dá para salvar o
+  texto como está ou seguir de novo; e o segundo "Seguir", com a revisão aberta
+  e não salva, passa pela pergunta antes de descartar (oitava emenda).
 - Dado que a pessoa está lendo um PDF pelo "Anonimizar", então o item marcado no
   menu é "Anonimizar".
 - Dado que a pessoa cancela a leitura de um PDF pelo "Anonimizar", então ela
