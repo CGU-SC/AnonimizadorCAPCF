@@ -345,8 +345,7 @@ class PainelAnonimizar(QWidget):
         # A quebra de linha do documento fica guardada agora, com o arquivo em
         # mãos: o arquivo gravado sai com a mesma, e não com a do programa.
         self._quebra_da_origem = quebra_de_linha(caminho)
-        self.tela_revisao.mostrar(caminho.name, texto, cpf.procurar(texto))
-        self.telas.setCurrentWidget(self.tela_revisao)
+        self._abrir_revisao(texto)
 
     def voltar_para_escolher(self):
         """Volta à escolha do arquivo - perguntando antes, quando há o que perder."""
@@ -481,11 +480,44 @@ class PainelAnonimizar(QWidget):
         para o Anonimizar": quem entrou por este módulo já disse o que quer, e
         oferecer o arquivo com os CPFs inteiros seria oferecer o contrário.
         """
-        paginas = self.pdf.texto_conferido()
         self._conferindo = False
         # As páginas viram um texto só, separadas por linha em branco - o mesmo
         # arranjo com que elas vão para o arquivo (RN-12).
-        texto = arquivo_md.montar_conteudo(paginas)
+        self._abrir_revisao(arquivo_md.montar_conteudo(self.pdf.texto_conferido()))
+
+    def receber_texto_conferido(self, caminho, paginas):
+        """O texto conferido no Gerar OCR chega para ser revisado (RN-16).
+
+        Chega por dentro do programa, sem arquivo no meio. Havendo revisão
+        aberta e não salva - ou um PDF no meio do caminho aqui -, a pergunta
+        antes de descartar vem primeiro: é outro documento chegando.
+        """
+        # Quem vem do Gerar OCR pediu uma coisa e pode ouvir falar de outra: a
+        # pergunta é sobre o documento que já estava aqui. A linha a mais diz
+        # onde ficou o texto que ela mandou seguir (revisão da etapa 8).
+        if self.perguntar_antes_de_descartar(
+                lambda: self.receber_texto_conferido(caminho, paginas),
+                incluir_conferencia=True,
+                lembrete=("O texto que você mandou seguir continua no Gerar "
+                          "OCR, esperando.")):
+            return
+        self.faixa_do_topo.esconder()
+        self.pdf.abandonar_leitura()
+        self._conferindo = False
+        self._origem = Path(caminho)
+        self._salvo = False
+        # O texto veio de um PDF: a quebra de linha do arquivo gravado é a
+        # simples, e não tem de onde ser herdada.
+        self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
+        self._abrir_revisao(arquivo_md.montar_conteudo(paginas))
+
+    def _abrir_revisao(self, texto):
+        """O único jeito de abrir a revisão, venha o texto de onde vier.
+
+        Os três caminhos terminam aqui - o arquivo de texto, o PDF lido neste
+        módulo e o texto que chega do "Gerar OCR" -, para que um passo novo ao
+        abrir a revisão nunca entre em dois deles e esqueça o terceiro.
+        """
         self.tela_revisao.mostrar(self._origem.name, texto, cpf.procurar(texto))
         self.telas.setCurrentWidget(self.tela_revisao)
 
@@ -554,32 +586,33 @@ class PainelAnonimizar(QWidget):
 
     def perguntar_antes_de_descartar(self, acao,
                                      rotulo_descartar="Descartar e seguir",
-                                     incluir_conferencia=False):
-        """Segura a ação e pergunta, quando ela jogaria fora a revisão.
+                                     incluir_conferencia=False, lembrete=None):
+        """Segura a ação e pergunta, quando ela jogaria fora trabalho.
 
-        Devolve se perguntou. Sem nada a perder não pergunta nada: pergunta que
-        aparece sem motivo ensina a clicar em "sim" sem ler, e aí ela não
-        protege na vez em que importa.
+        Devolve se perguntou. São duas perguntas, e a ordem aqui é a ordem em
+        que elas aparecem na vida: primeiro a da revisão, que é o caso comum;
+        depois a da conferência de um PDF, que só vale para quem está abrindo
+        outro documento; e, não havendo o que perder, não se pergunta nada -
+        pergunta que aparece sem motivo ensina a clicar em "sim" sem ler, e aí
+        ela não protege na vez em que importa.
+
+        `incluir_conferencia` separa as duas situações da tabela do rascunho 08
+        (estado 11): "anonimizar outro documento" e arrastar outro arquivo
+        perguntam durante a conferência; trocar de item no menu e fechar a
+        janela, não - ali nada se perde, e voltando a conferência está como
+        estava.
 
         Quem fecha a janela vê "Fechar sem salvar" no lugar de "Descartar e
         seguir": é o mesmo risco, dito com a palavra do que a pessoa pediu.
         """
-        # Durante a conferência de um PDF, "anonimizar outro documento" e
-        # arrastar outro arquivo perguntam com as palavras do Gerar OCR, nas
-        # mesmas condições. O menu e o fechar da janela não: trocando de item,
-        # nada se perde - voltando, a conferência está como estava (rascunho
-        # 08, tabela do estado 11).
-        if not self.tem_revisao_nao_salva():
-            if not (incluir_conferencia and self._ha_conferencia_aberta()):
-                return False
-            return self._perguntar_pela_conferencia(acao)
-        self._acao_pendente = acao
-        # Com a pergunta já na tela - outro arquivo solto por cima dela -, o
-        # lugar para onde voltar continua sendo o de antes. Guardar a própria
-        # pergunta deixaria "Voltar e salvar" sem sair do lugar, e a única saída
-        # seria a que joga fora o trabalho (lição do "Gerar OCR").
-        if self.telas.currentWidget() is not self.tela_descartar:
-            self._tela_antes_da_pergunta = self.telas.currentWidget()
+        if self.tem_revisao_nao_salva():
+            return self._perguntar_pela_revisao(acao, rotulo_descartar)
+        if incluir_conferencia and self._ha_conferencia_aberta():
+            return self._perguntar_pela_conferencia(acao, lembrete)
+        return False
+
+    def _perguntar_pela_revisao(self, acao, rotulo_descartar):
+        self._guardar_de_onde_veio(acao)
         self.tela_descartar.mostrar(
             self.TITULO_DA_PERGUNTA,
             self.O_QUE_SE_PERDE.format(
@@ -590,10 +623,8 @@ class PainelAnonimizar(QWidget):
         self.telas.setCurrentWidget(self.tela_descartar)
         return True
 
-    def _perguntar_pela_conferencia(self, acao):
-        self._acao_pendente = acao
-        if self.telas.currentWidget() is not self.tela_descartar:
-            self._tela_antes_da_pergunta = self.telas.currentWidget()
+    def _perguntar_pela_conferencia(self, acao, lembrete=None):
+        self._guardar_de_onde_veio(acao)
         # As mesmas palavras do Gerar OCR, nas mesmas condições (rascunho 08,
         # tabela do estado 11): é o mesmo trabalho em risco.
         resumo = resumo_do_documento(
@@ -604,10 +635,23 @@ class PainelAnonimizar(QWidget):
             f"{resumo}.\n\n"
             "Se você seguir, o texto e as correções são descartados, e isso não "
             "se desfaz. Para ter o texto de volta, seria preciso ler o documento "
-            "de novo e refazer as correções.",
+            "de novo e refazer as correções."
+            + (f"\n\n{lembrete}" if lembrete else ""),
         )
         self.telas.setCurrentWidget(self.tela_descartar)
         return True
+
+    def _guardar_de_onde_veio(self, acao):
+        """Guarda o que fazer depois, e a tela para onde o "Voltar" devolve.
+
+        Com a pergunta já na tela - outro arquivo solto por cima dela -, o lugar
+        para onde voltar continua sendo o de antes. Guardando a própria pergunta,
+        o "Voltar e salvar" ficava sem sair do lugar, e a única saída que
+        funcionava era a que joga o trabalho fora (lição do "Gerar OCR").
+        """
+        self._acao_pendente = acao
+        if self.telas.currentWidget() is not self.tela_descartar:
+            self._tela_antes_da_pergunta = self.telas.currentWidget()
 
     def _descartar_e_seguir(self):
         acao = self._acao_pendente

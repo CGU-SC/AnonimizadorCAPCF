@@ -30,7 +30,8 @@ import estilo
 class TelaSaida(QWidget):
     """As duas saídas do texto conferido, lado a lado."""
 
-    def __init__(self, ao_salvar, ao_voltar, ao_processar_outro):
+    def __init__(self, ao_salvar, ao_voltar, ao_processar_outro,
+                 ao_anonimizar=None):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -44,32 +45,38 @@ class TelaSaida(QWidget):
         cartoes = QHBoxLayout()
         cartoes.setSpacing(estilo.ESPACO_4)
 
+        # O Anonimizar vem à esquerda, com o botão em destaque, e o salvar à
+        # direita, sem destaque (rascunho 08, estado 4): o caminho que não
+        # expõe nada é o mais fácil de clicar, como em todo o programa.
+        self.botao_anonimizar = QPushButton("Seguir para Anonimizar")
+        self.botao_anonimizar.setCursor(Qt.PointingHandCursor)
+        self.botao_anonimizar.setStyleSheet(estilo.estilo_botao(principal=True))
+        if ao_anonimizar is not None:
+            # O clique do Qt manda um argumento junto; sem o lambda, ele cairia
+            # no primeiro parâmetro de quem for chamado (lição da etapa 5).
+            self.botao_anonimizar.clicked.connect(lambda _=False: ao_anonimizar())
+        else:
+            self.botao_anonimizar.setEnabled(False)
+        cartoes.addWidget(_cartao_de_saida(
+            "🔒",
+            "Seguir para o Anonimizar",
+            "Leva este texto direto para a revisão, que mascara os CPFs — sem "
+            "passar por arquivo nenhum.",
+            self.botao_anonimizar,
+        ))
+
         self.botao_salvar = QPushButton("Escolher onde salvar")
         self.botao_salvar.setCursor(Qt.PointingHandCursor)
-        self.botao_salvar.setStyleSheet(estilo.estilo_botao(principal=True))
+        self.botao_salvar.setStyleSheet(estilo.estilo_botao(principal=False))
         self.botao_salvar.clicked.connect(ao_salvar)
+        # "Com os CPFs inteiros" fica escrito no próprio cartão: é a diferença
+        # entre as duas saídas, e ela não pode depender de a pessoa lembrar.
         cartoes.addWidget(_cartao_de_saida(
             "💾",
             "Salvar o texto como está",
             "Gera um arquivo .md na sua máquina, com o texto do jeito que você "
-            "deixou.",
+            "deixou — com os CPFs inteiros.",
             self.botao_salvar,
-        ))
-
-        # O botão do módulo seguinte aparece apagado, e não some: é assim que
-        # quem usa descobre que essa saída existe e está a caminho, em vez de
-        # achar que o programa só sabe fazer uma coisa. Sem código nenhum por
-        # trás - o módulo 3 ainda não existe.
-        self.botao_anonimizar = QPushButton("Ainda não existe")
-        self.botao_anonimizar.setStyleSheet(estilo.estilo_botao(principal=False))
-        self.botao_anonimizar.setEnabled(False)
-        cartoes.addWidget(_cartao_de_saida(
-            "🔒",
-            "Seguir para Anonimizar",
-            "Levaria este texto direto para o módulo que mascara os CPFs, sem "
-            "passar por arquivo nenhum. Esse módulo ainda vai ser construído.",
-            self.botao_anonimizar,
-            desligado=True,
         ))
 
         layout.addLayout(cartoes)
@@ -468,10 +475,13 @@ def _aviso_dos_cpfs():
         f"font-size: {estilo.TEXTO_BASE}px; font-weight: 600;"
         f"color: {estilo.COR_ALERTA}; border: none;"
     )
+    # O aviso continua dizendo que o arquivo sai com os CPFs inteiros, e passa
+    # a dizer por onde se chega ao Anonimizar, que agora existe (RN-17).
     texto = QLabel(
-        "Este módulo lê e confere o texto; ele não mascara nada. Mascarar o CPF "
-        "é o módulo Anonimizar, que ainda vai ser construído. Até lá, trate este "
-        "arquivo com o mesmo cuidado do documento original."
+        "Este módulo lê e confere o texto; ele não mascara nada. Para mascarar "
+        "os CPFs, volte e escolha \"Seguir para Anonimizar\", ou use o item "
+        "Anonimizar do menu. Trate este arquivo com o mesmo cuidado do "
+        "documento original."
     )
     texto.setWordWrap(True)
     texto.setStyleSheet(

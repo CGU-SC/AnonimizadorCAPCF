@@ -47,8 +47,12 @@ from motor_na_tela import ControleDoMotor
 
 
 class PainelOcr(QWidget):
-    def __init__(self):
+    def __init__(self, ao_seguir_para_anonimizar=None):
         super().__init__()
+        # Quem recebe o texto conferido quando a pessoa escolhe "Seguir para
+        # Anonimizar". É a janela principal quem sabe trocar de módulo; sem ela
+        # (um painel montado sozinho), o botão fica apagado, e não enganando.
+        self._ao_seguir_para_anonimizar = ao_seguir_para_anonimizar
         # Aceitar arquivo arrastado é uma das duas formas de escolher o
         # documento previstas na spec 002; a outra é o botão.
         self.setAcceptDrops(True)
@@ -96,6 +100,8 @@ class PainelOcr(QWidget):
             ao_salvar=self.escolher_onde_salvar,
             ao_voltar=self.voltar_a_conferencia,
             ao_processar_outro=self.voltar_para_escolher,
+            ao_anonimizar=(self.seguir_para_anonimizar
+                           if ao_seguir_para_anonimizar else None),
         )
         self.tela_salvar = TelaSalvar(
             ao_salvar=self.tentar_salvar,
@@ -327,6 +333,19 @@ class PainelOcr(QWidget):
         """Depois do "Conferido": as duas saídas do texto."""
         self.tela_saida.mostrar(*self._resumo_do_que_foi_conferido())
         self.telas.setCurrentWidget(self.tela_saida)
+
+    def seguir_para_anonimizar(self):
+        """Leva o texto conferido para a revisão do Anonimizar (RN-16).
+
+        Sem gravar arquivo nenhum no meio - é o que torna este o caminho seguro.
+        E o Gerar OCR fica exatamente como estava, com o texto conferido na
+        escolha da saída: um clique por engano não joga fora uma leitura de PDF,
+        que custa minutos (oitava emenda da spec 003).
+        """
+        if self._ao_seguir_para_anonimizar is None or self.ficha_atual is None:
+            return
+        self._ao_seguir_para_anonimizar(
+            self.ficha_atual.caminho, self.tela_conferencia.texto_conferido())
 
     def escolher_onde_salvar(self):
         self.tela_salvar.mostrar(
