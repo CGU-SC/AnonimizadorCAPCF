@@ -139,7 +139,8 @@ class JanelaPrincipal(QMainWindow):
         raiz_layout.addWidget(self.painel)
 
         self.itens_do_menu = []
-        self.painel_ocr = PainelOcr()
+        self.painel_ocr = PainelOcr(
+            ao_seguir_para_anonimizar=self._seguir_para_anonimizar)
         self._ligar_item_ao_painel(self.menu.botao_ocr, self.painel_ocr)
         self.painel_anonimizar = PainelAnonimizar()
         self._ligar_item_ao_painel(
@@ -177,6 +178,16 @@ class JanelaPrincipal(QMainWindow):
         self.painel_ocr.encerrar()
         self.painel_anonimizar.encerrar()
         super().closeEvent(evento)
+
+    def _seguir_para_anonimizar(self, caminho, paginas):
+        """O texto conferido no Gerar OCR segue para a revisão (RN-16).
+
+        O menu passa a marcar "Anonimizar" antes de tudo: se lá houver uma
+        revisão aberta e não salva, é lá que a pergunta antes de descartar vai
+        aparecer, e a pessoa precisa ver de onde ela vem.
+        """
+        self._ir_para_o_anonimizar()
+        self.painel_anonimizar.receber_texto_conferido(caminho, paginas)
 
     def _ir_para_o_anonimizar(self):
         for item in self.itens_do_menu:

@@ -109,12 +109,15 @@ def copia_do_pdf(tmp_path):
     return copia
 
 
-def test_conferido_leva_as_duas_saidas_com_o_anonimizar_apagado(aplicacao, copia_do_pdf):
-    """Critério de aceite da spec 002.
+def test_painel_sozinho_nao_oferece_um_anonimizar_que_nao_leva_a_lugar_nenhum(
+        aplicacao, copia_do_pdf):
+    """Montado fora da janela, o painel não tem para onde mandar o texto.
 
-    "Dado que o módulo 3 ainda não foi construído, quando a pessoa chega à
-    escolha da saída, então o botão está apagado com a explicação, e 'salvar o
-    texto como está' funciona."
+    Até a etapa 8 do Anonimizar este teste guardava o critério da spec 002 de
+    o botão ficar apagado porque "o módulo 3 ainda não foi construído" - que a
+    RN-16 da spec 003 substituiu. Agora ele fica apagado só quando ninguém vai
+    receber o texto: botão que parece pronto e não faz nada é lido como defeito.
+    O botão aceso, na janela de verdade, está em test_seguir_para_anonimizar.
     """
     painel = _painel_na_conferencia(copia_do_pdf)
 

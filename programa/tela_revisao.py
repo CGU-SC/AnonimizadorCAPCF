@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from dataclasses import dataclass
+from typing import NamedTuple
 
 import cpf
 import estilo
@@ -63,16 +64,38 @@ A_MAO = "a_mao"
 # cada tela a lista e o aviso de antes de gravar podiam divergir.
 _VALIDO = tipos_na_tela.POR_TIPO[cpf.PASSA_NA_CONTA]
 _A_MAO = tipos_na_tela.POR_TIPO[cpf.MASCARADO_A_MAO]
+class Grupo(NamedTuple):
+    """Um grupo da revisão: quem pertence a ele, e como ele se chama na tela."""
+
+    pertence: "callable"
+    nome: str
+    plural: str
+
+
 GRUPOS = {
-    VALIDOS: (lambda o: o.tipo == cpf.PASSA_NA_CONTA and o.situacao == cpf.MASCARADO,
-              _VALIDO.nome, _VALIDO.plural),
-    SUSPEITOS: (lambda o: o.suspeito and o.situacao == cpf.MASCARADO,
-                tipos_na_tela.SUSPEITO.nome, tipos_na_tela.SUSPEITO.plural),
-    A_MAO: (lambda o: o.tipo == cpf.MASCARADO_A_MAO and o.situacao == cpf.MASCARADO,
-            _A_MAO.nome, _A_MAO.plural),
-    LIBERADOS: (lambda o: o.situacao == cpf.LIBERADO,
-                tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.plural),
+    VALIDOS: Grupo(
+        lambda o: o.tipo == cpf.PASSA_NA_CONTA and o.situacao == cpf.MASCARADO,
+        _VALIDO.nome, _VALIDO.plural),
+    SUSPEITOS: Grupo(
+        lambda o: o.suspeito and o.situacao == cpf.MASCARADO,
+        tipos_na_tela.SUSPEITO.nome, tipos_na_tela.SUSPEITO.plural),
+    A_MAO: Grupo(
+        lambda o: o.tipo == cpf.MASCARADO_A_MAO and o.situacao == cpf.MASCARADO,
+        _A_MAO.nome, _A_MAO.plural),
+    LIBERADOS: Grupo(
+        lambda o: o.situacao == cpf.LIBERADO,
+        tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.plural),
 }
+
+
+def quantos_em_cada_grupo(ocorrencias):
+    """Quantos números há em cada grupo, agora.
+
+    A conta é feita num lugar só porque as três telas que a usam - os selos, a
+    contagem do salvar e a do que se perde - precisam contar a mesma coisa.
+    """
+    return {nome: sum(1 for o in ocorrencias if grupo.pertence(o))
+            for nome, grupo in GRUPOS.items()}
 
 
 class TelaRevisao(QWidget):
@@ -397,7 +420,7 @@ class TelaRevisao(QWidget):
         numeros = sorted(self._ocorrencias, key=lambda o: o.inicio)
         if self._filtro is None:
             return numeros
-        pertence = GRUPOS[self._filtro][0]
+        pertence = GRUPOS[self._filtro].pertence
         return [o for o in numeros if pertence(o)]
 
     def _atualizar_navegacao(self):
@@ -421,8 +444,8 @@ class TelaRevisao(QWidget):
         total = len(numeros)
         grupo = ""
         if self._filtro is not None:
-            _, singular, plural = GRUPOS[self._filtro]
-            grupo = " " + (singular if total == 1 else plural)
+            do_filtro = GRUPOS[self._filtro]
+            grupo = " " + (do_filtro.nome if total == 1 else do_filtro.plural)
         self.posicao.setText(f"{atual} de {total}{grupo}")
 
         # Com a volta, sempre há para onde ir enquanto o grupo tiver algum número.
@@ -545,9 +568,7 @@ class TelaRevisao(QWidget):
         tinha bem mais CPF do que o programa achou. Na tela de sucesso ela vem
         sem a separação por tipo (`por_tipo=False`): lá já não há o que decidir.
         """
-        pertence_a = {grupo: regra for grupo, (regra, _, _) in GRUPOS.items()}
-        contas = {grupo: sum(1 for o in self._ocorrencias if pertence_a[grupo](o))
-                  for grupo in (VALIDOS, SUSPEITOS, A_MAO)}
+        contas = quantos_em_cada_grupo(self._ocorrencias)
         mascarados = sum(contas.values())
         if not mascarados:
             return "Nenhum número foi mascarado neste texto."
@@ -558,9 +579,9 @@ class TelaRevisao(QWidget):
         partes = []
         for grupo in (VALIDOS, SUSPEITOS, A_MAO):
             if contas[grupo]:
-                _, singular, plural = GRUPOS[grupo]
+                do_grupo = GRUPOS[grupo]
                 partes.append(f"{contas[grupo]} "
-                              f"{singular if contas[grupo] == 1 else plural}")
+                              f"{do_grupo.nome if contas[grupo] == 1 else do_grupo.plural}")
         frase = f"{quantos}: {_juntar(partes)}."
         # A frase do caso bom é dita com todas as letras, e não pelo silêncio:
         # sem ela, não dava para diferenciar "nada foi liberado" de "o programa
@@ -585,9 +606,7 @@ class TelaRevisao(QWidget):
         máscara que o programa refaz em um instante não é perda, e decisão dela
         - um número liberado, um trecho mascarado à mão - é.
         """
-        pertence_a = {grupo: regra for grupo, (regra, _, _) in GRUPOS.items()}
-        contas = {grupo: sum(1 for o in self._ocorrencias if pertence_a[grupo](o))
-                  for grupo in GRUPOS}
+        contas = quantos_em_cada_grupo(self._ocorrencias)
         mascarados = contas[VALIDOS] + contas[SUSPEITOS] + contas[A_MAO]
         frase = (f"{mascarados} números mascarados" if mascarados != 1
                  else "1 número mascarado")
@@ -662,11 +681,10 @@ class TelaRevisao(QWidget):
         # suspeitos + liberados. Liberar um suspeito tira ele de "suspeitos" e
         # põe em "liberados" - assim a pessoa soma os três e confere o total de
         # relance (decidido na conferência da etapa 3, em 17/09/2026).
-        pertence_a = {grupo: regra for grupo, (regra, _, _) in GRUPOS.items()}
-        validos = [o for o in self._ocorrencias if pertence_a[VALIDOS](o)]
-        suspeitos = [o for o in self._ocorrencias if pertence_a[SUSPEITOS](o)]
-        a_mao = [o for o in self._ocorrencias if pertence_a[A_MAO](o)]
-        liberados = [o for o in self._ocorrencias if pertence_a[LIBERADOS](o)]
+        validos = [o for o in self._ocorrencias if GRUPOS[VALIDOS].pertence(o)]
+        suspeitos = [o for o in self._ocorrencias if GRUPOS[SUSPEITOS].pertence(o)]
+        a_mao = [o for o in self._ocorrencias if GRUPOS[A_MAO].pertence(o)]
+        liberados = [o for o in self._ocorrencias if GRUPOS[LIBERADOS].pertence(o)]
 
         tem_cpf = bool(self._ocorrencias)
         self.aviso_sem_cpf.setVisible(not tem_cpf)
