@@ -605,9 +605,10 @@ aprovação própria, antes da construção.
   "Seguir para Anonimizar", então o menu passa a marcar "Anonimizar" e a
   revisão abre com o texto conferido, sem que nenhum arquivo tenha sido gravado.
 - Dado que ela seguiu para o Anonimizar, quando volta ao "Gerar OCR" pelo menu,
-  então o texto conferido continua lá, na escolha da saída, e dá para salvar o
-  texto como está ou seguir de novo; e o segundo "Seguir", com a revisão aberta
-  e não salva, passa pela pergunta antes de descartar (oitava emenda).
+  então — com a revisão aberta e não salva — aparece primeiro a pergunta antes
+  de descartar, e, descartada a revisão, o texto conferido continua lá, na
+  escolha da saída, com o salvar e o seguir de novo funcionando (oitava emenda).
+  Vale também o contrário: salva a revisão, a volta é direta.
 - Dado que a pessoa está lendo um PDF pelo "Anonimizar", então o item marcado no
   menu é "Anonimizar".
 - Dado que a pessoa cancela a leitura de um PDF pelo "Anonimizar", então ela
