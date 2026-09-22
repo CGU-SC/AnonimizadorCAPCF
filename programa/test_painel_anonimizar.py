@@ -152,12 +152,53 @@ def test_a_caixa_de_erro_cabe_a_frase_inteira(aplicacao):
     assert explicacao.minimumHeight() > 20
 
 
-def test_o_pdf_avisa_que_ainda_nao_anda_por_aqui(aplicacao):
-    """Enquanto o caminho do PDF não existe, ele diz isso em vez de não fazer nada."""
+def test_o_pdf_entra_pelo_caminho_do_pdf(aplicacao):
+    """Desde a etapa 7, o PDF anda por aqui: conferência do documento primeiro.
+
+    Até a etapa 6 ele recebia um aviso dizendo que o caminho dele viria depois.
+    """
     painel = PainelAnonimizar()
     painel.receber_arquivo(MASSA / "01-com-texto-e-tabela.pdf")
-    assert painel.telas.currentWidget() is painel.tela_erro
-    assert "etapa seguinte" in painel.tela_erro.explicacao.text()
+
+    assert painel.telas.currentWidget() is painel.pdf.tela_verificando
+    # A conferência do documento acontece logo depois de a tela de espera
+    # aparecer. Com texto por dentro, a tela seguinte é a de decidir, sem o
+    # cartão do Gerar OCR no meio (rascunho 08, estado 3b; oitava emenda).
+    painel.pdf.conferir_documento(MASSA / "01-com-texto-e-tabela.pdf")
+    assert painel.telas.currentWidget() is painel.pdf.tela_decisao
+
+
+def test_o_pdf_sem_texto_abre_a_tela_de_ler_com_o_motor(aplicacao):
+    """Rascunho 08, estado 3a: nome, páginas e a escolha do motor antes de ler."""
+    pdf = MASSA / "02-imprimir-para-pdf.pdf"
+    painel = PainelAnonimizar()
+    painel.receber_arquivo(pdf)
+    painel.pdf.conferir_documento(pdf)
+
+    tela = painel.pdf.tela_de_ler
+    assert painel.telas.currentWidget() is tela
+    assert tela.titulo.text() == "Este documento precisa ser lido"
+    assert pdf.name in tela.legenda.text()
+    assert tela.motor_tesseract.isChecked()
+    assert not tela.motor_ia_local.isEnabled()
+    assert tela.botao_ler.text().startswith("Ler as ")
+
+
+def test_ignorar_o_texto_leva_a_tela_de_ler_e_ela_volta_a_decisao(aplicacao):
+    """Rascunho 08, estado 3c: quem mudar de ideia volta a decidir."""
+    pdf = MASSA / "01-com-texto-e-tabela.pdf"
+    painel = PainelAnonimizar()
+    painel.receber_arquivo(pdf)
+    painel.pdf.conferir_documento(pdf)
+
+    painel.pdf.tela_decisao.botao_ignorar.click()
+    tela = painel.pdf.tela_de_ler
+    assert painel.telas.currentWidget() is tela
+    assert tela.titulo.text() == "Ler as imagens deste documento"
+    assert "será ignorado" in tela.legenda.text()
+
+    tela.botao_outro.click()
+    assert painel.telas.currentWidget() is painel.pdf.tela_decisao
 
 
 def test_arquivo_de_outro_tipo_nao_promete_etapa_seguinte(aplicacao, tmp_path):
@@ -217,3 +258,35 @@ def test_o_destaque_cai_em_cima_do_numero_mascarado(aplicacao):
     assert cursor.charFormat().underlineStyle() != sem_traco
     cursor.setPosition(1)
     assert cursor.charFormat().underlineStyle() == sem_traco
+
+
+def test_o_pdf_com_texto_vai_da_conferencia_direto_para_a_revisao(aplicacao):
+    """Critério da spec 003: conferido, o texto do PDF vai direto para a revisão.
+
+    A escolha entre "salvar o texto como está" e "seguir para o Anonimizar" não
+    aparece neste caminho: quem entrou por aqui ja disse o que quer, e oferecer
+    o arquivo com os CPFs inteiros seria oferecer o contrario (RN-15).
+    """
+    pdf = MASSA / "01-com-texto-e-tabela.pdf"
+    painel = PainelAnonimizar()
+    painel.receber_arquivo(pdf)
+    painel.pdf.conferir_documento(pdf)
+
+    # O PDF da massa tem texto por dentro: a decisao e da pessoa, e ela vem
+    # logo depois da conferencia do documento.
+    assert painel.telas.currentWidget() is painel.pdf.tela_decisao
+
+    painel.pdf.aproveitar_o_texto_existente(
+        painel.pdf.ficha_atual, painel.pdf.tela_decisao._paginas)
+    assert painel.telas.currentWidget() is painel.pdf.tela_conferencia
+
+    painel.pdf.tela_conferencia.botao_conferido.click()
+    assert painel.telas.currentWidget() is painel.tela_revisao
+
+    # E a revisao chega mascarada, como em qualquer outro caminho.
+    na_tela = painel.tela_revisao.texto_mascarado()
+    assert cpf.procurar(na_tela) == []
+    assert "XXX" in na_tela
+    # O caminho sugerido para salvar sai do PDF que foi lido.
+    painel.abrir_o_salvar()
+    assert painel.tela_salvar.campo.text().endswith("01-com-texto-e-tabela - sem CPF.md")

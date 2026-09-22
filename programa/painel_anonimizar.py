@@ -8,9 +8,10 @@ este arquivo é quem sabe a ordem entre elas - o mesmo arranjo do painel do
 Segue os rascunhos aprovados mockups/anonimizar/08-escolher-e-salvar.html (a
 escolha do arquivo) e 01-revisar-antes-de-salvar.html (a revisão e o erro).
 
-Nesta etapa o painel abre `.md` e `.txt`. O caminho do PDF - leitura,
-conferência e a escolha do motor - entra numa etapa seguinte, e até lá o PDF
-escolhido aqui recebe um aviso dizendo isso.
+O painel abre `.md`, `.txt` e PDF. O PDF passa pela mesma peça do "Gerar OCR"
+(`caminho_do_pdf.py`) - decidir sobre o texto de dentro, ler, conferir - e,
+conferido, vem direto para a revisão (RN-15, desde a etapa 7). O motor faltando
+também é peça comum aos dois módulos (`motor_na_tela.py`), com as frases deste.
 """
 import os
 from pathlib import Path
@@ -31,18 +32,19 @@ import arquivo_md
 import arquivo_texto
 import cpf
 import estilo
+from caminho_do_pdf import CaminhoDoPdf, FaixaDoTopo
+from motor_na_tela import ControleDoMotor
 from arquivo_texto import ArquivoNaoServe, ler, quebra_de_linha
 from tela_revisao import TelaRevisao
-from telas_de_salvar import TelaDescartar, TelaSobrescrever
+from telas_de_salvar import (
+    TelaDescartar,
+    TelaSobrescrever,
+    resumo_do_documento,
+)
 from telas_de_salvar_sem_cpf import TelaGravadoSemCpf, TelaSalvarSemCpf
 
 EXTENSOES_DE_TEXTO = (".md", ".txt")
 EXTENSOES_ACEITAS = EXTENSOES_DE_TEXTO + (".pdf",)
-
-AINDA_SEM_PDF = (
-    "O caminho do PDF, com a leitura e a conferência, entra numa etapa "
-    "seguinte. Por enquanto o Anonimizar abre {nome} só se for .md ou .txt."
-)
 
 # Word, planilha e imagem não estão a caminho: eles estão fora do escopo da
 # spec. Dizer "numa etapa seguinte" para eles seria prometer o que o programa
@@ -87,6 +89,8 @@ class PainelAnonimizar(QWidget):
         # para onde voltar se ela desistir.
         self._acao_pendente = None
         self._tela_antes_da_pergunta = None
+        # Um PDF está na conferência, com texto que ainda não chegou à revisão?
+        self._conferindo = False
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(estilo.ESPACO_4, estilo.ESPACO_4,
@@ -94,6 +98,22 @@ class PainelAnonimizar(QWidget):
         layout.setSpacing(0)
 
         self.telas = QStackedWidget()
+        # O motor faltando é a mesma peça do Gerar OCR, com as frases deste
+        # módulo: aqui, sem o motor, ainda dá para anonimizar muita coisa, e o
+        # aviso e a tela cheia precisam dizer isso (rascunho 08, estados 2 e 2b).
+        self.motor = ControleDoMotor(
+            dono=self,
+            pilha=self.telas,
+            ao_escolher_outro=self.voltar_para_escolher,
+            ao_resolvido=self._motor_resolvido,
+            texto_do_aviso=(
+                "Sem ele, o programa não lê PDF escaneado. O resto continua "
+                "funcionando — veja abaixo o que dá para anonimizar agora."),
+            rotulo_de_outro="Escolher outro arquivo",
+            lembrete=(
+                "Um .md, um .txt ou um PDF com texto por dentro podem ser "
+                "anonimizados normalmente."),
+        )
         self.tela_escolher = self._montar_tela_escolher()
         self.tela_revisao = TelaRevisao(
             ao_anonimizar_outro=self.voltar_para_escolher,
@@ -116,6 +136,21 @@ class PainelAnonimizar(QWidget):
             ao_descartar=self._descartar_e_seguir,
             ao_voltar=self._voltar_de_onde_estava,
         )
+        # O caminho do PDF é a mesma peça que o "Gerar OCR" usa: conferir o
+        # documento, decidir sobre a camada de texto, ler e conferir. O que muda
+        # é o destino - aqui o texto conferido vai direto para a revisão, sem a
+        # escolha de saída do outro módulo (RN-15).
+        self.pdf = CaminhoDoPdf(
+            pilha=self.telas,
+            ao_conferir=self._texto_conferido,
+            ao_escolher_outro=self.voltar_para_escolher,
+            ao_cancelar=self._leitura_foi_cancelada,
+            com_cartao=False,
+            ao_abrir_conferencia=self._comecou_a_conferencia,
+            tem_motor=self._conferir_o_motor,
+            ao_faltar_motor=self.motor.mostrar_que_falta,
+            rotulo_de_outro="Escolher outro arquivo",
+        )
         self.tela_erro = _TelaErro(ao_escolher_outro=self.voltar_para_escolher)
         for tela in (self.tela_escolher, self.tela_revisao, self.tela_salvar,
                      self.tela_sobrescrever, self.tela_gravado,
@@ -123,6 +158,10 @@ class PainelAnonimizar(QWidget):
             self.telas.addWidget(tela)
 
         layout.addWidget(self.telas)
+        # A primeira tela é a de escolher: sem dizer isso, a pilha abre na tela
+        # que entrou nela primeiro, que é uma do meio do caminho do PDF.
+        self.telas.setCurrentWidget(self.tela_escolher)
+        self._conferir_o_motor()
 
     # ---------------------------------------------------------------- telas
 
@@ -149,6 +188,13 @@ class PainelAnonimizar(QWidget):
         layout.addWidget(titulo)
         layout.addWidget(legenda)
         layout.addSpacing(estilo.ESPACO_4)
+        layout.addWidget(self.motor.aviso)
+        layout.addWidget(self.motor.espaco_depois_do_aviso)
+        # A faixa só aparece quando há o que contar - hoje, quando a pessoa
+        # cancela uma leitura. Voltar calada faria quem clicou sem querer não
+        # descobrir o que aconteceu.
+        self.faixa_do_topo = FaixaDoTopo()
+        layout.addWidget(self.faixa_do_topo)
         layout.addWidget(self._montar_area_de_arrastar())
         layout.addStretch()
         return tela
@@ -181,12 +227,32 @@ class PainelAnonimizar(QWidget):
             "border: none;"
         )
 
-        tipos = QLabel("PDF, .md ou .txt")
+        self.tipos = tipos = QLabel("PDF, .md ou .txt")
         tipos.setAlignment(Qt.AlignCenter)
         tipos.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
             f"color: {estilo.COR_TEXTO_SECUNDARIO}; border: none;"
         )
+        # Sem o motor, no lugar da linha dos tipos aparece a lista do que dá
+        # para anonimizar agora (rascunho 08, estado 2). O PDF continua aceito:
+        # o programa só descobre se ele tem texto depois de abri-lo, e o PDF
+        # com texto funciona sem o motor. O ✗ é amarelo, e não vermelho: nada
+        # falhou, falta uma peça.
+        self.lista_sem_motor = QLabel(
+            "<b>O que dá para anonimizar agora</b><br>"
+            f"<span style='color:{estilo.COR_SUCESSO}'>✓</span> .md e .txt<br>"
+            f"<span style='color:{estilo.COR_SUCESSO}'>✓</span> PDF com texto por "
+            "dentro, como os do sistema de processos<br>"
+            f"<span style='color:{estilo.COR_ALERTA}'>✗</span> PDF escaneado — "
+            "precisa do motor de leitura"
+        )
+        self.lista_sem_motor.setTextFormat(Qt.RichText)
+        self.lista_sem_motor.setAlignment(Qt.AlignCenter)
+        self.lista_sem_motor.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO}; border: none;"
+        )
+        self.lista_sem_motor.setVisible(False)
 
         ou = QLabel("ou")
         ou.setAlignment(Qt.AlignCenter)
@@ -208,6 +274,7 @@ class PainelAnonimizar(QWidget):
         layout.addWidget(icone)
         layout.addWidget(chamada)
         layout.addWidget(tipos)
+        layout.addWidget(self.lista_sem_motor)
         layout.addSpacing(estilo.ESPACO_3)
         layout.addWidget(ou)
         layout.addSpacing(estilo.ESPACO_3)
@@ -233,12 +300,31 @@ class PainelAnonimizar(QWidget):
         só é aberto depois de a pessoa dizer que pode jogar fora o anterior.
         """
         if self.perguntar_antes_de_descartar(
-                lambda: self.receber_arquivo(caminho)):
+                lambda: self.receber_arquivo(caminho), incluir_conferencia=True):
             return
+        self.faixa_do_topo.esconder()
+        if caminho.suffix.lower() == ".pdf":
+            # A revisão do documento anterior sai de cena. Deixada por baixo -
+            # já salva, e com o PDF novo marcado como "não salvo" -, ela fazia
+            # a pergunta antes de descartar falar de um arquivo que já tinha
+            # sido gravado, e a janela recusava fechar (revisão da etapa 7).
+            self.tela_revisao.esquecer()
+            self._origem = caminho
+            self._salvo = False
+            # O PDF não é arquivo de texto: a quebra de linha do arquivo
+            # gravado é a simples, e não tem de onde ser herdada.
+            self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
+            self.pdf.comecar(caminho)
+            return
+        # Qualquer outro arquivo para a leitura de PDF que estiver em andamento
+        # (o PDF novo já faz isso por dentro da peça). Sem isto, a leitura
+        # antiga terminava por baixo, jogava a tela para a conferência do PDF
+        # por cima da revisão do arquivo novo, e o texto de um documento saía
+        # com o nome e a quebra de linha do outro (revisão da etapa 7).
+        self.pdf.abandonar_leitura()
+        self._conferindo = False
         if caminho.suffix.lower() not in EXTENSOES_DE_TEXTO:
-            aviso = (AINDA_SEM_PDF if caminho.suffix.lower() == ".pdf"
-                     else OUTRO_TIPO)
-            self._mostrar_erro(aviso.format(nome=caminho.name))
+            self._mostrar_erro(OUTRO_TIPO.format(nome=caminho.name))
             return
         try:
             texto = ler(caminho)
@@ -264,12 +350,16 @@ class PainelAnonimizar(QWidget):
 
     def voltar_para_escolher(self):
         """Volta à escolha do arquivo - perguntando antes, quando há o que perder."""
-        if self.perguntar_antes_de_descartar(self._voltar_para_escolher_agora):
+        if self.perguntar_antes_de_descartar(self._voltar_para_escolher_agora,
+                                             incluir_conferencia=True):
             return
         self._voltar_para_escolher_agora()
 
     def _voltar_para_escolher_agora(self):
         self.tela_revisao.esquecer()
+        self.pdf.abandonar_leitura()
+        self.pdf.esquecer()
+        self._conferindo = False
         self._origem = None
         self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
         self._destino_pendente = None
@@ -355,6 +445,80 @@ class PainelAnonimizar(QWidget):
         self.tela_erro.mostrar(motivo)
         self.telas.setCurrentWidget(self.tela_erro)
 
+    # --------------------------------------------------- o motor de leitura
+
+    def showEvent(self, evento):
+        # Procura de novo toda vez que a pessoa entra no módulo: o motor pode
+        # ter sido instalado com o programa aberto, e o aviso não deve continuar
+        # dizendo que falta uma peça que já está lá.
+        self._conferir_o_motor()
+        super().showEvent(evento)
+
+    def _conferir_o_motor(self):
+        """Procura o motor, acerta o aviso e a lista do que dá, e diz se achou."""
+        achou = self.motor.conferir()
+        self.tipos.setVisible(achou)
+        self.lista_sem_motor.setVisible(not achou)
+        return achou
+
+    def _motor_resolvido(self, ficha):
+        """O motor apareceu com a pessoa na tela cheia: o documento segue.
+
+        Segue para a tela de ler, e não direto para a leitura - começar sozinho
+        surpreenderia quem só clicou para conferir. Quem chegou pela decisão
+        ("ignorar e ler as imagens") volta à tela de ler do jeito dela.
+        """
+        self._conferir_o_motor()
+        self.pdf.tela_de_ler.mostrar(ficha, ignorando=ficha.tem_camada_de_texto)
+        self.telas.setCurrentWidget(self.pdf.tela_de_ler)
+
+    # --------------------------------------------------- o caminho do PDF
+
+    def _texto_conferido(self):
+        """O texto que saiu da conferência vai direto para a revisão (RN-15).
+
+        Aqui não aparece a escolha entre "salvar o texto como está" e "seguir
+        para o Anonimizar": quem entrou por este módulo já disse o que quer, e
+        oferecer o arquivo com os CPFs inteiros seria oferecer o contrário.
+        """
+        paginas = self.pdf.texto_conferido()
+        self._conferindo = False
+        # As páginas viram um texto só, separadas por linha em branco - o mesmo
+        # arranjo com que elas vão para o arquivo (RN-12).
+        texto = arquivo_md.montar_conteudo(paginas)
+        self.tela_revisao.mostrar(self._origem.name, texto, cpf.procurar(texto))
+        self.telas.setCurrentWidget(self.tela_revisao)
+
+    def encerrar(self):
+        """Para a leitura de PDF em andamento antes de o programa fechar.
+
+        Uma leitura deixada rodando enquanto a janela é desmontada derruba o
+        programa, e o Windows mostra a caixa de "parou de funcionar".
+        """
+        self.pdf.abandonar_leitura()
+
+    def _comecou_a_conferencia(self):
+        self._conferindo = True
+
+    def _ha_conferencia_aberta(self):
+        """Há texto de PDF na conferência, que se perderia ao sair?
+
+        Da conferência para trás, o trabalho perdido é uma leitura e as
+        correções feitas à mão - para ter tudo de volta, seria preciso ler o
+        documento de novo.
+        """
+        return self._conferindo and any(self.pdf.texto_conferido())
+
+    def _leitura_foi_cancelada(self, pagina):
+        """Cancelar a leitura volta à escolha do arquivo, e diz o que houve."""
+        self._origem = None
+        self._salvo = False
+        self.faixa_do_topo.mostrar(
+            f"Leitura cancelada na página {pagina}. Nada foi gravado, e o "
+            "documento original não foi tocado."
+        )
+        self.telas.setCurrentWidget(self.tela_escolher)
+
     # ------------------------------------------- antes de descartar a revisão
 
     TITULO_DA_PERGUNTA = "A revisão deste documento ainda não foi salva"
@@ -389,7 +553,8 @@ class PainelAnonimizar(QWidget):
         return bool(self.tela_revisao.tem_o_que_perder())
 
     def perguntar_antes_de_descartar(self, acao,
-                                     rotulo_descartar="Descartar e seguir"):
+                                     rotulo_descartar="Descartar e seguir",
+                                     incluir_conferencia=False):
         """Segura a ação e pergunta, quando ela jogaria fora a revisão.
 
         Devolve se perguntou. Sem nada a perder não pergunta nada: pergunta que
@@ -399,8 +564,15 @@ class PainelAnonimizar(QWidget):
         Quem fecha a janela vê "Fechar sem salvar" no lugar de "Descartar e
         seguir": é o mesmo risco, dito com a palavra do que a pessoa pediu.
         """
+        # Durante a conferência de um PDF, "anonimizar outro documento" e
+        # arrastar outro arquivo perguntam com as palavras do Gerar OCR, nas
+        # mesmas condições. O menu e o fechar da janela não: trocando de item,
+        # nada se perde - voltando, a conferência está como estava (rascunho
+        # 08, tabela do estado 11).
         if not self.tem_revisao_nao_salva():
-            return False
+            if not (incluir_conferencia and self._ha_conferencia_aberta()):
+                return False
+            return self._perguntar_pela_conferencia(acao)
         self._acao_pendente = acao
         # Com a pergunta já na tela - outro arquivo solto por cima dela -, o
         # lugar para onde voltar continua sendo o de antes. Guardar a própria
@@ -414,6 +586,25 @@ class PainelAnonimizar(QWidget):
                 resumo=f"{self._origem.name} — "
                        f"{self.tela_revisao.resumo_do_que_se_perde()}"),
             rotulo_descartar,
+        )
+        self.telas.setCurrentWidget(self.tela_descartar)
+        return True
+
+    def _perguntar_pela_conferencia(self, acao):
+        self._acao_pendente = acao
+        if self.telas.currentWidget() is not self.tela_descartar:
+            self._tela_antes_da_pergunta = self.telas.currentWidget()
+        # As mesmas palavras do Gerar OCR, nas mesmas condições (rascunho 08,
+        # tabela do estado 11): é o mesmo trabalho em risco.
+        resumo = resumo_do_documento(
+            self._origem.name, len(self.pdf.texto_conferido()),
+            self.pdf.tela_conferencia.paginas_corrigidas())
+        self.tela_descartar.mostrar(
+            "O texto deste documento ainda não foi salvo",
+            f"{resumo}.\n\n"
+            "Se você seguir, o texto e as correções são descartados, e isso não "
+            "se desfaz. Para ter o texto de volta, seria preciso ler o documento "
+            "de novo e refazer as correções.",
         )
         self.telas.setCurrentWidget(self.tela_descartar)
         return True

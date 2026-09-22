@@ -7,6 +7,7 @@ exatamente o que aconteceu na conferência da etapa 1, em 10/09/2026.
 from pathlib import Path
 
 import pytest
+import caminho_do_pdf
 import painel_ocr
 
 
@@ -17,7 +18,7 @@ def test_a_caixa_de_erro_cabe_a_frase_inteira(aplicacao):
     fora da borda. Quem lia via meia frase sem nenhum sinal de que faltava
     pedaço.
     """
-    tela = painel_ocr._TelaErro(ao_escolher_outro=lambda: None)
+    tela = caminho_do_pdf._TelaErro(ao_escolher_outro=lambda: None)
 
     # A frase mais longa que o programa consegue mostrar hoje.
     motivo = (
@@ -46,13 +47,17 @@ def test_o_numero_de_letras_sai_escrito_em_portugues(aplicacao):
     """
     import documento
 
-    tela = painel_ocr._TelaFicha(
-        ao_escolher_outro=lambda: None, ao_ler=lambda _ficha: None
+    tela = caminho_do_pdf._TelaFicha(
+        titulo="Gerar OCR",
+        legenda="Resultado da verificação do documento.",
+        rotulo_de_outro="Escolher outro documento",
+        ao_escolher_outro=lambda: None,
+        ao_ler=lambda _ficha: None,
     )
     massa = Path(__file__).parent.parent / "dados-exemplo"
     ficha = documento.conferir(massa / "01-com-texto-e-tabela.pdf")
 
-    tela.mostrar(ficha)
+    tela.mostrar(ficha, painel_ocr._o_que_vai_acontecer)
 
     # 1.472 é o que este documento inventado tem de letras, sem contar espaço
     # nem quebra de linha. O número está fixo aqui de propósito: se um dia ele
@@ -62,10 +67,10 @@ def test_o_numero_de_letras_sai_escrito_em_portugues(aplicacao):
 
 def test_separador_de_milhar_nao_depende_da_maquina():
     """O mesmo número, escrito do mesmo jeito em qualquer Windows."""
-    assert painel_ocr._com_separador_de_milhar(7) == "7"
-    assert painel_ocr._com_separador_de_milhar(999) == "999"
-    assert painel_ocr._com_separador_de_milhar(1720) == "1.720"
-    assert painel_ocr._com_separador_de_milhar(1234567) == "1.234.567"
+    assert caminho_do_pdf.com_separador_de_milhar(7) == "7"
+    assert caminho_do_pdf.com_separador_de_milhar(999) == "999"
+    assert caminho_do_pdf.com_separador_de_milhar(1720) == "1.720"
+    assert caminho_do_pdf.com_separador_de_milhar(1234567) == "1.234.567"
 
 
 def test_falha_inesperada_nao_deixa_o_painel_preso(aplicacao, monkeypatch):
@@ -80,7 +85,7 @@ def test_falha_inesperada_nao_deixa_o_painel_preso(aplicacao, monkeypatch):
     def estourar(_caminho):
         raise ValueError("defeito que ninguém previu")
 
-    monkeypatch.setattr(painel_ocr, "conferir", estourar)
+    monkeypatch.setattr(caminho_do_pdf, "conferir", estourar)
     painel._conferir(Path("qualquer-documento.pdf"))
 
     assert painel.telas.currentWidget() is painel.tela_erro, (
@@ -92,7 +97,7 @@ def test_toda_mensagem_de_erro_do_programa_cabe_na_caixa(aplicacao):
     """Vale para as quatro frases que o programa sabe mostrar, não só uma."""
     import documento
 
-    tela = painel_ocr._TelaErro(ao_escolher_outro=lambda: None)
+    tela = caminho_do_pdf._TelaErro(ao_escolher_outro=lambda: None)
     massa = Path(__file__).parent.parent / "dados-exemplo"
 
     for nome in ["05-corrompido.pdf", "06-protegido-por-senha.pdf",
@@ -117,7 +122,7 @@ def test_a_barra_anda_mesmo_num_documento_de_uma_pagina_so(aplicacao):
     """
     import documento
 
-    tela = painel_ocr._TelaLendo(ao_cancelar=lambda: None)
+    tela = caminho_do_pdf._TelaLendo(ao_cancelar=lambda: None)
     massa = Path(__file__).parent.parent / "dados-exemplo"
 
     tela.comecar(documento.conferir(massa / "03-conteudo-girado.pdf"))
@@ -143,16 +148,16 @@ def test_sem_motor_de_leitura_nao_aparece_tentar_de_novo(aplicacao):
     painel = painel_ocr.PainelOcr()
     # O aviso carrega quem o mandou, para leitura abandonada não sequestrar a
     # tela; aqui a leitura de mentira faz esse papel.
-    leitura = painel_ocr.LeituraEmSegundoPlano(Path("qualquer.pdf"))
+    leitura = caminho_do_pdf.LeituraEmSegundoPlano(Path("qualquer.pdf"))
     painel.leitura = leitura
 
-    painel._leitura_falhou(leitura, 7, "Alguma coisa deu errado ao ler esta página.")
+    painel.pdf._leitura_falhou(leitura, 7, "Alguma coisa deu errado ao ler esta página.")
     assert not painel.tela_erro.botao_tentar.isHidden(), (
         "falha numa página pode ser tentada de novo, e o botão sumiu"
     )
 
     painel.leitura = leitura
-    painel._leitura_falhou(leitura, 0, "O motor de leitura não foi encontrado.")
+    painel.pdf._leitura_falhou(leitura, 0, "O motor de leitura não foi encontrado.")
     assert painel.tela_erro.botao_tentar.isHidden(), (
         "sem motor instalado, tentar de novo vai falhar igual - o botão não "
         "pode aparecer"
@@ -219,13 +224,13 @@ def test_aviso_de_leitura_abandonada_nao_sequestra_a_tela(aplicacao):
     painel = painel_ocr.PainelOcr()
     massa = Path(__file__).parent.parent / "dados-exemplo"
     ficha_antiga = documento.conferir(massa / "02-imprimir-para-pdf.pdf")
-    abandonada = painel_ocr.LeituraEmSegundoPlano(ficha_antiga.caminho)
+    abandonada = caminho_do_pdf.LeituraEmSegundoPlano(ficha_antiga.caminho)
 
     # O programa já está em outro documento: esta leitura não é mais a de agora.
     painel.leitura = None
     tela_antes = painel.telas.currentWidget()
 
-    painel._leitura_terminou(abandonada, ficha_antiga, ["texto velho"])
+    painel.pdf._leitura_terminou(abandonada, ficha_antiga, ["texto velho"])
 
     assert painel.telas.currentWidget() is tela_antes, (
         "o aviso de uma leitura abandonada trocou a tela"

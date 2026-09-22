@@ -118,7 +118,7 @@ class _SaidasDoMotor:
 class AvisoDoMotor(QFrame):
     """A faixa no alto do painel, que já traz o que fazer a respeito."""
 
-    def __init__(self, ao_instalar, ao_conferir, ao_apontar):
+    def __init__(self, ao_instalar, ao_conferir, ao_apontar, texto=None):
         super().__init__()
         self.setObjectName("aviso_do_motor")
         self.setStyleSheet(
@@ -144,11 +144,14 @@ class AvisoDoMotor(QFrame):
             f"color: {estilo.COR_ALERTA}; border: none; background: transparent;"
         )
 
-        texto = QLabel(
+        # No Anonimizar a frase é mais curta: logo abaixo do aviso vem a lista
+        # do que dá para anonimizar agora, e ela diz o resto (rascunho 08,
+        # estado 2).
+        texto = QLabel(texto or (
             "Documento escaneado não vai funcionar até isto ser resolvido. "
             "Documento que já tem texto por dentro continua funcionando "
             "normalmente."
-        )
+        ))
         texto.setWordWrap(True)
         _pintar(texto, estilo.COR_TEXTO_SECUNDARIO)
 
@@ -182,8 +185,13 @@ class TelaSemMotor(QWidget):
     LARGURA_DA_CAIXA = 480
     LARGURA_DO_TEXTO = 420
 
-    def __init__(self, ao_instalar, ao_conferir, ao_apontar, ao_escolher_outro):
+    def __init__(self, ao_instalar, ao_conferir, ao_apontar, ao_escolher_outro,
+                 rotulo_de_outro="Escolher outro documento", lembrete=None):
         super().__init__()
+        # O lembrete é a frase a mais do Anonimizar: ele diz o que ainda dá para
+        # anonimizar sem o motor, para quem chegou aqui não concluir que o
+        # módulo inteiro parou (rascunho 08, estado 2b).
+        self._lembrete = lembrete
         self.saidas = _SaidasDoMotor(
             ao_instalar, ao_conferir, ao_apontar,
             largura_do_texto=self.LARGURA_DO_TEXTO,
@@ -235,7 +243,7 @@ class TelaSemMotor(QWidget):
 
         linha_outro = QHBoxLayout()
         linha_outro.addStretch()
-        linha_outro.addWidget(_botao("Escolher outro documento", ao_escolher_outro))
+        linha_outro.addWidget(_botao(rotulo_de_outro, ao_escolher_outro))
         linha_outro.addStretch()
 
         layout.addWidget(caixa, alignment=Qt.AlignCenter)
@@ -264,6 +272,8 @@ class TelaSemMotor(QWidget):
                 f"O <b>{nome}</b> não tem texto por dentro — ele só pode ser "
                 f"lido pelo Tesseract, que {motivo}."
             )
+            if self._lembrete:
+                frase += f" {self._lembrete}"
         self.explicacao.setText(frase)
         self.explicacao.setMinimumHeight(
             self.explicacao.heightForWidth(self.LARGURA_DO_TEXTO)

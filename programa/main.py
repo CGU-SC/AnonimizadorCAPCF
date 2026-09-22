@@ -170,7 +170,12 @@ class JanelaPrincipal(QMainWindow):
             self._ir_para_o_anonimizar()
             evento.ignore()
             return
+        # As duas leituras param, e não só a do Gerar OCR: desde a etapa 7 o
+        # PDF também é lido pelo Anonimizar, e a leitura dele sobrevivia ao
+        # fechar - trazendo de volta a caixa de "o programa parou de funcionar"
+        # que este fechar existe para evitar (revisão da etapa 7).
         self.painel_ocr.encerrar()
+        self.painel_anonimizar.encerrar()
         super().closeEvent(evento)
 
     def _ir_para_o_anonimizar(self):
