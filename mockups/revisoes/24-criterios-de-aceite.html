@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 24 — os critérios de aceite, com as oito etapas</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .mudanca .pergunta {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-4);
+    border-left: 2px solid var(--cor-borda);
+    padding-left: var(--espaco-3);
+  }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 300px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  pre {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    overflow-x: auto;
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    line-height: 1.5;
+    color: var(--cor-texto);
+  }
+  pre .rem { color: var(--cor-texto-secundario); }
+  pre .novo { color: var(--cor-sucesso); }
+  .lista-simples { list-style: none; padding: 0; margin: 0; }
+  .lista-simples li {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-2);
+  }
+  .nao-consertado {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-erro);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-3);
+  }
+  .nao-consertado .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .nao-consertado .motivo {
+    margin-top: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+  }
+  code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  .aviso {
+    margin-top: var(--espaco-5);
+    background: rgba(59,110,165,0.12);
+    border: 1px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .prova {
+    background: rgba(76,175,109,0.10);
+    border: 1px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  table { border-collapse: collapse; width: 100%; margin-top: var(--espaco-2); }
+  th, td {
+    text-align: left;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: var(--texto-pequeno);
+  }
+  th { color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rodape {
+    margin-top: var(--espaco-4);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+  td.ok { color: var(--cor-sucesso); font-weight: 600; }
+  td.falta { color: var(--cor-erro); font-weight: 600; }
+  td.meio { color: var(--cor-alerta); font-weight: 600; }
+  td:first-child { color: var(--cor-texto-secundario); }
+</style>
+</head><body>
+
+<h1>Revisão 24 — os critérios de aceite, com as oito etapas</h1>
+<p class="subtitulo">AnomizadorCAPCF — 21/09/2026, com a funcionalidade 3 construída de ponta a ponta</p>
+
+<div class="lente">
+  <div class="rotulo">O que foi revisado, e por qual lente</div>
+  <p>
+    O <strong>Módulo Anonimizador de CPF</strong> inteiro, com as oito etapas construídas, contra a
+    <strong>spec 003</strong> — já com as oito emendas e o acréscimo da navegação.
+  </p>
+  <p>
+    A lente foi a de <strong>CRITÉRIOS DE ACEITE</strong>: ela não procura defeito, mede quanto do
+    combinado existe de verdade. Na revisão 19, com cinco etapas prontas, a resposta era 41 de 48. Cada
+    critério foi conferido de novo hoje — "passava antes" não conta como prova.
+  </p>
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-consertado">
+    <div class="contagem-numero">50</div>
+    <div class="contagem-label">critérios que passam</div>
+  </div>
+  <div class="contagem-item c-fora">
+    <div class="contagem-numero">0</div>
+    <div class="contagem-label">que não passam</div>
+  </div>
+  <div class="contagem-item c-achado">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">para você conferir</div>
+  </div>
+  <div class="contagem-item c-recusado">
+    <div class="contagem-numero">321</div>
+    <div class="contagem-label">testes passando</div>
+  </div>
+</div>
+
+<div class="prova">
+  <p>
+    <strong>Tudo o que a spec 003 prometeu existe.</strong> Cada "passa" está amarrado a um teste que roda
+    sozinho. O único critério fora é o que só se vê na tela — fechar e reabrir o programa —, e ele está
+    esperando, junto com os seis passos da etapa 8, em
+    <code>especificacoes/a-conferir-na-tela.md</code>.
+  </p>
+  <p>
+    <strong>E esta conta não diz que o módulo está pronto para entregar.</strong> Ela mede o que o programa
+    decide, não o que a pessoa entende ao olhar: a etapa 8 passa nos critérios dela e ainda não foi
+    conferida na tela. São coisas diferentes, e a segunda é a que falta.
+  </p>
+</div>
+
+<h2>O que mudou desde a revisão 19</h2>
+<p class="intro-secao">
+  Os 28 critérios de "Encontrar e conferir", "Máscara" e "Revisão" continuam passando, com as mesmas
+  provas. Mudaram de estado os das etapas 6, 7 e 8:
+</p>
+<div class="rolar"><table>
+  <tr><th>Critério</th><th>Na revisão 19</th><th>Agora</th><th>Como se sabe</th></tr>
+  <tr><td>PDF sem camada de texto: leitura, conferência e revisão, sem "salvar como está"</td><td class="meio">sem o que verificar</td><td class="ok">passa</td><td>test_pdf_no_anonimizar e test_painel_anonimizar</td></tr>
+  <tr><td>PDF sem texto: a tela "Este documento precisa ser lido", com nome, páginas e o motor</td><td class="meio">critério novo (8ª emenda)</td><td class="ok">passa</td><td>test_painel_anonimizar: a tela de ler com o motor</td></tr>
+  <tr><td>o item do menu durante a leitura pelo Anonimizar é "Anonimizar"</td><td class="meio">sem o que verificar</td><td class="ok">passa</td><td>o caminho inteiro acontece dentro do painel do Anonimizar</td></tr>
+  <tr><td>cancelar a leitura volta à escolha do arquivo, sem gravar nada</td><td class="meio">sem o que verificar</td><td class="ok">passa</td><td>test_pdf_no_anonimizar: cancelar volta e diz o que houve</td></tr>
+  <tr><td>Tesseract faltando: o aviso com as três saídas, e um <code>.md</code> abre normalmente</td><td class="meio">sem o que verificar</td><td class="ok">passa</td><td>test_pdf_no_anonimizar: quatro testes do motor faltando</td></tr>
+  <tr><td>a escolha do motor não aparece na primeira tela, e aparece antes de ler</td><td class="ok">passa (metade)</td><td class="ok">passa</td><td>test_pdf_no_anonimizar e os dois estados da tela de ler</td></tr>
+  <tr><td>"Seguir para Anonimizar" abre a revisão com o texto conferido, sem gravar nada</td><td class="meio">sem o que verificar</td><td class="ok">passa</td><td>test_seguir_para_anonimizar: a pasta antes e depois</td></tr>
+  <tr><td>voltando ao Gerar OCR, o texto conferido continua lá</td><td class="meio">critério novo (8ª emenda)</td><td class="ok">passa</td><td>test_seguir_para_anonimizar: a volta pelo menu</td></tr>
+  <tr><td>revisão aberta e nada salvo + "Gerar OCR" no menu → pergunta antes de descartar</td><td class="falta">NÃO PASSA</td><td class="ok">passa</td><td>test_antes_de_descartar: trocar de item no menu</td></tr>
+  <tr><td>o aviso da tela de salvar do Gerar OCR aponta para o Anonimizar</td><td class="falta">NÃO PASSA</td><td class="ok">passa</td><td>test_seguir_para_anonimizar: o aviso não fala mais em "ainda vai ser construído"</td></tr>
+  <tr><td>fechar e reabrir o programa volta ao estado inicial</td><td class="meio">para você conferir</td><td class="meio">para você conferir</td><td>nada é guardado em disco; o passo está no a-conferir-na-tela.md</td></tr>
+</table></div>
+
+<h2>O que esta rodada mudou</h2>
+<div class="rolar"><table>
+  <tr><th>Onde</th><th>O que aconteceu</th></tr>
+  <tr><td><code>especificacoes/specs/003-anonimizador-de-cpf.md</code></td><td>um critério contava a história pela metade: dizia que voltar ao Gerar OCR devolve o texto conferido, sem mencionar que, com a revisão não salva, a pergunta antes de descartar vem primeiro. O programa fazia o certo; o texto é que faltava dizer</td></tr>
+  <tr><td><code>mockups/revisoes/24-criterios-de-aceite.html</code></td><td>novo: esta página</td></tr>
+</table></div>
+
+<p class="rodape">
+  Uma lente por rodada. Na funcionalidade 3 rodaram: a crítica em todas as etapas, a de segredo e dado
+  real, a de manutenção, e esta duas vezes. Continua sem rodar a de <strong>clareza</strong> — o trecho que
+  funciona mas que ninguém lê depois —, e a de <strong>conferir na tela</strong> sobre o conjunto, que é
+  justamente o que o <code>a-conferir-na-tela.md</code> está guardando.
+</p>
+
+</body>
+</html>
