@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import motor_na_tela
 import painel_ocr
 from documento import conferir
 
@@ -30,14 +31,14 @@ class _Maquina:
 def maquina(monkeypatch):
     estado = _Maquina()
     monkeypatch.setattr(
-        painel_ocr, "localizar_tesseract",
+        motor_na_tela, "localizar_tesseract",
         lambda: TESSERACT_DE_MENTIRA if estado.tem_motor else None,
     )
     monkeypatch.setattr(
-        painel_ocr, "ha_algum_tesseract", lambda: estado.sem_portugues
+        motor_na_tela, "ha_algum_tesseract", lambda: estado.sem_portugues
     )
-    monkeypatch.setattr(painel_ocr, "localizar_instalador", lambda: estado.instalador)
-    monkeypatch.setattr(painel_ocr, "abrir_instalador", estado.instaladores_abertos.append)
+    monkeypatch.setattr(motor_na_tela, "localizar_instalador", lambda: estado.instalador)
+    monkeypatch.setattr(motor_na_tela, "abrir_instalador", estado.instaladores_abertos.append)
 
     def apontar(pasta):
         estado.pastas_apontadas.append(pasta)
@@ -49,7 +50,7 @@ def maquina(monkeypatch):
             return True
         return False
 
-    monkeypatch.setattr(painel_ocr, "apontar_pasta", apontar)
+    monkeypatch.setattr(motor_na_tela, "apontar_pasta", apontar)
     return estado
 
 
@@ -220,7 +221,7 @@ def test_instalador_que_nao_abre_explica_o_porque(maquina, monkeypatch):
     def recusar(_instalador):
         raise OSError("A operação foi cancelada pelo usuário.")
 
-    monkeypatch.setattr(painel_ocr, "abrir_instalador", recusar)
+    monkeypatch.setattr(motor_na_tela, "abrir_instalador", recusar)
     painel.instalar_o_motor()
 
     assert '"Sim"' in painel.aviso_do_motor.saidas.recado.text()
