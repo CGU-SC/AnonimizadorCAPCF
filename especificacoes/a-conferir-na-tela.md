@@ -8,40 +8,15 @@ Este arquivo existe porque uma etapa foi construída num dia em que a pessoa nã
 estava na frente da máquina (21/09/2026, pelo controle remoto). Conferido um
 item, ele sai daqui.
 
-## Etapa 8 — "Seguir para Anonimizar" no Gerar OCR
+## Nada esperando conferência
 
-Construída e revisada pela lente crítica em 21/09/2026; **não conferida na tela**.
+A etapa 8 do Anonimizar — o "Seguir para Anonimizar" — e o critério da
+reabertura (RN-19) foram conferidos em 23/09/2026, e saíram daqui.
 
-1. **Gerar OCR** → `dados-exemplo\01-com-texto-e-tabela.pdf` → "Aproveitar este
-   texto" → **"Conferido"**.
-   O que olhar: o cartão do Anonimizar fica **à esquerda, com o botão em
-   destaque**, e o de salvar à direita, dizendo "— com os CPFs inteiros".
-2. **"Seguir para Anonimizar"**.
-   O que olhar: o menu passa a marcar "Anonimizar", a revisão abre com os
-   números mascarados, e **nenhum arquivo novo aparece** na pasta do PDF.
-3. Na revisão, **"Salvar o texto mascarado…"**.
-   O que olhar: o caminho sugerido é `01-com-texto-e-tabela - sem CPF.md`, na
-   pasta do PDF.
-4. Sem salvar, clicar em **"Gerar OCR"** no menu.
-   O que olhar: aparece a pergunta antes de descartar. Respondendo "Descartar e
-   seguir", o Gerar OCR está na escolha da saída, **com o texto conferido lá**.
-5. Ali, **"Escolher onde salvar"**.
-   O que olhar: o aviso amarelo aponta para o "Seguir para Anonimizar" e para o
-   item do menu, e **não** diz mais que o Anonimizar "ainda vai ser construído".
-6. Caminho torto, com os dois módulos ocupados: deixe um PDF na **conferência do
-   Anonimizar**, vá ao Gerar OCR, termine outro documento e clique em "Seguir
-   para Anonimizar".
-   O que olhar: a pergunta fala do documento que já estava no Anonimizar, e
-   traz a linha "O texto que você mandou seguir continua no Gerar OCR,
-   esperando."
-
-## Critério de aceite que só se vê na tela
-
-Da revisão 19, ainda sem relato:
-
-- Anonimizar um arquivo, **fechar o programa, abrir de novo** e ir em
-  "Anonimizar": a tela tem que estar na escolha do arquivo, sem lembrar nada do
-  uso anterior (RN-19).
+O relato veio **global** ("fiz os testes e está tudo certo"), e não observação
+por observação. Fica registrado como veio: se um dia algum desses seis passos
+mostrar defeito, este parágrafo é a explicação de por que ele passou batido, e
+não uma contradição.
 
 ## O que não fica aqui
 
