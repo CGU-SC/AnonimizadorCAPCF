@@ -1,4 +1,4 @@
-# AnomizadorCAPCF
+# Anonimizador CAPCF
 
 ## O que é
 
@@ -83,7 +83,7 @@ dia o programa sair da universidade.
 
 Três nascem do pacote de skills, e valem sempre:
 
-- O agente trabalha **dentro desta pasta** (`c:\Dev\AnomizadorCAPCF`). Sair
+- O agente trabalha **dentro desta pasta** (`c:\Dev\AnonimizadorCAPCF`). Sair
   dela é pedido do usuário, com caminho e tarefa nomeados, e vale só para
   aquela tarefa.
 - **Segredo mora no `.env`**, nunca no código, nunca no chat, nunca no

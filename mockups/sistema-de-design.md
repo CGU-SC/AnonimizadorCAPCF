@@ -1,4 +1,4 @@
-# Sistema de design — AnomizadorCAPCF
+# Sistema de design — Anonimizador CAPCF
 
 Decidido em 03/09/2026, com a usuária, antes da primeira tela. Toda página do
 projeto (mockup de tela ou página de relatório) segue isto.

@@ -1,7 +1,7 @@
 @echo off
-title AnomizadorCAPCF - modo DEV, sem o motor de leitura
+title Anonimizador CAPCF - modo DEV, sem o motor de leitura
 echo.
-echo   Abrindo o AnomizadorCAPCF como se o Tesseract NAO estivesse instalado.
+echo   Abrindo o Anonimizador CAPCF como se o Tesseract NAO estivesse instalado.
 echo   Nada foi desinstalado: o programa so finge que nao encontrou o motor.
 echo.
 echo   Para simular a TI terminando a instalacao com o programa aberto,

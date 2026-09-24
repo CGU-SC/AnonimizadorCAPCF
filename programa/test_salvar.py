@@ -39,7 +39,7 @@ def test_o_arquivo_tem_o_texto_e_mais_nada():
 
     assert conteudo == "texto da primeira pagina\n\ntexto da segunda pagina\n"
     for recado in ["OCR", "página", "pagina 1", "conferid", "gerado", "---",
-                   "Anomizador", "CPF"]:
+                   "Anonimizador", "CPF"]:
         if recado in paginas[0] or recado in paginas[1]:
             continue
         assert recado not in conteudo, f"o programa escreveu '{recado}' dentro do arquivo"
