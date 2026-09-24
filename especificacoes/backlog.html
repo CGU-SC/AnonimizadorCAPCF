@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Backlog — AnomizadorCAPCF</title>
+<title>Backlog — Anonimizador CAPCF</title>
 <style>
   :root {
     --cor-fundo: #1e2228;
@@ -68,7 +68,7 @@
 <body>
 
 <h1>Backlog</h1>
-<p class="subtitulo">O que está previsto para o AnomizadorCAPCF — espelha <code>especificacoes/backlog.md</code>, sempre a versão vigente</p>
+<p class="subtitulo">O que está previsto para o Anonimizador CAPCF — espelha <code>especificacoes/backlog.md</code>, sempre a versão vigente</p>
 
 <div class="coluna">
   <h2>Prevista <span class="contagem">2</span></h2>
@@ -79,8 +79,9 @@
       <div class="cartao-entrega">Pedida em 16/09/2026, na conferência da etapa 2 do Anonimizar. Antes de construir, precisa de levantamento próprio: as tabelas, o que mora fora do corpo do texto (cabeçalho, rodapé, nota, caixa de texto, comentário) e a imagem colada dentro do documento. O <code>.doc</code> antigo fica de fora — exigiria o Word instalado ou um programa a mais nas máquinas do núcleo.</div>
     </div>
     <div class="cartao">
-      <div class="cartao-titulo">4. Motor de leitura por IA local</div>
-      <div class="cartao-entrega">Liga o módulo de OCR a um modelo de IA rodando na própria máquina (LM Studio) ou em servidor da UFSC, como alternativa ao Tesseract — endereço restrito à máquina ou à rede da universidade.</div>
+      <div class="cartao-titulo">4. Revisão por IA local</div>
+      <div class="cartao-entrega">Um segundo par de olhos antes do olho humano: uma IA na própria máquina (LM Studio) ou num servidor dentro da rede da UFSC aponta, na revisão, onde a leitura parece frágil e onde um número merece mais cuidado. Os apontamentos somam à lista que já existe, e a IA nunca reescreve o texto. Vem desligada. De quebra, a IA também fica disponível como motor de leitura no lugar do Tesseract.</div>
+      <div class="cartao-entrega">Levantamento começado e parado em 23/09/2026 para a entrega da versão de teste; o que já foi levantado está anotado na branch <code>spec-004-revisao-por-ia-local</code>.</div>
     </div>
   </div>
 </div>
@@ -120,7 +121,7 @@
 </div>
 
 <p class="rodape">
-  Estas quatro linhas são só a parte visível do trabalho — cerca de um terço do
+  Estas cinco linhas são só a parte visível do trabalho — cerca de um terço do
   esforço real de um projeto costuma ser funcionalidade nova; o resto é
   correção, ajuste, empacotamento e registro, e não aparece aqui.
 </p>
