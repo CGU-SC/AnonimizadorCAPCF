@@ -21,9 +21,11 @@ from estilo import (
     COR_TEXTO,
     COR_TEXTO_SECUNDARIO,
     LARGURA_MENU,
+    TEXTO_PEQUENO,
 )
 from painel_anonimizar import PainelAnonimizar
 from painel_ocr import PainelOcr
+from versao import VERSAO
 
 NOME_PROGRAMA = "Anonimizador CAPCF"
 
@@ -57,6 +59,15 @@ class MenuLateral(QWidget):
         layout.addWidget(self.botao_ocr)
         layout.addWidget(self.botao_anonimizar)
         layout.addStretch()
+
+        # No pé da faixa, discreta: é para quem precisa responder "qual versão
+        # você está usando?" ao relatar um defeito, e não para o uso do dia.
+        self.versao = QLabel(f"versão {VERSAO}")
+        self.versao.setStyleSheet(
+            f"color: {COR_TEXTO_SECUNDARIO}; font-size: {TEXTO_PEQUENO}px;"
+            "padding: 0 16px; border: none;"
+        )
+        layout.addWidget(self.versao)
 
     def _criar_item_menu(self, texto):
         botao = QPushButton(texto)
