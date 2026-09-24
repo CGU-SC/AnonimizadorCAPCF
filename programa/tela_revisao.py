@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import math
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -33,6 +34,7 @@ import cpf
 import estilo
 import tipos_na_tela
 from dupla_conferencia import liberar_mesmo_assim
+from linha_que_desce import LinhaQueDesce
 from lista_de_achados import ListaDeAchados, contexto
 
 AVISO_SEM_CPF = "Nenhum CPF encontrado neste texto"
@@ -137,7 +139,12 @@ class TelaRevisao(QWidget):
         layout.addWidget(self.aviso_sem_cpf)
         layout.addSpacing(estilo.ESPACO_2)
 
-        layout.addLayout(self._montar_chave_de_cores())
+        chave, acoes = self._montar_chave_de_cores()
+        layout.addLayout(chave)
+        layout.addSpacing(estilo.ESPACO_2)
+        layout.addLayout(acoes)
+        layout.addSpacing(estilo.ESPACO_1)
+        layout.addWidget(self.aviso_do_trecho, alignment=Qt.AlignRight)
         layout.addSpacing(estilo.ESPACO_2)
 
         self.texto = QTextEdit()
@@ -169,7 +176,14 @@ class TelaRevisao(QWidget):
         metades = QHBoxLayout()
         metades.setSpacing(estilo.ESPACO_3)
         metades.addWidget(self.texto, stretch=1)
-        metades.addWidget(self.lista)
+        # A revisão por IA mora no pé da lista, e não na barra de baixo: lá, com
+        # os três botões e o aviso, nada cabia inteiro nem na janela do tamanho
+        # em que ela abre. A coluna da lista tem largura fixa e não encolhe.
+        coluna = QVBoxLayout()
+        coluna.setSpacing(estilo.ESPACO_2)
+        coluna.addWidget(self.lista, stretch=1)
+        coluna.addLayout(self._montar_revisao_por_ia())
+        metades.addLayout(coluna)
         layout.addLayout(metades, stretch=1)
         layout.addSpacing(estilo.ESPACO_3)
 
@@ -192,7 +206,10 @@ class TelaRevisao(QWidget):
         botao_outro.setCursor(Qt.PointingHandCursor)
         botao_outro.setStyleSheet(estilo.estilo_botao(principal=False))
         botao_outro.clicked.connect(ao_anonimizar_outro)
-        aviso = QLabel("Nada é gravado até você salvar.")
+        # Em duas linhas, com a quebra escrita no texto: numa só, o aviso não
+        # encolhe, e na janela mínima quem apertava eram os dois botões, que
+        # saíam com o texto cortado.
+        aviso = QLabel("Nada é gravado\naté você salvar.")
         aviso.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
             f"color: {estilo.COR_TEXTO_SECUNDARIO};"
@@ -203,10 +220,32 @@ class TelaRevisao(QWidget):
 
     # ------------------------------------------------------------- montagem
 
-    def _montar_cabecalho(self):
-        linha = QHBoxLayout()
-        linha.setSpacing(estilo.ESPACO_3)
+    def _montar_revisao_por_ia(self):
+        """O lugar da revisão das máscaras por IA local, a funcionalidade 4.
 
+        Ela aparece apagada de propósito, e sempre com a linha embaixo - o
+        mesmo padrão da IA local na escolha do motor de leitura. Botão apagado
+        sozinho faz a pessoa clicar, nada acontecer, e concluir que o programa
+        quebrou.
+        """
+        coluna = QVBoxLayout()
+        coluna.setSpacing(estilo.ESPACO_1)
+        self.botao_revisar_com_ia = QPushButton("Revisar máscaras com IA local")
+        self.botao_revisar_com_ia.setEnabled(False)
+        self.botao_revisar_com_ia.setStyleSheet(estilo.estilo_botao(principal=False))
+        # Sem quebra automática de linha: a frase é curta, e a quebra do Qt
+        # reservaria a altura de uma linha só, cortando o resto.
+        self.explicacao_revisar_com_ia = QLabel("Funcionalidade a ser implementada")
+        self.explicacao_revisar_com_ia.setAlignment(Qt.AlignHCenter)
+        self.explicacao_revisar_com_ia.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+        )
+        coluna.addWidget(self.botao_revisar_com_ia)
+        coluna.addWidget(self.explicacao_revisar_com_ia)
+        return coluna
+
+    def _montar_cabecalho(self):
         titulo = QLabel("Revisar antes de salvar")
         titulo.setStyleSheet(
             f"font-size: {estilo.TEXTO_GRANDE}px; font-weight: 600;"
@@ -227,14 +266,21 @@ class TelaRevisao(QWidget):
         self.selo_liberados = _Selo(cor=tipos_na_tela.LIBERADO.cor,
                                     ao_clicar=lambda: self.filtrar(LIBERADOS))
 
-        linha.addWidget(titulo)
-        linha.addWidget(self.selo_encontrados)
-        linha.addWidget(self.selo_validos)
-        linha.addWidget(self.selo_suspeitos)
-        linha.addWidget(self.selo_a_mao)
-        linha.addWidget(self.selo_liberados)
-        linha.addStretch()
-        return linha
+        # O título tem a linha dele, e os selos vão para a de baixo, descendo
+        # mais uma quando não cabem. Na mesma linha, com os cinco acesos, título
+        # e selos pediam uns 990 px, e saíam cortados até perto de 1300 px de
+        # janela (conferência da entrega, 23/09/2026).
+        cabecalho = QVBoxLayout()
+        cabecalho.setSpacing(estilo.ESPACO_2)
+        cabecalho.addWidget(titulo)
+        selos = LinhaQueDesce(espaco=estilo.ESPACO_2)
+        selos.addWidget(self.selo_encontrados)
+        selos.addWidget(self.selo_validos)
+        selos.addWidget(self.selo_suspeitos)
+        selos.addWidget(self.selo_a_mao)
+        selos.addWidget(self.selo_liberados)
+        cabecalho.addLayout(selos)
+        return cabecalho
 
     def _montar_chave_de_cores(self):
         linha = QHBoxLayout()
@@ -251,11 +297,25 @@ class TelaRevisao(QWidget):
         linha.addWidget(self.chave_a_mao)
         linha.addStretch()
 
-        # O aviso de trecho sem dígito fica ao lado do botão, onde o olho está,
-        # e não numa caixa por cima para fechar. Some quando a pessoa marca
-        # outro trecho (rascunho 01, estado 3).
+        # O botão e a navegação moram numa linha própria, abaixo da chave. Numa
+        # linha só, as peças pediam uns 920 px, e na janela do tamanho em que
+        # ela abre havia 724: o "Mascarar o trecho marcado" era quem apertava, e
+        # saía cortado pela metade (conferência da entrega, 23/09/2026).
+        acoes = QHBoxLayout()
+        acoes.setSpacing(estilo.ESPACO_4)
+        acoes.addStretch()
+
+        # O aviso de trecho sem dígito fica logo abaixo do botão, onde o olho
+        # está, e não numa caixa por cima para fechar. Some quando a pessoa
+        # marca outro trecho (rascunho 01, estado 3). Tem linha própria porque
+        # pede uns 400 px, e ao lado do botão ou da chave voltaria a cortar o
+        # que estivesse junto. O lugar dele fica guardado mesmo apagado: sem
+        # isso, o texto do documento pularia para baixo a cada aviso.
         self.aviso_do_trecho = QLabel()
         self.aviso_do_trecho.setVisible(False)
+        guardar_o_lugar = self.aviso_do_trecho.sizePolicy()
+        guardar_o_lugar.setRetainSizeWhenHidden(True)
+        self.aviso_do_trecho.setSizePolicy(guardar_o_lugar)
         self.aviso_do_trecho.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px; color: {estilo.COR_ALERTA};"
         )
@@ -267,8 +327,7 @@ class TelaRevisao(QWidget):
         # Botão que parece pronto e não faz nada é lido como defeito: ele só
         # acende quando há trecho marcado.
         self.botao_mascarar.setEnabled(False)
-        linha.addWidget(self.aviso_do_trecho)
-        linha.addWidget(self.botao_mascarar)
+        acoes.addWidget(self.botao_mascarar)
 
         # A navegação pelos números, para passar o documento de cima a baixo
         # sem rolar (acréscimo da spec 003, de 17/09/2026). Ela percorre a lista
@@ -287,10 +346,10 @@ class TelaRevisao(QWidget):
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
             f"color: {estilo.COR_TEXTO_SECUNDARIO};"
         )
-        linha.addWidget(self.botao_anterior)
-        linha.addWidget(self.posicao)
-        linha.addWidget(self.botao_proximo)
-        return linha
+        acoes.addWidget(self.botao_anterior)
+        acoes.addWidget(self.posicao)
+        acoes.addWidget(self.botao_proximo)
+        return linha, acoes
 
     def _montar_aviso_sem_cpf(self):
         caixa = QFrame()
@@ -847,7 +906,6 @@ def _amostra_da_chave(nome, ondulado, cor, pontilhado=False):
     amostra.setReadOnly(True)
     amostra.setFrameShape(QFrame.NoFrame)
     amostra.setFixedHeight(22)
-    amostra.setFixedWidth(200)
     amostra.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     amostra.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
     amostra.setStyleSheet("background: transparent; border: none;")
@@ -869,4 +927,10 @@ def _amostra_da_chave(nome, ondulado, cor, pontilhado=False):
     cursor = amostra.textCursor()
     cursor.insertText(cpf.MASCARA * 3, marcado)
     cursor.insertText(f"  {nome}", comum)
+    # Da largura do próprio texto, e não um número fixo: com 200 px cada, as
+    # três amostras tomavam a linha e o que vinha ao lado saía cortado. Sem
+    # quebra de linha, senão o Qt quebra palavra por palavra antes de a conta
+    # ser feita, e ela dá a largura de uma palavra só.
+    amostra.setLineWrapMode(QTextEdit.NoWrap)
+    amostra.setFixedWidth(math.ceil(amostra.document().size().width()) + 2)
     return amostra
