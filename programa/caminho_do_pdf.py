@@ -800,18 +800,18 @@ def montar_escolha_do_motor(rotulo):
     tesseract.setChecked(True)
     tesseract.setStyleSheet(estilo_do_radio())
 
-    # A IA local aparece e não funciona de propósito: ela depende de um servidor
-    # que a TI da UFSC ainda vai montar. Não existe nenhuma linha do programa que
-    # converse com motor remoto - e ele nunca será de empresa de fora da UFSC.
-    ia_local = QRadioButton("IA local da UFSC")
+    # A IA local aparece e não funciona de propósito: ainda não foi construída.
+    # "Local" porque ela poderá rodar na própria máquina da pessoa, e não só num
+    # servidor da UFSC (backlog, 23/09/2026). Não existe nenhuma linha do
+    # programa que converse com outro motor - e ele nunca será de empresa de
+    # fora da UFSC.
+    ia_local = QRadioButton("IA local")
     ia_local.setEnabled(False)
     ia_local.setStyleSheet(estilo_do_radio(apagado=True))
 
-    explicacao = QLabel(
-        "Depende de um servidor que a TI ainda vai montar dentro da rede "
-        "da universidade."
-    )
-    explicacao.setWordWrap(True)
+    # Sem quebra automática de linha: a frase é curta, e a quebra do Qt
+    # reservaria a altura de uma linha só, cortando o resto.
+    explicacao = QLabel("Funcionalidade a ser implementada")
     explicacao.setStyleSheet(
         f"font-size: {estilo.TEXTO_PEQUENO}px;"
         f"color: {estilo.COR_TEXTO_SECUNDARIO}; margin-left: 22px;"
