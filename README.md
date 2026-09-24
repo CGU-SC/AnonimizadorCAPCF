@@ -1,4 +1,4 @@
-# AnomizadorCAPCF
+# Anonimizador CAPCF
 
 Programa para a CAPCF (Coordenadoria de Análise de Prestações de Contas
 Fundacionais da UFSC) tirar o CPF de documentos antes de eles irem para

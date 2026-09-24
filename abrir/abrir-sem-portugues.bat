@@ -1,7 +1,7 @@
 @echo off
-title AnomizadorCAPCF - modo DEV, Tesseract sem o portugues
+title Anonimizador CAPCF - modo DEV, Tesseract sem o portugues
 echo.
-echo   Abrindo o AnomizadorCAPCF como se o Tesseract estivesse instalado
+echo   Abrindo o Anonimizador CAPCF como se o Tesseract estivesse instalado
 echo   SEM o pacote de portugues. Nada foi mexido na instalacao: o programa
 echo   so finge que o pacote nao esta la.
 echo.

@@ -1,5 +1,5 @@
 @echo off
-title AnomizadorCAPCF - simular a instalacao do motor
+title Anonimizador CAPCF - simular a instalacao do motor
 echo.
 if exist "%~dp0.motor-escondido" (
     del "%~dp0.motor-escondido"

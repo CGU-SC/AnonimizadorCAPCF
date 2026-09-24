@@ -1,7 +1,7 @@
 @echo off
-title AnomizadorCAPCF - modo DEV
+title Anonimizador CAPCF - modo DEV
 echo.
-echo   Abrindo o AnomizadorCAPCF em modo de desenvolvimento...
+echo   Abrindo o Anonimizador CAPCF em modo de desenvolvimento...
 echo.
 
 cd /d "%~dp0.."

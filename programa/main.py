@@ -1,4 +1,4 @@
-# Ponto de entrada do AnomizadorCAPCF: abre a janela do programa.
+# Ponto de entrada do Anonimizador CAPCF: abre a janela do programa.
 import sys
 
 from PySide6.QtCore import Qt
@@ -25,7 +25,7 @@ from estilo import (
 from painel_anonimizar import PainelAnonimizar
 from painel_ocr import PainelOcr
 
-NOME_PROGRAMA = "AnomizadorCAPCF"
+NOME_PROGRAMA = "Anonimizador CAPCF"
 
 
 class MenuLateral(QWidget):
@@ -42,7 +42,10 @@ class MenuLateral(QWidget):
         layout.setContentsMargins(0, 24, 0, 24)
         layout.setSpacing(4)
 
-        nome = QLabel(NOME_PROGRAMA)
+        # Numa linha só, o nome pede 244 px e a faixa tem 220: o fim sairia
+        # cortado, sem aviso. A quebra vai escrita no texto, e não pela quebra
+        # automática do Qt, que reserva a altura de uma linha e corta a segunda.
+        nome = QLabel(NOME_PROGRAMA.replace(" ", "\n"))
         nome.setStyleSheet(
             f"color: {COR_TEXTO}; font-size: 20px; font-weight: 700;"
             f"padding: 0 16px 16px 16px; border-bottom: 1px solid {COR_BORDA};"
