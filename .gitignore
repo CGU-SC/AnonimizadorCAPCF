@@ -18,10 +18,11 @@ instaladores/
 # fingir que o Tesseract não está pronto. Existe só enquanto a simulação dura.
 abrir/.motor-escondido
 
-# Saída padrão do PyInstaller ao gerar o executável.
+# Saída padrão do PyInstaller ao gerar o executável. A receita dele (o .spec em
+# empacotar/) fica DENTRO do histórico: é código do projeto, e sem ela a
+# próxima versão seria montada de outro jeito (entrega de 23/09/2026).
 build/
 dist/
-*.spec
 
 # Ambiente virtual do Python — cada máquina cria o seu com `pip install -r requirements.txt`.
 .venv/

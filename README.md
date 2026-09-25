@@ -43,6 +43,18 @@ Para abrir o programa, dois cliques em:
 abrir\abrir-dev.bat
 ```
 
+## Como gerar a entrega
+
+Dois cliques em:
+
+```
+empacotar\gerar-entrega.bat
+```
+
+Ele roda os testes, monta o instalador e deixa em `builds\entrega-<versão>\`
+o que vai para o núcleo: o instalador e o roteiro `Como instalar.html`. O que
+ele precisa, e onde fica cada peça, está no `CLAUDE.md`.
+
 ## Onde ficam as coisas
 
 Ver `CLAUDE.md` — é o contrato de trabalho do projeto, com a tabela de
