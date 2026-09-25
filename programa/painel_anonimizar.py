@@ -201,13 +201,21 @@ class PainelAnonimizar(QWidget):
 
     def _montar_area_de_arrastar(self):
         area = QFrame()
+        # A regra vale só para o quadro, pelo nome. Escrita para todo QFrame,
+        # ela valia também para os textos de dentro (todo texto do Qt é um
+        # QFrame), e cada um pintava o fundo de novo por cima do quadro: saíam
+        # caixinhas mais claras em volta de cada frase (entrega, 24/09/2026).
+        # E os textos ficam transparentes: senão pintam o fundo da janela, que
+        # a regra do painel em main.py passa para tudo o que está dentro dele.
+        area.setObjectName("area_de_arrastar")
         area.setStyleSheet(
             f"""
-            QFrame {{
+            QFrame#area_de_arrastar {{
                 border: 2px dashed {estilo.COR_BORDA};
                 border-radius: {estilo.RAIO}px;
                 background-color: rgba(255, 255, 255, 4);
             }}
+            QLabel {{ background: transparent; }}
             """
         )
         layout = QVBoxLayout(area)

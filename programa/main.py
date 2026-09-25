@@ -36,8 +36,16 @@ class MenuLateral(QWidget):
     def __init__(self):
         super().__init__()
         self.setFixedWidth(LARGURA_MENU)
+        # A cor vale só para a faixa, pelo nome, e a faixa precisa ser mandada
+        # pintar o próprio fundo: um QWidget comum ignora a cor da folha de
+        # estilo. Sem as duas coisas, a regra caía só nos textos de dentro - o
+        # bloco do nome saía em #262b33 e o resto da faixa no cinza padrão do
+        # Windows (entrega, 24/09/2026).
+        self.setObjectName("menu_lateral")
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.setStyleSheet(
-            f"background-color: {COR_FUNDO_ELEVADO}; border-right: 1px solid {COR_BORDA};"
+            f"QWidget#menu_lateral {{ background-color: {COR_FUNDO_ELEVADO};"
+            f" border-right: 1px solid {COR_BORDA}; }}"
         )
 
         layout = QVBoxLayout(self)
@@ -62,10 +70,12 @@ class MenuLateral(QWidget):
 
         # No pé da faixa, discreta: é para quem precisa responder "qual versão
         # você está usando?" ao relatar um defeito, e não para o uso do dia.
+        # Fundo transparente: a cor da faixa também pinta os textos de dentro
+        # dela, e a versão saía numa caixa de outro tom (entrega, 24/09/2026).
         self.versao = QLabel(f"versão {VERSAO}")
         self.versao.setStyleSheet(
             f"color: {COR_TEXTO_SECUNDARIO}; font-size: {TEXTO_PEQUENO}px;"
-            "padding: 0 16px; border: none;"
+            "padding: 0 16px; border: none; background: transparent;"
         )
         layout.addWidget(self.versao)
 

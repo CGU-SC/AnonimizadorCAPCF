@@ -234,13 +234,22 @@ class TelaSobrescrever(QWidget):
 
         caixa = QFrame()
         caixa.setFixedWidth(self.LARGURA_DA_CAIXA)
+        # O estilo vale só para a caixa, pelo nome. Escrito para todo QFrame,
+        # valia também para cada texto de dentro (todo texto do Qt é um
+        # QFrame), que repetia o fundo e a barra colorida por cima da caixa - o
+        # mesmo vale para as caixas e cartões deste arquivo (entrega,
+        # 24/09/2026). E os textos ficam transparentes: senão pintam o fundo
+        # da janela, que a regra do painel em main.py passa para tudo o que
+        # está dentro dele.
+        caixa.setObjectName("quadro")
         caixa.setStyleSheet(
             f"""
-            QFrame {{
+            QFrame#quadro {{
                 background-color: rgba(217, 83, 79, 26);
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}
+            QLabel {{ background: transparent; }}
             """
         )
         dentro = QVBoxLayout(caixa)
@@ -316,13 +325,15 @@ class TelaDescartar(QWidget):
 
         caixa = QFrame()
         caixa.setFixedWidth(self.LARGURA_DA_CAIXA)
+        caixa.setObjectName("quadro")
         caixa.setStyleSheet(
             f"""
-            QFrame {{
+            QFrame#quadro {{
                 background-color: rgba(217, 164, 65, 26);
                 border-left: 4px solid {estilo.COR_ALERTA};
                 border-radius: {estilo.RAIO}px;
             }}
+            QLabel {{ background: transparent; }}
             """
         )
         dentro = QVBoxLayout(caixa)
@@ -456,13 +467,15 @@ def resumo_do_documento(nome_do_documento, paginas, corrigidas):
 def _aviso_dos_cpfs():
     """O aviso que a regra RN-14 exige, com todas as letras, antes de gravar."""
     caixa = QFrame()
+    caixa.setObjectName("quadro")
     caixa.setStyleSheet(
         f"""
-        QFrame {{
+        QFrame#quadro {{
             background-color: rgba(217, 164, 65, 31);
             border-left: 4px solid {estilo.COR_ALERTA};
             border-radius: {estilo.RAIO}px;
         }}
+        QLabel {{ background: transparent; }}
         """
     )
     dentro = QVBoxLayout(caixa)
@@ -495,13 +508,15 @@ def _aviso_dos_cpfs():
 
 def _cartao_de_saida(icone, nome, explicacao, botao, desligado=False):
     cartao = QFrame()
+    cartao.setObjectName("quadro")
     cartao.setStyleSheet(
         f"""
-        QFrame {{
+        QFrame#quadro {{
             background-color: {estilo.COR_FUNDO_ELEVADO};
             border: 1px solid {estilo.COR_BORDA};
             border-radius: {estilo.RAIO}px;
         }}
+        QLabel {{ background: transparent; }}
         """
     )
     dentro = QVBoxLayout(cartao)
