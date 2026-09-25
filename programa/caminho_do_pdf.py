@@ -350,13 +350,21 @@ class _TelaFicha(QWidget):
         layout.addSpacing(estilo.ESPACO_4)
 
         self.cartao = QFrame()
+        # O estilo vale só para o quadro, pelo nome. Escrito para todo QFrame,
+        # valia também para cada texto de dentro (todo texto do Qt é um
+        # QFrame), que repetia o fundo e a borda por cima do quadro - o mesmo
+        # vale para as caixas deste arquivo (entrega, 24/09/2026). E os textos
+        # ficam transparentes: senão pintam o fundo da janela, que a regra do
+        # painel em main.py passa para tudo o que está dentro dele.
+        self.cartao.setObjectName("quadro")
         self.cartao.setStyleSheet(
             f"""
-            QFrame {{
+            QFrame#quadro {{
                 background-color: {estilo.COR_FUNDO_ELEVADO};
                 border: 1px solid {estilo.COR_BORDA};
                 border-radius: {estilo.RAIO}px;
             }}
+            QLabel {{ background: transparent; }}
             """
         )
         cartao_layout = QVBoxLayout(self.cartao)
@@ -566,13 +574,15 @@ class _TelaErro(QWidget):
 
         caixa = QFrame()
         caixa.setFixedWidth(self.LARGURA_DA_CAIXA)
+        caixa.setObjectName("quadro")
         caixa.setStyleSheet(
             f"""
-            QFrame {{
+            QFrame#quadro {{
                 background-color: rgba(217, 83, 79, 26);
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}
+            QLabel {{ background: transparent; }}
             """
         )
         caixa_layout = QVBoxLayout(caixa)
