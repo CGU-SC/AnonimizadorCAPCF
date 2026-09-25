@@ -66,6 +66,20 @@ def test_valor_em_branco_conta_como_nao_preenchido(tmp_path, monkeypatch):
     assert configuracao.valor_do_env("TESSERACT_CAMINHO") is None
 
 
+def test_o_env_que_o_instalador_cria_chega_em_branco(tmp_path, monkeypatch):
+    """O modelo que vai no instalador não pode trazer caminho preenchido.
+
+    Ele nasce ao lado do programa em cada máquina do núcleo, e o exemplo dentro
+    dele é comentário. Se o exemplo virasse valor, todas as máquinas passariam
+    a procurar o Tesseract numa pasta que não existe nelas.
+    """
+    modelo = Path(__file__).parent.parent / "empacotar" / "modelo.env"
+    monkeypatch.setattr(configuracao, "pasta_do_programa", lambda: tmp_path)
+    (tmp_path / ".env").write_bytes(modelo.read_bytes())
+
+    assert configuracao.valor_do_env("TESSERACT_CAMINHO") is None
+
+
 @pytest.mark.parametrize("formato", ["utf-8", "utf-8-sig", "utf-16", "cp1252"])
 def test_o_env_e_lido_nos_formatos_que_o_bloco_de_notas_grava(tmp_path, monkeypatch,
                                                               formato):

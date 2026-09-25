@@ -21,7 +21,7 @@ maduro do mercado para ler PDF, rodar OCR e achar padrão com regex.
 | Validação de CPF | Sem biblioteca — dígito verificador calculado na mão |
 | Dados | Sem banco — cada documento é processado sozinho, sem estado entre usos |
 | Testes | pytest |
-| Distribuição | `.exe` único via PyInstaller — sem exigir instalação de Python nas máquinas do núcleo |
+| Distribuição | instalador do Windows (Inno Setup) com o programa numa pasta montada pelo PyInstaller — sem exigir Python nas máquinas do núcleo. Era `.exe` único até 23/09/2026: com instalador a pasta não aparece, e o `.exe` único se desempacota a cada abertura (5 a 10 s) e o antivírus desconfia dele |
 
 Descartado: C#/.NET (sem fluência de quem mantém) e Electron (mais pesado, OCR
 pior). Atenção: PyMuPDF é AGPL — ok para uso interno da UFSC, conferir se um
@@ -35,7 +35,7 @@ dia o programa sair da universidade.
 | Instalar as dependências | `.\.venv\Scripts\python.exe -m pip install -r requirements.txt` |
 | Rodar os testes | `.\.venv\Scripts\python.exe -m pytest` |
 | Rodar o programa | `abrir\abrir-dev.bat` (ou `.\.venv\Scripts\python.exe programa\main.py`) |
-| Gerar o instalador | *(ainda não existe — entra com a `skill-11-gerente-de-entrega`)* |
+| Gerar a entrega | `empacotar\gerar-entrega.bat` — roda os testes, monta a pasta do programa, o instalador e a pasta `builds\entrega-<versão>\` com o instalador e o roteiro. Pede o Inno Setup (`winget install --id JRSoftware.InnoSetup --exact`) e o instalador do Tesseract em `instaladores\` |
 
 ## Onde ficam as coisas
 
@@ -47,7 +47,9 @@ dia o programa sair da universidade.
 | `dados-exemplo/` | massa sintética para testar — nunca documento real |
 | `conferencias/` | as páginas que mostram o que o programa decidiu sobre a massa, para conferir sem abrir código (nasce na etapa 1 do Anonimizar) |
 | `abrir/` | atalho de abrir o programa em modo desenvolvimento (nasce quando houver algo para ver na tela) |
-| `builds/` | o `.exe` gerado no dia da entrega — conteúdo fora do histórico |
+| `empacotar/` | as receitas da entrega: a do PyInstaller (`anonimizador.spec`), a do instalador (`instalador.iss`), o `.env` em branco que o instalador cria (`modelo.env`), o roteiro para quem instala (`como-instalar.html`) e o atalho que gera tudo |
+| `builds/` | o que a entrega gera: a pasta do programa, o instalador e a pasta `entrega-<versão>` que vai para o núcleo — conteúdo fora do histórico |
+| `instaladores/` | o instalador do Tesseract que vai dentro do nosso — programa de terceiros, fora do histórico. Vem do GitHub da UB-Mannheim; confira o código SHA256 com o do catálogo do winget (`winget show --id UB-Mannheim.TesseractOCR`) |
 | `.venv/` | ambiente virtual do Python — cada máquina cria o seu, fora do histórico |
 
 ## O combinado com quem usa
@@ -66,8 +68,9 @@ dia o programa sair da universidade.
   num `.md`, `***` e `**` são a marcação de negrito e itálico (sétima emenda da
   spec 003).
 - **Motor de OCR**: dois no menu — Tesseract local, e (fora do escopo desta
-  primeira versão) uma LLM remota, apontando para um servidor que a TI da UFSC
-  pretende montar dentro da rede da universidade. **Nunca** um serviço de
+  primeira versão) uma IA local, na própria máquina (LM Studio) ou num servidor
+  dentro da rede da universidade. Na tela ela aparece apagada, como "IA local",
+  com "Funcionalidade a ser implementada" embaixo. **Nunca** um serviço de
   empresa externa — seria contradizer o motivo do programa existir.
 - **Conferência humana**: parte fixa do processo quando o texto veio de OCR, e
   não etapa opcional. O dígito verificador do CPF confere o que foi lido; o
@@ -75,6 +78,19 @@ dia o programa sair da universidade.
   calado.
 - **PDF grande com vários documentos**: entra como um documento só, sai como um
   `.md` só. Separar por dentro é melhoria futura.
+- **Quem faz**: o programa é desenvolvido pela CGU no âmbito da consultoria
+  realizada à UFSC em 2026, e será entregue à universidade depois. Em texto
+  para quem usa, não diga que a UFSC o fez. No instalador, o editor é "CGU".
+- **Como chega em quem usa** (forma de entrega, decidida em 23/09/2026):
+  **instalador** do Windows, instalado só para a pessoa, na pasta de programas
+  dela (`%LOCALAPPDATA%\Programs\Anonimizador CAPCF`), **sem pedir
+  administrador** — a funcionalidade 4 vai gravar configuração ao lado do
+  programa, e em `Program Files` cada gravação pediria a confirmação do
+  Windows. O instalador leva o do Tesseract (na pasta `instaladores`) e cria
+  um `.env` em branco; a pasta que vai para o núcleo tem o instalador e o
+  roteiro `Como instalar.html`. O número da versão mora em
+  `programa/versao.py`, e aparece no pé da faixa da esquerda e no instalador;
+  0.x é versão de teste, 1.0.0 fica para quando o núcleo aprovar o uso.
 - **Fora de escopo desta versão**: outro dado sensível além do CPF; saída em
   XLSX ou PDF (fica para um "anonimizador de documentos" futuro); construir o
   assistente de IA em si; qualquer uso oficial do arquivo gerado.
@@ -219,3 +235,33 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   parou de funcionar" — que assusta quem usa e ainda deixa a dúvida de se o
   documento foi mexido. Reproduzido e resolvido em 10/09/2026, com o
   `closeEvent` da janela pedindo o encerramento e esperando.
+- **Fileira do Qt espreme o texto em vez de descer, e ninguém avisa.** Um
+  `QHBoxLayout` com mais peças do que cabe corta o texto de todos os botões
+  pela metade — "Mascarar o trecho marcado" saía cortado até em janela de
+  1400 px. Antes de pôr peça nova numa linha, **meça** (`sizeHint` contra a
+  largura real, na janela mínima de 900 px e na de 1000 px em que ela abre),
+  em vez de confiar no olho. Quando não cabe, a peça desce de linha
+  (`programa/linha_que_desce.py`), vai para outro lugar, ou o texto quebra com
+  `\n` escrito nele (entrega, 23/09/2026).
+- **Regra de cor sem alvo vale para tudo o que está dentro.** No Qt, uma folha
+  de estilo `QFrame { background: ... }` pinta também cada texto de dentro
+  (todo `QLabel` é um `QFrame`), e a regra do painel em `main.py` pinta todo
+  texto com o fundo da janela. O efeito são caixinhas de outro tom em volta de
+  cada frase. Quadro com fundo próprio leva a regra pelo nome
+  (`QFrame#quadro`) **e** `QLabel { background: transparent; }`; e um
+  `QWidget` comum só pinta o próprio fundo com `WA_StyledBackground` (entrega,
+  24/09/2026).
+- **`.env` criado no Bloco de Notas sai `.env.txt`**, e o Windows esconde o
+  `.txt`: na pasta ele parece certo, e o programa o ignora calado. Por isso o
+  instalador já cria o `.env` em branco, para só ser editado (teste da
+  entrega, 25/09/2026).
+- **A cerca do agente bloqueia gravar fora do projeto**, até na pasta do
+  programa instalado para teste e na pasta de memória. No teste da entrega, o
+  `.env` da instalação foi criado pela pessoa — o que, de quebra, revelou o
+  `.env.txt` acima.
+- **O instalador do Tesseract 5.4.0 tem assinatura vencida**: o certificado da
+  Universidade de Mannheim venceu antes de o arquivo ser assinado, e o Windows
+  mostra "Editor: Desconhecido" na confirmação de administrador. O arquivo é o
+  autêntico (o SHA256 bate com o do catálogo do winget); o roteiro de
+  instalação avisa a pessoa antes. E ele baixa o português da internet durante
+  a instalação.
