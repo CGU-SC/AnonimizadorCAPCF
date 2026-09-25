@@ -71,8 +71,13 @@
 <p class="subtitulo">O que está previsto para o Anonimizador CAPCF — espelha <code>especificacoes/backlog.md</code>, sempre a versão vigente</p>
 
 <div class="coluna">
-  <h2>Prevista <span class="contagem">2</span></h2>
+  <h2>Prevista <span class="contagem">3</span></h2>
   <div class="cartoes">
+    <div class="cartao">
+      <div class="cartao-titulo">6. CPF sem o zero da frente</div>
+      <div class="cartao-entrega">Reconhece o CPF que perdeu o zero inicial e ficou com 10 dígitos, como aparece no formulário do SIGPEX: com o zero de volta, a conta do dígito verificador diz se é CPF, e o que passar na conta é mascarado como os outros.</div>
+      <div class="cartao-entrega">Achada no teste da versão 0.1.0, em 25/09/2026, num formulário real: o CPF saía inteiro, sem marca na revisão. É emenda da spec 003 (os formatos da RN-1). Três caminhos levantados: <strong>só o que passa na conta</strong>, com alarme falso em 1 de cada 100 números de 10 dígitos, como telefone com DDD (o recomendado); também o que perdeu dois zeros (9 dígitos); ou só perto da palavra "CPF", que perde o CPF em coluna de tabela.</div>
+    </div>
     <div class="cartao">
       <div class="cartao-titulo">5. Abrir documento do Word</div>
       <div class="cartao-entrega">Aceita <code>.docx</code> no Anonimizar, tirando o texto e as tabelas de dentro dele sem instalar nada a mais na máquina.</div>
@@ -121,7 +126,7 @@
 </div>
 
 <p class="rodape">
-  Estas cinco linhas são só a parte visível do trabalho — cerca de um terço do
+  Estas seis linhas são só a parte visível do trabalho — cerca de um terço do
   esforço real de um projeto costuma ser funcionalidade nova; o resto é
   correção, ajuste, empacotamento e registro, e não aparece aqui.
 </p>
