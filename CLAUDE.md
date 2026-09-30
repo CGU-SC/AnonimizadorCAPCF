@@ -24,7 +24,14 @@ maduro do mercado para ler PDF, rodar OCR e achar padrão com regex.
 | Distribuição | instalador do Windows (Inno Setup) com o programa numa pasta montada pelo PyInstaller — sem exigir Python nas máquinas do núcleo. Era `.exe` único até 23/09/2026: com instalador a pasta não aparece, e o `.exe` único se desempacota a cada abertura (5 a 10 s) e o antivírus desconfia dele |
 
 Descartado: C#/.NET (sem fluência de quem mantém) e Electron (mais pesado, OCR
-pior). Atenção: PyMuPDF é AGPL — ok para uso interno da UFSC, conferir se um
+pior). O **PaddleOCR** foi perguntado em 30/09/2026,
+depois da entrega, e não entra no lugar do Tesseract: ele lê melhor página
+escaneada ruim e entende tabela, mas pesa mais de meio giga com os modelos, os
+baixa da internet na primeira leitura (embarcá-los é trabalho de empacotamento
+que hoje não existe) e trocar o motor agora jogaria fora o teste da entrega,
+feito com o Tesseract. Virou a **funcionalidade 7 do backlog**: um segundo
+motor na escolha, para a pessoa usar na página em que o Tesseract lê pior —
+alternativa, não substituição. Atenção: PyMuPDF é AGPL — ok para uso interno da UFSC, conferir se um
 dia o programa sair da universidade.
 
 ## Comandos
