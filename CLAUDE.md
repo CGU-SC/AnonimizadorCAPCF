@@ -52,6 +52,7 @@ dia o programa sair da universidade.
 | `especificacoes/` | `backlog.md` e `backlog.html` (o previsto), `specs/` (o combinado de cada funcionalidade) |
 | `mockups/` | rascundos de tela, sistema de design, mapa do entendimento — tudo desenhado pela `skill-07-designer-de-telas` |
 | `dados-exemplo/` | massa sintética para testar — nunca documento real |
+| `dados-reais/` | documento real que chega para teste (o formulário do SIGPEX do teste da 0.1.0) — só nesta máquina, fora do histórico |
 | `conferencias/` | as páginas que mostram o que o programa decidiu sobre a massa, para conferir sem abrir código (nasce na etapa 1 do Anonimizar) |
 | `abrir/` | atalho de abrir o programa em modo desenvolvimento (nasce quando houver algo para ver na tela) |
 | `empacotar/` | as receitas da entrega: a do PyInstaller (`anonimizador.spec`), a do instalador (`instalador.iss`), o `.env` em branco que o instalador cria (`modelo.env`), o roteiro para quem instala (`como-instalar.html`) e o atalho que gera tudo |
