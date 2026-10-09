@@ -42,7 +42,7 @@ dia o programa sair da universidade.
 | Instalar as dependências | `.\.venv\Scripts\python.exe -m pip install -r requirements.txt` |
 | Rodar os testes | `.\.venv\Scripts\python.exe -m pytest` |
 | Rodar o programa | `abrir\abrir-dev.bat` (ou `.\.venv\Scripts\python.exe programa\main.py`) |
-| Gerar a entrega | `empacotar\gerar-entrega.bat` — roda os testes, monta a pasta do programa, o instalador e a pasta `builds\entrega-<versão>\` com o instalador e o roteiro. Pede o Inno Setup (`winget install --id JRSoftware.InnoSetup --exact`) e o instalador do Tesseract em `instaladores\` |
+| Gerar a entrega | `empacotar\gerar-entrega.bat` — roda os testes, monta a pasta do programa, o instalador e a pasta `builds\entrega-<versão>\` com o instalador e os dois roteiros. Pede o Inno Setup (`winget install --id JRSoftware.InnoSetup --exact`) e o instalador do Tesseract em `instaladores\` |
 
 ## Onde ficam as coisas
 
@@ -55,7 +55,7 @@ dia o programa sair da universidade.
 | `dados-reais/` | documento real que chega para teste (o formulário do SIGPEX do teste da 0.1.0) — só nesta máquina, fora do histórico |
 | `conferencias/` | as páginas que mostram o que o programa decidiu sobre a massa, para conferir sem abrir código (nasce na etapa 1 do Anonimizar) |
 | `abrir/` | atalho de abrir o programa em modo desenvolvimento (nasce quando houver algo para ver na tela) |
-| `empacotar/` | as receitas da entrega: a do PyInstaller (`anonimizador.spec`), a do instalador (`instalador.iss`), o `.env` em branco que o instalador cria (`modelo.env`), o roteiro para quem instala (`como-instalar.html`) e o atalho que gera tudo |
+| `empacotar/` | as receitas da entrega: a do PyInstaller (`anonimizador.spec`), a do instalador (`instalador.iss`), o `.env` em branco que o instalador cria (`modelo.env`), os roteiros para quem instala e para quem usa (`como-instalar.html` e `como-usar.html`) e o atalho que gera tudo |
 | `builds/` | o que a entrega gera: a pasta do programa, o instalador e a pasta `entrega-<versão>` que vai para o núcleo — conteúdo fora do histórico |
 | `instaladores/` | o instalador do Tesseract que vai dentro do nosso — programa de terceiros, fora do histórico. Vem do GitHub da UB-Mannheim; confira o código SHA256 com o do catálogo do winget (`winget show --id UB-Mannheim.TesseractOCR`) |
 | `.venv/` | ambiente virtual do Python — cada máquina cria o seu, fora do histórico |
@@ -95,8 +95,8 @@ dia o programa sair da universidade.
   administrador** — a funcionalidade 4 vai gravar configuração ao lado do
   programa, e em `Program Files` cada gravação pediria a confirmação do
   Windows. O instalador leva o do Tesseract (na pasta `instaladores`) e cria
-  um `.env` em branco; a pasta que vai para o núcleo tem o instalador e o
-  roteiro `Como instalar.html`. O número da versão mora em
+  um `.env` em branco; a pasta que vai para o núcleo tem o instalador e os
+  roteiros `Como instalar.html` e `Como usar.html`. O número da versão mora em
   `programa/versao.py`, e aparece no pé da faixa da esquerda e no instalador;
   0.x é versão de teste, 1.0.0 fica para quando o núcleo aprovar o uso.
 - **Fora de escopo desta versão**: outro dado sensível além do CPF; saída em
@@ -164,6 +164,16 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   módulos. Então: a primeira fatia da etapa 7 é tirar o caminho do PDF para uma
   peça própria, usada pelos dois painéis, antes de qualquer tela nova
   (revisão pela lente de manutenção, 18/09/2026).
+
+- **Os roteiros da entrega são refeitos a cada versão, num prompt próprio.**
+  O `como-instalar.html` e o `como-usar.html` têm o número da versão e as
+  regras do programa escritos no texto, e o `gerar-entrega.bat` só os copia.
+  Trocar o número sozinho no gerador foi oferecido e recusado em 09/10/2026:
+  o roteiro envelhece também nas regras (o aviso do CPF sem o zero da frente
+  cai com a funcionalidade 6), e quem o refaz relê tudo de uma vez.
+  **Antes de cada entrega, refazer os dois roteiros** — e, se esquecer, o
+  gerador lembra: ele para quando algum roteiro não cita a versão do
+  `programa/versao.py`.
 
 ## O que já nos mordeu
 

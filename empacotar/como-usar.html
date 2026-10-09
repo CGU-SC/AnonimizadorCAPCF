@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Como usar o Anonimizador CAPCF</title>
+<style>
+  /* As cores e medidas são as do sistema de design do programa
+     (mockups/sistema-de-design.md) e as mesmas do "Como instalar", para os
+     dois roteiros terem a cara do programa. A fonte é a da máquina: o roteiro
+     abre sem internet. */
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-claro: #5b8fc9;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", Consolas, monospace;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 40px 16px 64px; }
+  code, .mono {
+    font-family: var(--fonte-mono); font-size: 0.92em;
+  }
+  code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; }
+  strong { font-weight: 600; }
+  .secundario { color: var(--cor-texto-secundario); }
+
+  /* ---- capa ---- */
+  .capa { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .capa h1 { font-size: 30px; margin: 0; line-height: 1.2; }
+  .capa p { margin: 8px 0 0; max-width: 580px; }
+  .selo-versao {
+    border: 1px solid var(--cor-borda); background: var(--cor-fundo-elevado);
+    border-radius: 999px; padding: 6px 14px; font-size: 13px; white-space: nowrap;
+  }
+  .selo-versao b { color: var(--cor-alerta); }
+  .mascara {
+    display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    margin-top: 16px; font-family: var(--fonte-mono); font-size: 14px;
+  }
+  .mascara .de { color: var(--cor-texto-secundario); text-decoration: line-through; }
+  .mascara .para b { color: var(--cor-alerta); font-weight: 700; }
+
+  .aviso {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: rgba(217,164,65,0.10); border: 1px solid rgba(217,164,65,0.55);
+    border-radius: var(--raio); padding: 14px 18px; margin: 28px 0 0;
+  }
+  .aviso .icone { font-size: 20px; line-height: 1.3; }
+  .aviso p { margin: 0; }
+  .aviso p + p { margin-top: 8px; }
+
+  /* ---- títulos ---- */
+  h2 {
+    font-size: 21px; margin: 48px 0 6px; display: flex; align-items: center; gap: 12px;
+  }
+  h2 .numero {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--cor-destaque);
+    color: #fff; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px; flex: 0 0 auto;
+  }
+  h3 { font-size: 16px; margin: 28px 0 10px; }
+  .lead { color: var(--cor-texto-secundario); margin: 0 0 18px; }
+
+  /* ---- fatos rápidos ---- */
+  .fatos { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 16px; }
+  .fato {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-radius: var(--raio); padding: 14px 16px;
+  }
+  .fato .rotulo { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cor-texto-secundario); margin-bottom: 4px; }
+  .fato .valor { font-size: 14px; }
+
+  /* ---- o caminho inteiro ---- */
+  .percurso { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .etapa {
+    flex: 1 1 150px; background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-top: 4px solid var(--cor-destaque); border-radius: var(--raio); padding: 12px 14px;
+  }
+  .etapa.so-pdf { border-top-color: var(--cor-alerta); border-style: dashed; border-top-style: solid; }
+  .etapa .quem { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cor-texto-secundario); margin-bottom: 4px; }
+  .etapa .rotulo { font-weight: 600; }
+  .etapa .detalhe { font-size: 13px; color: var(--cor-texto-secundario); margin-top: 6px; }
+  .seta { align-self: center; color: var(--cor-texto-secundario); font-size: 20px; }
+
+  /* ---- passos ---- */
+  .passos { display: flex; flex-direction: column; gap: 10px; }
+  .passo {
+    display: flex; gap: 16px; align-items: flex-start;
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-radius: var(--raio); padding: 14px 18px;
+  }
+  .passo .n {
+    flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--cor-destaque); color: var(--cor-texto);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+  }
+  .passo.so-pdf .n { border-color: var(--cor-alerta); }
+  .passo .corpo { flex: 1; min-width: 0; }
+  .passo .corpo p { margin: 0; }
+  .passo .corpo p + p, .passo .corpo ul + p, .passo .corpo p + ul { margin-top: 8px; }
+  .passo .corpo ul { margin: 0; padding-left: 20px; }
+  .passo .corpo li + li { margin-top: 4px; }
+  .passo .nota { font-size: 13px; color: var(--cor-texto-secundario); }
+  .marca-pdf {
+    display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--cor-alerta); border: 1px solid rgba(217,164,65,0.6); border-radius: 999px;
+    padding: 0 8px; margin-left: 6px; vertical-align: 2px;
+  }
+  .botao {
+    display: inline-block; font-size: 13px; font-weight: 600; padding: 1px 9px;
+    border: 1px solid var(--cor-borda); border-radius: 4px; background: rgba(255,255,255,0.05);
+    white-space: nowrap;
+  }
+  .botao.principal { background: var(--cor-destaque); border-color: var(--cor-destaque); color: #fff; }
+
+  /* ---- bifurcação do PDF ---- */
+  .caminhos { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
+  .caminho {
+    border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 10px 12px;
+    background: rgba(255,255,255,0.03); font-size: 14px;
+  }
+  .caminho .titulo { font-weight: 600; margin-bottom: 4px; }
+
+  /* ---- desenho da tela de revisão ---- */
+  .desenho { margin-top: 14px; }
+  .desenho .legenda { font-size: 12px; color: var(--cor-texto-secundario); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .tela {
+    border: 1px solid #4a5260; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35); background: var(--cor-fundo); font-size: 13px;
+  }
+  .tela .topo { padding: 12px 14px 8px; border-bottom: 1px solid var(--cor-borda); }
+  .tela .topo .t { font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+  .selos { display: flex; gap: 6px; flex-wrap: wrap; }
+  .selo { font-size: 12px; border: 1px solid var(--cor-borda); border-radius: 999px; padding: 1px 10px; }
+  .selo.valido { color: var(--cor-erro-texto); border-color: rgba(240,138,134,0.6); }
+  .selo.suspeito { color: var(--cor-alerta); border-color: rgba(217,164,65,0.6); }
+  .selo.liberado { color: var(--cor-sucesso); border-color: rgba(76,175,109,0.6); }
+  .tela .meio { display: grid; grid-template-columns: 1fr 210px; gap: 10px; padding: 10px 14px; }
+  .tela .texto {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: 4px;
+    padding: 10px 12px; font-family: var(--fonte-mono); font-size: 12.5px; line-height: 1.8;
+  }
+  .tela .acoes { display: flex; justify-content: flex-end; gap: 8px; align-items: center; margin-top: 8px; font-size: 12px; flex-wrap: wrap; }
+  .tela .lista { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+  .tela .lista .cab { font-weight: 600; color: var(--cor-texto-secundario); }
+  .item {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-left: 3px solid var(--cor-alerta); border-radius: 4px; padding: 6px 8px;
+  }
+  .item.valido { border-left-color: var(--cor-erro-texto); }
+  .item .et { font-size: 11px; color: var(--cor-alerta); }
+  .item.valido .et { color: var(--cor-erro-texto); }
+  .item .num { font-family: var(--fonte-mono); }
+  .item .mini { display: inline-block; margin-top: 4px; font-size: 11px; border: 1px solid var(--cor-borda); border-radius: 3px; padding: 0 6px; }
+  .tela .rodape { display: flex; gap: 8px; align-items: center; padding: 8px 14px 12px; border-top: 1px solid var(--cor-borda); flex-wrap: wrap; }
+
+  /* As marcas iguais às da tela do programa: traço reto para o CPF válido,
+     ondulado para o suspeito, pontilhado para o mascarado à mão. */
+  .m-valido { color: var(--cor-erro-texto); text-decoration: underline solid var(--cor-erro-texto); text-underline-offset: 3px; }
+  .m-suspeito { color: var(--cor-alerta); text-decoration: underline wavy var(--cor-alerta); text-underline-offset: 3px; }
+  .m-amao { color: var(--cor-destaque-claro); text-decoration: underline dotted var(--cor-destaque-claro); text-underline-offset: 3px; }
+  .m-liberado { color: var(--cor-sucesso); }
+
+  /* ---- chave de cores ---- */
+  .chave { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+  .tipo {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-radius: var(--raio); padding: 14px 16px;
+  }
+  .tipo .nome { font-weight: 600; margin-bottom: 2px; }
+  .tipo .exemplo { font-family: var(--fonte-mono); font-size: 14px; margin: 6px 0; }
+  .tipo .o-que { font-size: 14px; color: var(--cor-texto-secundario); }
+  .tipo .o-que b { color: var(--cor-texto); }
+
+  /* ---- cuidados e problemas ---- */
+  .problemas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .problema {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-alerta); border-radius: var(--raio); padding: 14px 16px;
+  }
+  .problema.azul { border-left-color: var(--cor-destaque); }
+  .problema .se { font-weight: 600; margin-bottom: 6px; }
+  .problema .entao { font-size: 14px; color: var(--cor-texto-secundario); }
+  .problema .entao b { color: var(--cor-texto); }
+
+  .relatar {
+    display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-radius: var(--raio); padding: 14px 18px; margin-top: 12px;
+  }
+  .faixa-mini {
+    width: 150px; background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-radius: 4px; padding: 10px 12px 8px; font-size: 12px;
+  }
+  .faixa-mini .nome { font-weight: 700; font-size: 13px; line-height: 1.2; padding-bottom: 6px; border-bottom: 1px solid var(--cor-borda); }
+  .faixa-mini .item-menu { color: var(--cor-texto-secundario); padding: 4px 0; }
+  .faixa-mini .item-menu.alvo { color: var(--cor-texto); outline: 2px solid var(--cor-alerta); outline-offset: 2px; border-radius: 2px; }
+  .faixa-mini .versao { color: var(--cor-texto-secundario); margin-top: 18px; display: inline-block; }
+  .faixa-mini .versao.alvo { outline: 2px solid var(--cor-alerta); outline-offset: 3px; border-radius: 2px; }
+
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--cor-borda); font-size: 13px; color: var(--cor-texto-secundario); }
+
+  @media (max-width: 600px) {
+    .tela .meio { grid-template-columns: 1fr; }
+    .capa h1 { font-size: 26px; }
+  }
+
+  @media print {
+    :root {
+      --cor-fundo: #ffffff; --cor-fundo-elevado: #f5f6f8; --cor-borda: #cfd4db;
+      --cor-texto: #1e2228; --cor-texto-secundario: #555c66;
+      --cor-erro-texto: #b3261e; --cor-alerta: #9a6a00; --cor-sucesso: #2e7d4a;
+    }
+    main { padding: 0; }
+    .tela { box-shadow: none; }
+    .passo, .problema, .etapa, .tipo, .fato, .desenho { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header class="capa">
+  <div>
+    <h1>Como usar o<br>Anonimizador CAPCF</h1>
+    <p>O programa tira o CPF de um documento antes de ele ir para um assistente
+    de IA. Você escolhe o arquivo, confere o que o programa marcou e salva um
+    <code>.md</code> sem os CPFs, pronto para arrastar para a conversa. Tudo
+    acontece na sua máquina: o documento não é enviado para lugar nenhum.</p>
+    <div class="mascara">
+      <span class="de">123.456.789-10</span>
+      <span class="secundario">→</span>
+      <span class="para"><b>XXX</b>.456.789-<b>XX</b></span>
+    </div>
+  </div>
+  <div class="selo-versao">versão <b>0.1.0</b> · teste</div>
+</header>
+
+<div class="aviso">
+  <div class="icone">⚠</div>
+  <div>
+    <p><strong>Esta é uma versão de teste.</strong> O programa marca os CPFs
+    sozinho, mas quem decide é você: passe o olho na tela de revisão antes de
+    salvar, sempre. O arquivo gerado não serve para nenhum uso oficial.</p>
+    <p><strong>Uma limitação conhecida:</strong> CPF que aparece sem o zero da
+    frente (10 dígitos, como no formulário do SIGPEX) ainda não é reconhecido.
+    Se você vir um, marque com o mouse e use
+    <span class="botao">Mascarar o trecho marcado</span> (passo 7).</p>
+  </div>
+</div>
+
+<h2>Antes de começar</h2>
+<div class="fatos">
+  <div class="fato">
+    <div class="rotulo">o que entra</div>
+    <div class="valor">PDF (com texto ou escaneado), <code>.md</code> ou <code>.txt</code>. Um arquivo por vez.</div>
+  </div>
+  <div class="fato">
+    <div class="rotulo">o que sai</div>
+    <div class="valor">Um <code>.md</code> com o nome do original mais <strong>“ - sem CPF”</strong>, na mesma pasta.</div>
+  </div>
+  <div class="fato">
+    <div class="rotulo">o que é tirado</div>
+    <div class="valor">Só o CPF. Nomes e outros dados continuam no texto.</div>
+  </div>
+  <div class="fato">
+    <div class="rotulo">o original</div>
+    <div class="valor">Nunca é alterado nem apagado — continua na pasta com os CPFs inteiros.</div>
+  </div>
+</div>
+
+<h2>O caminho inteiro</h2>
+<p class="lead">Tudo pelo item <strong>Anonimizar</strong>, na faixa da esquerda.
+As duas etapas em amarelo só aparecem quando o arquivo é PDF.</p>
+<div class="percurso">
+  <div class="etapa">
+    <div class="quem">passos 1 e 2</div>
+    <div class="rotulo">Escolher o arquivo</div>
+  </div>
+  <div class="seta">→</div>
+  <div class="etapa so-pdf">
+    <div class="quem">só PDF · passo 3</div>
+    <div class="rotulo">Ler o documento</div>
+    <div class="detalhe">Escaneado leva alguns minutos.</div>
+  </div>
+  <div class="seta">→</div>
+  <div class="etapa so-pdf">
+    <div class="quem">só PDF · passo 4</div>
+    <div class="rotulo">Conferir a leitura</div>
+    <div class="detalhe">Corrigir o que o programa leu errado.</div>
+  </div>
+  <div class="seta">→</div>
+  <div class="etapa">
+    <div class="quem">passos 5 a 7</div>
+    <div class="rotulo">Revisar os CPFs</div>
+  </div>
+  <div class="seta">→</div>
+  <div class="etapa">
+    <div class="quem">passos 8 e 9</div>
+    <div class="rotulo">Salvar e usar</div>
+  </div>
+</div>
+
+<h2><span class="numero">1</span> Anonimizar um documento</h2>
+<p class="lead">O caminho de todo dia. Nada é gravado até você clicar em salvar.</p>
+
+<div class="passos">
+  <div class="passo">
+    <div class="n">1</div>
+    <div class="corpo"><p>Abra o <strong>Anonimizador CAPCF</strong> pelo menu
+    Iniciar e clique em <strong>Anonimizar</strong>, na faixa da esquerda.</p></div>
+  </div>
+
+  <div class="passo">
+    <div class="n">2</div>
+    <div class="corpo">
+      <p>Arraste o arquivo para dentro da área <strong>“Arraste o arquivo
+      aqui”</strong>, ou clique em <span class="botao principal">Escolher
+      arquivo…</span>.</p>
+      <p class="nota">Arquivo <code>.md</code> ou <code>.txt</code> vai direto para
+      a revisão — pule para o passo 5.</p>
+    </div>
+  </div>
+
+  <div class="passo so-pdf">
+    <div class="n">3</div>
+    <div class="corpo">
+      <p>O programa olha o PDF por dentro e mostra uma de duas telas.<span class="marca-pdf">só PDF</span></p>
+      <div class="caminhos">
+        <div class="caminho">
+          <div class="titulo">“Este documento já tem texto por dentro”</div>
+          É o PDF gerado pelo sistema de processos. A tela mostra as primeiras
+          linhas desse texto. Se elas estão legíveis, clique em
+          <span class="botao">Aproveitar este texto</span>. Se saíram
+          embaralhadas, com letras sem sentido, clique em
+          <span class="botao">Ignorar e ler as imagens</span>.
+        </div>
+        <div class="caminho">
+          <div class="titulo">“Este documento precisa ser lido”</div>
+          É o PDF escaneado ou impresso, que é só imagem. Deixe marcado
+          <strong>Tesseract (nesta máquina)</strong> e clique em
+          <span class="botao principal">Ler o documento</span>. A tela mostra
+          “Lendo a página 3 de 12”; dá para
+          <span class="botao">Cancelar a leitura</span> a qualquer momento.
+        </div>
+      </div>
+      <p class="nota">A opção “IA local” aparece apagada: é uma funcionalidade
+      que ainda vai ser feita.</p>
+    </div>
+  </div>
+
+  <div class="passo so-pdf">
+    <div class="n">4</div>
+    <div class="corpo">
+      <p><strong>Confira a leitura.</strong> O PDF fica à esquerda e o texto lido
+      à direita, página por página. Compare os dois e corrija no texto o que
+      o programa leu errado — <strong>principalmente os números</strong>: um
+      CPF com uma letra no lugar de um dígito pode não ser reconhecido.<span class="marca-pdf">só PDF</span></p>
+      <p>Use o <span class="botao">−</span> e o <span class="botao">+</span> de
+      cada lado para aumentar a página ou a letra, e
+      <span class="botao">ajustar</span> para a página voltar a caber na
+      largura. Quando terminar, clique em
+      <span class="botao principal">Conferido</span>.</p>
+      <p class="nota">Esta é a única hora em que dá para editar o texto. Na
+      revisão, a seguir, ele só pode ser mascarado.</p>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="n">5</div>
+    <div class="corpo">
+      <p><strong>Revise antes de salvar.</strong> O programa já mascarou tudo o
+      que achou e mostra o texto com cada número destacado. Nos selos do alto,
+      a contagem; à direita, a lista <strong>“O que o programa achou”</strong>,
+      com os <strong>suspeitos sempre primeiro</strong>.</p>
+      <ul>
+        <li>Clique num item da lista para o texto ir até aquele número.</li>
+        <li>Use <span class="botao">‹ anterior</span> e
+        <span class="botao">próximo ›</span> para passar de número em número
+        sem rolar a tela.</li>
+        <li>Clique num selo (por exemplo, “suspeitos”) para a navegação passar
+        só por aquele grupo. Clique de novo para desligar.</li>
+      </ul>
+      <p>Comece pelos <strong>suspeitos</strong>: o significado de cada cor está
+      na parte 2, logo abaixo.</p>
+
+      <div class="desenho">
+        <div class="legenda">a tela de revisão, simplificada</div>
+        <div class="tela" aria-hidden="true">
+          <div class="topo">
+            <div class="t">Revisar antes de salvar</div>
+            <div class="selos">
+              <span class="selo">4 números encontrados</span>
+              <span class="selo valido">2 CPFs válidos</span>
+              <span class="selo suspeito">1 suspeito</span>
+              <span class="selo liberado">1 liberado por você</span>
+            </div>
+          </div>
+          <div class="meio">
+            <div>
+              <div class="texto">
+                Interessado: Fulano de Tal<br>
+                CPF: <span class="m-valido">XXX.111.111-XX</span><br>
+                Fiscal: Beltrana de Tal, CPF <span class="m-valido">XXX.222.222-XX</span><br>
+                Testemunha: CPF <span class="m-suspeito">XXX.456.789-XX</span><br>
+                Código do convênio: <span class="m-liberado">135.792.468-00</span>
+              </div>
+              <div class="acoes">
+                <span class="botao">Mascarar o trecho marcado</span>
+                <span class="botao">‹ anterior</span>
+                <span class="secundario">1 de 4</span>
+                <span class="botao">próximo ›</span>
+              </div>
+            </div>
+            <div class="lista">
+              <div class="cab">O que o programa achou</div>
+              <div class="secundario">Suspeitos — olhe estes 1</div>
+              <div class="item">
+                <div class="et">falha na conta</div>
+                <div class="num">123.456.789-10</div>
+                <span class="mini">Desfazer</span>
+              </div>
+              <div class="item" style="border-left-color:var(--cor-borda)">
+                <div class="et"><span class="secundario">falha na conta</span> <span class="m-liberado">liberado</span></div>
+                <div class="num">135.792.468-00</div>
+                <span class="mini">Mascarar de novo</span>
+              </div>
+              <div class="secundario">CPF válido 2</div>
+              <div class="item valido">
+                <div class="et">CPF válido</div>
+                <div class="num">111.111.111-11</div>
+                <span class="mini">Desfazer…</span>
+              </div>
+              <div class="secundario">…</div>
+            </div>
+          </div>
+          <div class="rodape">
+            <span class="botao principal">Salvar o texto mascarado…</span>
+            <span class="botao">Anonimizar outro documento</span>
+            <span class="secundario" style="font-size:12px;">Nada é gravado até você salvar.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="n">6</div>
+    <div class="corpo">
+      <p><strong>Decida sobre cada suspeito.</strong> Na dúvida, deixe
+      mascarado — tudo o que você não mexer sai mascarado.</p>
+      <ul>
+        <li>Se o número <strong>não é CPF</strong> (um protocolo, um telefone),
+        clique em <span class="botao">Desfazer</span> no item da lista. Ele
+        volta inteiro no texto e fica na lista como <span class="m-liberado">liberado</span>.</li>
+        <li>Mudou de ideia? No mesmo item, clique em
+        <span class="botao">Mascarar de novo</span>.</li>
+        <li>Quando o botão é <span class="botao">Desfazer…</span>, com
+        reticências, o número fecha a conta do CPF e quase certamente é o de
+        alguém. Abre uma caixa vermelha perguntando de novo:
+        <span class="botao">Manter a máscara</span> já vem escolhido (Enter ou
+        Esc mantêm), e só <span class="botao">Liberar mesmo assim</span> solta
+        o número.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="n">7</div>
+    <div class="corpo">
+      <p><strong>Mascare à mão o que o programa não pegou.</strong> Se você vir
+      no texto um CPF que ficou inteiro, selecione-o com o mouse e clique em
+      <span class="botao">Mascarar o trecho marcado</span>. Ele aparece
+      destacado em azul e entra na lista como “mascarado à mão”.</p>
+      <p class="nota">O programa esconde os 3 primeiros e os 2 últimos dígitos do
+      trecho marcado — ou todos, se forem 5 ou menos. Selecione só o número, sem
+      a palavra “CPF” do lado. O botão só acende quando há um trecho marcado.</p>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="n">8</div>
+    <div class="corpo">
+      <p>Clique em <span class="botao principal">Salvar o texto mascarado…</span>.
+      O caminho já vem preenchido — a pasta do original, com o nome dele e
+      <strong>“ - sem CPF.md”</strong> no fim. Para guardar em outro lugar, use
+      <span class="botao">Escolher pasta…</span>. Então clique em
+      <span class="botao principal">Salvar</span>.</p>
+      <ul>
+        <li>Se você liberou algum CPF válido, o programa mostra quais foram antes
+        de gravar. Clique em <span class="botao">Voltar à revisão</span> se
+        foi engano.</li>
+        <li>Se já existe um arquivo com aquele nome, ele pergunta:
+        <span class="botao">Escrever por cima</span> ou
+        <span class="botao">Salvar com outro nome</span>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="passo">
+    <div class="n">9</div>
+    <div class="corpo">
+      <p><strong>Pronto.</strong> Clique em <span class="botao principal">Abrir a
+      pasta</span> e arraste para a conversa com o assistente de IA
+      <strong>o arquivo que termina em “ - sem CPF.md”</strong>.</p>
+      <p class="nota">O original continua ao lado, com os CPFs inteiros — é fácil
+      pegar o arquivo errado na hora de arrastar. Para o próximo documento,
+      clique em <span class="botao">Anonimizar outro documento</span>.</p>
+    </div>
+  </div>
+</div>
+
+<h2><span class="numero">2</span> O que cada cor quer dizer</h2>
+<p class="lead">A mesma cor aparece no texto, na lista e no selo do alto. A
+linha embaixo do número também muda, para dar para distinguir sem depender
+só da cor.</p>
+<div class="chave">
+  <div class="tipo">
+    <div class="nome" style="color:var(--cor-erro-texto)">CPF válido</div>
+    <div class="exemplo"><span class="m-valido">XXX.111.111-XX</span></div>
+    <div class="o-que">Traço reto, vermelho. O número fecha a conta do dígito
+    verificador: <b>é quase certamente um CPF</b>. Para soltar, o programa
+    pergunta duas vezes.</div>
+  </div>
+  <div class="tipo">
+    <div class="nome" style="color:var(--cor-alerta)">Suspeito · falha na conta</div>
+    <div class="exemplo"><span class="m-suspeito">XXX.456.789-XX</span></div>
+    <div class="o-que">Traço ondulado, amarelo. Tem a forma de um CPF, mas a
+    conta não fecha. Pode ser um CPF digitado ou lido errado — ou outro número.
+    <b>Olhe o que vem antes dele no texto.</b></div>
+  </div>
+  <div class="tipo">
+    <div class="nome" style="color:var(--cor-alerta)">Suspeito · quase CPF</div>
+    <div class="exemplo"><span class="m-suspeito">XXX.456.789-XX</span></div>
+    <div class="o-que">Traço ondulado, amarelo. Um número que a leitura do
+    escaneado estragou: uma letra no lugar de um dígito, um espaço no lugar do
+    ponto, ou o número partido entre duas linhas. Se ele leva também a etiqueta
+    vermelha <b style="color:var(--cor-erro-texto)">válido se corrigido</b>, é
+    um CPF de verdade e pede a dupla confirmação.</div>
+  </div>
+  <div class="tipo">
+    <div class="nome" style="color:var(--cor-destaque-claro)">Mascarado à mão</div>
+    <div class="exemplo"><span class="m-amao">XXX4 5678 9XX</span></div>
+    <div class="o-que">Traço pontilhado, azul. O que você mascarou no passo 7.
+    Desfazer é um clique.</div>
+  </div>
+  <div class="tipo">
+    <div class="nome" style="color:var(--cor-sucesso)">Liberado</div>
+    <div class="exemplo"><span class="m-liberado">135.792.468-00</span></div>
+    <div class="o-que">Verde. Um número que você soltou: ele <b>vai inteiro
+    para o arquivo</b>. Continua na lista, para ser mascarado de novo.</div>
+  </div>
+</div>
+
+<h2><span class="numero">3</span> Só o texto, sem mascarar: Gerar OCR</h2>
+<p class="lead">O item <strong>Gerar OCR</strong> lê um PDF e devolve o texto
+<strong>com os CPFs inteiros</strong>. Serve para guardar o texto de um
+escaneado para outro uso — não para mandar ao assistente. Para tirar o CPF, o
+caminho é sempre o Anonimizar.</p>
+<div class="passos">
+  <div class="passo">
+    <div class="n">1</div>
+    <div class="corpo"><p>Clique em <strong>Gerar OCR</strong>, escolha o PDF e
+    siga os passos 3 e 4 da parte 1: ler, conferir e clicar em
+    <span class="botao principal">Conferido</span>.</p></div>
+  </div>
+  <div class="passo">
+    <div class="n">2</div>
+    <div class="corpo">
+      <p>Escolha a saída:</p>
+      <ul>
+        <li><span class="botao principal">Seguir para Anonimizar</span> leva o
+        texto conferido direto para a revisão do passo 5, sem ler de novo.</li>
+        <li><span class="botao">Escolher onde salvar</span> grava o texto como
+        está, num <code>.md</code> com o mesmo nome do PDF — <strong>com os
+        CPFs inteiros</strong>. A tela avisa antes de gravar.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>Cuidados</h2>
+<div class="problemas">
+  <div class="problema">
+    <div class="se">“Nenhum CPF encontrado” não é garantia</div>
+    <div class="entao">Num escaneado, um CPF que a leitura estragou demais pode
+    passar sem ser reconhecido. <b>Passe o olho no texto</b> mesmo assim, e
+    use o mascarar à mão se preciso.</div>
+  </div>
+  <div class="problema">
+    <div class="se">Só o CPF é tirado</div>
+    <div class="entao">Nome, RG, endereço, telefone e conta bancária
+    <b>continuam no texto</b>. CNPJ e número de processo também ficam inteiros,
+    de propósito.</div>
+  </div>
+  <div class="problema">
+    <div class="se">CPF escrito de jeito diferente</div>
+    <div class="entao">Sem o zero da frente (10 dígitos), por extenso ou com
+    os dígitos separados de forma estranha: o programa não reconhece.
+    <b>Mascare à mão</b>.</div>
+  </div>
+  <div class="problema">
+    <div class="se">Arraste o arquivo certo</div>
+    <div class="entao">Para o assistente vai só o <b>“ - sem CPF.md”</b>. O
+    PDF ou o <code>.md</code> original continuam com os CPFs inteiros.</div>
+  </div>
+</div>
+
+<h2>Se algo der errado</h2>
+<div class="problemas">
+  <div class="problema azul">
+    <div class="se">Aviso de que falta o motor de leitura</div>
+    <div class="entao">Só o PDF escaneado precisa dele; <code>.md</code>,
+    <code>.txt</code> e PDF com texto funcionam. Para instalar, siga a parte 2
+    do <b>Como instalar</b>, ou peça à TI.</div>
+  </div>
+  <div class="problema azul">
+    <div class="se">O arquivo não abre</div>
+    <div class="entao">PDF com senha, danificado, ou arquivo vazio: o programa
+    explica em uma frase e volta à escolha. <b>Tire a senha</b> ou peça outra
+    cópia do documento.</div>
+  </div>
+  <div class="problema azul">
+    <div class="se">O texto veio embaralhado</div>
+    <div class="entao">Volte com <b>Escolher outro documento</b>, escolha o mesmo
+    PDF e, na tela do texto por dentro, clique em <b>Ignorar e ler as
+    imagens</b>.</div>
+  </div>
+  <div class="problema azul">
+    <div class="se">Saí sem salvar</div>
+    <div class="entao">O programa pergunta antes de jogar fora uma revisão não
+    salva. Clique em <b>Voltar e salvar</b> para não perder o trabalho.</div>
+  </div>
+  <div class="problema azul">
+    <div class="se">Não consigo digitar no texto da revisão</div>
+    <div class="entao">É de propósito: na revisão só se mascara e se desfaz.
+    A correção da leitura de um PDF é feita no passo 4, na conferência.</div>
+  </div>
+  <div class="problema azul">
+    <div class="se">A leitura demora</div>
+    <div class="entao">Um escaneado é lido página por página, e um documento
+    grande leva minutos. A contagem mostra em que página está.</div>
+  </div>
+</div>
+
+<div class="relatar">
+  <div class="faixa-mini">
+    <div class="nome">Anonimizador<br>CAPCF</div>
+    <div class="item-menu">Gerar OCR</div>
+    <div class="item-menu">Anonimizar</div>
+    <div class="versao alvo">versão 0.1.0</div>
+  </div>
+  <div style="flex:1;min-width:240px;">
+    <p style="margin:0;"><strong>Para relatar um problema,</strong> anote o que
+    aparecia na tela e a <strong>versão</strong>, que fica no pé da faixa da
+    esquerda, e mande para quem entregou o programa. Nunca mande junto o
+    documento original, que tem CPF.</p>
+  </div>
+</div>
+
+<footer>Anonimizador CAPCF · versão 0.1.0<br>O programa foi desenvolvido pela CGU no
+âmbito da consultoria realizada à UFSC em 2026.</footer>
+
+</main>
+</body>
+</html>

@@ -52,7 +52,8 @@ empacotar\gerar-entrega.bat
 ```
 
 Ele roda os testes, monta o instalador e deixa em `builds\entrega-<versão>\`
-o que vai para o núcleo: o instalador e o roteiro `Como instalar.html`. O que
+o que vai para o núcleo: o instalador e os roteiros `Como instalar.html` e
+`Como usar.html`. O que
 ele precisa, e onde fica cada peça, está no `CLAUDE.md`.
 
 ## Onde ficam as coisas
