@@ -20,6 +20,20 @@ for /f "delims=" %%v in ('call ".venv\Scripts\python.exe" -c "import sys; sys.pa
 if "%VERSAO%"=="" goto erro
 echo   Versao: %VERSAO%
 
+REM Os roteiros sao refeitos a mao a cada versao, num prompt proprio (decisao
+REM de 09/10/2026, no CLAUDE.md), e daqui so sao copiados. Roteiro que nao
+REM cita a versao que esta saindo e roteiro que ninguem refez - e ele iria
+REM para o nucleo com o numero e as regras da versao anterior.
+for %%r in (como-instalar como-usar) do (
+    findstr /c:"%VERSAO%" "empacotar\%%r.html" >nul
+    if errorlevel 1 (
+        echo.
+        echo   O roteiro empacotar\%%r.html nao fala da versao %VERSAO%.
+        echo   Refaca os dois roteiros para esta versao antes de gerar a entrega.
+        goto erro
+    )
+)
+
 REM Sem o instalador do Tesseract, o botao "instalar agora" nasceria apagado
 REM nas maquinas do nucleo. Ele e baixado a parte (fora do historico), e o
 REM roteiro de entrega diz de onde.
@@ -50,14 +64,18 @@ echo   [4/4] Montando o instalador...
 "%ISCC%" /Qp /DVersao=%VERSAO% empacotar\instalador.iss
 if errorlevel 1 goto erro
 
-REM A pasta que vai para o nucleo: o instalador e o roteiro, e nada mais. E
-REM refeita do zero a cada vez, para nunca levar sobra de uma geracao anterior.
+REM A pasta que vai para o nucleo: o instalador e os dois roteiros, e nada
+REM mais. E refeita do zero a cada vez, para nunca levar sobra de uma geracao
+REM anterior - e, pelo mesmo motivo, nada entra nela copiado a mao: o que
+REM nao esta aqui fica de fora da proxima entrega sem ninguem perceber.
 set ENTREGA=builds\entrega-%VERSAO%
 if exist "%ENTREGA%" rmdir /s /q "%ENTREGA%"
 mkdir "%ENTREGA%"
 copy /y "builds\instalador\Anonimizador-CAPCF-%VERSAO%-instalador.exe" "%ENTREGA%\" >nul
 if errorlevel 1 goto erro
 copy /y "empacotar\como-instalar.html" "%ENTREGA%\Como instalar.html" >nul
+if errorlevel 1 goto erro
+copy /y "empacotar\como-usar.html" "%ENTREGA%\Como usar.html" >nul
 if errorlevel 1 goto erro
 
 echo.
