@@ -6,6 +6,11 @@
 # mesmo que a pasta volte a existir depois.
 Exemplos/
 
+# Documento real que chega para teste (como o formulário do SIGPEX do teste da
+# versão 0.1.0, onde apareceu o CPF sem o zero da frente). Fica só nesta
+# máquina, longe de dados-exemplo/, que é só massa sintética.
+dados-reais/
+
 # Artefatos gerados (instalador, .exe final) — nascem do código, não se editam à mão.
 builds/
 
