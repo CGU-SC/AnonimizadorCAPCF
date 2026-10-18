@@ -1,0 +1,37 @@
+[
+  {
+    "pagina": "oficio-limpo",
+    "o_que_testa": "ofício limpo - a referência",
+    "texto": "UNIVERSIDADE FEDERAL DE SANTA CATARINA\nCoordenadoria de Análise de Prestações de Contas Fundacionais\nOfício nº 0137/2026 - Prestação de contas do projeto de extensão\n\nTrata-se de prestação de contas referente ao projeto identificado no\nprocesso 23080.012345/2026-11, encaminhada pela fundação de apoio para\nanálise desta Coordenadoria. O coordenador indicado no termo de outorga\né o servidor Fulano de Tal Exemplo, inscrito no CPF 123.456.789-10.\nA bolsista Maria da Conceição Exemplo, CPF 222.222.222-22, recebeu as\nparcelas de março a junho. O pagamento ao colaborador João Ninguém\nSilva (CPF 33333333333) foi feito por depósito em conta corrente, e a\ndiária do motorista Cícero Inventado, CPF 777.777.777-78, segue em\nanexo. Solicita-se a conferência dos comprovantes até 30/11/2026."
+  },
+  {
+    "pagina": "tabela-limpa",
+    "o_que_testa": "tabela com grade, limpa",
+    "texto": "UNIVERSIDADE FEDERAL DE SANTA CATARINA\nCoordenadoria de Análise de Prestações de Contas Fundacionais\nRelação de pagamentos a bolsistas - março de 2026\nNome CPF Função Valor (R$)\nAna Beatriz Moreira 111.111.111-11 Bolsista 1.200,00\nBruno César Lima 222.222.222-22 Bolsista 1.200,00\nCláudia Exemplo Souza 444.444.444-44 Pesquisadora 3.450,00\nDaniel Fictício Rocha 55555555555 Bolsista 800,00\nElaine Inventada Dias 666.666.666/66 Técnica 2.100,00\nFábio Teste Nogueira 777.777.777-77 Bolsista 1.200,00\nGisele Modelo Araújo 888888888-88 Coordenadora 4.000,00\nHélio Amostra Costa 999.999.999-99 Bolsista 1.200,00\nIara Simulada Prado 123.456.789-10 Bolsista 1.200,00\nJorge Exemplar Reis 246.813.579-12 Motorista 950,00\nKarina Suposta Luz 333.333.333/34 Bolsista 1.200,00\nLucas Hipótese Melo 000.000.000-00 Bolsista 1.200,00"
+  },
+  {
+    "pagina": "tabela-com-poeira",
+    "o_que_testa": "a mesma tabela com pontinhos de poeira, como em escâner sujo",
+    "texto": "UNIVERSIDADE FEDERAL DE SANTA CATARINA\nCoordenadoria de Análise de Prestações de Contas Fundacionais\nRelação de pagamentos a bolsistas - março de 2026\nNome CPF Função Valor (R$)\nAna Beatriz Moreira 111.111.111-11 Bolsista 1.200,00\nBruno César Lima 222.222.222-22 Bolsista 1.200,00\nCláudia Exemplo Souza 444.444.444-44 Pesquisadora 3.450,00\nDaniel Fictício Rocha 55555555555 Bolsista 800,00\nElaine Inventada Dias 666.666.666/66 Técnica 2.100,00\nFábio Teste Nogueira 777.777.777-77 Bolsista 1.200,00\nGisele Modelo Araújo 888888888-88 Coordenadora 4.000,00\nHélio Amostra Costa 999.999.999-99 Bolsista 1.200,00\nIara Simulada Prado 123.456.789-10 Bolsista 1.200,00\nJorge Exemplar Reis 246.813.579-12 Motorista 950,00\nKarina Suposta Luz 333.333.333/34 Bolsista 1.200,00\nLucas Hipótese Melo 000.000.000-00 Bolsista 1.200,00"
+  },
+  {
+    "pagina": "tabela-torta",
+    "o_que_testa": "a mesma tabela, 2 graus torta no escâner",
+    "texto": "UNIVERSIDADE FEDERAL DE SANTA CATARINA\nCoordenadoria de Análise de Prestações de Contas Fundacionais\nRelação de pagamentos a bolsistas - março de 2026\nNome CPF Função Valor (R$)\nAna Beatriz Moreira 111.111.111-11 Bolsista 1.200,00\nBruno César Lima 222.222.222-22 Bolsista 1.200,00\nCláudia Exemplo Souza 444.444.444-44 Pesquisadora 3.450,00\nDaniel Fictício Rocha 55555555555 Bolsista 800,00\nElaine Inventada Dias 666.666.666/66 Técnica 2.100,00\nFábio Teste Nogueira 777.777.777-77 Bolsista 1.200,00\nGisele Modelo Araújo 888888888-88 Coordenadora 4.000,00\nHélio Amostra Costa 999.999.999-99 Bolsista 1.200,00\nIara Simulada Prado 123.456.789-10 Bolsista 1.200,00\nJorge Exemplar Reis 246.813.579-12 Motorista 950,00\nKarina Suposta Luz 333.333.333/34 Bolsista 1.200,00\nLucas Hipótese Melo 000.000.000-00 Bolsista 1.200,00"
+  },
+  {
+    "pagina": "tabela-desbotada",
+    "o_que_testa": "a mesma tabela, desbotada, borrada e com chuvisco - a pior de todas",
+    "texto": "UNIVERSIDADE FEDERAL DE SANTA CATARINA\nCoordenadoria de Análise de Prestações de Contas Fundacionais\nRelação de pagamentos a bolsistas - março de 2026\nNome CPF Função Valor (R$)\nAna Beatriz Moreira 111.111.111-11 Bolsista 1.200,00\nBruno César Lima 222.222.222-22 Bolsista 1.200,00\nCláudia Exemplo Souza 444.444.444-44 Pesquisadora 3.450,00\nDaniel Fictício Rocha 55555555555 Bolsista 800,00\nElaine Inventada Dias 666.666.666/66 Técnica 2.100,00\nFábio Teste Nogueira 777.777.777-77 Bolsista 1.200,00\nGisele Modelo Araújo 888888888-88 Coordenadora 4.000,00\nHélio Amostra Costa 999.999.999-99 Bolsista 1.200,00\nIara Simulada Prado 123.456.789-10 Bolsista 1.200,00\nJorge Exemplar Reis 246.813.579-12 Motorista 950,00\nKarina Suposta Luz 333.333.333/34 Bolsista 1.200,00\nLucas Hipótese Melo 000.000.000-00 Bolsista 1.200,00"
+  },
+  {
+    "pagina": "oficio-torto-comprimido",
+    "o_que_testa": "ofício 3 graus torto, gravado em baixa qualidade",
+    "texto": "UNIVERSIDADE FEDERAL DE SANTA CATARINA\nCoordenadoria de Análise de Prestações de Contas Fundacionais\nOfício nº 0137/2026 - Prestação de contas do projeto de extensão\n\nTrata-se de prestação de contas referente ao projeto identificado no\nprocesso 23080.012345/2026-11, encaminhada pela fundação de apoio para\nanálise desta Coordenadoria. O coordenador indicado no termo de outorga\né o servidor Fulano de Tal Exemplo, inscrito no CPF 123.456.789-10.\nA bolsista Maria da Conceição Exemplo, CPF 222.222.222-22, recebeu as\nparcelas de março a junho. O pagamento ao colaborador João Ninguém\nSilva (CPF 33333333333) foi feito por depósito em conta corrente, e a\ndiária do motorista Cícero Inventado, CPF 777.777.777-78, segue em\nanexo. Solicita-se a conferência dos comprovantes até 30/11/2026."
+  },
+  {
+    "pagina": "oficio-deitado",
+    "o_que_testa": "ofício com o conteúdo deitado 90 graus",
+    "texto": "UNIVERSIDADE FEDERAL DE SANTA CATARINA\nCoordenadoria de Análise de Prestações de Contas Fundacionais\nOfício nº 0137/2026 - Prestação de contas do projeto de extensão\n\nTrata-se de prestação de contas referente ao projeto identificado no\nprocesso 23080.012345/2026-11, encaminhada pela fundação de apoio para\nanálise desta Coordenadoria. O coordenador indicado no termo de outorga\né o servidor Fulano de Tal Exemplo, inscrito no CPF 123.456.789-10.\nA bolsista Maria da Conceição Exemplo, CPF 222.222.222-22, recebeu as\nparcelas de março a junho. O pagamento ao colaborador João Ninguém\nSilva (CPF 33333333333) foi feito por depósito em conta corrente, e a\ndiária do motorista Cícero Inventado, CPF 777.777.777-78, segue em\nanexo. Solicita-se a conferência dos comprovantes até 30/11/2026."
+  }
+]
