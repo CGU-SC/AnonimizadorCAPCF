@@ -17,22 +17,27 @@ maduro do mercado para ler PDF, rodar OCR e achar padrão com regex.
 | --- | --- |
 | Interface | PySide6 (Qt) — menu lateral + painel principal |
 | Leitura de PDF | PyMuPDF — extrai texto, detecta ausência de texto, converte página em imagem para o OCR |
-| OCR | Tesseract, via pytesseract, com pacote de português |
+| OCR | Dois motores na escolha (spec 002, emenda de 18/10/2026). **PaddleOCR**, o padrão: os modelos PP-OCRv6 pequenos, rodados pelo RapidOCR 3.10.0 com o onnxruntime 1.31.0, dentro do programa — nada é baixado. **Tesseract**, a alternativa, via pytesseract, com pacote de português; o detector de orientação dele endireita a página também para o PaddleOCR |
 | Validação de CPF | Sem biblioteca — dígito verificador calculado na mão |
 | Dados | Sem banco — cada documento é processado sozinho, sem estado entre usos |
 | Testes | pytest |
 | Distribuição | instalador do Windows (Inno Setup) com o programa numa pasta montada pelo PyInstaller — sem exigir Python nas máquinas do núcleo. Era `.exe` único até 23/09/2026: com instalador a pasta não aparece, e o `.exe` único se desempacota a cada abertura (5 a 10 s) e o antivírus desconfia dele |
 
 Descartado: C#/.NET (sem fluência de quem mantém) e Electron (mais pesado, OCR
-pior). O **PaddleOCR** foi perguntado em 30/09/2026,
-depois da entrega, e não entra no lugar do Tesseract: ele lê melhor página
-escaneada ruim e entende tabela, mas pesa mais de meio giga com os modelos, os
-baixa da internet na primeira leitura (embarcá-los é trabalho de empacotamento
-que hoje não existe) e trocar o motor agora jogaria fora o teste da entrega,
-feito com o Tesseract. Virou a **funcionalidade 7 do backlog**: um segundo
-motor na escolha, para a pessoa usar na página em que o Tesseract lê pior —
-alternativa, não substituição. Atenção: PyMuPDF é AGPL — ok para uso interno da UFSC, conferir se um
-dia o programa sair da universidade.
+pior). O **PaddleOCR** foi perguntado em 30/09/2026, depois da entrega, e virou
+a **funcionalidade 7 do backlog**. Medido antes de construir (conferência 02,
+13 a 16/10/2026): com as mesmas páginas, o Tesseract deixaria 42 de 60 CPFs sem
+máscara — pula tabela com grade inteira, mesmo limpa —, e os modelos do
+PaddleOCR de 1 a 5. Por isso ele passou a ser o motor padrão, e o Tesseract a
+alternativa. **Descartado o PaddleOCR oficial** (PaddlePaddle): instalado do
+jeito normal não leu nenhuma página no Windows (defeito do oneDNN), com a
+correção leva quase um minuto por página, ocupa mais de 1 GB e, sem configurar,
+consulta a internet ao iniciar. O RapidOCR roda a versão pequena da mesma
+família de modelos, a 1 ou 2 segundos por página, com os modelos dentro do
+próprio pacote. **Descartado também o modelo médio**: três vezes mais lento,
+quatro vezes maior, sem ganho firme na medição. Atenção: PyMuPDF é AGPL — ok
+para uso interno da UFSC, conferir se um dia o programa sair da universidade;
+RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
 
 ## Comandos
 
@@ -75,11 +80,14 @@ dia o programa sair da universidade.
   Era asterisco até 18/09/2026, e ele quebrava na tela de quem abre o arquivo:
   num `.md`, `***` e `**` são a marcação de negrito e itálico (sétima emenda da
   spec 003).
-- **Motor de OCR**: dois no menu — Tesseract local, e (fora do escopo desta
-  primeira versão) uma IA local, na própria máquina (LM Studio) ou num servidor
+- **Motor de OCR**: três na escolha, desde a emenda de 18/10/2026 da spec 002 —
+  o PaddleOCR, primeiro e já marcado; o Tesseract, como alternativa; e (fora do
+  escopo ainda) uma IA local, na própria máquina (LM Studio) ou num servidor
   dentro da rede da universidade. Na tela ela aparece apagada, como "IA local",
   com "Funcionalidade a ser implementada" embaixo. **Nunca** um serviço de
-  empresa externa — seria contradizer o motivo do programa existir.
+  empresa externa — seria contradizer o motivo do programa existir. A escolha
+  vale até a pessoa trocar ou fechar o programa; lembrá-la entre um uso e outro
+  é a funcionalidade 8 do backlog.
 - **Conferência humana**: parte fixa do processo quando o texto veio de OCR, e
   não etapa opcional. O dígito verificador do CPF confere o que foi lido; o
   que não fechar vira lista de suspeitos para a pessoa olhar, em vez de passar

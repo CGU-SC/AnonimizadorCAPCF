@@ -191,7 +191,7 @@
 <body>
 
 <h1>Spec ilustrada 002 — Módulo de OCR</h1>
-<p class="subtitulo">O combinado do item 2 do backlog, desenhado — 09/09/2026 · situação: aprovada</p>
+<p class="subtitulo">O combinado do item 2 do backlog, desenhado — 09/09/2026 · situação: aprovada · <a href="#emenda-paddleocr" style="color:#7fb1e8">emenda de 18/10/2026 (PaddleOCR) aprovada</a></p>
 
 <div class="objetivo">
   <strong>Objetivo.</strong> Transformar um PDF da CAPCF em texto conferido por uma
@@ -451,6 +451,130 @@
   <div class="cartao regra novo"><span class="chave">RN-23 e RN-24</span><br>Na conferência, a página do documento aumenta e diminui de 50% a 400%, e o tamanho escolhido vale para as páginas seguintes. A letra do texto também aumenta e diminui — e isso não altera o texto, só como ele aparece na tela.</div>
 </div>
 
+<h2 id="emenda-paddleocr">Emenda de 18/10/2026 — o PaddleOCR na escolha do motor</h2>
+<div class="emenda">
+  <strong>Aprovada em 18/10/2026.</strong> Funcionalidade 7 do backlog. Na medição
+  (conferência 02), com as mesmas páginas, o Tesseract deixaria 42 de 60 CPFs saírem sem
+  máscara — pula tabela com grade inteira, mesmo limpa —, e os modelos do PaddleOCR
+  deixariam de 1 a 5. Ele passa a ser o primeiro motor, já marcado; o Tesseract fica como
+  alternativa, inteiro. Vale nos dois módulos.
+</div>
+
+<p class="nota">O trecho do percurso que muda: a leitura das imagens passa por uma escolha que hoje não existe.</p>
+<div class="mapa">
+  <div class="caixa decisao"><div class="rotulo">Qual motor está marcado?</div><div class="detalhe">PaddleOCR, por padrão; vale até a pessoa trocar ou fechar o programa</div></div>
+  <div class="seta">↓</div>
+  <div class="ramos">
+    <div class="ramo">
+      <div class="ramo-titulo">PaddleOCR (o padrão)</div>
+      <div class="caixa"><div class="rotulo">O detector do Tesseract endireita a página</div><div class="detalhe">só se o Tesseract estiver instalado; sem ele, a página vai como está</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Lê com o PaddleOCR</div><div class="detalhe">modelos dentro do programa — nada é baixado</div></div>
+    </div>
+    <div class="ramo">
+      <div class="ramo-titulo">Tesseract</div>
+      <div class="caixa"><div class="rotulo">Endireita e lê como hoje</div><div class="detalhe">nada muda neste caminho</div></div>
+    </div>
+  </div>
+  <div class="seta">↓</div>
+  <div class="caixa"><div class="rotulo">Conferência, dizendo qual motor leu</div><div class="detalhe">"lido pelo PaddleOCR" ou "lido pelo Tesseract" — só na tela, nunca no arquivo</div></div>
+</div>
+
+<h3 style="margin-top:24px">Os fluxos da emenda, o normal e os tortos lado a lado</h3>
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Normal — PDF escaneado, com o PaddleOCR</div>
+    <div class="fluxo-quando">Quem não mexe na escolha</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">Abre o módulo: três motores, o PaddleOCR marcado, um resumo embaixo de cada um.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Escolhe um PDF sem texto por dentro.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">A estimativa usa o tempo do PaddleOCR: cerca de 2 segundos por página.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">Cada página é endireitada pelo detector do Tesseract e lida pelo PaddleOCR.</div></div>
+    <div class="passo"><div class="passo-numero">5</div><div class="passo-texto">A conferência abre como hoje, dizendo "lido pelo PaddleOCR".</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — falta o Tesseract</div>
+    <div class="fluxo-quando">O PaddleOCR funciona</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">Nenhum aviso no alto. Na escolha, o Tesseract aparece apagado, com o motivo e as três saídas de hoje ao lado.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">A leitura segue com o PaddleOCR, sem endireitar.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">A conferência avisa uma vez que a orientação das páginas não pôde ser conferida.</div></div>
+  </div>
+</div>
+<div class="fluxos" style="margin-top:16px">
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — falta o PaddleOCR</div>
+    <div class="fluxo-quando">Instalação estragada: arquivo apagado, cópia pela metade</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">O PaddleOCR aparece apagado: "esta instalação está incompleta — reinstale o programa".</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">O Tesseract passa a vir marcado. Nada troca de motor calado, e nada é buscado na internet.</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — não funciona nenhum dos dois</div>
+    <div class="fluxo-quando">É o único caso da tela cheia</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">O aviso no alto e a tela cheia de "motor faltando", como hoje, com as três saídas do Tesseract.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">O PDF com texto por dentro continua funcionando.</div></div>
+  </div>
+</div>
+
+<h3 style="margin-top:24px">Os estados que a emenda acrescenta</h3>
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-vazio">vazio</div>
+    <div class="estado-corpo">Três motores: PaddleOCR marcado, Tesseract, IA local apagada. O resumo embaixo dos dois primeiros — o que cada um faz melhor e quanto leva por página.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-vazio">vazio, faltando o Tesseract</div>
+    <div class="estado-corpo">A linha dele apagada, com o motivo e as três saídas. Nenhum aviso no alto.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-vazio">vazio, faltando o PaddleOCR</div>
+    <div class="estado-corpo">A linha dele apagada, pedindo para reinstalar, e o Tesseract marcado.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">conferência</div>
+    <div class="estado-corpo">"Lido pelo PaddleOCR" ou "lido pelo Tesseract"; e, sem o Tesseract na máquina, o aviso de que a orientação não pôde ser conferida.</div>
+  </div>
+</div>
+
+<div class="duas-colunas" style="margin-top:24px">
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-entra">Entra na emenda</div>
+    <div class="corpo-peso">
+      <ul>
+        <li>Três motores na escolha, o PaddleOCR primeiro e marcado.</li>
+        <li>O resumo de cada motor: o que faz melhor e quanto leva por página.</li>
+        <li>O motor marcado é o que lê — hoje a escolha não decide nada.</li>
+        <li>O PaddleOCR dentro do programa, sem baixar nada.</li>
+        <li>O detector do Tesseract endireitando a página para o PaddleOCR.</li>
+        <li>A conferência dizendo qual motor leu.</li>
+        <li>O motor faltando dito para cada motor, na própria escolha.</li>
+        <li>A estimativa de tempo pelo motor marcado.</li>
+        <li>Nos dois módulos.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-nao-entra">NÃO entra na emenda</div>
+    <div class="corpo-peso">
+      <ul>
+        <li><strong>A IA local</strong> — continua apagada.</li>
+        <li><strong>Qualquer motor fora da máquina.</strong> <span class="quando">Nunca.</span></li>
+        <li><strong>O PaddleOCR oficial e o modelo médio.</strong> <span class="quando">Descartados na escolha técnica.</span></li>
+        <li><strong>Um modelo próprio para página deitada.</strong></li>
+        <li><strong>Tabela com barras do Markdown.</strong> <span class="quando">Continua tabela de texto.</span></li>
+        <li><strong>O botão "ler de novo com o outro motor".</strong></li>
+        <li><strong>Lembrar as escolhas entre um uso e outro.</strong> <span class="quando">Item novo no backlog, ligado à funcionalidade 4.</span></li>
+        <li><strong>A entrega da versão nova e os roteiros.</strong> <span class="quando">Prompt próprio, na skill de entrega.</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="cartoes" style="margin-top:24px">
+  <div class="cartao regra novo"><span class="chave">RN-26</span><br>O motor marcado é o que lê. A escolha vale até a pessoa trocar ou fechar o programa; ao abrir de novo, volta o PaddleOCR. Nada é guardado — a RN-22 continua inteira.</div>
+  <div class="cartao regra novo"><span class="chave">RN-27</span><br>O programa confere que os modelos estão no lugar antes de chamar o PaddleOCR, e nunca deixa a biblioteca buscar modelo na internet.</div>
+  <div class="cartao regra novo"><span class="chave">RN-29 e RN-30</span><br>Nunca troca de motor calado. A tela cheia de "motor faltando" fica só para quando nenhum dos dois funciona.</div>
+  <div class="cartao regra novo"><span class="chave">RN-35</span><br>O instalador pode chegar a cerca de 250 MB. Passando disso, a decisão volta para a solicitante.</div>
+</div>
+
 <h2>Questões em aberto</h2>
 <div class="objetivo" style="border-left-color: var(--cor-sucesso)">
   <strong>Nenhuma.</strong> Todas as decisões que faltavam foram fechadas na conversa
@@ -461,7 +585,7 @@
 
 <div class="rodape">
   Gerada pela skill-07-designer-de-telas, a pedido da skill-05-redator-de-funcionalidade ·
-  espelha <code>especificacoes/specs/002-modulo-de-ocr.md</code> · regenerada em 11/09/2026, com a emenda dos controles de tamanho
+  espelha <code>especificacoes/specs/002-modulo-de-ocr.md</code> · regenerada em 18/10/2026, com a emenda do PaddleOCR (funcionalidade 7)
 </div>
 
 </body>
