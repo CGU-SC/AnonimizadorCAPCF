@@ -1,6 +1,7 @@
 # Spec 002 — Módulo de OCR
 
-**Status:** aprovada
+**Status:** aprovada — a emenda de 2026-10-18 (funcionalidade 7) também,
+no mesmo dia
 **Data:** 2026-09-09
 **Emendada em:** 2026-09-11 — acrescentados os controles de tamanho da tela de
 conferência (escopo, RN-23, RN-24, dois critérios de aceite e um item de
@@ -16,6 +17,12 @@ a etapa 7.
 português junto (RN-19 e o caminho torto do Tesseract). O buraco apareceu na
 revisão da etapa 7: instalado sem o português, o aviso sumia e toda leitura de
 documento escaneado falhava sem dizer por quê.
+**Emendada em:** 2026-10-18 — o PaddleOCR entra na escolha do motor, primeiro e
+já marcado, com o Tesseract como alternativa (funcionalidade 7 do backlog). Está
+inteira na seção "Emenda de 18/10/2026", no fim; os trechos de antes que ela
+muda trazem a remissão a ela. Veio da medição da conferência 02: com a mesma
+massa, o Tesseract deixaria 42 de 60 CPFs saírem sem máscara, porque pula tabela
+com grade, e os modelos do PaddleOCR deixariam de 1 a 5.
 
 ## Objetivo
 
@@ -32,12 +39,15 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
 - Escolher um PDF da máquina.
 - Escolher o motor de leitura, entre dois itens: **"Tesseract (nesta máquina)"**,
   funcionando, e **"IA local da UFSC"**, visível e desligada, com a explicação
-  de que depende de servidor que a TI ainda vai montar.
+  de que depende de servidor que a TI ainda vai montar. *(Passam a ser três
+  itens, com o PaddleOCR primeiro e marcado — emenda de 18/10/2026, RN-25.)*
 - Detectar, por verificação exata, se o PDF já tem camada de texto por dentro.
 - Havendo camada de texto: mostrar as primeiras linhas dela na tela e deixar a
   pessoa escolher entre aproveitar esse texto ou ignorá-lo e ler as imagens.
 - Não havendo camada de texto: desenhar cada página como imagem e ler com o
   Tesseract, endireitando automaticamente a página cujo conteúdo esteja girado.
+  *(Lê com o motor marcado, que por padrão é o PaddleOCR — emenda de
+  18/10/2026, RN-26 e RN-28.)*
 - Mostrar o andamento durante a leitura, com a contagem de páginas e a
   possibilidade de cancelar.
 - Remontar como tabela de texto o que era tabela no documento, nos dois
@@ -95,7 +105,9 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
   *presta* é outra coisa, e essa fica com a pessoa (RN-4).
 - premissa: o motor desta versão é o Tesseract instalado na máquina, com o
   pacote de português. A LLM/IA local aparece no menu mas está fora do escopo
-  desta versão. Nunca um serviço de empresa externa.
+  desta versão. Nunca um serviço de empresa externa. *(Desde a emenda de
+  18/10/2026, o motor padrão é o PaddleOCR, que vai dentro do programa; o
+  Tesseract continua como alternativa.)*
 - premissa: a saída `.md` preserva as tabelas do documento original como tabelas
   de texto.
 - premissa: PDF grande com vários documentos dentro entra como um documento só e
@@ -151,6 +163,11 @@ documento segue pelo caminho do OCR.
 
 ### Caminho torto — o Tesseract não está instalado
 
+*Desde a emenda de 18/10/2026, o que vem abaixo vale quando **nenhum** dos dois
+motores funciona. Faltando só o Tesseract, com o PaddleOCR funcionando, o aviso
+do alto e a tela cheia não aparecem: a falta é dita na própria escolha do motor
+(RN-30).*
+
 - Ao abrir o módulo, o programa procura o Tesseract e não acha. Um aviso aparece
   no alto do painel dizendo que o motor de leitura não foi encontrado e que
   documentos escaneados não vão funcionar — **e esse aviso já traz o que fazer a
@@ -203,7 +220,7 @@ vive na memória durante o uso:
 | Informação | De onde vem | Obrigatória | Observação |
 | --- | --- | --- | --- |
 | caminho do PDF escolhido | a pessoa (botão ou arrastar) | sim | tem que existir, ser legível e abrir como PDF |
-| motor escolhido | a pessoa (escolha na tela) | sim | só "Tesseract" é escolhível nesta versão |
+| motor escolhido | a pessoa (escolha na tela) | sim | só "Tesseract" é escolhível nesta versão *(PaddleOCR ou Tesseract desde a emenda de 18/10/2026 — ver os Dados da emenda)* |
 | tem camada de texto? | verificação no PDF | derivado | sim/não, verificação exata |
 | origem do texto | derivado | sim | "camada do PDF" ou "OCR" — decide o aviso da tela de conferência |
 | texto lido, página a página | PyMuPDF ou Tesseract | sim | fica separado por página, que é o que permite a rolagem casada |
@@ -260,7 +277,8 @@ usado quando a IA local entrar, em spec própria.
 - RN-6: antes de ler cada página, o programa detecta a orientação do conteúdo e
   endireita a página que estiver girada. O campo de rotação do PDF não serve
   para isso: um documento deitado dentro de uma página em pé tem esse campo
-  zerado, e só a detecção em cima da imagem pega o caso.
+  zerado, e só a detecção em cima da imagem pega o caso. *(Com o PaddleOCR, quem
+  detecta é o detector do Tesseract, quando ele está instalado — RN-28.)*
 - RN-7: a página é desenhada a 300 pontos por polegada. É a densidade que o
   Tesseract recomenda para texto impresso — abaixo disso ele erra mais, acima
   fica mais lento sem ganhar precisão.
@@ -307,7 +325,9 @@ usado quando a IA local entrar, em spec própria.
   explicação de que depende de servidor que a TI ainda vai montar. Não há, neste
   módulo, nenhum código que converse com motor remoto.
 - RN-22: nada é guardado entre um uso e outro — nem histórico, nem preferência
-  de motor, nem última pasta usada.
+  de motor, nem última pasta usada. *(A emenda de 18/10/2026 não mexe nesta
+  regra: o PaddleOCR vir marcado é o padrão escrito no programa, e não uma
+  preferência guardada — RN-26.)*
 - RN-23: a página do documento, na conferência, tem controles de **−** e **+**,
   indo de 50% a 400%, mais um botão que volta ao tamanho que cabe na largura. O
   tamanho escolhido **vale para as páginas seguintes** enquanto o mesmo
@@ -394,3 +414,254 @@ usado quando a IA local entrar, em spec própria.
 ## Questões em aberto
 
 Nenhuma.
+
+---
+
+## Emenda de 18/10/2026 — o PaddleOCR na escolha do motor
+
+**Funcionalidade 7 do backlog.** Levantamento detalhado fechado em 18/10/2026
+(`mockups/requisitos/03-mapa-do-entendimento.html`), depois da medição
+(`conferencias/02-os-motores-de-leitura.html`). Escolha técnica aprovada em
+16/10/2026: os modelos do PaddleOCR rodados pelo RapidOCR, com o modelo pequeno.
+
+### Objetivo da emenda
+
+Ler melhor a página em que o Tesseract lê pior — tabela com grade, página torta,
+contraste fraco — e, com isso, deixar escapar menos CPF. Na medição, com as
+mesmas páginas, o Tesseract pulou tabelas com grade inteiras, mesmo limpas.
+
+### Escopo da emenda
+
+- A escolha do motor passa a ter **três itens, nesta ordem**: "PaddleOCR (nesta
+  máquina)", **já marcado**; "Tesseract (nesta máquina)"; e a "IA local",
+  apagada, como hoje.
+- Embaixo do PaddleOCR e do Tesseract, **uma linha de resumo** com o que cada um
+  faz melhor e quanto leva por página.
+- **O motor marcado é o que lê.** Hoje a escolha não decide nada — o programa
+  sempre chama o Tesseract. O ponto em que o programa escolhe entre motores passa
+  a existir, desenhado para a IA local da funcionalidade 4 caber depois sem
+  retrabalho, sem que nada dela seja construído agora.
+- O PaddleOCR vai **dentro do programa**: motor e modelos na pasta da instalação.
+  Nada é baixado em uso.
+- Com o PaddleOCR, a página deitada é endireitada pelo **detector do Tesseract**,
+  quando ele está instalado.
+- A conferência diz **qual motor leu**.
+- O motor faltando passa a ser dito **para cada motor**, na própria escolha; a
+  tela cheia de "motor faltando" fica para quando nenhum dos dois funciona.
+- A estimativa de tempo antes de ler passa a usar o tempo **do motor marcado**.
+- Vale **nos dois módulos**: no Gerar OCR, na tela de escolher o documento; no
+  Anonimizar, na tela de ler o PDF como imagem (RN-15 da spec 003).
+
+### Fora de escopo da emenda
+
+- **A IA local** (funcionalidade 4) — continua apagada na escolha.
+- **Qualquer motor fora da máquina.** Nunca, por regra dura do projeto.
+- **O PaddleOCR oficial** (PaddlePaddle) **e o modelo médio** — descartados na
+  escolha técnica: o oficial não leu do jeito normal no Windows e leva quase um
+  minuto por página; o médio é três vezes mais lento e não leu de forma
+  consistentemente melhor.
+- **Um modelo próprio para descobrir página deitada.** Quem endireita é o
+  detector do Tesseract (RN-28).
+- **Tabela no formato do Markdown, com barras.** A tabela continua saindo como
+  tabela de texto (RN-10, RN-34).
+- **Um botão "ler de novo com o outro motor"** na conferência.
+- **Lembrar as escolhas da pessoa entre um uso e outro** — item novo do backlog,
+  ligado à funcionalidade 4, que parou na mesma pergunta (onde guardar, e a
+  emenda da RN-22).
+- **A entrega da versão nova** e os roteiros "Como instalar" e "Como usar" — da
+  `skill-11-gerente-de-entrega`, num prompt próprio.
+
+### Premissas da emenda
+
+- premissa: sem o Tesseract, o programa não tem como saber **qual** página
+  estava deitada; por isso o aviso sai uma vez por documento, e não por página
+  (RN-28).
+- premissa: PDF com texto por dentro não muda nada — o PaddleOCR só entra quando
+  a página é lida como imagem.
+- premissa: ler em segundo plano, contar as páginas, cancelar (esperando a
+  página atual terminar) e as telas de falha continuam iguais, com qualquer dos
+  dois motores.
+- premissa: os motores são conferidos ao abrir o módulo e de novo antes de cada
+  leitura, como hoje se faz com o Tesseract.
+- premissa: a página vai para o PaddleOCR na mesma densidade de hoje, 300 pontos
+  por polegada (RN-7), a mesma da medição.
+- premissa: os tempos do resumo foram medidos nesta máquina; nas do núcleo podem
+  ser um pouco maiores.
+
+### Fluxos da emenda
+
+**Fluxo normal — PDF escaneado, com o PaddleOCR.**
+
+1. A pessoa abre o módulo. A escolha mostra o PaddleOCR marcado, com o resumo
+   embaixo de cada motor.
+2. Ela escolhe um PDF sem texto por dentro (no Anonimizar, chega à tela de ler).
+3. A estimativa antes de ler usa o tempo do PaddleOCR.
+4. Para cada página: o programa desenha a imagem, o detector do Tesseract
+   endireita o que estiver deitado, e o PaddleOCR lê.
+5. A conferência abre como hoje, dizendo "lido pelo PaddleOCR".
+
+**Fluxo alternativo — a pessoa escolhe o Tesseract.**
+
+1a. Ela marca o Tesseract antes de ler. A estimativa passa a usar o tempo dele.
+4a. A leitura é a de hoje, inteira. A conferência diz "lido pelo Tesseract".
+1b. Com o programa aberto, o Tesseract continua marcado nos documentos seguintes
+    daquele módulo, até ela trocar. Fechou e abriu o programa, volta o PaddleOCR.
+
+**Caminho torto — falta o Tesseract, e o PaddleOCR funciona.**
+
+- Não aparece aviso no alto nem tela cheia. Na escolha, a linha do Tesseract fica
+  apagada, com "não encontrado nesta máquina — sem ele, página deitada não é
+  endireitada", e as três saídas de hoje (instalar agora, conferir de novo,
+  apontar a pasta) ficam ali.
+- A leitura com o PaddleOCR segue, sem endireitar. A conferência mostra, uma vez,
+  "a orientação das páginas não pôde ser conferida — falta o Tesseract nesta
+  máquina". Nada disso vai para o arquivo (RN-11).
+
+**Caminho torto — falta o PaddleOCR (instalação estragada).**
+
+- A linha do PaddleOCR fica apagada, com "esta instalação está incompleta —
+  reinstale o programa", e o Tesseract passa a vir marcado. A pessoa lê, mas
+  sabendo com que motor. Nenhum arquivo é buscado na internet.
+
+**Caminho torto — não funciona nenhum dos dois.**
+
+- Como hoje: o aviso no alto com as três saídas do Tesseract, e a tela cheia
+  para quem escolhe um PDF sem texto. O PDF com texto por dentro continua
+  funcionando. A linha do PaddleOCR continua dizendo que a instalação está
+  incompleta.
+
+**Caminho torto — a leitura falha numa página, ou a pessoa cancela.**
+
+- Igual a hoje, com qualquer dos dois motores: a tela de falha com "tentar de
+  novo", ou a volta à escolha com nada gravado.
+
+### Dados da emenda
+
+| Informação | De onde vem | Observação |
+| --- | --- | --- |
+| motor escolhido | a pessoa | PaddleOCR ou Tesseract. Padrão: PaddleOCR. Vive na memória até ela trocar ou fechar o programa; cada módulo tem o seu (RN-26) |
+| motor que leu | derivado | vai para a linha da conferência que diz de onde o texto veio (RN-32) |
+| orientação conferida? | derivado | não, quando o PaddleOCR leu sem o Tesseract na máquina; decide o aviso da conferência (RN-28) |
+| PaddleOCR presente? | conferência dos arquivos na pasta do programa | os modelos e o motor estão no lugar e carregam (RN-29) |
+
+Os modelos do PaddleOCR são arquivos do programa, e não dado: vão na instalação,
+não mudam com o uso e não guardam nada de quem usa.
+
+### Estados da interface da emenda
+
+- **vazio:** a escolha com os três motores — PaddleOCR marcado, Tesseract, IA
+  local apagada —, com a linha de resumo embaixo dos dois primeiros.
+- **vazio, faltando o Tesseract:** a linha do Tesseract apagada, com o motivo e
+  as três saídas; nenhum aviso no alto.
+- **vazio, faltando o PaddleOCR:** a linha do PaddleOCR apagada, com "esta
+  instalação está incompleta — reinstale o programa", e o Tesseract marcado.
+- **vazio, sem nenhum motor:** como o "vazio, com o motor faltando" de hoje, mais
+  a linha do PaddleOCR apagada.
+- **com dados (conferência):** a linha de onde o texto veio diz "lido pelo
+  PaddleOCR" ou "lido pelo Tesseract"; e, quando o PaddleOCR leu sem o Tesseract
+  na máquina, o aviso de que a orientação não pôde ser conferida.
+
+O desenho exato — onde ficam o resumo, a linha apagada e as três saídas, na
+janela mínima de 900 px — sai no rascunho de tela, aprovado antes do código.
+
+### Regras de negócio da emenda
+
+- RN-25: a escolha do motor tem três itens, nesta ordem: **"PaddleOCR (nesta
+  máquina)"**, "Tesseract (nesta máquina)" e "IA local" (apagada, RN-21). Ao
+  abrir o programa, o PaddleOCR vem marcado.
+- RN-26: **o motor marcado é o que lê.** A escolha vale até a pessoa trocar ou
+  fechar o programa, e cada módulo tem a sua. Nada disso é guardado: o PaddleOCR
+  vir marcado é o padrão escrito no programa, e a RN-22 continua inteira.
+- RN-27: o PaddleOCR são os modelos PP-OCRv6 **pequenos**, rodados pelo RapidOCR
+  (versão 3.10.0) com o onnxruntime (versão 1.31.0), dentro da pasta do
+  programa. O programa confere que os arquivos dos modelos estão no lugar
+  **antes** de chamar o motor, e nunca deixa a biblioteca buscar modelo na
+  internet (RN-20).
+- RN-28: com o PaddleOCR, a orientação é detectada pelo **detector do Tesseract**,
+  quando ele está instalado (a RN-6 vale para os dois motores). Sem o Tesseract,
+  a página vai como está, e a conferência diz uma vez, no alto: "a orientação das
+  páginas não pôde ser conferida — falta o Tesseract nesta máquina".
+- RN-29: faltando o PaddleOCR — modelo ausente, ou motor que não carrega —, a
+  linha dele aparece apagada, com "esta instalação está incompleta — reinstale o
+  programa", e o Tesseract passa a vir marcado. O programa **nunca troca de
+  motor calado**.
+- RN-30: faltando o Tesseract com o PaddleOCR funcionando, a linha do Tesseract
+  aparece apagada, com "não encontrado nesta máquina — sem ele, página deitada
+  não é endireitada", e as três saídas da RN-19 ficam ao lado dela. O aviso no
+  alto e a tela cheia de motor faltando aparecem **só quando nenhum dos dois
+  funciona**. O Tesseract sem o pacote de português conta como faltando (RN-19).
+- RN-31: as linhas de resumo são: PaddleOCR — *"Melhor resultado, inclusive em
+  tabela e página escaneada ruim · cerca de 2 segundos por página"*; Tesseract —
+  *"Pode pular tabela com grade · cerca de 3 segundos por página"*. A estimativa
+  antes de ler usa o mesmo tempo do motor marcado: 2 segundos por página com o
+  PaddleOCR, 3 com o Tesseract (era 1,5, medido em 11/09/2026 só na massa
+  limpa).
+- RN-32: a conferência diz "lido pelo PaddleOCR" ou "lido pelo Tesseract", na
+  linha que já diz de onde o texto veio. Nada disso vai para o arquivo (RN-11).
+- RN-33: a escolha e as regras desta emenda valem nos dois módulos — no Gerar
+  OCR, na tela de escolher o documento; no Anonimizar, na tela de ler o PDF como
+  imagem.
+- RN-34: com qualquer motor, a tabela sai como tabela de texto, com as colunas
+  alinhadas, pela mesma remontagem de hoje (RN-10).
+- RN-35: o instalador com o PaddleOCR dentro pode chegar a **cerca de 250 MB**
+  (o da 0.1.0 tem 97). Passando disso, a decisão volta para a solicitante antes
+  de a construção seguir.
+
+### Critérios de aceite da emenda
+
+- Dado qualquer dos dois módulos aberto, quando a escolha do motor aparece,
+  então ela mostra, nesta ordem, "PaddleOCR (nesta máquina)" marcado, "Tesseract
+  (nesta máquina)" e "IA local" apagada, com as duas linhas de resumo da RN-31.
+- Dado um PDF sem texto e o PaddleOCR marcado, quando a leitura termina, então o
+  texto foi lido pelo PaddleOCR (um teste confere qual motor foi chamado) e a
+  conferência diz "lido pelo PaddleOCR".
+- Dado o Tesseract marcado, quando a leitura termina, então o texto foi lido pelo
+  Tesseract e a conferência diz "lido pelo Tesseract".
+- Dadas as páginas limpas, com poeira e torta de `dados-exemplo/20-paginas-dificeis.pdf`,
+  quando lidas pelo PaddleOCR, então todos os CPFs do gabarito delas aparecem
+  inteiros no texto — inclusive os 12 da tabela com grade.
+- Dada a página deitada (`03-conteudo-girado.pdf` e a página deitada da massa
+  20), com o Tesseract instalado, quando lida pelo PaddleOCR, então o texto sai
+  na leitura correta, e os CPFs da página deitada da massa 20 aparecem inteiros.
+- Dado que o Tesseract não está na máquina e o PaddleOCR está, quando a pessoa
+  abre o módulo, então não aparece aviso no alto, a linha do Tesseract está
+  apagada com o motivo e as três saídas, e um PDF sem texto vai para a leitura
+  (não para a tela cheia).
+- Dado que o Tesseract não está na máquina, quando o PaddleOCR termina de ler,
+  então a conferência mostra uma vez o aviso de que a orientação não pôde ser
+  conferida, e o arquivo salvo não tem esse aviso.
+- Dado que um arquivo de modelo do PaddleOCR foi tirado da pasta do programa,
+  quando o módulo abre, então a linha do PaddleOCR está apagada com "esta
+  instalação está incompleta — reinstale o programa", o Tesseract está marcado, e
+  nenhuma tentativa de baixar modelo foi feita.
+- Dado que nenhum dos dois motores funciona, quando a pessoa abre o módulo, então
+  o aviso no alto e a tela cheia aparecem como hoje, e um PDF com texto por
+  dentro segue até a conferência.
+- Dado que a pessoa marcou o Tesseract e leu um documento, quando ela escolhe o
+  documento seguinte no mesmo módulo, então o Tesseract continua marcado; o
+  outro módulo continua com o PaddleOCR; e, fechando e abrindo o programa, os
+  dois voltam ao PaddleOCR.
+- Dado um PDF de 12 páginas, quando a tela mostra quanto a leitura deve levar,
+  então diz "uns 24 segundos" com o PaddleOCR marcado e "uns 36 segundos" com o
+  Tesseract.
+- Dado que a leitura com o PaddleOCR está em andamento, quando a pessoa cancela,
+  então o programa volta à escolha e nenhum arquivo foi gravado.
+- Dada a pasta do programa montada para a entrega (e não o ambiente de
+  desenvolvimento), quando ela lê a massa 20 com o PaddleOCR, então a leitura
+  funciona.
+- Dada a máquina **sem rede nenhuma**, quando o programa entregue lê um PDF
+  escaneado com o PaddleOCR, então a leitura termina normalmente. *(Para a
+  solicitante conferir, com a rede desligada.)*
+- Dado o instalador gerado, então ele tem até cerca de 250 MB — ou a decisão da
+  solicitante de seguir com mais que isso está registrada.
+- Dado o código do programa inteiro, inclusive o do motor novo, quando se procura
+  por endereço de internet ou chamada a serviço remoto, então não há nenhum; e o
+  motor novo não usa nada de CPF (RN-18).
+- Dados os testes que já existiam antes desta emenda, quando rodam, então todos
+  passam — o Tesseract continua inteiro.
+
+### Questões em aberto da emenda
+
+Nenhuma. O desenho exato da escolha sai no rascunho de tela, com aprovação
+própria; o tamanho real do instalador é medido na primeira etapa da construção e
+conferido contra a RN-35.

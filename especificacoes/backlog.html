@@ -74,9 +74,9 @@
   <h2>Prevista <span class="contagem">4</span></h2>
   <div class="cartoes">
     <div class="cartao">
-      <div class="cartao-titulo">7. Ler com o PaddleOCR</div>
-      <div class="cartao-entrega">Um segundo motor na escolha da leitura, ao lado do Tesseract, para a página escaneada torta, de contraste fraco ou cheia de tabela — onde o Tesseract lê pior. Roda na própria máquina, sem internet e sem servidor, e quem escolhe continua sendo a pessoa, olhando a página que tem na mão.</div>
-      <div class="cartao-entrega">Perguntada em 30/09/2026, depois da entrega da 0.1.0, como <strong>alternativa e não como substituição</strong> do Tesseract. É emenda da spec 002 (a escolha do motor). Precisa de levantamento próprio, e o peso é o assunto dele: os modelos passam de meio giga, e o instalador de hoje a pessoa roda sem administrador — pedaço que se instala só quando alguém precisa? ao lado do programa? Os modelos têm de vir embarcados, porque a RN-20 não deixa o programa ir à internet. E antes de tudo, medir o quanto o Tesseract erra de fato na massa do núcleo: na 0.1.0 o CPF que escapou escapou por regra de reconhecimento, não por leitura ruim.</div>
+      <div class="cartao-titulo">8. Lembrar as escolhas de quem usa</div>
+      <div class="cartao-entrega">O programa lembra, de um uso para o outro, as escolhas da pessoa — o motor de leitura marcado, e depois a configuração da IA local —, em vez de voltar ao padrão a cada vez que abre.</div>
+      <div class="cartao-entrega">Pedida em 18/10/2026, no levantamento da funcionalidade 7, onde ficou de fora. Ligada à funcionalidade 4, que parou na mesma pergunta: <strong>onde guardar</strong>, e a emenda da RN-22 da spec 002 — separando a configuração da pessoa, que poderia ser guardada, da memória do trabalho (documento, texto lido, pasta), que continua proibida.</div>
     </div>
     <div class="cartao">
       <div class="cartao-titulo">6. CPF sem o zero da frente</div>
@@ -97,9 +97,13 @@
 </div>
 
 <div class="coluna">
-  <h2>Em spec <span class="contagem">0</span></h2>
+  <h2>Em spec <span class="contagem">1</span></h2>
   <div class="cartoes">
-    <p class="vazio">Nenhuma spec esperando construção.</p>
+    <div class="cartao">
+      <div class="cartao-titulo">7. Ler com o PaddleOCR</div>
+      <div class="cartao-entrega">O PaddleOCR entra primeiro e já marcado na escolha do motor, com o Tesseract como alternativa, nos dois módulos: lê a tabela com grade, a página torta e a de contraste fraco, onde o Tesseract lê pior. Roda na própria máquina, sem internet, com os modelos dentro do programa.</div>
+      <div class="cartao-entrega"><strong>Emenda da spec 002 aprovada em 18/10/2026</strong> (RN-25 a RN-35, 17 critérios de aceite). Antes, a medição: com as mesmas páginas, o Tesseract deixaria 42 de 60 CPFs sem máscara, porque pula tabela com grade, e os modelos do PaddleOCR de 1 a 5. Escolha técnica de 16/10/2026: os modelos pequenos, rodados pelo RapidOCR. Falta o rascunho da escolha com três motores.</div>
+    </div>
   </div>
 </div>
 
@@ -131,7 +135,7 @@
 </div>
 
 <p class="rodape">
-  Estas seis linhas são só a parte visível do trabalho — cerca de um terço do
+  Estas oito linhas são só a parte visível do trabalho — cerca de um terço do
   esforço real de um projeto costuma ser funcionalidade nova; o resto é
   correção, ajuste, empacotamento e registro, e não aparece aqui.
 </p>
