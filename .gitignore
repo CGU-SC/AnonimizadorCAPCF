@@ -32,6 +32,14 @@ dist/
 # Ambiente virtual do Python — cada máquina cria o seu com `pip install -r requirements.txt`.
 .venv/
 
+# Os ambientes e os modelos da medição dos motores de leitura (conferência 02,
+# funcionalidade 7): pesam perto de 1,5 GB juntos e se refazem com os comandos
+# do conferencias/ler-com-o-motor.py. As leituras da massa também se refazem.
+.venv-paddleocr/
+.venv-rapidocr/
+.modelos-medicao/
+conferencias/leituras-02/
+
 # Arquivos que o Python gera sozinho ao rodar.
 __pycache__/
 *.pyc
