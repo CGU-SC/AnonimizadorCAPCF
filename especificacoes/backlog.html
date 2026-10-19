@@ -97,13 +97,9 @@
 </div>
 
 <div class="coluna">
-  <h2>Em spec <span class="contagem">1</span></h2>
+  <h2>Em spec <span class="contagem">0</span></h2>
   <div class="cartoes">
-    <div class="cartao">
-      <div class="cartao-titulo">7. Ler com o PaddleOCR</div>
-      <div class="cartao-entrega">O PaddleOCR entra primeiro e já marcado na escolha do motor, com o Tesseract como alternativa, nos dois módulos: lê a tabela com grade, a página torta e a de contraste fraco, onde o Tesseract lê pior. Roda na própria máquina, sem internet, com os modelos dentro do programa.</div>
-      <div class="cartao-entrega"><strong>Emenda da spec 002 aprovada em 18/10/2026</strong> (RN-25 a RN-35, 17 critérios de aceite). Antes, a medição: com as mesmas páginas, o Tesseract deixaria 42 de 60 CPFs sem máscara, porque pula tabela com grade, e os modelos do PaddleOCR de 1 a 5. Escolha técnica de 16/10/2026: os modelos pequenos, rodados pelo RapidOCR. Falta o rascunho da escolha com três motores.</div>
-    </div>
+    <p class="vazio">Nenhuma spec esperando construção.</p>
   </div>
 </div>
 
@@ -115,8 +111,13 @@
 </div>
 
 <div class="coluna">
-  <h2>Construída <span class="contagem">3</span></h2>
+  <h2>Construída <span class="contagem">4</span></h2>
   <div class="cartoes">
+    <div class="cartao">
+      <div class="cartao-titulo">7. Ler com o PaddleOCR</div>
+      <div class="cartao-entrega">O PaddleOCR entra primeiro e já marcado na escolha do motor, com o Tesseract como alternativa, nos dois módulos: lê a tabela com grade, a página torta e a de contraste fraco, onde o Tesseract lê pior. Roda na própria máquina, sem internet, com os modelos dentro do programa. Emenda da spec 002 aprovada em 18/10/2026; rascunho 11 aprovado.</div>
+      <div class="cartao-entrega"><strong>As 5 etapas conferidas na tela</strong>, de 18 a 19/10/2026 — inclusive o programa instalado lendo com a rede desligada — e os 17 critérios da emenda passando. Instalador de teste com 180 MB. Observação: se o Tesseract marcado sumir com o programa aberto, a leitura seguinte sai com o PaddleOCR sem a troca aparecer antes, só depois, no selo (desvio da letra da RN-29). A entrega da versão nova é trabalho à parte.</div>
+    </div>
     <div class="cartao">
       <div class="cartao-titulo">3. Módulo de Anonimizador de CPF</div>
       <div class="cartao-entrega">Encontra todo CPF no texto (em qualquer formato de pontuação), mascara e gera o <code>.md</code> pronto para o assistente. Spec 003 aprovada em 14/09/2026, com oito emendas; rascunhos de tela 01 e 08 aprovados.</div>
