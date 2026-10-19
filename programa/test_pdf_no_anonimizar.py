@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import motor_na_tela
+import motor_paddleocr
 from main import JanelaPrincipal
 from painel_anonimizar import PainelAnonimizar
 
@@ -29,8 +30,13 @@ class _LeituraDeMentira:
 
 @pytest.fixture
 def sem_motor(monkeypatch):
-    """Uma máquina sem o Tesseract, que ganha o motor quando pedirem."""
+    """Uma máquina sem nenhum motor, que ganha o Tesseract quando pedirem.
+
+    O PaddleOCR também fica escondido: desde a emenda de 18/10/2026 da spec
+    002, o aviso e a tela cheia são de quando nenhum dos dois funciona (RN-30).
+    """
     estado = {"tem_motor": False}
+    monkeypatch.setattr(motor_paddleocr, "presente", lambda: False)
     monkeypatch.setattr(motor_na_tela, "localizar_tesseract",
                         lambda: Path("tesseract.exe") if estado["tem_motor"] else None)
     monkeypatch.setattr(motor_na_tela, "ha_algum_tesseract", lambda: False)

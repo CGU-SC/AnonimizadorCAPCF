@@ -2,12 +2,18 @@
 
 O Tesseract desta máquina não é tocado: o painel recebe um localizador de
 mentira, que responde "não achei" até o teste dizer que o motor foi instalado.
+
+Desde a emenda de 18/10/2026 da spec 002, o aviso do alto e a tela cheia são de
+quando **nenhum** motor funciona (RN-30). Por isso a máquina de mentira daqui
+também esconde o PaddleOCR - sem isso, ele leria, e o aviso não apareceria.
+Faltar só o Tesseract é outro caso, conferido em test_cada_motor_faltando.py.
 """
 from pathlib import Path
 
 import pytest
 
 import motor_na_tela
+import motor_paddleocr
 import painel_ocr
 from documento import conferir
 
@@ -30,6 +36,7 @@ class _Maquina:
 @pytest.fixture
 def maquina(monkeypatch):
     estado = _Maquina()
+    monkeypatch.setattr(motor_paddleocr, "presente", lambda: False)
     monkeypatch.setattr(
         motor_na_tela, "localizar_tesseract",
         lambda: TESSERACT_DE_MENTIRA if estado.tem_motor else None,

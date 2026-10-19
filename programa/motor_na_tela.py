@@ -14,6 +14,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QFileDialog, QWidget
 
 import estilo
+import motor_paddleocr
 from motor import (
     abrir_instalador,
     apontar_pasta,
@@ -21,7 +22,7 @@ from motor import (
     localizar_instalador,
     localizar_tesseract,
 )
-from telas_do_motor import AvisoDoMotor, TelaSemMotor
+from telas_do_motor import AvisoDoMotor, TelaSemMotor, _SaidasDoMotor
 
 
 class ControleDoMotor:
@@ -42,6 +43,12 @@ class ControleDoMotor:
         self.sem_portugues = False
         # O documento que esperava o motor na tela cheia.
         self._ficha_esperando = None
+        # A escolha do motor do módulo, e as saídas do Tesseract que moram nela
+        # quando só ele falta (RN-30). Chegam depois, por `ligar_escolha`: no
+        # Anonimizar a escolha nasce dentro do caminho do PDF, depois deste
+        # controle.
+        self._escolha = None
+        self._saidas_na_escolha = None
 
         # O aviso vai na tela de escolher de quem usa esta peça, antes de
         # qualquer documento: fazer a pessoa arrastar um PDF para só então
@@ -67,22 +74,46 @@ class ControleDoMotor:
         )
         pilha.addWidget(self.tela_sem_motor)
 
+    def ligar_escolha(self, escolha):
+        """Faz a escolha do motor do módulo mostrar o que falta, e lhe dá as
+        mesmas três saídas do aviso do alto, para quando só o Tesseract falta."""
+        self._escolha = escolha
+        self._saidas_na_escolha = _SaidasDoMotor(
+            self.instalar, self.conferir_de_novo, self.apontar_a_pasta,
+            pequeno=True)
+        escolha.receber_saidas_do_tesseract(self._saidas_na_escolha)
+        self.conferir()
+
     def conferir(self):
-        """Procura o motor, acerta o aviso do alto, e diz se achou."""
-        if localizar_tesseract() is not None:
-            self.sem_portugues = False
+        """Procura os dois motores, acerta o aviso e a escolha, e diz se há
+        algum que leia.
+
+        O aviso do alto e a tela cheia ficam só para quando nenhum dos dois
+        funciona (RN-30, emenda de 18/10/2026 da spec 002): faltando só o
+        Tesseract, o PaddleOCR lê, e a falta é dita na linha do Tesseract.
+        """
+        paddleocr_presente = motor_paddleocr.presente()
+        tesseract_presente = localizar_tesseract() is not None
+        tem_instalador = localizar_instalador() is not None
+        # Nenhum Tesseract achado tem o português - a procura teria parado no
+        # primeiro que tivesse. Havendo algum, então, o Tesseract está na
+        # máquina e o que falta é só o pacote.
+        self.sem_portugues = not tesseract_presente and ha_algum_tesseract()
+
+        if self._escolha is not None:
+            self._escolha.mostrar_o_que_ha(paddleocr_presente, tesseract_presente,
+                                           self.sem_portugues)
+            self._saidas_na_escolha.atualizar(tem_instalador, self.sem_portugues)
+
+        algum = paddleocr_presente or tesseract_presente
+        if algum:
             self.aviso.esconder()
             self.espaco_depois_do_aviso.setVisible(False)
-            return True
-        tem_instalador = localizar_instalador() is not None
-        # Chegando aqui, nenhum Tesseract achado tem o português: a procura logo
-        # acima teria parado no primeiro que tivesse. Havendo algum, então, o
-        # motor está na máquina e o que falta é só o pacote.
-        self.sem_portugues = ha_algum_tesseract()
-        self.aviso.mostrar(tem_instalador, self.sem_portugues)
-        self.espaco_depois_do_aviso.setVisible(True)
-        self.tela_sem_motor.saidas.atualizar(tem_instalador, self.sem_portugues)
-        return False
+        else:
+            self.aviso.mostrar(tem_instalador, self.sem_portugues)
+            self.espaco_depois_do_aviso.setVisible(True)
+            self.tela_sem_motor.saidas.atualizar(tem_instalador, self.sem_portugues)
+        return algum
 
     def mostrar_que_falta(self, ficha):
         self._ficha_esperando = ficha
@@ -119,13 +150,19 @@ class ControleDoMotor:
         )
 
     def conferir_de_novo(self):
-        if self.conferir():
+        # Conferir de novo é sobre o Tesseract: é ele que se instala à parte.
+        # Com o PaddleOCR funcionando, "conferir" sempre acharia algum motor, e
+        # o recado diria que deu certo quando o Tesseract continua faltando.
+        if self.conferir() and localizar_tesseract() is not None:
             self._resolvido()
             return
         falta = (
             "O pacote de português continua faltando."
             if self.sem_portugues
-            else "O motor continua sem ser encontrado."
+            # "O motor" seria ambíguo com o PaddleOCR lendo ao lado: quem
+            # lesse acharia que o programa parou de ler (lente crítica da
+            # etapa 4).
+            else "O Tesseract continua sem ser encontrado."
         )
         self._dar_recado(
             f"{falta} Se a instalação ainda está em andamento, espere ela "
@@ -150,7 +187,7 @@ class ControleDoMotor:
                 erro=True,
             )
             return
-        if self.conferir():
+        if self.conferir() and localizar_tesseract() is not None:
             self._resolvido()
             return
         # A pasta tinha o Tesseract, só que sem o português. Dizer que ela "não
@@ -168,6 +205,8 @@ class ControleDoMotor:
         conferir.
         """
         self.tela_sem_motor.saidas.apagar_recado()
+        if self._saidas_na_escolha is not None:
+            self._saidas_na_escolha.apagar_recado()
         if (self._pilha.currentWidget() is self.tela_sem_motor
                 and self._ficha_esperando is not None):
             self._ao_resolvido(self._ficha_esperando)
@@ -177,3 +216,5 @@ class ControleDoMotor:
         # escolher, a resposta ao que a pessoa clicou continua à vista.
         self.aviso.saidas.dar_recado(texto, erro=erro)
         self.tela_sem_motor.saidas.dar_recado(texto, erro=erro)
+        if self._saidas_na_escolha is not None:
+            self._saidas_na_escolha.dar_recado(texto, erro=erro)

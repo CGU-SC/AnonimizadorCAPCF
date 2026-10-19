@@ -197,10 +197,14 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   e numa máquina onde a TI instalou em outro lugar ela grava a pasta no `.env`,
   em `TESSERACT_CAMINHO`. Mexer no caminho do Windows resolveria só esta
   máquina, e as do núcleo continuariam quebradas.
-- Para ver na tela o aviso de motor faltando sem desinstalar nada, abra pelo
-  `abrir\abrir-sem-motor.bat` (ou `abrir\abrir-sem-portugues.bat`, para o
-  Tesseract instalado sem o pacote de português); o
-  `abrir\simular-instalacao.bat` faz o motor "aparecer" com o programa aberto.
+- Para ver na tela um motor faltando sem desinstalar nada, abra pelos atalhos
+  de `abrir\`: `abrir-sem-motor.bat` esconde só o Tesseract (e aí o PaddleOCR
+  lê, e a falta aparece na linha do Tesseract - RN-30), `abrir-sem-portugues.bat`
+  finge o Tesseract sem o pacote de português, `abrir-sem-paddleocr.bat` finge a
+  instalação sem os modelos do PaddleOCR (RN-29), e `abrir-sem-nenhum-motor.bat`
+  esconde os dois - o único caso do aviso no alto e da tela cheia. O
+  `abrir\simular-instalacao.bat` faz o que estava escondido "aparecer" com o
+  programa aberto.
   Instalado sem o português, o Tesseract não serve — toda leitura falharia —,
   e o programa o trata como motor faltando. No dia da entrega, o instalador do
   Tesseract vai na pasta `instaladores`, ao lado do `.exe` — sem ele, o botão

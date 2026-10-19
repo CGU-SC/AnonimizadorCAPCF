@@ -151,6 +151,7 @@ class PainelAnonimizar(QWidget):
             ao_faltar_motor=self.motor.mostrar_que_falta,
             rotulo_de_outro="Escolher outro arquivo",
         )
+        self.motor.ligar_escolha(self.pdf.tela_de_ler.escolha_do_motor)
         self.tela_erro = _TelaErro(ao_escolher_outro=self.voltar_para_escolher)
         for tela in (self.tela_escolher, self.tela_revisao, self.tela_salvar,
                      self.tela_sobrescrever, self.tela_gravado,
