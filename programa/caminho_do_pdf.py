@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 
 import estilo
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
+from leitura import MOTOR_PADDLEOCR, MOTOR_TESSERACT
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
 from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
 from tela_decisao import TelaDecisao
@@ -60,7 +61,8 @@ class CaminhoDoPdf:
                  titulo="", legenda="", o_que_vai_acontecer=None,
                  com_cartao=True, ao_abrir_conferencia=None,
                  tem_motor=None, ao_faltar_motor=None,
-                 rotulo_de_outro="Escolher outro documento"):
+                 rotulo_de_outro="Escolher outro documento",
+                 motor_escolhido=None):
         self._pilha = pilha
         # O Gerar OCR mostra o cartão do que o programa descobriu antes de
         # tudo. O Anonimizar não: o PDF sem texto vai para a tela de ler, que
@@ -110,6 +112,11 @@ class CaminhoDoPdf:
             ao_processar_outro=self._escolher_outro,
             ao_conferir=self._conferiu,
         )
+        # Qual motor lê é perguntado a quem tem a escolha na tela: no Gerar OCR
+        # ela fica na tela de escolher o documento, que é do painel; no
+        # Anonimizar, na tela de ler, que é desta peça.
+        self._motor_escolhido = (motor_escolhido
+                                 or self.tela_de_ler.escolha_do_motor.marcado)
         self.tela_erro = _TelaErro(
             ao_escolher_outro=self._escolher_outro,
             ao_tentar_de_novo=self.tentar_ler_de_novo,
@@ -233,7 +240,7 @@ class CaminhoDoPdf:
         # escolheu outro documento no meio - continua terminando o que estava
         # fazendo, e o aviso dela chega depois; sem esta marca, ele sequestraria
         # a tela e mostraria a conferência de um documento que ninguém pediu.
-        leitura = LeituraEmSegundoPlano(ficha.caminho)
+        leitura = LeituraEmSegundoPlano(ficha.caminho, self._motor_escolhido())
         self.leitura = leitura
         leitura.avancou.connect(
             lambda pagina, total: self._leitura_avancou(leitura, pagina, total))
@@ -790,47 +797,82 @@ def estilo_do_radio(apagado=False):
     """
 
 
-def montar_escolha_do_motor(rotulo):
-    """A escolha do motor de leitura: o Tesseract, marcado, e a IA local, apagada.
+# O resumo embaixo de cada motor (RN-31 da emenda de 18/10/2026). Os tempos
+# foram medidos nesta máquina na conferência 02; nas do núcleo podem ser um
+# pouco maiores. O tempo vai na cor do texto, e o resto na cor de apoio, para o
+# olho achar o número sem ler a frase inteira (rascunho 11).
+RESUMO_PADDLEOCR = ("Melhor resultado, inclusive em tabela e página escaneada "
+                    "ruim · ", "cerca de 2 segundos por página")
+RESUMO_TESSERACT = ("Pode pular tabela com grade · ",
+                    "cerca de 3 segundos por página")
 
-    Os dois módulos mostram esta mesma escolha - o Gerar OCR na tela de escolher
-    o documento, o Anonimizar na hora de ler as imagens (terceira emenda da spec
-    003) -, e ela é montada num lugar só para as duas não divergirem.
 
-    Devolve o bloco pronto e os dois botões, para quem quiser consultá-los.
-    """
-    bloco = QWidget()
-    layout = QVBoxLayout(bloco)
-    layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(estilo.ESPACO_2)
-
-    layout.addWidget(rotulo_de_secao(rotulo))
-
-    tesseract = QRadioButton("Tesseract (nesta máquina)")
-    tesseract.setChecked(True)
-    tesseract.setStyleSheet(estilo_do_radio())
-
-    # A IA local aparece e não funciona de propósito: ainda não foi construída.
-    # "Local" porque ela poderá rodar na própria máquina da pessoa, e não só num
-    # servidor da UFSC (backlog, 23/09/2026). Não existe nenhuma linha do
-    # programa que converse com outro motor - e ele nunca será de empresa de
-    # fora da UFSC.
-    ia_local = QRadioButton("IA local")
-    ia_local.setEnabled(False)
-    ia_local.setStyleSheet(estilo_do_radio(apagado=True))
-
-    # Sem quebra automática de linha: a frase é curta, e a quebra do Qt
-    # reservaria a altura de uma linha só, cortando o resto.
-    explicacao = QLabel("Funcionalidade a ser implementada")
-    explicacao.setStyleSheet(
+def _linha_de_explicacao(texto=""):
+    # Sem quebra automática de linha: a quebra do Qt reservaria a altura de uma
+    # linha só, cortando o resto. As frases daqui foram medidas para caber numa
+    # linha na janela mínima, de 900 px (test_escolha_do_motor.py).
+    linha = QLabel(texto)
+    linha.setStyleSheet(
         f"font-size: {estilo.TEXTO_PEQUENO}px;"
         f"color: {estilo.COR_TEXTO_SECUNDARIO}; margin-left: 22px;"
     )
+    return linha
 
-    layout.addWidget(tesseract)
-    layout.addWidget(ia_local)
-    layout.addWidget(explicacao)
-    return bloco, tesseract, ia_local
+
+def _resumo(frase, tempo):
+    linha = _linha_de_explicacao()
+    linha.setTextFormat(Qt.RichText)
+    linha.setText(f"{frase}<span style='color: {estilo.COR_TEXTO};'>{tempo}</span>")
+    return linha
+
+
+class EscolhaDoMotor(QWidget):
+    """A escolha do motor de leitura: o PaddleOCR, marcado; o Tesseract; e a IA
+    local, apagada (RN-25 da emenda de 18/10/2026).
+
+    Os dois módulos mostram esta mesma escolha - o Gerar OCR na tela de escolher
+    o documento, o Anonimizar na hora de ler as imagens (terceira emenda da spec
+    003) -, e ela é montada num lugar só para as duas não divergirem. Cada
+    módulo tem a sua, e ela vale até a pessoa trocar ou fechar o programa: nada
+    é guardado (RN-26).
+    """
+
+    def __init__(self, rotulo):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(estilo.ESPACO_2)
+
+        layout.addWidget(rotulo_de_secao(rotulo))
+
+        self.paddleocr = QRadioButton("PaddleOCR (nesta máquina)")
+        self.paddleocr.setChecked(True)
+        self.paddleocr.setStyleSheet(estilo_do_radio())
+        self.resumo_paddleocr = _resumo(*RESUMO_PADDLEOCR)
+
+        self.tesseract = QRadioButton("Tesseract (nesta máquina)")
+        self.tesseract.setStyleSheet(estilo_do_radio())
+        self.resumo_tesseract = _resumo(*RESUMO_TESSERACT)
+
+        # A IA local aparece e não funciona de propósito: ainda não foi
+        # construída. "Local" porque ela poderá rodar na própria máquina da
+        # pessoa, e não só num servidor da UFSC (backlog, 23/09/2026). Nenhuma
+        # linha do programa conversa com motor de fora da máquina - e ele nunca
+        # será de empresa de fora da UFSC.
+        self.ia_local = QRadioButton("IA local")
+        self.ia_local.setEnabled(False)
+        self.ia_local.setStyleSheet(estilo_do_radio(apagado=True))
+
+        for peca in (self.paddleocr, self.resumo_paddleocr, self.tesseract,
+                     self.resumo_tesseract, self.ia_local,
+                     _linha_de_explicacao("Funcionalidade a ser implementada")):
+            layout.addWidget(peca)
+
+    def marcado(self):
+        """O motor que vai ler o próximo documento: o marcado é o que lê."""
+        if self.tesseract.isChecked():
+            return MOTOR_TESSERACT
+        return MOTOR_PADDLEOCR
 
 
 class _TelaDeLer(QWidget):
@@ -839,7 +881,8 @@ class _TelaDeLer(QWidget):
     Ela faz o papel do cartão do Gerar OCR para quem vai ler o PDF como imagem:
     diz o nome, as páginas e o que vai acontecer, e traz a escolha do motor logo
     acima do botão de ler - o único momento em que essa escolha serve para
-    alguma coisa. Tesseract já vem marcado: quem não quer pensar só clica em ler.
+    alguma coisa. O PaddleOCR já vem marcado: quem não quer pensar só clica em
+    ler.
     """
 
     def __init__(self, ao_ler, ao_escolher_outro, ao_voltar_a_decisao):
@@ -860,9 +903,8 @@ class _TelaDeLer(QWidget):
         layout.addWidget(self.legenda)
         layout.addSpacing(estilo.ESPACO_4)
 
-        bloco, self.motor_tesseract, self.motor_ia_local = montar_escolha_do_motor(
-            "LER COM")
-        layout.addWidget(bloco)
+        self.escolha_do_motor = EscolhaDoMotor("LER COM")
+        layout.addWidget(self.escolha_do_motor)
         layout.addSpacing(estilo.ESPACO_4)
 
         self.botao_ler = QPushButton()

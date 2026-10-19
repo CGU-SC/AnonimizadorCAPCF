@@ -291,3 +291,11 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   autêntico (o SHA256 bate com o do catálogo do winget); o roteiro de
   instalação avisa a pessoa antes. E ele baixa o português da internet durante
   a instalação.
+- **O RapidOCR baixa modelo da internet sozinho** quando não recebe o caminho
+  de cada arquivo: sem `Det.model_path`, `Cls.model_path` e `Rec.model_path`, ele
+  procura o modelo pelo nome e, não achando, vai buscá-lo num site da China
+  (ModelScope) - calado, e contra a RN-20. Por isso o `programa/motor_paddleocr.py`
+  sempre diz onde está cada um dos três, e confere que eles existem antes de
+  chamar: com o caminho dito, o arquivo faltando vira erro, e não download. Os
+  nomes dos arquivos mudam de uma versão do RapidOCR para outra - por isso a
+  versão é fixa no `requirements.txt` (etapa 1 da funcionalidade 7, 18/10/2026).

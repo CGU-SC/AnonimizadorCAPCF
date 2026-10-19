@@ -96,10 +96,14 @@ def test_a_leitura_nao_fala_com_ninguem_fora_da_maquina():
     A razão de o programa existir é o documento não sair da universidade. Se
     alguém um dia acrescentar uma chamada de rede aqui, este teste cai.
     """
-    codigo = Path(leitura.__file__).read_text(encoding="utf-8").lower()
-
-    for proibido in ["http", "requests", "urllib", "socket", "api_key", "webhook"]:
-        assert proibido not in codigo, (
-            f"apareceu '{proibido}' no módulo de leitura - nenhum caminho de "
-            "código pode apontar para fora da máquina"
-        )
+    # O motor_paddleocr entrou com a emenda de 18/10/2026: a biblioteca que ele
+    # usa sabe baixar modelo da internet, e o arquivo dele é o que garante que
+    # ela nunca chegue a isso (RN-27). Ele não pode ter caminho para fora.
+    for modulo in (leitura.__file__, leitura.motor_paddleocr.__file__):
+        codigo = Path(modulo).read_text(encoding="utf-8").lower()
+        for proibido in ["http", "requests", "urllib", "socket", "api_key",
+                         "webhook"]:
+            assert proibido not in codigo, (
+                f"apareceu '{proibido}' em {Path(modulo).name} - nenhum caminho "
+                "de código pode apontar para fora da máquina"
+            )

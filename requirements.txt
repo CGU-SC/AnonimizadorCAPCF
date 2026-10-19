@@ -7,6 +7,14 @@ PyMuPDF>=1.24,<2
 # OCR: liga o Python ao motor Tesseract já instalado na máquina
 pytesseract>=0.3.10,<0.4
 
+# OCR: o PaddleOCR, motor padrão desde a emenda de 18/10/2026 da spec 002. São
+# os modelos PP-OCRv6 pequenos, que vêm dentro do pacote do RapidOCR, rodados
+# pelo onnxruntime. Versões fixas, e não faixas: os nomes dos arquivos dos
+# modelos mudam de uma versão para outra, e o programa os procura pelo nome
+# (programa/motor_paddleocr.py). Trocar a versão pede conferir esses nomes.
+rapidocr==3.10.0
+onnxruntime==1.31.0
+
 # Testes automatizados
 pytest>=8.0,<9
 
