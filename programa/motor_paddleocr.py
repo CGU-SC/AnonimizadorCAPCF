@@ -16,7 +16,9 @@ from pathlib import Path
 from disposicao import agrupar_por_altura, montar
 
 # Os três modelos que vêm no pacote do RapidOCR: o que acha onde há texto na
-# página, o que vira a linha de cabeça para baixo, e o que lê. Os nomes são os
+# página, o que vira a linha de cabeça para baixo (ligado só sem o detector do
+# Tesseract, ver `preparar`),
+# e o que lê. Os nomes são os
 # da versão 3.10.0, fixada no requirements.txt - trocar a versão pede conferir
 # estes nomes de novo.
 MODELO_QUE_ACHA = "PP-OCRv6_det_small.onnx"
@@ -25,8 +27,9 @@ MODELO_QUE_LE = "PP-OCRv6_rec_small.onnx"
 MODELOS = (MODELO_QUE_ACHA, MODELO_QUE_VIRA, MODELO_QUE_LE)
 
 # O motor é carregado uma vez e reaproveitado: carregar leva perto de meio
-# segundo, e fazer isso a cada página somaria minutos num documento grande.
-_motor = None
+# segundo, e fazer isso a cada página somaria minutos num documento grande. São
+# dois, um para cada jeito de ler (ver `preparar`), guardados pelo jeito.
+_motores = {}
 
 
 class PaddleOcrFaltando(Exception):
@@ -56,11 +59,19 @@ def presente():
     return all((pasta / nome).is_file() for nome in MODELOS)
 
 
-def preparar():
-    """Carrega o motor, uma vez. Levanta PaddleOcrFaltando quando não dá."""
-    global _motor
-    if _motor is not None:
-        return _motor
+def preparar(virar_linhas):
+    """Carrega o motor, uma vez. Levanta PaddleOcrFaltando quando não dá.
+
+    `virar_linhas` liga o que vira linha por linha o que parece estar de cabeça
+    para baixo. Com o detector do Tesseract na máquina ele fica desligado: o
+    detector endireita a página inteira, e esta peça só atrapalhava - virava
+    linhas que estavam certas, duas inteiras no ofício deitado da massa 20. Sem
+    o detector, ela é a única defesa contra a folha que entrou de cabeça para
+    baixo no escâner, e perder uma ou outra linha é melhor que perder a página
+    (medição e lente crítica da etapa 3 da funcionalidade 7, 19/10/2026).
+    """
+    if virar_linhas in _motores:
+        return _motores[virar_linhas]
     if not presente():
         raise PaddleOcrFaltando(
             "O PaddleOCR não está completo nesta instalação. Reinstale o "
@@ -69,22 +80,26 @@ def preparar():
     try:
         from rapidocr import RapidOCR
         pasta = pasta_dos_modelos()
-        _motor = RapidOCR(params={
+        motor = RapidOCR(params={
             "Det.model_path": str(pasta / MODELO_QUE_ACHA),
             "Cls.model_path": str(pasta / MODELO_QUE_VIRA),
             "Rec.model_path": str(pasta / MODELO_QUE_LE),
             # O RapidOCR escreve uma linha por modelo carregado. Ninguém vê
             # essas linhas no programa entregue, que não tem janela de texto.
             "Global.log_level": "error",
+            # O caminho do modelo que vira as linhas vai dito acima mesmo
+            # quando ele fica desligado, para a biblioteca nunca ir buscá-lo.
+            "Global.use_cls": virar_linhas,
         })
     except Exception as problema:
         raise PaddleOcrFaltando(
             "O PaddleOCR não pôde ser carregado. Reinstale o programa."
         ) from problema
-    return _motor
+    _motores[virar_linhas] = motor
+    return motor
 
 
-def ler(imagem):
+def ler(imagem, virar_linhas):
     """Lê a imagem de uma página e devolve o texto, com as linhas remontadas.
 
     O PaddleOCR devolve pedaços de texto com a posição de cada um. Passando pela
@@ -96,7 +111,7 @@ def ler(imagem):
     # ordem já veio trocada e não mexe - e a tinta azul de um carimbo chegava
     # ao modelo como vermelha, mais clara contra o papel (lente crítica da
     # etapa 1, 18/10/2026).
-    resultado = preparar()(imagem.convert("RGB"))
+    resultado = preparar(virar_linhas)(imagem.convert("RGB"))
     if not resultado.txts:
         return ""
     pedacos = []

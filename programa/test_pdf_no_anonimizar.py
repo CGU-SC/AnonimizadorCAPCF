@@ -262,7 +262,8 @@ def test_abrir_um_md_no_meio_da_leitura_para_a_leitura_do_pdf(aplicacao):
     assert painel.telas.currentWidget() is painel.tela_revisao
 
     # Um aviso atrasado da leitura antiga não pode mais tomar a tela.
-    painel.pdf._leitura_terminou(leitura, painel.pdf.ficha_atual, ["texto do pdf"])
+    painel.pdf._leitura_terminou(leitura, painel.pdf.ficha_atual, ["texto do pdf"],
+                                  "paddleocr", True)
     assert painel.telas.currentWidget() is painel.tela_revisao
     assert painel._origem.name == "10-prestacao-com-cpf.md"
 

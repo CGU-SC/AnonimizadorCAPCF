@@ -230,7 +230,8 @@ def test_aviso_de_leitura_abandonada_nao_sequestra_a_tela(aplicacao):
     painel.leitura = None
     tela_antes = painel.telas.currentWidget()
 
-    painel.pdf._leitura_terminou(abandonada, ficha_antiga, ["texto velho"])
+    painel.pdf._leitura_terminou(abandonada, ficha_antiga, ["texto velho"],
+                                  "paddleocr", True)
 
     assert painel.telas.currentWidget() is tela_antes, (
         "o aviso de uma leitura abandonada trocou a tela"

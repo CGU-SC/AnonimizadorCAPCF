@@ -16,7 +16,7 @@ from PIL import Image
 
 import motor_paddleocr
 from disposicao import montar
-from motor import localizar_tesseract
+from motor import localizar_tesseract, tem_o_detector
 
 # Os motores que a escolha da tela oferece (emenda de 18/10/2026 da spec 002).
 # A IA local, quando for construída, entra aqui como mais um nome, com a sua
@@ -37,17 +37,22 @@ PONTOS_POR_POLEGADA = 300
 IDIOMA = "por"
 
 
-# Quanto uma página costuma levar para ser lida, medido nesta máquina em
-# 11/09/2026 sobre a massa de teste: o desenho da página, a detecção de
-# orientação e o OCR somados. Serve só para dizer à pessoa quanto tempo ela vai
-# esperar antes de ela escolher esperar - a estimativa que aparece DURANTE a
-# leitura é calculada pelo ritmo real, e não por este número.
-SEGUNDOS_POR_PAGINA = 1.5
+# Quanto uma página costuma levar para ser lida, por motor: o desenho da
+# página, a detecção de orientação e a leitura somados. São os mesmos números do
+# resumo embaixo de cada motor na escolha (RN-31), medidos nesta máquina na
+# conferência 02, em 13/10/2026. O do Tesseract era 1,5, medido em 11/09/2026
+# só na massa limpa; com tabela e página difícil ele passou de 2,5. Servem só
+# para dizer à pessoa quanto tempo ela vai esperar antes de ela escolher esperar
+# - a estimativa que aparece DURANTE a leitura é calculada pelo ritmo real.
+SEGUNDOS_POR_PAGINA = {
+    MOTOR_PADDLEOCR: 2,
+    MOTOR_TESSERACT: 3,
+}
 
 
-def tempo_estimado(paginas):
-    """Uma frase curta com quanto a leitura deve levar."""
-    segundos = round(paginas * SEGUNDOS_POR_PAGINA)
+def tempo_estimado(paginas, motor):
+    """Uma frase curta com quanto a leitura deve levar com este motor."""
+    segundos = round(paginas * SEGUNDOS_POR_PAGINA[motor])
     if segundos < 60:
         return f"uns {segundos} segundos"
     # Arredonda para cima na metade: quem decide esperar prefere descobrir que
@@ -122,15 +127,37 @@ def imagem_da_pagina(caminho, indice, largura_desejada):
         documento.close()
 
 
-def _preparar_paddleocr():
+def _preparar_paddleocr(virar_linhas):
     try:
-        motor_paddleocr.preparar()
+        motor_paddleocr.preparar(virar_linhas)
     except motor_paddleocr.PaddleOcrFaltando as problema:
         raise MotorNaoEncontrado(str(problema)) from problema
 
 
+def orientacao_conferida(motor):
+    """Diz se a leitura com este motor vai endireitar a página deitada.
+
+    Quem descobre que a página está deitada é o detector do Tesseract, para os
+    dois motores (RN-28): o PaddleOCR só vira linha de cabeça para baixo. Sem o
+    Tesseract na máquina - ou com ele, mas sem o arquivo do detector -, a leitura
+    com o PaddleOCR segue sem endireitar, e a conferência precisa avisar. Quem
+    chama pergunta aqui, e não refaz a conta.
+    """
+    if motor == MOTOR_TESSERACT:
+        return True
+    executavel = localizar_tesseract()
+    return executavel is not None and tem_o_detector(executavel)
+
+
 def _ler_pagina_com_paddleocr(pagina):
-    return motor_paddleocr.ler(_desenhar(pagina))
+    # Sem o detector do Tesseract, a única defesa contra a página de cabeça para
+    # baixo é o PaddleOCR virar linha por linha - e aí ele vira (ver
+    # motor_paddleocr.preparar).
+    return motor_paddleocr.ler(_desenhar(pagina), virar_linhas=True)
+
+
+def _ler_pagina_endireitada_com_paddleocr(pagina):
+    return motor_paddleocr.ler(_endireitar(_desenhar(pagina)), virar_linhas=False)
 
 
 def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
@@ -147,8 +174,14 @@ def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
     continuar recebendo a leitura de sempre.
     """
     if motor == MOTOR_PADDLEOCR:
-        _preparar_paddleocr()
-        ler_pagina = _ler_pagina_com_paddleocr
+        if orientacao_conferida(motor):
+            _preparar_paddleocr(virar_linhas=False)
+            # O detector é do Tesseract: ele precisa saber onde o Tesseract mora.
+            preparar_motor()
+            ler_pagina = _ler_pagina_endireitada_com_paddleocr
+        else:
+            _preparar_paddleocr(virar_linhas=True)
+            ler_pagina = _ler_pagina_com_paddleocr
     else:
         preparar_motor()
         ler_pagina = _ler_pagina
@@ -241,6 +274,14 @@ def _desenhar(pagina):
     return Image.open(io.BytesIO(pixels.tobytes("png")))
 
 
+# Abaixo disto, a resposta do detector de orientação é palpite. Medido em
+# 19/10/2026 sobre todas as páginas da massa e do documento real desta máquina:
+# as decisões certas tinham confiança de 7 a 23 - as páginas em pé e as duas
+# deitadas de verdade (12 e 15) -, e o único palpite errado, 1,2. O 5 fica longe
+# dos dois lados.
+CONFIANCA_MINIMA_PARA_GIRAR = 5
+
+
 def _endireitar(imagem):
     """Gira a imagem quando o conteúdo dela está deitado.
 
@@ -252,6 +293,12 @@ def _endireitar(imagem):
     Quando o detector não consegue decidir - página quase vazia, pouco texto -
     ele reclama em vez de responder. Aí a página segue como está: girar no
     palpite estragaria uma página que talvez estivesse certa.
+
+    E às vezes ele responde chutando: numa página desbotada e cheia de chuvisco
+    ele mandou virar de cabeça para baixo, com confiança 1,2, uma página que
+    estava em pé - e o PaddleOCR, que lia 4 dos 12 CPFs dela, passou a ler
+    nenhum (conferência da etapa 3 da funcionalidade 7, 19/10/2026). Resposta
+    abaixo da confiança mínima conta como "não decidiu".
     """
     try:
         leitura = pytesseract.image_to_osd(
@@ -262,5 +309,7 @@ def _endireitar(imagem):
 
     graus = leitura.get("rotate", 0)
     if graus % 360 == 0:
+        return imagem
+    if leitura.get("orientation_conf", 0) < CONFIANCA_MINIMA_PARA_GIRAR:
         return imagem
     return imagem.rotate(-graus, expand=True)

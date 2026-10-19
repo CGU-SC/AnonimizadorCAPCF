@@ -21,6 +21,12 @@ from painel_ocr import PainelOcr
 MASSA = Path(__file__).parent.parent / "dados-exemplo"
 PAGINAS_DIFICEIS = MASSA / "20-paginas-dificeis.pdf"
 
+# O CPF escrito no gabarito, solto: nem colado a outro dígito, nem dentro de
+# outro número. Sem as duas pontas, um pedaço do número do processo
+# (23080.012345/2026-11) passava por CPF - é a mesma regra do programa (RN-3
+# da spec 003).
+CPF_NO_GABARITO = r"(?<!\d)\d{3}\.?\d{3}\.?\d{3}[-/]?\d{2}(?!\d)"
+
 # O espaço que sobra para o resumo na janela mínima: 900 px menos o menu da
 # esquerda, as margens do painel e a barra de rolagem da tela de escolher.
 LARGURA_QUE_SOBRA = 900 - estilo.LARGURA_MENU - estilo.ESPACO_4 - estilo.ESPACO_5 - 10
@@ -33,6 +39,7 @@ class _LeituraDeMentira:
 
     def __init__(self, caminho, motor):
         _LeituraDeMentira.motores.append(motor)
+        _LeituraDeMentira.ultima = self
         for aviso in ("avancou", "terminou", "cancelou", "falhou"):
             setattr(self, aviso, _AvisoDeMentira())
 
@@ -44,13 +51,27 @@ class _LeituraDeMentira:
 
 
 class _AvisoDeMentira:
-    def connect(self, _funcao):
-        pass
+    """Guarda quem se ligou, para o teste poder dar o aviso como se a leitura
+    tivesse terminado."""
+
+    def __init__(self):
+        self.ligados = []
+
+    def connect(self, funcao):
+        self.ligados.append(funcao)
+
+    def emit(self, *valores):
+        for funcao in self.ligados:
+            funcao(*valores)
 
 
 @pytest.fixture
 def leitura_de_mentira(monkeypatch):
     _LeituraDeMentira.motores = []
+    # Sem apagar, a leitura do teste anterior ficava guardada: um teste em que
+    # a leitura nem começa daria o aviso de fim nela, ligada a outra tela, e
+    # passaria conferindo a coisa errada (lente crítica da etapa 3).
+    _LeituraDeMentira.ultima = None
     monkeypatch.setattr(caminho_do_pdf, "LeituraEmSegundoPlano", _LeituraDeMentira)
     return _LeituraDeMentira
 
@@ -158,8 +179,8 @@ def test_a_pagina_vai_ao_paddleocr_como_imagem_pronta(monkeypatch):
         recebido.append(imagem)
         return type("Resultado", (), {"txts": None, "boxes": None})()
 
-    monkeypatch.setattr(motor_paddleocr, "preparar", lambda: motor_de_mentira)
-    motor_paddleocr.ler(Image.new("RGB", (10, 10), "white"))
+    monkeypatch.setattr(motor_paddleocr, "preparar", lambda virar_linhas: motor_de_mentira)
+    motor_paddleocr.ler(Image.new("RGB", (10, 10), "white"), virar_linhas=False)
 
     assert isinstance(recebido[0], Image.Image)
 
@@ -173,7 +194,7 @@ def test_o_paddleocr_le_inteiros_os_cpfs_das_paginas_limpas_com_poeira_e_torta(i
     gabarito = json.loads(
         (MASSA / "20-paginas-dificeis.gabarito.json").read_text(encoding="utf-8"))
     pagina = gabarito[indice]
-    esperados = re.findall(r"\d{3}\.?\d{3}\.?\d{3}[-/]?\d{2}", pagina["texto"])
+    esperados = re.findall(CPF_NO_GABARITO, pagina["texto"])
     assert esperados, "a página do gabarito deveria ter CPF"
 
     documento = pymupdf.open(PAGINAS_DIFICEIS)
@@ -184,3 +205,171 @@ def test_o_paddleocr_le_inteiros_os_cpfs_das_paginas_limpas_com_poeira_e_torta(i
 
     faltando = [cpf for cpf in esperados if cpf not in texto]
     assert not faltando, f"{pagina['pagina']}: não leu {faltando}"
+
+
+# ------------------------------------------------- etapa 3: deitada, selo, tempo
+
+
+def _ler_com_o_paddleocr(caminho, indice):
+    import pymupdf
+    documento = pymupdf.open(caminho)
+    try:
+        leitura.preparar_motor()
+        return leitura._ler_pagina_endireitada_com_paddleocr(documento[indice])
+    finally:
+        documento.close()
+
+
+def test_a_pagina_deitada_sai_endireitada_com_o_paddleocr():
+    """RN-28: o detector do Tesseract endireita a página para o PaddleOCR.
+
+    Sem ele, a página deitada da massa 20 saía com um terço das palavras e dois
+    CPFs escapando (conferência 02).
+    """
+    texto = _ler_com_o_paddleocr(MASSA / "03-conteudo-girado.pdf", 0)
+    assert "UNIVERSIDADE FEDERAL DE SANTA CATARINA" in texto
+
+    gabarito = json.loads(
+        (MASSA / "20-paginas-dificeis.gabarito.json").read_text(encoding="utf-8"))
+    deitada = next(i for i, p in enumerate(gabarito) if p["pagina"] == "oficio-deitado")
+    esperados = re.findall(CPF_NO_GABARITO, gabarito[deitada]["texto"])
+    texto = _ler_com_o_paddleocr(PAGINAS_DIFICEIS, deitada)
+    assert [cpf for cpf in esperados if cpf not in texto] == []
+
+
+def test_sem_o_tesseract_a_orientacao_do_paddleocr_nao_e_conferida(monkeypatch):
+    monkeypatch.setattr(leitura, "localizar_tesseract", lambda: None)
+    assert not leitura.orientacao_conferida(leitura.MOTOR_PADDLEOCR)
+    # Com o Tesseract marcado, quem não está é o próprio motor: o aviso
+    # disso é outro, o de motor faltando.
+    assert leitura.orientacao_conferida(leitura.MOTOR_TESSERACT)
+
+
+def test_a_conferencia_diz_quem_leu_e_avisa_da_orientacao(leitura_de_mentira, monkeypatch):
+    """RN-32 e RN-28, pelo caminho inteiro: da escolha à conferência."""
+    monkeypatch.setattr(caminho_do_pdf, "orientacao_conferida", lambda motor: False)
+    painel = PainelOcr()
+    ficha = caminho_do_pdf.conferir(MASSA / "02-imprimir-para-pdf.pdf")
+
+    painel.pdf.comecar_a_ler(ficha)
+    leitura_de_mentira.ultima.terminou.emit(["texto lido"] * ficha.paginas)
+
+    conferencia = painel.pdf.tela_conferencia
+    assert conferencia.selo.text() == "LIDO PELO PADDLEOCR"
+    assert not conferencia.faixa_da_orientacao.isHidden()
+    # O aviso é da tela: o texto que segue para o arquivo não o leva (RN-11).
+    assert "orientação" not in " ".join(conferencia.texto_conferido())
+
+
+def test_com_o_tesseract_o_selo_diz_tesseract_e_nao_ha_aviso(leitura_de_mentira):
+    painel = PainelOcr()
+    painel.escolha_do_motor.tesseract.setChecked(True)
+    ficha = caminho_do_pdf.conferir(MASSA / "02-imprimir-para-pdf.pdf")
+
+    painel.pdf.comecar_a_ler(ficha)
+    leitura_de_mentira.ultima.terminou.emit(["texto lido"] * ficha.paginas)
+
+    conferencia = painel.pdf.tela_conferencia
+    assert conferencia.selo.text() == "LIDO PELO TESSERACT"
+    assert conferencia.faixa_da_orientacao.isHidden()
+
+
+def test_a_estimativa_antes_de_ler_usa_o_motor_marcado():
+    """RN-31: no PDF com texto por dentro, ignorar e ler as imagens leva o
+    tempo do motor marcado - 3 páginas: 6 segundos com o PaddleOCR, 9 com o
+    Tesseract."""
+    painel = PainelOcr()
+    ficha = caminho_do_pdf.conferir(MASSA / "01-com-texto-e-tabela.pdf")
+
+    painel.pdf.decidir_sobre_o_texto_existente(ficha)
+    assert "uns 6 segundos" in painel.pdf.tela_decisao.porque_ignorar.text()
+
+    painel.escolha_do_motor.tesseract.setChecked(True)
+    painel.pdf.decidir_sobre_o_texto_existente(ficha)
+    assert "uns 9 segundos" in painel.pdf.tela_decisao.porque_ignorar.text()
+
+
+def test_palpite_do_detector_nao_vira_a_pagina(monkeypatch):
+    """Regressão da conferência da etapa 3 (19/10/2026).
+
+    Na página desbotada, o detector do Tesseract mandou virar de cabeça para
+    baixo com confiança 1,2, e o PaddleOCR deixou de ler os 4 CPFs que lia.
+    Resposta com pouca confiança conta como "não decidiu"; com confiança, gira.
+    """
+    from PIL import Image
+
+    pagina = Image.new("RGB", (40, 20), "white")
+
+    monkeypatch.setattr(leitura.pytesseract, "image_to_osd",
+                        lambda *a, **k: {"rotate": 180, "orientation_conf": 1.2})
+    assert leitura._endireitar(pagina) is pagina
+
+    monkeypatch.setattr(leitura.pytesseract, "image_to_osd",
+                        lambda *a, **k: {"rotate": 90, "orientation_conf": 14.76})
+    assert leitura._endireitar(pagina).size == (20, 40)
+
+
+def test_a_pagina_desbotada_nao_e_virada_a_toa():
+    """A mesma página que mostrou o defeito, lida de verdade pelo detector."""
+    import pymupdf
+
+    leitura.preparar_motor()
+    documento = pymupdf.open(PAGINAS_DIFICEIS)
+    try:
+        imagem = leitura._desenhar(documento[4])
+    finally:
+        documento.close()
+    assert leitura._endireitar(imagem) is imagem
+
+
+def test_a_pagina_deitada_sai_com_todas_as_linhas():
+    """Regressão da conferência da etapa 3 (19/10/2026).
+
+    O RapidOCR virava linha por linha o que achava estar de cabeça para baixo, e
+    virava linhas certas: no ofício deitado, a do processo e a das parcelas
+    saíam como lixo. Desligado isso, as duas voltam.
+    """
+    gabarito = json.loads(
+        (MASSA / "20-paginas-dificeis.gabarito.json").read_text(encoding="utf-8"))
+    deitada = next(i for i, p in enumerate(gabarito) if p["pagina"] == "oficio-deitado")
+    texto = _ler_com_o_paddleocr(PAGINAS_DIFICEIS, deitada)
+    assert "23080.012345/2026-11" in texto
+    assert "parcelas de março a junho" in texto
+
+
+def _tesseract_de_mentira(pasta, *arquivos_de_idioma):
+    (pasta / "tessdata").mkdir()
+    for nome in arquivos_de_idioma:
+        (pasta / "tessdata" / nome).write_text("")
+    executavel = pasta / "tesseract.exe"
+    executavel.write_text("")
+    return executavel
+
+
+def test_sem_o_arquivo_do_detector_a_orientacao_nao_e_conferida(tmp_path, monkeypatch):
+    """Lente crítica da etapa 3: quem endireita é o detector, e ele usa um
+    arquivo próprio. Só com o português, a página seguia sem endireitar e a
+    conferência não avisava."""
+    monkeypatch.delenv("TESSDATA_PREFIX", raising=False)
+    so_portugues = _tesseract_de_mentira(tmp_path, "por.traineddata")
+    monkeypatch.setattr(leitura, "localizar_tesseract", lambda: so_portugues)
+    assert not leitura.orientacao_conferida(leitura.MOTOR_PADDLEOCR)
+
+    (tmp_path / "tessdata" / "osd.traineddata").write_text("")
+    assert leitura.orientacao_conferida(leitura.MOTOR_PADDLEOCR)
+
+
+@pytest.mark.parametrize("conferida, deve_virar_linhas", [(True, False), (False, True)])
+def test_o_paddleocr_vira_linhas_so_sem_o_detector(monkeypatch, conferida, deve_virar_linhas):
+    """Lente crítica da etapa 3: com o detector, virar linha por linha só
+    atrapalhava; sem ele, é a única defesa contra a folha de cabeça para baixo."""
+    import motor_paddleocr
+
+    pedidos = []
+    monkeypatch.setattr(leitura, "orientacao_conferida", lambda motor: conferida)
+    monkeypatch.setattr(motor_paddleocr, "preparar", lambda virar_linhas: None)
+    monkeypatch.setattr(motor_paddleocr, "ler",
+                        lambda imagem, virar_linhas: pedidos.append(virar_linhas) or "")
+
+    leitura.ler_documento(MASSA / "03-conteudo-girado.pdf", motor=leitura.MOTOR_PADDLEOCR)
+    assert pedidos == [deve_virar_linhas]

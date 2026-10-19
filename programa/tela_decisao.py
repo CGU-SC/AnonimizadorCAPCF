@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 
 import estilo
 from documento import primeiras_linhas
-from leitura import tempo_estimado
+from leitura import MOTOR_PADDLEOCR, tempo_estimado
 
 LINHAS_DA_AMOSTRA = 12
 
@@ -121,7 +121,9 @@ class TelaDecisao(QWidget):
 
         return linha
 
-    def mostrar(self, ficha, paginas):
+    def mostrar(self, ficha, paginas, motor=MOTOR_PADDLEOCR):
+        """`motor` é o que está marcado na escolha: é com ele que a leitura das
+        imagens vai acontecer, e é o tempo dele que a estimativa diz (RN-31)."""
         self._ficha = ficha
         self._paginas = paginas
 
@@ -139,7 +141,7 @@ class TelaDecisao(QWidget):
         # disso antes de clicar.
         self.porque_ignorar.setText(
             "Se o texto acima está estranho ou ilegível. Leva "
-            f"{tempo_estimado(ficha.paginas)}."
+            f"{tempo_estimado(ficha.paginas, motor)}."
         )
 
     def _aproveitar(self):

@@ -17,6 +17,10 @@ EXECUTAVEL = "tesseract.exe"
 # Tesseract. É o "por" que a leitura pede (leitura.IDIOMA).
 PACOTE_DE_PORTUGUES = "por.traineddata"
 
+# O arquivo do detector de orientação, que o instalador do Tesseract põe por
+# padrão, junto com o inglês.
+ARQUIVO_DO_DETECTOR = "osd.traineddata"
+
 # Onde o instalador do Tesseract costuma deixar o programa no Windows. Ele não
 # entra no caminho que o Windows procura sozinho, então procurar aqui é o que
 # faz o programa funcionar sem ninguém configurar nada em cada máquina do
@@ -60,10 +64,25 @@ def ha_algum_tesseract():
 
 
 def tem_o_portugues(executavel):
-    """Diz se o pacote de português está onde este Tesseract vai procurá-lo.
+    """Diz se o pacote de português está onde este Tesseract vai procurá-lo."""
+    return _tem_o_arquivo_de_idioma(executavel, PACOTE_DE_PORTUGUES)
 
-    O instalador põe os idiomas na pasta tessdata, ao lado do tesseract.exe, e
-    o português vem como opção a marcar. A TI pode ter apontado outra pasta de
+
+def tem_o_detector(executavel):
+    """Diz se o detector de orientação deste Tesseract tem o arquivo dele.
+
+    É o que endireita a página deitada, também para o PaddleOCR (RN-28), e ele
+    não usa o pacote de português: usa um arquivo próprio. Sem ele, o detector
+    falha calado e a página segue sem endireitar - o programa precisa saber
+    disso para a conferência avisar (lente crítica da etapa 3 da
+    funcionalidade 7, 19/10/2026).
+    """
+    return _tem_o_arquivo_de_idioma(executavel, ARQUIVO_DO_DETECTOR)
+
+
+def _tem_o_arquivo_de_idioma(executavel, nome):
+    """O instalador põe os idiomas na pasta tessdata, ao lado do tesseract.exe,
+    e o português vem como opção a marcar. A TI pode ter apontado outra pasta de
     idiomas na variável TESSDATA_PREFIX do Windows - e aí é lá que ele procura.
     """
     lugares = [Path(executavel).parent / "tessdata"]
@@ -72,7 +91,7 @@ def tem_o_portugues(executavel):
         # Conforme a versão, a variável aponta a própria pasta de idiomas ou a
         # pasta de cima dela. Aceitar as duas evita um aviso falso.
         lugares = [Path(prefixo), Path(prefixo) / "tessdata"]
-    return any((lugar / PACOTE_DE_PORTUGUES).is_file() for lugar in lugares)
+    return any((lugar / nome).is_file() for lugar in lugares)
 
 
 def _executaveis_encontrados():

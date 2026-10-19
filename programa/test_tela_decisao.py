@@ -76,13 +76,18 @@ def test_o_botao_de_ignorar_diz_quanto_tempo_vai_levar(aplicacao):
     tela.mostrar(ficha, documento.texto_da_camada(ficha.caminho))
     assert "segundos" in tela.porque_ignorar.text()
 
-    from leitura import tempo_estimado
-    assert tempo_estimado(1) == "uns 2 segundos"
-    assert tempo_estimado(12) == "uns 18 segundos"
-    assert tempo_estimado(40) == "cerca de 1 minuto"
-    # 100 páginas dão 2 minutos e meio, e a metade arredonda para cima: quem
-    # decide esperar prefere descobrir que terminou antes do previsto.
-    assert tempo_estimado(100) == "cerca de 3 minutos"
+    # Um tempo por motor desde a emenda de 18/10/2026 da spec 002 (RN-31): 2
+    # segundos por página com o PaddleOCR, 3 com o Tesseract.
+    from leitura import MOTOR_PADDLEOCR, MOTOR_TESSERACT, tempo_estimado
+    assert tempo_estimado(1, MOTOR_PADDLEOCR) == "uns 2 segundos"
+    assert tempo_estimado(12, MOTOR_PADDLEOCR) == "uns 24 segundos"
+    assert tempo_estimado(12, MOTOR_TESSERACT) == "uns 36 segundos"
+    assert tempo_estimado(40, MOTOR_PADDLEOCR) == "cerca de 1 minuto"
+    # 40 páginas com o Tesseract dão 2 minutos certos; 100 com o PaddleOCR dão
+    # 3 minutos e 20, e a metade arredonda para cima: quem decide esperar
+    # prefere descobrir que terminou antes do previsto.
+    assert tempo_estimado(40, MOTOR_TESSERACT) == "cerca de 2 minutos"
+    assert tempo_estimado(100, MOTOR_PADDLEOCR) == "cerca de 3 minutos"
 
 
 def test_as_duas_escolhas_levam_a_caminhos_diferentes(aplicacao):
@@ -142,7 +147,8 @@ def test_ignorar_manda_ler_as_imagens_e_o_texto_e_o_do_ocr(aplicacao):
     aplicacao.processEvents()
 
     assert painel.telas.currentWidget() is painel.tela_conferencia
-    assert painel.tela_conferencia.selo.text() == "VEIO DO OCR"
+    # Desde a emenda de 18/10/2026 da spec 002, o selo diz qual motor leu (RN-32).
+    assert painel.tela_conferencia.selo.text() == "LIDO PELO PADDLEOCR"
     assert painel.tela_conferencia.texto_conferido() != lixo, (
         "a conferência ficou com o texto embaralhado do PDF, e não com o do OCR"
     )

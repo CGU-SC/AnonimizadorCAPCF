@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 import estilo
-from leitura import imagem_da_pagina
+from leitura import NOME_NA_TELA, imagem_da_pagina
 
 # De onde veio o texto que está sendo conferido. Muda só o selo da tela, mas
 # muda o que a pessoa precisa olhar: texto adivinhado de uma imagem erra bem
@@ -94,6 +94,28 @@ class TelaConferencia(QWidget):
             f"margin-top: {estilo.ESPACO_2}px;"
         )
         layout.addWidget(self.faixa_do_erro)
+        # Aparece só quando o PaddleOCR leu sem o Tesseract na máquina: quem
+        # endireita a página deitada é o detector do Tesseract (RN-28), e sem
+        # ele não há como saber qual página estava deitada. Por isso o aviso
+        # sai uma vez, aqui no alto, e não página a página. Ele é da tela, e
+        # nunca vai para o arquivo salvo (RN-11).
+        self.faixa_da_orientacao = QLabel(
+            "A orientação das páginas não pôde ser conferida — falta o "
+            "Tesseract nesta máquina. Página deitada sai mal lida: confira com "
+            "a imagem ao lado."
+        )
+        self.faixa_da_orientacao.setWordWrap(True)
+        self.faixa_da_orientacao.setVisible(False)
+        self.faixa_da_orientacao.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+            f"border-left: 3px solid {estilo.COR_ALERTA};"
+            "background-color: rgba(217, 164, 65, 26);"
+            f"border-radius: {estilo.RAIO}px;"
+            f"padding: {estilo.ESPACO_2}px {estilo.ESPACO_3}px;"
+            f"margin-top: {estilo.ESPACO_2}px;"
+        )
+        layout.addWidget(self.faixa_da_orientacao)
         self.legenda = QLabel()
         self.legenda.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
@@ -270,7 +292,11 @@ class TelaConferencia(QWidget):
 
     # ---------------------------------------------------------------- uso
 
-    def mostrar(self, ficha, paginas, origem=ORIGEM_OCR):
+    def mostrar(self, ficha, paginas, origem=ORIGEM_OCR, motor=None,
+                orientacao_conferida=True):
+        """`motor` é quem leu, quando o texto veio da leitura das imagens: o
+        selo diz o nome dele (RN-32). Sem motor, o selo continua dizendo só que
+        veio do OCR."""
         self._caminho = ficha.caminho
         self._paginas = list(paginas)
         # A cópia do texto como ele saiu da leitura é o que permite saber, mais
@@ -285,7 +311,8 @@ class TelaConferencia(QWidget):
             f"{ficha.caminho.name} — compare com o original à esquerda e "
             "corrija o que estiver errado."
         )
-        self._definir_selo(origem)
+        self._definir_selo(origem, motor)
+        self.faixa_da_orientacao.setVisible(not orientacao_conferida)
         # Documento novo começa no tamanho padrão: nada é lembrado entre um uso
         # e outro (RN-22), e o que valia para o documento anterior não tem por
         # que valer para este.
@@ -486,11 +513,15 @@ class TelaConferencia(QWidget):
         else:
             self.contagem_de_correcoes.setText(f"{quantas} páginas com correção sua")
 
-    def _definir_selo(self, origem):
+    def _definir_selo(self, origem, motor=None):
         if origem == ORIGEM_CAMADA_DO_PDF:
             texto, cor, fundo = "VEIO DO PRÓPRIO PDF", "#7fb1e8", "rgba(59, 110, 165, 51)"
         else:
-            texto, cor, fundo = "VEIO DO OCR", estilo.COR_ALERTA, "rgba(217, 164, 65, 38)"
+            # Quem estranhar uma leitura precisa saber com que motor ela foi
+            # feita, para decidir se vale ler de novo com o outro (RN-32).
+            texto = (f"LIDO PELO {NOME_NA_TELA[motor].upper()}" if motor
+                     else "VEIO DO OCR")
+            cor, fundo = estilo.COR_ALERTA, "rgba(217, 164, 65, 38)"
 
         self.selo.setText(texto)
         self.selo.setStyleSheet(
