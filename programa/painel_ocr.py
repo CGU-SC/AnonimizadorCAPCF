@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QProgressBar,
     QPushButton,
-    QRadioButton,
     QScrollArea,
     QStackedWidget,
     QVBoxLayout,
@@ -29,9 +28,9 @@ from PySide6.QtWidgets import (
 import estilo
 from caminho_do_pdf import (
     CaminhoDoPdf,
+    EscolhaDoMotor,
     legenda_da_tela,
     FaixaDoTopo,
-    montar_escolha_do_motor,
     titulo_da_tela,
 )
 from arquivo_md import caminho_livre, caminho_sugerido, gravar, montar_conteudo
@@ -75,6 +74,7 @@ class PainelOcr(QWidget):
         )
         self.aviso_do_motor = self.motor.aviso
         self.tela_sem_motor = self.motor.tela_sem_motor
+        self.escolha_do_motor = EscolhaDoMotor("MOTOR DE LEITURA")
         self.tela_escolher = self._montar_tela_escolher()
         # Do PDF escolhido ao texto conferido, quem conduz é a peça comum aos
         # dois módulos. Ela cria as telas desse trecho e as põe nesta pilha.
@@ -89,6 +89,7 @@ class PainelOcr(QWidget):
             ao_abrir_conferencia=self._comecou_a_conferencia,
             tem_motor=self.motor.conferir,
             ao_faltar_motor=self.motor.mostrar_que_falta,
+            motor_escolhido=self.escolha_do_motor.marcado,
         )
         self.tela_verificando = self.pdf.tela_verificando
         self.tela_ficha = self.pdf.tela_ficha
@@ -166,7 +167,7 @@ class PainelOcr(QWidget):
 
         layout.addWidget(self._montar_area_de_arrastar())
         layout.addSpacing(estilo.ESPACO_4)
-        layout.addWidget(self._montar_escolha_do_motor())
+        layout.addWidget(self.escolha_do_motor)
         layout.addStretch()
 
         # Com o aviso do motor no alto, a tela passa da altura da janela. Sem a
@@ -260,11 +261,6 @@ class PainelOcr(QWidget):
         layout.addSpacing(estilo.ESPACO_3)
         layout.addLayout(linha_botao)
         return area
-
-    def _montar_escolha_do_motor(self):
-        bloco, self.motor_tesseract, self.motor_ia_local = montar_escolha_do_motor(
-            "MOTOR DE LEITURA")
-        return bloco
 
     # ------------------------------------------------------------- escolher
 

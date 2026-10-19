@@ -12,6 +12,7 @@ acontecendo.
 from PySide6.QtCore import QThread, Signal
 
 from leitura import (
+    MOTOR_TESSERACT,
     LeituraCancelada,
     LeituraFalhou,
     MotorNaoEncontrado,
@@ -26,9 +27,10 @@ class LeituraEmSegundoPlano(QThread):
     falhou = Signal(int, str)       # em que página (0 quando a falha não foi
                                     # numa página), e o que dizer na tela
 
-    def __init__(self, caminho):
+    def __init__(self, caminho, motor=MOTOR_TESSERACT):
         super().__init__()
         self._caminho = caminho
+        self._motor = motor
         self._pediram_para_cancelar = False
 
     def cancelar(self):
@@ -47,6 +49,7 @@ class LeituraEmSegundoPlano(QThread):
                 self._caminho,
                 ao_avancar=self.avancou.emit,
                 foi_cancelado=lambda: self._pediram_para_cancelar,
+                motor=self._motor,
             )
         except LeituraCancelada as parada:
             self.cancelou.emit(parada.pagina)

@@ -4,8 +4,9 @@ Este arquivo não sabe que existe uma janela: ele avisa o andamento e pergunta
 se foi cancelado através de duas funções que quem chama entrega. É isso que
 permite testar a leitura sem abrir o programa.
 
-Nada aqui sai da máquina. O Tesseract é um programa instalado no próprio
-Windows, e o documento não viaja para lugar nenhum.
+Nada aqui sai da máquina. Os dois motores leem na própria máquina - o
+Tesseract, instalado no Windows; o PaddleOCR, dentro do programa -, e o
+documento não viaja para lugar nenhum.
 """
 import io
 
@@ -13,8 +14,19 @@ import pymupdf
 import pytesseract
 from PIL import Image
 
+import motor_paddleocr
 from disposicao import montar
 from motor import localizar_tesseract
+
+# Os motores que a escolha da tela oferece (emenda de 18/10/2026 da spec 002).
+# A IA local, quando for construída, entra aqui como mais um nome, com a sua
+# própria maneira de preparar e de ler uma página.
+MOTOR_PADDLEOCR = "paddleocr"
+MOTOR_TESSERACT = "tesseract"
+NOME_NA_TELA = {
+    MOTOR_PADDLEOCR: "PaddleOCR",
+    MOTOR_TESSERACT: "Tesseract",
+}
 
 # 300 pontos por polegada é a densidade que o Tesseract recomenda para texto
 # impresso (regra RN-7 da spec 002). Abaixo disso ele erra mais; acima, fica
@@ -110,15 +122,36 @@ def imagem_da_pagina(caminho, indice, largura_desejada):
         documento.close()
 
 
-def ler_documento(caminho, ao_avancar=None, foi_cancelado=None):
+def _preparar_paddleocr():
+    try:
+        motor_paddleocr.preparar()
+    except motor_paddleocr.PaddleOcrFaltando as problema:
+        raise MotorNaoEncontrado(str(problema)) from problema
+
+
+def _ler_pagina_com_paddleocr(pagina):
+    return motor_paddleocr.ler(_desenhar(pagina))
+
+
+def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
+                  motor=MOTOR_TESSERACT):
     """Lê o documento inteiro e devolve o texto de cada página, em ordem.
 
     ao_avancar(pagina, total) é chamado antes de cada página, para a tela poder
     mostrar a contagem. foi_cancelado() é perguntado no mesmo momento: quando
     responde que sim, a leitura para e o que já foi lido é jogado fora - nada
     é gravado antes da conferência (regra RN-2).
+
+    `motor` é o que está marcado na tela: o marcado é o que lê (RN-26). O
+    Tesseract é o padrão aqui, e não na tela, para quem chama sem dizer o motor
+    continuar recebendo a leitura de sempre.
     """
-    preparar_motor()
+    if motor == MOTOR_PADDLEOCR:
+        _preparar_paddleocr()
+        ler_pagina = _ler_pagina_com_paddleocr
+    else:
+        preparar_motor()
+        ler_pagina = _ler_pagina
 
     documento = pymupdf.open(caminho)
     try:
@@ -132,7 +165,7 @@ def ler_documento(caminho, ao_avancar=None, foi_cancelado=None):
                 ao_avancar(numero, total)
 
             try:
-                paginas.append(_ler_pagina(documento[indice]))
+                paginas.append(ler_pagina(documento[indice]))
             except LeituraCancelada:
                 raise
             except Exception as problema:

@@ -179,8 +179,9 @@ def test_o_pdf_sem_texto_abre_a_tela_de_ler_com_o_motor(aplicacao):
     assert painel.telas.currentWidget() is tela
     assert tela.titulo.text() == "Este documento precisa ser lido"
     assert pdf.name in tela.legenda.text()
-    assert tela.motor_tesseract.isChecked()
-    assert not tela.motor_ia_local.isEnabled()
+    # Emenda de 18/10/2026 da spec 002: o PaddleOCR vem marcado (RN-25).
+    assert tela.escolha_do_motor.paddleocr.isChecked()
+    assert not tela.escolha_do_motor.ia_local.isEnabled()
     assert tela.botao_ler.text().startswith("Ler as ")
 
 

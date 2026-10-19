@@ -399,7 +399,7 @@ def test_o_modulo_de_ocr_nao_usa_nada_de_cpf():
     do_ocr = ["painel_ocr.py", "tela_conferencia.py", "tela_decisao.py",
               "telas_de_salvar.py", "telas_do_motor.py", "leitura.py",
               "leitura_em_segundo_plano.py", "documento.py", "disposicao.py",
-              "arquivo_md.py", "motor.py"]
+              "arquivo_md.py", "motor.py", "motor_paddleocr.py"]
     for nome in do_ocr:
         codigo = (PROGRAMA / nome).read_text(encoding="utf-8")
         assert "import cpf" not in codigo and "from cpf" not in codigo, nome
