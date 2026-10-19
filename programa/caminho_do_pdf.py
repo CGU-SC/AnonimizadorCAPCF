@@ -812,6 +812,23 @@ RESUMO_PADDLEOCR = ("Melhor resultado, inclusive em tabela e página escaneada "
 RESUMO_TESSERACT = ("Pode pular tabela com grade · ",
                     "cerca de 3 segundos por página")
 
+# O que a linha de cada motor diz quando ele falta (RN-29 e RN-30). O PaddleOCR
+# vai dentro do programa: faltar quer dizer instalação estragada, e o remédio é
+# reinstalar. O Tesseract é instalado à parte, e sem ele o que se perde, lendo
+# com o PaddleOCR, é endireitar a página deitada.
+FALTA_PADDLEOCR = "Esta instalação está incompleta — reinstale o programa."
+FALTA_TESSERACT = ("Não encontrado nesta máquina — sem ele, página deitada não "
+                   "é endireitada.")
+# Faltando os dois, o aviso do alto já explica e traz as saídas: a linha só diz
+# que falta (rascunho 11, estado 4).
+FALTA_TESSERACT_SEM_NENHUM = "Não encontrado nesta máquina."
+# O Tesseract instalado sem o pacote de português não serve para ler, mas
+# está lá: dizer "não encontrado" mandaria a TI conferir, ver que está
+# instalado, e não mexer em nada (lente crítica da etapa 4, 19/10/2026).
+FALTA_PORTUGUES = ("Sem o pacote de português nesta máquina — sem ele, página "
+                   "deitada não é endireitada.")
+FALTA_PORTUGUES_SEM_NENHUM = "Sem o pacote de português nesta máquina."
+
 
 def _linha_de_explicacao(texto=""):
     # Sem quebra automática de linha: a quebra do Qt reservaria a altura de uma
@@ -822,6 +839,16 @@ def _linha_de_explicacao(texto=""):
         f"font-size: {estilo.TEXTO_PEQUENO}px;"
         f"color: {estilo.COR_TEXTO_SECUNDARIO}; margin-left: 22px;"
     )
+    return linha
+
+
+def _linha_de_falta():
+    linha = _linha_de_explicacao()
+    linha.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px;"
+        f"color: {estilo.COR_ALERTA}; margin-left: 22px;"
+    )
+    linha.setVisible(False)
     return linha
 
 
@@ -856,9 +883,21 @@ class EscolhaDoMotor(QWidget):
         self.paddleocr.setStyleSheet(estilo_do_radio())
         self.resumo_paddleocr = _resumo(*RESUMO_PADDLEOCR)
 
+        self.falta_paddleocr = _linha_de_falta()
+
         self.tesseract = QRadioButton("Tesseract (nesta máquina)")
         self.tesseract.setStyleSheet(estilo_do_radio())
         self.resumo_tesseract = _resumo(*RESUMO_TESSERACT)
+        self.falta_tesseract = _linha_de_falta()
+        # As três saídas do Tesseract faltando - instalar, conferir de novo,
+        # apontar a pasta - moram aqui, coladas na linha do motor a que servem,
+        # quando o PaddleOCR funciona e por isso não há aviso no alto (RN-30).
+        # Quem as monta é o controle do motor de cada módulo.
+        self.saidas_do_tesseract = QWidget()
+        self.saidas_do_tesseract.setVisible(False)
+        self._lugar_das_saidas = QVBoxLayout(self.saidas_do_tesseract)
+        self._lugar_das_saidas.setContentsMargins(22, 0, 0, 0)
+        self._lugar_das_saidas.setSpacing(estilo.ESPACO_1)
 
         # A IA local aparece e não funciona de propósito: ainda não foi
         # construída. "Local" porque ela poderá rodar na própria máquina da
@@ -869,10 +908,51 @@ class EscolhaDoMotor(QWidget):
         self.ia_local.setEnabled(False)
         self.ia_local.setStyleSheet(estilo_do_radio(apagado=True))
 
-        for peca in (self.paddleocr, self.resumo_paddleocr, self.tesseract,
-                     self.resumo_tesseract, self.ia_local,
+        for peca in (self.paddleocr, self.resumo_paddleocr, self.falta_paddleocr,
+                     self.tesseract, self.resumo_tesseract, self.falta_tesseract,
+                     self.saidas_do_tesseract, self.ia_local,
                      _linha_de_explicacao("Funcionalidade a ser implementada")):
             layout.addWidget(peca)
+
+    def receber_saidas_do_tesseract(self, saidas):
+        """Põe embaixo da linha do Tesseract as mesmas saídas do aviso do alto."""
+        self._lugar_das_saidas.addLayout(saidas.linha_de_botoes())
+        for frase in (saidas.linha_sem_instalador, saidas.linha_sem_portugues,
+                      saidas.recado):
+            self._lugar_das_saidas.addWidget(frase)
+
+    def mostrar_o_que_ha(self, paddleocr_presente, tesseract_presente,
+                         tesseract_sem_portugues=False):
+        """Acerta a escolha conforme os motores que funcionam nesta máquina.
+
+        O motor que falta fica apagado, dizendo por quê. Se ele era o marcado,
+        a marca passa para o outro - e a troca aparece na tela, com a linha
+        apagada explicando: o programa nunca troca de motor calado (RN-29).
+        """
+        self._mostrar_motor(self.paddleocr, self.resumo_paddleocr,
+                            self.falta_paddleocr, paddleocr_presente,
+                            FALTA_PADDLEOCR)
+        if tesseract_sem_portugues:
+            falta = FALTA_PORTUGUES if paddleocr_presente else FALTA_PORTUGUES_SEM_NENHUM
+        else:
+            falta = FALTA_TESSERACT if paddleocr_presente else FALTA_TESSERACT_SEM_NENHUM
+        self._mostrar_motor(self.tesseract, self.resumo_tesseract,
+                            self.falta_tesseract, tesseract_presente, falta)
+        self.saidas_do_tesseract.setVisible(
+            paddleocr_presente and not tesseract_presente)
+
+        if self.paddleocr.isChecked() and not paddleocr_presente and tesseract_presente:
+            self.tesseract.setChecked(True)
+        elif self.tesseract.isChecked() and not tesseract_presente and paddleocr_presente:
+            self.paddleocr.setChecked(True)
+
+    @staticmethod
+    def _mostrar_motor(botao, resumo, falta, presente, frase_da_falta):
+        botao.setEnabled(presente)
+        botao.setStyleSheet(estilo_do_radio(apagado=not presente))
+        resumo.setVisible(presente)
+        falta.setText(frase_da_falta)
+        falta.setVisible(not presente)
 
     def marcado(self):
         """O motor que vai ler o próximo documento: o marcado é o que lê."""

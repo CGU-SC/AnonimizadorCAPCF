@@ -1,8 +1,9 @@
 @echo off
-title Anonimizador CAPCF - modo DEV, sem o motor de leitura
+title Anonimizador CAPCF - modo DEV, sem o Tesseract
 echo.
 echo   Abrindo o Anonimizador CAPCF como se o Tesseract NAO estivesse instalado.
 echo   Nada foi desinstalado: o programa so finge que nao encontrou o motor.
+echo   O PaddleOCR continua lendo: so o Tesseract falta (RN-30).
 echo.
 echo   Para simular a TI terminando a instalacao com o programa aberto,
 echo   de dois cliques em simular-instalacao.bat, nesta mesma pasta.

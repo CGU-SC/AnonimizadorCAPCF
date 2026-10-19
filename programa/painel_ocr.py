@@ -75,6 +75,7 @@ class PainelOcr(QWidget):
         self.aviso_do_motor = self.motor.aviso
         self.tela_sem_motor = self.motor.tela_sem_motor
         self.escolha_do_motor = EscolhaDoMotor("MOTOR DE LEITURA")
+        self.motor.ligar_escolha(self.escolha_do_motor)
         self.tela_escolher = self._montar_tela_escolher()
         # Do PDF escolhido ao texto conferido, quem conduz é a peça comum aos
         # dois módulos. Ela cria as telas desse trecho e as põe nesta pilha.
