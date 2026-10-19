@@ -34,7 +34,7 @@ from PySide6.QtWidgets import (
 
 import estilo
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
-from leitura import MOTOR_PADDLEOCR, MOTOR_TESSERACT
+from leitura import MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
 from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
 from tela_decisao import TelaDecisao
@@ -196,7 +196,7 @@ class CaminhoDoPdf:
         except Exception:
             self.mostrar_erro(ficha.caminho, NAO_ABRE)
             return
-        self.tela_decisao.mostrar(ficha, paginas)
+        self.tela_decisao.mostrar(ficha, paginas, self._motor_escolhido())
         self._mostrar(self.tela_decisao)
 
     def _ignorar_o_texto_existente(self, ficha):
@@ -240,12 +240,17 @@ class CaminhoDoPdf:
         # escolheu outro documento no meio - continua terminando o que estava
         # fazendo, e o aviso dela chega depois; sem esta marca, ele sequestraria
         # a tela e mostraria a conferência de um documento que ninguém pediu.
-        leitura = LeituraEmSegundoPlano(ficha.caminho, self._motor_escolhido())
+        # O motor é lido uma vez, na largada: trocar a marca no meio da leitura
+        # não muda quem está lendo, e a conferência precisa dizer quem leu.
+        motor = self._motor_escolhido()
+        conferida = orientacao_conferida(motor)
+        leitura = LeituraEmSegundoPlano(ficha.caminho, motor)
         self.leitura = leitura
         leitura.avancou.connect(
             lambda pagina, total: self._leitura_avancou(leitura, pagina, total))
         leitura.terminou.connect(
-            lambda paginas: self._leitura_terminou(leitura, ficha, paginas))
+            lambda paginas: self._leitura_terminou(
+                leitura, ficha, paginas, motor, conferida))
         leitura.cancelou.connect(
             lambda pagina: self._leitura_cancelada(leitura, pagina))
         leitura.falhou.connect(
@@ -305,10 +310,11 @@ class CaminhoDoPdf:
         if self._e_a_leitura_de_agora(leitura):
             self.tela_lendo.avancar(pagina, total)
 
-    def _leitura_terminou(self, leitura, ficha, paginas):
+    def _leitura_terminou(self, leitura, ficha, paginas, motor, conferida):
         if not self._e_a_leitura_de_agora(leitura):
             return
-        self.tela_conferencia.mostrar(ficha, paginas)
+        self.tela_conferencia.mostrar(ficha, paginas, motor=motor,
+                                      orientacao_conferida=conferida)
         self._ao_abrir_conferencia()
         self._mostrar(self.tela_conferencia)
         self.leitura = None

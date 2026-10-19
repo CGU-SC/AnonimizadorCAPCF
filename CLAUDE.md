@@ -312,3 +312,14 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   Windows. Só nesta máquina de desenvolvimento, nunca numa do núcleo. Os modelos do PaddleOCR só entram
   na pasta montada porque a receita os pede (`collect_data_files("rapidocr")`):
   o programa os abre pelo caminho, e o empacotador não os acha sozinho.
+- **O detector de orientação do Tesseract chuta, e o chute vira a página.** Numa
+  página desbotada e cheia de chuvisco, ele mandou virar de cabeça para baixo,
+  com confiança 1,2, uma página que estava em pé - e o PaddleOCR leu nada dela.
+  O programa só gira com confiança de 5 para cima (`programa/leitura.py`):
+  medido em todas as páginas da massa e do documento real, as decisões certas
+  tinham de 7 a 23. E o **RapidOCR, por padrão, vira linha por linha** o que acha
+  estar de cabeça para baixo - e virava linhas certas: duas inteiras saíam como
+  lixo no ofício deitado. Está desligado (`Global.use_cls`), porque sem ele a
+  leitura melhorou ou empatou em todas as páginas medidas. Os dois só apareceram
+  na conferência na tela: nenhum teste acusava, e o texto saía com cara de
+  leitura ruim, não de defeito (etapa 3 da funcionalidade 7, 19/10/2026).
