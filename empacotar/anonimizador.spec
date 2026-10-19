@@ -10,6 +10,8 @@
 import sys
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_data_files
+
 RAIZ = Path(SPECPATH).parent
 PROGRAMA = RAIZ / "programa"
 
@@ -20,9 +22,13 @@ analise = Analysis(
     [str(PROGRAMA / "main.py")],
     pathex=[str(PROGRAMA)],
     # Só o que o programa importa entra: os testes, a massa de exemplo e o
-    # .env ficam de fora por não estarem nesta lista. Nenhum arquivo de dados
-    # entra por fora, de propósito - a conferência da pasta gerada confirma.
-    datas=[],
+    # .env ficam de fora por não estarem nesta lista. O único arquivo de dados
+    # que entra por fora são os do RapidOCR - os modelos do PaddleOCR e as
+    # configurações que dizem como lê-los. O empacotador não os acha sozinho,
+    # porque o programa não os importa: os abre pelo caminho. Sem eles, o
+    # programa entregue diria que a instalação está incompleta, e reinstalar
+    # não resolveria (funcionalidade 7, etapa 2).
+    datas=collect_data_files("rapidocr"),
     # O pytest está no ambiente de desenvolvimento para os testes, e não tem
     # o que fazer no programa entregue.
     excludes=["pytest", "_pytest", "tkinter"],

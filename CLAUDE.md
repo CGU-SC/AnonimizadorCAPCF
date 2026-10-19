@@ -299,3 +299,16 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   chamar: com o caminho dito, o arquivo faltando vira erro, e não download. Os
   nomes dos arquivos mudam de uma versão do RapidOCR para outra - por isso a
   versão é fixa no `requirements.txt` (etapa 1 da funcionalidade 7, 18/10/2026).
+- **Gerar instalador para testar, pelo `gerar-entrega.bat`, escreve por cima da
+  entrega**: com a versão do `programa/versao.py` igual, o instalador novo sai
+  com o mesmo nome do que foi para o núcleo, em `builds\instalador`, e a pasta
+  `builds\entrega-<versão>` é refeita do zero. Para testar uma construção no
+  programa instalado, monte a pasta com o PyInstaller (o passo 2 do gerador) e
+  chame o Inno Setup com outra pasta e outro nome:
+  `ISCC.exe /Qp /DVersao=<versão> /O"builds\teste-<nnn>" /F"<nome>-teste" empacotar\instalador.iss`
+  (etapa 2 da funcionalidade 7, 19/10/2026). O que isso preserva é o
+  **arquivo** do instalador entregue: instalado, o de teste substitui a
+  instalação da máquina como qualquer versão - é o mesmo programa para o
+  Windows. Só nesta máquina de desenvolvimento, nunca numa do núcleo. Os modelos do PaddleOCR só entram
+  na pasta montada porque a receita os pede (`collect_data_files("rapidocr")`):
+  o programa os abre pelo caminho, e o empacotador não os acha sozinho.
