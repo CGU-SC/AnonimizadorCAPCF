@@ -47,6 +47,15 @@ echo   [2/4] Montando a pasta do programa...
 ".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean --distpath builds\programa --workpath builds\trabalho empacotar\anonimizador.spec
 if errorlevel 1 goto erro
 
+REM O PyInstaller termina sem erro mesmo sem os modelos do PaddleOCR, que
+REM entram por fora (anonimizador.spec). Sem eles, o motor padrao chegaria ao
+REM nucleo como "instalacao incompleta", e reinstalar nao resolveria. Os nomes
+REM vem do proprio programa, para a conferencia nunca divergir do que ele abre
+REM (lente critica da etapa 2 da funcionalidade 7, 19/10/2026).
+echo   Conferindo os modelos do PaddleOCR na pasta montada...
+".venv\Scripts\python.exe" -c "import sys; sys.path.insert(0, 'programa'); from pathlib import Path; from motor_paddleocr import MODELOS; pasta = Path(r'builds\programa\Anonimizador CAPCF\_internal\rapidocr\models'); faltam = [m for m in MODELOS if not (pasta / m).is_file()]; print('   Faltam na pasta montada: ' + ', '.join(faltam)) if faltam else None; sys.exit(1 if faltam else 0)"
+if errorlevel 1 goto erro
+
 REM O Inno Setup pode estar na pasta de programas pessoal (como o winget o
 REM instala) ou na de todos os usuarios.
 echo   [3/4] Procurando o Inno Setup...
