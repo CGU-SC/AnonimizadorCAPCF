@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rascunho 09 — O CPF sem o zero da frente na revisão</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #15181d;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.5;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 900px; }
+  h2 { font-size: var(--texto-grande); margin: var(--espaco-5) 0 var(--espaco-2) 0; }
+  .explica { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: 0 0 var(--espaco-3) 0; max-width: 900px; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  /* a janela do programa, na largura mínima */
+  .janela {
+    width: 900px; height: 560px;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    display: flex; overflow: hidden;
+  }
+  .menu { width: 220px; background: var(--cor-fundo-elevado); padding: var(--espaco-3); flex-shrink: 0; }
+  .menu .nome { font-weight: 700; margin-bottom: var(--espaco-4); }
+  .menu .item-menu { padding: var(--espaco-2) var(--espaco-3); border-radius: var(--raio); color: var(--cor-texto-secundario); margin-bottom: var(--espaco-1); }
+  .menu .item-menu.ativo { background: var(--cor-destaque); color: #fff; }
+  .painel { flex: 1; padding: var(--espaco-3); display: flex; flex-direction: column; gap: var(--espaco-2); min-width: 0; }
+  .selos { display: flex; gap: var(--espaco-1); flex-wrap: wrap; font-size: 12px; }
+  .selo { border: 1px solid var(--cor-borda); border-radius: 10px; padding: 1px 8px; color: var(--cor-texto-secundario); }
+  .selo.valido { color: var(--cor-erro-texto); border-color: var(--cor-erro-texto); }
+  .selo.suspeito { color: var(--cor-alerta); border-color: var(--cor-alerta); }
+  .corpo { flex: 1; display: flex; gap: var(--espaco-3); min-height: 0; }
+  .texto {
+    flex: 1; min-width: 0;
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio);
+    padding: var(--espaco-3); font-family: var(--fonte-mono); font-size: 12px; line-height: 1.7;
+    white-space: pre; overflow: hidden; color: var(--cor-texto);
+  }
+  .m-valido { color: var(--cor-erro-texto); text-decoration: underline; text-underline-offset: 3px; }
+  .m-valido.atual { background: rgba(59,110,165,0.35); }
+  .m-suspeito { color: var(--cor-alerta); text-decoration: underline wavy; text-underline-offset: 3px; }
+  .m-liberado { color: var(--cor-sucesso); text-decoration: underline dashed; text-underline-offset: 3px; }
+
+  /* a coluna da lista: 330 px fixos, como no programa */
+  .lista { width: 330px; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column; gap: var(--espaco-2); padding-right: var(--espaco-2); }
+  .lista-titulo { font-size: var(--texto-pequeno); font-weight: 700; color: var(--cor-texto-secundario); letter-spacing: 1px; }
+  .secao { font-size: var(--texto-pequeno); font-weight: 600; margin-top: var(--espaco-2); }
+  .item {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-left: 3px solid var(--cor-erro-texto); border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3); display: flex; flex-direction: column; gap: var(--espaco-1);
+  }
+  .item.suspeito { border-left-color: var(--cor-alerta); }
+  .item.liberado { border-left-color: var(--cor-borda); }
+  .item.marcado { background: rgba(59,110,165,0.18); border-color: var(--cor-destaque); border-left-color: var(--cor-erro-texto); }
+  .etiquetas { display: flex; gap: var(--espaco-1); flex-wrap: wrap; }
+  .etq { font-size: 11px; font-weight: 600; border: 1px solid currentColor; border-radius: 8px; padding: 0 6px; white-space: nowrap; }
+  .etq.vermelha { color: var(--cor-erro-texto); }
+  .etq.amarela { color: var(--cor-alerta); }
+  .etq.cinza { color: var(--cor-texto-secundario); }
+  .etq.verde { color: var(--cor-sucesso); }
+  .etq.nova { box-shadow: 0 0 0 3px rgba(240,138,134,0.18); }
+  .num { font-family: var(--fonte-mono); font-size: var(--texto-base); }
+  .ctx { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .botao-peq { align-self: flex-start; font-size: 12px; border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 2px 10px; color: var(--cor-texto); }
+
+  .quadros { display: flex; gap: var(--espaco-4); flex-wrap: wrap; align-items: flex-start; }
+  .quadro-titulo { font-size: var(--texto-pequeno); text-transform: uppercase; letter-spacing: 0.05em; color: var(--cor-texto-secundario); font-weight: 700; margin-bottom: var(--espaco-2); }
+  .so-lista { width: 330px; display: flex; flex-direction: column; gap: var(--espaco-2); }
+
+  /* a caixa da dupla conferência, nos 520 px dela */
+  .dialogo { width: 568px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-4); display: flex; flex-direction: column; gap: var(--espaco-4); }
+  .caixa-vermelha { width: 520px; background: rgba(217,83,79,0.10); border-left: 4px solid var(--cor-erro); border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .caixa-vermelha .t { font-weight: 600; }
+  .caixa-vermelha .n { font-family: var(--fonte-mono); font-size: var(--texto-grande); }
+  .caixa-vermelha .e { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); width: 460px; }
+  .caixa-vermelha .e .novo { color: var(--cor-texto); background: rgba(240,138,134,0.12); }
+  .acoes { display: flex; gap: var(--espaco-3); justify-content: center; }
+  .botao { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 6px 16px; }
+  .botao.principal { background: var(--cor-destaque); border-color: var(--cor-destaque); color: #fff; outline: 2px solid #8fb6de; outline-offset: 2px; }
+
+  .notas { max-width: 900px; margin-top: var(--espaco-3); background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); }
+  .notas li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 900px; }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 09 — O CPF sem o zero da frente na revisão</h1>
+<p class="subtitulo">Nona emenda da spec 003 (funcionalidade 6) · 20/10/2026 · <strong>aprovado em 20/10/2026</strong> · parte do vigente da revisão, que é o do programa
+de hoje: só muda o que está aqui. Os números que fecham a conta são só de zeros (RN-22), e os nomes são inventados.
+O realce rosado em volta das peças marca o que é novo: ele não existe na tela de verdade.</p>
+
+<h2>1 · A revisão, na janela mínima (900 × 560)</h2>
+<p class="explica">O texto mostra a máscara com os 11 dígitos de volta, em vermelho como todo CPF válido, e a coluna de
+valores continua reta. Na lista, o número aparece como estava escrito no documento, com 10 dígitos, e a etiqueta nova
+fica ao lado de "CPF válido". As duas cabem lado a lado nos 330 px da coluna, com folga, em qualquer largura de janela.</p>
+
+<div class="janela">
+  <div class="menu">
+    <div class="nome">Anonimizador CAPCF</div>
+    <div class="item-menu">Gerar OCR</div>
+    <div class="item-menu ativo">Anonimizar</div>
+  </div>
+  <div class="painel">
+    <div class="selos">
+      <span class="selo">4 números encontrados</span>
+      <span class="selo valido">3 CPFs válidos</span>
+      <span class="selo suspeito">1 suspeito</span>
+    </div>
+    <div class="corpo">
+<div class="texto">Relação de bolsistas — Projeto Exemplo
+
+| Bolsista          | CPF            | Valor       |
+| ----------------- | -------------- | ----------- |
+| Ana Suposta Lima  | <span class="m-valido">XXX.111.111-XX</span> | R$ 1.500,00 |
+| Davi Hipotético   | <span class="m-valido atual">XXX000000XX</span>    | R$ 1.500,00 |
+| Ivo Fictício      | <span class="m-valido">XXX000000XX</span>    | R$ 1.500,00 |
+
+Termo de outorga nº 4521/2026.
+Recibo de Otávio Suposto, CPF
+<span class="m-suspeito">XXX.456.789-XX</span>, conferido.</div>
+      <div class="lista">
+        <div class="lista-titulo">O QUE O PROGRAMA ACHOU</div>
+        <div class="secao">Suspeitos — olhe estes 1</div>
+        <div class="item suspeito">
+          <div class="etiquetas"><span class="etq amarela">falha na conta</span></div>
+          <div class="num">123.456.789-10</div>
+          <div class="ctx">…Recibo de Otávio Suposto, CPF</div>
+          <span class="botao-peq">Desfazer</span>
+        </div>
+        <div class="secao">CPF válido 3</div>
+        <div class="item">
+          <div class="etiquetas"><span class="etq vermelha">CPF válido</span></div>
+          <div class="num">111.111.111-11</div>
+          <div class="ctx">…| Ana Suposta Lima  |</div>
+          <span class="botao-peq">Desfazer…</span>
+        </div>
+        <div class="item marcado">
+          <div class="etiquetas"><span class="etq vermelha">CPF válido</span><span class="etq vermelha nova">sem o zero da frente</span></div>
+          <div class="num">0000000000</div>
+          <div class="ctx">…| Davi Hipotético   |</div>
+          <span class="botao-peq">Desfazer…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>2 · Os itens da lista, um por situação</h2>
+<p class="explica">Com 9 dígitos, a etiqueta vai para o plural. Liberado, o item ganha a etiqueta verde "liberado" e
+passa a ter três etiquetas, mas as três não cabem numa linha só. Hoje o programa põe <em>cada</em> etiqueta numa
+linha quando elas não cabem juntas, e o item ficaria com três linhas só de etiqueta. O rascunho propõe que elas
+<strong>desçam só o que não couber</strong>: as duas primeiras numa linha e "liberado" na de baixo.</p>
+
+<div class="quadros">
+  <div>
+    <div class="quadro-titulo">10 dígitos, mascarado</div>
+    <div class="so-lista">
+      <div class="item">
+        <div class="etiquetas"><span class="etq vermelha">CPF válido</span><span class="etq vermelha nova">sem o zero da frente</span></div>
+        <div class="num">00.000.000-00</div>
+        <div class="ctx">…prestador Davi Hipotético, inscrito sob</div>
+        <span class="botao-peq">Desfazer…</span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="quadro-titulo">9 dígitos, mascarado</div>
+    <div class="so-lista">
+      <div class="item">
+        <div class="etiquetas"><span class="etq vermelha">CPF válido</span><span class="etq vermelha nova">sem os zeros da frente</span></div>
+        <div class="num">000000000</div>
+        <div class="ctx">…| Ivo Fictício      |</div>
+        <span class="botao-peq">Desfazer…</span>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="quadro-titulo">Liberado — as etiquetas descem só o que não cabe</div>
+    <div class="so-lista">
+      <div class="item liberado">
+        <div class="etiquetas"><span class="etq cinza">CPF válido</span><span class="etq cinza nova">sem o zero da frente</span><span class="etq verde">liberado</span></div>
+        <div class="num">0000000000</div>
+        <div class="ctx">…Telefone do escritório: (48)</div>
+        <span class="botao-peq">Mascarar de novo</span>
+      </div>
+    </div>
+    <p class="explica" style="max-width:330px;margin-top:8px">No texto, ele volta a ser <code>0000000000</code>, verde e com traço tracejado, como todo liberado, e com os espaços de depois dele de volta.</p>
+  </div>
+</div>
+
+<h2>3 · A dupla conferência de um CPF sem o zero da frente</h2>
+<p class="explica">A caixa é a de sempre, com "Manter a máscara" já escolhido. Mudam duas coisas: o número aparece
+como está no documento, com 10 dígitos, e a explicação diz por que um número de 10 dígitos fecha a conta. Ela
+também avisa do telefone, que é o alarme falso mais provável. A frase nova está realçada.</p>
+
+<div class="dialogo">
+  <div class="caixa-vermelha">
+    <div class="t">Este número passa na conta do CPF</div>
+    <div class="n">0000000000</div>
+    <div class="e"><span class="novo">Ele tem 10 dígitos, um a menos que um CPF: o zero da frente costuma se perder quando o
+    número passa por uma planilha ou por um sistema que o guarda como número. Com o zero de volta, os dois últimos
+    batem com a conta do dígito verificador. Um telefone com DDD também pode fechar a conta por acaso: as palavras ao
+    redor ajudam a decidir.</span> Por isso ele quase certamente é o CPF de alguém. Liberado, ele vai para o arquivo
+    como está aqui em cima — e do arquivo para a conversa com o assistente de IA.</div>
+  </div>
+  <div class="acoes"><span class="botao">Liberar mesmo assim</span><span class="botao principal">Manter a máscara</span></div>
+</div>
+<p class="explica" style="margin-top:8px">Com 9 dígitos, a frase diz "Ele tem 9 dígitos, dois a menos que um CPF: os zeros da frente costumam se perder…", e o resto igual.</p>
+
+<div class="notas">
+  <strong>O que não muda</strong>
+  <ul>
+    <li>Os estados vazio, procurando, sem CPF e erro: ficam como no programa de hoje.</li>
+    <li>O aviso de antes de gravar: o curto liberado aparece nele como está no documento, como qualquer CPF válido liberado.</li>
+    <li>A navegação "‹ anterior · N de M · próximo ›" e os selos: o curto conta como CPF válido, e nada mais muda.</li>
+  </ul>
+</div>
+
+<p class="rodape">Rascunho gerado em 20/10/2026 pela skill-07-designer-de-telas, a partir da nona emenda da spec 003.
+Parte do programa de hoje (<code>programa/lista_de_achados.py</code> e <code>programa/dupla_conferencia.py</code>) e do
+sistema de design.</p>
+</body>
+</html>
