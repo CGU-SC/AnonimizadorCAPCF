@@ -340,11 +340,18 @@ MASSA = PROGRAMA.parent / "dados-exemplo"
 
 
 def _textos_da_massa():
-    """O texto de todo arquivo da massa: os .md, os .txt e os PDFs que abrem."""
+    """O texto de todo arquivo da massa: os .md, os .txt e os PDFs que abrem.
+
+    E também os geradores (.py) e os gabaritos (.json): as páginas difíceis da
+    funcionalidade 7 são imagem, sem texto por dentro, e os números delas só
+    existem escritos no gerador e no gabarito. Sem ler os dois, um CPF de
+    verdade posto ali "só para testar" passaria por este teste e iria para o
+    histórico (lente de segredo e dado real, 20/10/2026).
+    """
     import pymupdf
 
     for arquivo in sorted(MASSA.iterdir()):
-        if arquivo.suffix in (".md", ".txt"):
+        if arquivo.suffix in (".md", ".txt", ".py", ".json"):
             bruto = arquivo.read_bytes()
             for codificacao in ("utf-8", "cp1252"):
                 try:
