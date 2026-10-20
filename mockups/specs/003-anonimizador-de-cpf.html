@@ -216,7 +216,7 @@
 <body>
 
 <h1>Spec ilustrada 003 — Anonimizador de CPF</h1>
-<p class="subtitulo">O combinado do item 3 do backlog, desenhado — 13/09/2026 · situação: aprovada em 14/09/2026, emendada no mesmo dia</p>
+<p class="subtitulo">O combinado do item 3 do backlog, desenhado — 13/09/2026 · situação: aprovada em 14/09/2026, com oito emendas aprovadas até 18/09/2026 · <strong>nona emenda aprovada em 20/10/2026</strong> (funcionalidade 6, o CPF sem o zero da frente)</p>
 
 <div class="objetivo">
   <strong>Objetivo.</strong> Entregar um <code>.md</code> <strong>sem nenhum CPF inteiro</strong>,
@@ -331,6 +331,34 @@
   e põe em "liberados". Não muda regra nenhuma de máscara.
 </div>
 
+<div class="emenda">
+  <strong>Nona emenda de 20/10/2026, aprovada — o CPF que perdeu o zero da frente.</strong>
+  Um número solto de <strong>10 ou 9 dígitos</strong> que, com o zero (ou os dois zeros) de volta na frente,
+  <strong>fecha a conta</strong> passa a ser CPF válido, com a etiqueta "sem o zero da frente" na lista. Não
+  precisa estar perto da palavra "CPF". Na máscara, ele <strong>volta a ter 11 dígitos</strong>, no mesmo jeito em
+  que estava escrito, e a coluna da tabela é compensada com os espaços de depois dele. O curto que não fecha a
+  conta, e o que a leitura estragou, ficam de fora. Veio do teste da 0.1.0: no formulário real do SIGPEX, o CPF de
+  10 dígitos saía inteiro. Medido nele (só contagens): 6 de 6 números de 10 dígitos fecham a conta, 0 de 13 de 9
+  dígitos fecham, e nenhum dos 6 tem "CPF" logo antes, porque estão numa coluna de tabela. Os exemplos desta
+  página usam números só de zeros, os únicos curtos que fecham a conta e não podem ser de ninguém (RN-22).
+  <div class="classes" style="margin-top:16px">
+    <div class="classe">
+      <h3>Como ele sai</h3>
+      <div class="destino">reconhecido · mascarado com os zeros de volta</div>
+      <div class="exemplo"><span class="de">0000000000</span><span class="para">→ XXX000000XX</span><span class="porque">10 dígitos, sem pontuação: continua sem</span></div>
+      <div class="exemplo"><span class="de">00.000.000-00</span><span class="para">→ XXX.000.000-XX</span><span class="porque">com pontuação: continua com</span></div>
+      <div class="exemplo"><span class="de">000000000</span><span class="para">→ XXX000000XX</span><span class="porque">9 dígitos: "sem os zeros da frente"</span></div>
+    </div>
+    <div class="classe">
+      <h3>A coluna da tabela</h3>
+      <div class="destino">saem, logo depois dele, os espaços que ele cresceu · sempre sobra um</div>
+      <div class="exemplo"><span class="de" style="white-space:pre">| 0000000000     | R$ 1.500,00 |</span></div>
+      <div class="exemplo"><span class="para" style="white-space:pre">| XXX000000XX    | R$ 1.500,00 |</span><span class="porque">do mesmo tamanho: a coluna continua reta</span></div>
+      <div class="exemplo"><span class="de" style="white-space:pre">0000000000 R$ 10,00</span><span class="para" style="white-space:pre">→ XXX000000XX R$ 10,00</span><span class="porque">um espaço só depois dele: a linha cresce uma posição</span></div>
+    </div>
+  </div>
+</div>
+
 <h2>O percurso do texto</h2>
 <p class="nota">Três portas de entrada, e todas terminam na mesma revisão. O único momento em que algo vai para o disco é o último.</p>
 
@@ -371,7 +399,7 @@
 </div>
 
 <h2>O que conta como CPF</h2>
-<p class="nota">Todo número achado vai para um de três destinos. Os exemplos são inventados: nenhum passa na conta, a não ser os de dígitos repetidos, que a Receita não emite.</p>
+<p class="nota">Todo número achado vai para um de três destinos. Os exemplos são inventados: nenhum passa na conta, a não ser os de dígitos repetidos e os só de zeros, que a Receita não emite.</p>
 
 <div class="classes">
   <div class="classe">
@@ -381,6 +409,7 @@
     <div class="exemplo"><span class="de">11111111111</span><span class="para">→ XXX111111XX</span></div>
     <div class="exemplo"><span class="de">111.111.111/11</span><span class="para">→ XXX.111.111-XX</span><span class="porque">a barra vira traço</span></div>
     <div class="exemplo"><span class="porque">Os quatro formatos combinados, só com dígitos, e os dois últimos batendo com a conta.</span></div>
+    <div class="exemplo"><span class="de">0000000000</span><span class="para">→ XXX000000XX</span><span class="porque"><strong>sem o zero da frente</strong>: 10 ou 9 dígitos que fecham a conta com os zeros de volta; sai com 11 dígitos (nona emenda)</span></div>
   </div>
   <div class="classe suspeito">
     <h3>Suspeito</h3>
@@ -400,6 +429,9 @@
     <div class="exemplo"><span class="de">SOL.IDA.DES-OS</span><span class="para">letras demais, mesmo com pontuação</span></div>
     <div class="exemplo"><span class="de">l234S67891O</span><span class="para">três letras e nenhum separador</span></div>
     <div class="exemplo"><span class="de">123456789 ⏎ Situação</span><span class="para">o "Si" é começo de palavra (quinta emenda)</span></div>
+    <div class="exemplo"><span class="de">1234567891</span><span class="para">curto que não fecha a conta (nona emenda)</span></div>
+    <div class="exemplo"><span class="de">0000O00000</span><span class="para">curto estragado pela leitura (nona emenda)</span></div>
+    <div class="exemplo"><span class="de">00000000</span><span class="para">8 dígitos ou menos (nona emenda)</span></div>
     <div class="exemplo"><span class="porque">Número de processo e linha de boleto também: o CPF de verdade não aparece grudado num número maior.</span></div>
   </div>
 </div>
@@ -428,6 +460,7 @@
     <div class="passo"><div class="passo-numero">a</div><div class="passo-texto"><strong>Suspeito que falha na conta:</strong> "desfazer" é um clique. Ele fica na lista como "liberado", com a opção de mascarar de novo.</div></div>
     <div class="passo"><div class="passo-numero">b</div><div class="passo-texto"><strong>Passa na conta, ou quase CPF que passa:</strong> abre a caixa com o número como está escrito, e o botão já escolhido é "manter a máscara". Enter e Esc não liberam nada.</div></div>
     <div class="passo"><div class="passo-numero">c</div><div class="passo-texto">Ao salvar, se ela liberou algum que passa na conta, o programa mostra quais foram e deixa voltar.</div></div>
+    <div class="passo"><div class="passo-numero">d</div><div class="passo-texto"><strong>Curto que fechou a conta por acaso</strong> (um telefone com DDD, por exemplo): ela o reconhece pela etiqueta "sem o zero da frente" e desfaz pela dupla conferência, que mostra o número como está no documento. Liberado, ele volta inteiro, com os espaços de antes (nona emenda).</div></div>
     <div class="fluxo-titulo" style="margin-top:16px"><span class="marca"></span>Torto — o CPF que escapou</div>
     <div class="passo"><div class="passo-numero">a</div><div class="passo-texto">Ela marca o trecho com o mouse e escolhe "mascarar". Ele aparece na lista como "mascarado à mão".</div></div>
   </div>
@@ -522,6 +555,7 @@
         <li><code>- sem CPF.md</code> na pasta da origem, com o lembrete de que a origem continua lá</li>
         <li>O aviso da tela de salvar do OCR, atualizado</li>
         <li>Massa de teste nova, sem CPF de ninguém</li>
+        <li><strong>Nona emenda:</strong> o CPF de 10 ou 9 dígitos que fecha a conta com os zeros de volta, com ou sem pontuação, mascarado com 11 dígitos e a coluna da tabela compensada</li>
       </ul>
     </div>
   </div>
@@ -541,6 +575,8 @@
         <li>Vários arquivos de uma vez, ou separar um PDF com vários documentos</li>
         <li>Guardar histórico</li>
         <li>A leitura por IA local (item 4 do backlog)</li>
+        <li><strong>Nona emenda:</strong> o curto que não fecha a conta, o curto estragado pela leitura, o de 8 dígitos ou menos, e procurar "CPF" por perto para decidir</li>
+        <li>O aviso de "limitação conhecida" do <code>como-usar.html</code>: cai quando os roteiros forem refeitos para a próxima entrega</li>
       </ul>
     </div>
   </div>
@@ -569,7 +605,7 @@
 </div>
 
 <h2>Premissas — o que está sendo assumido</h2>
-<p class="nota">São 16. As 4 marcadas como "nova" apareceram ao escrever a spec, e você ainda não as viu no mapa.</p>
+<p class="nota">As 15 de antes, mais as 10 da nona emenda no fim. Das da nona, as 3 marcadas como "nova" apareceram ao escrever a emenda, e você ainda não as viu no mapa 05.</p>
 <div class="cartoes">
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — No "Anonimizar", o aviso de motor faltando aparece igual ao "Gerar OCR", na primeira tela; a escolha do motor aparece só quando o PDF vai ser lido como imagem (terceira emenda). Para <code>.md</code> e <code>.txt</code>, o motor não importa.</div>
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — "Quase CPF" tem o limite de letras no lugar de dígito <strong>depende da pontuação</strong>: até <strong>4</strong> com ponto, traço ou barra separando os grupos, e <strong>2</strong> sem separador ou só com espaços (quarta emenda).</div>
@@ -578,7 +614,7 @@
   <div class="cartao"><span class="chave">premissa</span> — No "quase CPF", a máscara cai nas 3 primeiras e nas 2 últimas posições, mesmo com letra ali. Quebrado entre linhas, as duas partes são mascaradas.</div>
   <div class="cartao"><span class="chave">premissa</span> — Dígitos repetidos (<code>111.111.111-11</code>) passam na conta e são tratados como CPF.</div>
   <div class="cartao"><span class="chave">premissa</span> — Desfazer um suspeito que falha na conta ou uma máscara feita à mão é um clique. O quase CPF que passa na conta pede dupla conferência.</div>
-  <div class="cartao"><span class="chave">premissa</span> — A máscara não muda o tamanho do número: a tabela continua alinhada.</div>
+  <div class="cartao"><span class="chave">premissa</span> — A máscara não muda o tamanho do número: a tabela continua alinhada. <em>Desde a nona emenda, com uma exceção:</em> o CPF sem o zero da frente cresce 1 ou 2 posições, e a coluna é compensada pelos espaços de depois dele.</div>
   <div class="cartao"><span class="chave">premissa</span> — Clicar num suspeito da lista leva o texto até ele.</div>
   <div class="cartao"><span class="chave">premissa</span> — Sair da revisão sem salvar pergunta antes de descartar.</div>
   <div class="cartao"><span class="chave">premissa</span> — O menu marca "Anonimizar" o caminho todo.</div>
@@ -587,6 +623,16 @@
   <div class="cartao"><span class="chave">premissa</span> — Arquivo vazio ou que não é texto dá erro e volta. PDF com problema usa os avisos do OCR.</div>
   <div class="cartao"><span class="chave">premissa</span> — Um arquivo por vez, nada guardado entre usos, a origem nunca alterada.</div>
   <div class="cartao"><span class="chave">premissa</span> — O botão do OCR acende, e o aviso da tela de salvar do OCR é atualizado.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — O curto é achado em todo caminho do Anonimizar. O Gerar OCR continua sem CPF (RN-18).</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — O curto colado a outro dígito, ou ligado a ele por ponto, traço ou barra, não conta (RN-3).</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Com 8 dígitos ou menos, fica de fora.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Soltá-lo pede a dupla conferência e o aviso antes de gravar, e ele conta nos "CPFs válidos".</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — O número que fecha a conta por acaso (cerca de 1 em 100 curtos soltos) sai mascarado, e a pessoa o solta pela dupla conferência.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Pontuações aceitas: as da RN-1, com o grupo da frente mais curto. Outra mistura fica de fora.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Soltá-lo devolve exatamente o que estava no documento, com os espaços que a compensação tinha tirado.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Letra grudada <strong>antes</strong> do curto não o impede de contar (<code>CPF0000000000</code>), como no CPF completo.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Com 9 dígitos, a etiqueta diz "sem os zeros da frente", no plural.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Na massa e nos testes, o curto que fecha a conta é só de zeros. O formato com outros dígitos é conferido direto na regra da máscara, e o telefone que fecha a conta não entra na massa.</div>
 </div>
 
 <h2>As regras que mais pesam</h2>
@@ -596,7 +642,9 @@
   <div class="cartao regra"><span class="chave">RN-10</span> — Desfazer todo número que passa na conta, inclusive o quase CPF que passa, pede dupla conferência, com "manter a máscara" já escolhido.</div>
   <div class="cartao regra"><span class="chave">RN-12</span> — O arquivo tem o texto e mais nada. A RN-11 da spec 002 vale nos dois arquivos.</div>
   <div class="cartao regra"><span class="chave">RN-15</span> — PDF pelo "Anonimizar" passa pela conferência obrigatória e nunca oferece o arquivo com CPF inteiro.</div>
-  <div class="cartao regra"><span class="chave">RN-22</span> — A massa de teste nunca tem CPF que possa ser de alguém.</div>
+  <div class="cartao regra"><span class="chave">RN-22</span> — A massa de teste nunca tem CPF que possa ser de alguém. Na nona emenda, o curto que fecha a conta é só de zeros.</div>
+  <div class="cartao regra"><span class="chave">RN-1 · nona emenda</span> — O número de 10 ou 9 dígitos que fecha a conta com os zeros de volta é CPF válido. O que falha não é achado.</div>
+  <div class="cartao regra"><span class="chave">RN-6 · nona emenda</span> — Ele é mascarado com os 11 dígitos de volta, no jeito em que estava escrito, e a coluna é compensada.</div>
 </div>
 
 <h2>Questões em aberto</h2>

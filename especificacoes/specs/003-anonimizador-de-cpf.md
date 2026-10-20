@@ -75,6 +75,22 @@ clique por engano não joga fora uma leitura de PDF, que custa minutos — e é
 justamente o que a pergunta antes de descartar existe para proteger. Um segundo
 "Seguir para Anonimizar", com revisão aberta e não salva do outro lado, passa por
 essa pergunta.
+**Nona emenda:** aprovada em 2026-10-20 — **o CPF que perdeu o zero da
+frente** (funcionalidade 6 do backlog). O número solto de 10 ou de 9 dígitos que,
+com os zeros de volta na frente, fecha a conta do dígito verificador passa a ser
+CPF válido (RN-1), com a etiqueta "sem o zero da frente" na revisão. Na máscara,
+ele volta a ter 11 dígitos, no mesmo jeito em que estava escrito (RN-6), e a
+coluna da tabela é compensada com os espaços de depois dele. Isso desfaz, só para
+ele, a premissa de que a máscara tem o tamanho do original. Veio do teste da
+versão 0.1.0, em 25/09/2026: num formulário real do SIGPEX, o CPF de 10 dígitos
+saía inteiro, sem marca na revisão. Medido no mesmo formulário (só as contagens,
+nenhum número): os 6 números de 10 dígitos fecham a conta, nenhum dos 13 de 9
+dígitos fecha, e nenhum dos 6 tem a palavra "CPF" logo antes, porque estão numa
+coluna de tabela. Levantamento em
+`mockups/requisitos/05-mapa-do-entendimento.html`, que refaz o 04 (no 04, a
+máscara mantinha o tamanho, e a usuária derrubou isso). Uma premissa do mapa
+mudou ao escrever esta emenda: a massa não ganha telefone que fecha a conta, e o
+curto que fecha a conta é só de zeros, porque a RN-22 vale inteira.
 **Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
 **Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
 contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
@@ -110,6 +126,10 @@ chatbot.
 - Encontrar CPF nos quatro formatos combinados e também o **"quase CPF"**: o
   número que o OCR estragou trocando dígito por letra, trocando a pontuação por
   espaço ou quebrando entre duas linhas.
+- Encontrar também o **CPF que perdeu o zero da frente** (nona emenda): o
+  número de 10 ou de 9 dígitos que fecha a conta com os zeros de volta, escrito
+  só com dígitos ou com a pontuação do CPF. Ele é mascarado com os 11 dígitos de
+  volta, e a coluna da tabela em que ele está continua reta.
 - Conferir cada número encontrado pela **conta do dígito verificador**,
   separando o que passa na conta do que é **suspeito**.
 - **Mascarar tudo o que foi encontrado**, suspeitos inclusive.
@@ -155,6 +175,15 @@ chatbot.
 - **CPF escrito de um jeito que não seja nenhum dos da RN-1 e da RN-2**, como
   por extenso ou com os dígitos separados por outros símbolos. Para esse, a rede
   é a revisão humana e o "mascarar à mão".
+- **Do CPF sem o zero da frente** (nona emenda): o que **não fecha a conta**,
+  que não é achado nem vira suspeito (no formulário do SIGPEX, seriam 13
+  suspeitos novos, nenhum deles CPF); o que **a leitura estragou**, com letra no
+  lugar de dígito, espaço no lugar do ponto ou partido em duas linhas, que é raro
+  e encheria o texto de alarme falso; o de **8 dígitos ou menos**; e procurar
+  a palavra "CPF" por perto para decidir, que perderia o CPF em coluna de tabela.
+  Para esses, a rede continua sendo a revisão humana e o "mascarar à mão".
+- **O aviso de "limitação conhecida" do roteiro `como-usar.html`.** Ele cai
+  quando os roteiros forem refeitos para a próxima entrega, num prompt próprio.
 - **Vários arquivos de uma vez**, e separar um PDF que traz vários documentos.
 - **Guardar histórico** do que foi anonimizado.
 - **A leitura por IA local.** É o item 4 do backlog.
@@ -174,7 +203,9 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   máscara feita à mão é um clique, sem caixa de confirmação. O "quase CPF" que
   passa na conta não entra aqui: ele pede a dupla conferência (RN-10).
 - premissa: a máscara troca cada dígito por um asterisco, um por um. O tamanho
-  do número não muda, e a tabela de texto continua alinhada.
+  do número não muda, e a tabela de texto continua alinhada. *Emendada na nona
+  emenda:* a exceção é o CPF sem o zero da frente, que cresce 1 ou 2 posições
+  (RN-6), e a tabela continua alinhada pela compensação dos espaços.
 - premissa: clicar num suspeito da lista leva o texto até ele.
 - premissa: sair da revisão sem salvar (trocar de item do menu ou fechar a
   janela) pergunta antes de descartar, como o "Gerar OCR" já faz.
@@ -228,6 +259,41 @@ apareceram ao escrever esta spec (marcadas com *nova*).
   do número à mostra.
 - premissa (*nova*): máscara desfeita pode ser refeita. O item continua na
   lista, marcado como "liberado", com a opção de mascarar de novo.
+
+Da nona emenda, as inferências do mapa 05 que a usuária leu e não derrubou, mais
+duas que apareceram ao escrever (marcadas com *nova*):
+
+- premissa: o CPF sem o zero da frente é achado em todo caminho do Anonimizar:
+  PDF com texto por dentro, PDF lido como imagem, `.md` e `.txt`. O Gerar OCR
+  continua sem nenhuma linha de CPF (RN-18).
+- premissa: a RN-3 vale igual para ele. Os 10 ou 9 dígitos colados a outro
+  dígito, ou ligados a ele por ponto, traço ou barra, não contam.
+- premissa: o CPF que perdeu três zeros ou mais (8 dígitos ou menos) fica de
+  fora. Quanto menos dígitos, menos a conta separa CPF de número qualquer.
+- premissa: soltá-lo pede o mesmo cuidado de qualquer CPF válido: a dupla
+  conferência (RN-10), com o número como está escrito no documento, e o aviso
+  antes de gravar (RN-11). Nos selos do alto, ele conta junto com os CPFs
+  válidos.
+- premissa: o número que não é CPF e fecha a conta por acaso (cerca de 1 em cada
+  100 números curtos soltos, como um telefone com DDD) sai mascarado e aparece
+  na lista com a etiqueta. A pessoa o solta pela dupla conferência. Entre um
+  alarme falso e um CPF que escapa calado, fica o alarme (RN-5).
+- premissa: no curto, valem as pontuações da RN-1 com o grupo da frente mais
+  curto (2 dígitos, ou 1): pontos e traço, só o traço, pontos e barra, e nada.
+  Qualquer outra mistura fica de fora.
+- premissa: soltá-lo devolve exatamente o que estava no documento, com os 10 ou
+  9 dígitos e os espaços que a compensação da coluna tinha tirado. Mascarar de
+  novo refaz as duas coisas.
+- premissa (*nova*): letra grudada **antes** do curto não o impede de contar
+  (`CPF0000000000`), como no CPF completo: a leitura cola o "CPF" no número
+  (quinta emenda). Só dígito colado o impede (RN-3).
+- premissa (*nova*): com 9 dígitos, a etiqueta diz "sem os zeros da frente",
+  no plural. É o mesmo tipo, com a frase certa para dois zeros.
+- premissa (*nova*): o curto que fecha a conta, na massa e nos testes, é só de
+  zeros (RN-22). O formato da máscara com outros dígitos é conferido direto na
+  regra que mascara, com números que não fecham a conta — com tudo zero, o teste
+  não veria um dígito fora do lugar. O telefone que fecha a conta não entra na
+  massa: ele seria um CPF que pode existir.
 
 ## Fluxos
 
@@ -303,6 +369,15 @@ Ela vê no texto um número que ficou inteiro. Marca o trecho com o mouse e
 escolhe "mascarar". O programa aplica a máscara (premissa da máscara à mão), e o
 trecho passa a aparecer destacado, na lista, como "mascarado à mão".
 
+### Caminho torto — um número curto que fecha a conta, e não é CPF
+
+Um telefone com DDD, ou outro número de 10 ou 9 dígitos, fecha a conta por
+acaso. Ele aparece mascarado entre os CPFs válidos, com a etiqueta "sem o zero
+da frente", e o texto mostra a máscara com os 11 dígitos. Ela o reconhece pela
+etiqueta e clica em "desfazer": vale a dupla conferência do caminho anterior, e
+a caixa mostra o número como está no documento, com os 10 ou 9 dígitos.
+Liberado, ele volta inteiro ao texto, com os espaços de antes (nona emenda).
+
 ### Caminho torto — nenhum CPF no texto
 
 A revisão abre normalmente, com o aviso bem visível de "nenhum CPF encontrado
@@ -349,7 +424,7 @@ memória durante o uso:
 | --- | --- | --- | --- |
 | arquivo de origem | a pessoa (botão ou arrastar), ou o PDF que veio do "Gerar OCR" | sim | PDF, `.md` ou `.txt`. Decide o caminho sugerido para salvar |
 | texto de entrada | a conferência do OCR, ou o conteúdo do `.md`/`.txt` | sim | nunca é gravado como está |
-| lista de ocorrências | derivada: busca no texto + ações da pessoa | sim | cada ocorrência tem: **onde** está no texto, **o que estava escrito**, o **tipo** (passa na conta · suspeito: falha na conta · suspeito: quase CPF · mascarado à mão), a **situação** (mascarado · liberado) e, para o quase CPF, se ele **passa na conta** depois de trocadas as letras e juntadas as partes. Na tela, "passa na conta" aparece como **"CPF válido"**, em vermelho (nome encurtado e cor trocada em 16/09/2026, na conferência da construção: entre 14 e 16/09 o rótulo era "forma CPF válido", no mesmo amarelo do suspeito, e na tela de verdade a diferença entre os dois ficou sutil demais). O suspeito fica no amarelo de alerta, e a caixa da dupla conferência continua vermelha: o número que passa na conta é o mais perigoso, e o verde de antes dava a impressão de coisa boa (decidido em 14/09/2026, nos rascunhos de tela 06 e 07) |
+| lista de ocorrências | derivada: busca no texto + ações da pessoa | sim | cada ocorrência tem: **onde** está no texto, **o que estava escrito**, o **tipo** (passa na conta · suspeito: falha na conta · suspeito: quase CPF · mascarado à mão), a **situação** (mascarado · liberado) e, para o quase CPF, se ele **passa na conta** depois de trocadas as letras e juntadas as partes. Na tela, "passa na conta" aparece como **"CPF válido"**, em vermelho (nome encurtado e cor trocada em 16/09/2026, na conferência da construção: entre 14 e 16/09 o rótulo era "forma CPF válido", no mesmo amarelo do suspeito, e na tela de verdade a diferença entre os dois ficou sutil demais). O suspeito fica no amarelo de alerta, e a caixa da dupla conferência continua vermelha: o número que passa na conta é o mais perigoso, e o verde de antes dava a impressão de coisa boa (decidido em 14/09/2026, nos rascunhos de tela 06 e 07). Desde a nona emenda, a ocorrência do tipo "passa na conta" diz também se ele é um **CPF sem o zero da frente** — na tela, a etiqueta "sem o zero da frente" (ou "sem os zeros da frente", com 9 dígitos), em vermelho, ao lado dele na lista |
 | texto de saída | derivado | sim | o texto de entrada com a máscara aplicada a toda ocorrência "mascarada". É só isto que vai para o arquivo |
 | caminho de destino | sugerido pelo programa, alterável | sim, na hora de salvar | padrão: pasta da origem, nome da origem sem a terminação, mais ` - sem CPF.md` |
 
@@ -392,6 +467,16 @@ aprovação própria, antes da construção.
   Número num desses formatos que **passa na conta** é do tipo "passa na conta".
   Número num desses formatos que **falha na conta** é "suspeito: falha na
   conta".
+  **O CPF sem o zero da frente** (nona emenda) é o número de **10 ou 9
+  dígitos**, só com dígitos, nos mesmos formatos com o grupo da frente mais
+  curto: `12.345.678-91`, `12345678-91`, `1234567891` e `12.345.678/91`, ou
+  `1.234.567-89`, `1234567-89`, `123456789` e `1.234.567/89`. Posto o zero (ou os
+  dois zeros) de volta na frente, se ele **passa na conta**, é do tipo "passa na
+  conta", com a marca de CPF sem o zero da frente. Não precisa estar perto da
+  palavra "CPF". **Se falha na conta, não é achado**: sem a conta, nada separa o
+  CPF curto de um telefone ou de um número de processo. Fica fora também o curto
+  com letra no lugar de dígito, com espaço no lugar do ponto ou partido em duas
+  linhas: a RN-2 não vale para ele.
 - RN-2: **O "quase CPF"** é a sequência com a forma de um CPF (três grupos de
   3 e um de 2, com ou sem separador) em que acontece pelo menos uma destas
   coisas: **até 4 posições** — ou **até 2**, quando não há separador nenhum ou
@@ -419,6 +504,16 @@ aprovação própria, antes da construção.
   dígito (ou da letra no lugar dele), e mantém os separadores. A barra antes dos
   dois últimos vira traço (`123.456.789/10` → `XXX.456.789-XX`). Nenhum
   outro caractere muda, e o comprimento do número também não muda.
+  **A exceção é o CPF sem o zero da frente** (nona emenda): ele ganha de volta o
+  zero (ou os dois zeros) e é mascarado como CPF completo, no mesmo jeito em que
+  estava escrito — sem pontuação continua sem, com pontuação continua com:
+  `1234567891` → `XXX345678XX`, `123456789` → `XXX234567XX`,
+  `12.345.678-91` → `XXX.345.678-XX`, `1.234.567-89` → `XXX.234.567-XX`. Fica à
+  vista o mesmo miolo de 6 dígitos de qualquer CPF. Como ele cresce 1 ou 2
+  posições, **a coluna da tabela é compensada**: logo depois do número, saem
+  tantos espaços quanto ele cresceu, mas sempre sobra pelo menos um. Com um
+  espaço só depois dele, ou nenhum, a linha cresce. Só espaço é tirado, e nunca
+  duas colunas se juntam.
 - RN-7: **A revisão aparece sempre**, com CPF ou sem, e o salvar fica liberado
   desde o começo. O suspeito que ninguém mexeu sai mascarado.
 - RN-8: **O texto não é editável na revisão.** As únicas mudanças possíveis são
@@ -478,6 +573,12 @@ aprovação própria, antes da construção.
   passam na conta são de dígitos repetidos (`111.111.111-11`,
   `222.222.222-22`…). Os suspeitos e os "quase CPF" partem de números que falham
   na conta, como o `123.456.789-10`, ou de dígitos repetidos.
+  **O CPF sem o zero da frente que passa na conta é só de zeros** (nona emenda):
+  `0000000000`, `000000000`, `00.000.000-00`, cujo CPF completo é o
+  `000.000.000-00`. Nenhum curto de dígitos repetidos fecha a conta, e qualquer
+  outro curto que feche é um CPF que pode existir. O formato da máscara com
+  outros dígitos é conferido direto na regra que mascara, com números que não
+  fecham a conta.
 
 ## Critérios de aceite
 
@@ -527,6 +628,52 @@ aprovação própria, antes da construção.
   mascaradas e a quebra de linha continua no mesmo lugar.
 - Dado um documento com um CPF dentro de uma tabela, quando o arquivo é salvo,
   então a tabela continua com as colunas no lugar.
+
+**CPF sem o zero da frente (nona emenda)**
+
+- Dado um texto com `0000000000`, `00.000.000-00`, `00000000-00` e
+  `00.000.000/00`, quando ele passa pelo Anonimizar, então os quatro aparecem
+  mascarados entre os "CPF válido", com a etiqueta "sem o zero da frente", e
+  nenhum está na lista de suspeitos.
+- Dado um texto com `000000000` e `0.000.000-00`, quando ele passa pelo
+  Anonimizar, então os dois aparecem mascarados entre os "CPF válido", com a
+  etiqueta "sem os zeros da frente".
+- Dado `0000000000`, então ele vira `XXX000000XX`. Dado `00.000.000-00`, então
+  ele vira `XXX.000.000-XX`. Dado `00.000.000/00`, então ele vira
+  `XXX.000.000-XX`. Dado `000000000`, então ele vira `XXX000000XX`.
+- Dada a regra que mascara o curto, aplicada direto, sem a busca, a
+  `1234567891`, `123456789`, `12.345.678-91`, `12345678-91` e `1.234.567-89`
+  (números que não fecham a conta), então eles viram `XXX345678XX`,
+  `XXX234567XX`, `XXX.345.678-XX`, `XXX345678-XX` e `XXX.234.567-XX`.
+- Dado um texto com `1234567891` e `123456789`, que não fecham a conta com os
+  zeros de volta, quando ele passa pelo Anonimizar, então os dois saem inteiros
+  e fora da lista.
+- Dado um texto com `0000O00000` (letra no lugar de um dígito), com
+  `00 000 000 00` e com `00.000.` no fim de uma linha e `000-00` no começo da
+  seguinte, quando ele passa pelo Anonimizar, então nada é mascarado ali.
+- Dado `CPF0000000000`, com o número grudado na palavra, então ele aparece
+  mascarado como `CPFXXX000000XX`: a letra antes do número não o impede de
+  contar, como no CPF completo (quinta emenda).
+- Dado um texto com `0000000000/2026` e com `00.000.000/0000-00`, na forma de
+  um CNPJ, quando ele passa pelo Anonimizar, então os dois saem inteiros.
+- Dado um texto com `00000000`, de 8 dígitos, então ele sai inteiro.
+- Dada a linha de tabela `| 0000000000     | R$ 1.500,00 |`, quando o arquivo é
+  salvo, então ela vira `| XXX000000XX    | R$ 1.500,00 |`, do mesmo tamanho.
+  Dada a linha `0000000000 R$ 10,00`, com um espaço só depois do número, então
+  ela vira `XXX000000XX R$ 10,00`, uma posição maior.
+- Dado `0000000000` mascarado na revisão, quando a pessoa clica em "desfazer",
+  então abre a dupla conferência com `0000000000` escrito na caixa, e **apertar
+  Enter mantém a máscara**. Liberado, o texto volta a ser exatamente o que era,
+  com os espaços de depois dele; mascarado de novo, volta a ser `XXX000000XX`.
+- Dado que a pessoa liberou um CPF sem o zero da frente, quando ela clica em
+  salvar, então o programa mostra esse número antes de gravar e deixa voltar à
+  revisão.
+- Dado um texto com `0000000000` e `111.111.111-11`, quando a revisão abre, então
+  o selo "CPFs válidos" conta 2.
+- Dado `dados-exemplo/`, quando se procura por número de 10 ou 9 dígitos que,
+  com os zeros de volta, passa na conta, então só aparecem os feitos de zeros.
+- Dados todos os critérios das seções anteriores, então eles continuam passando
+  depois desta emenda.
 
 **Revisão**
 
