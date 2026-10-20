@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa do entendimento — CPF sem o zero da frente</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 900px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .contagens { display: flex; gap: var(--espaco-3); margin-bottom: var(--espaco-5); flex-wrap: wrap; }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 140px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-inferido .contagem-numero { color: var(--cor-alerta); }
+  .c-respondido .contagem-numero { color: var(--cor-sucesso); }
+  .c-aberto .contagem-numero { color: var(--cor-texto-secundario); }
+
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .explica-secao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: calc(-1 * var(--espaco-2)) 0 var(--espaco-3) 0; }
+  .marca { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .marca-inferido { background: var(--cor-alerta); }
+  .marca-respondido { background: var(--cor-sucesso); }
+  .marca-aberto { background: var(--cor-texto-secundario); }
+
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao.inferido { border-left-color: var(--cor-alerta); }
+  .cartao.aberto { border-left-color: var(--cor-texto-secundario); }
+  .cartao-titulo { font-weight: 600; margin-bottom: var(--espaco-2); display: flex; align-items: baseline; gap: var(--espaco-2); flex-wrap: wrap; }
+  .numero { font-family: var(--fonte-mono); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); font-weight: 400; }
+  .dimensao { margin-left: auto; font-size: var(--texto-pequeno); font-weight: 400; color: var(--cor-texto-secundario); white-space: nowrap; }
+  .cartao-texto { color: var(--cor-texto); }
+  .selo-premissa {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(217,164,65,0.15); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+
+  /* a tabela de exemplos: como o número está escrito e como sai */
+  table.exemplos { border-collapse: collapse; margin-top: var(--espaco-3); width: 100%; font-size: var(--texto-pequeno); }
+  table.exemplos th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: var(--espaco-1) var(--espaco-3) var(--espaco-1) 0; border-bottom: 1px solid var(--cor-borda); }
+  table.exemplos td { padding: var(--espaco-2) var(--espaco-3) var(--espaco-2) 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  table.exemplos td.mono { font-family: var(--fonte-mono); white-space: pre; }
+  .nota-exemplo { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: var(--espaco-2); }
+
+  /* a linha da lista da revisão, com a etiqueta nova ao lado */
+  .linha-lista {
+    margin-top: var(--espaco-3);
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2); flex-wrap: wrap;
+  }
+  .linha-lista .num { font-family: var(--fonte-mono); color: var(--cor-erro-texto); text-decoration: underline; text-underline-offset: 3px; }
+  .etiqueta {
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 1px 8px; border-radius: 10px;
+    color: var(--cor-erro-texto); background: rgba(240,138,134,0.13);
+  }
+  .etiqueta.nova { outline: 1px dashed var(--cor-erro-texto); }
+
+  .medicao { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--espaco-2); margin-top: var(--espaco-3); }
+  .medida { background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .medida strong { display: block; font-size: var(--texto-grande); color: var(--cor-texto); }
+
+  .fora { margin-top: var(--espaco-5); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+  .fora h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .fora ul { margin: 0; padding-left: 20px; color: var(--cor-texto-secundario); }
+  .fora li { margin-bottom: var(--espaco-1); }
+  .rodape { margin-top: var(--espaco-4); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+</style>
+</head>
+<body>
+
+<h1>Mapa do entendimento — CPF sem o zero da frente</h1>
+<p class="subtitulo">Funcionalidade 6 do backlog: levantamento fechado em 20/10/2026, no nível detalhado. Vira a nona
+emenda da spec 003, nos formatos da RN-1. Ainda não foi escrita nem construída, então o que está aqui ainda se corrige de graça.
+Refaz o mapa 04: a máscara deixou de manter o tamanho do número (R-4), e entrou a coluna da tabela (R-9).</p>
+
+<div class="contagens">
+  <div class="contagem-item c-inferido">
+    <div class="contagem-numero">8</div>
+    <div class="contagem-label">inferido por mim: vira premissa se você não derrubar</div>
+  </div>
+  <div class="contagem-item c-respondido">
+    <div class="contagem-numero">9</div>
+    <div class="contagem-label">respondido por você</div>
+  </div>
+  <div class="contagem-item c-aberto">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">em aberto, e nenhum muda a regra</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Inferido por mim: confirme ou derrube</h2>
+<p class="explica-secao">Ninguém perguntou estes. Eu deduzi do que você respondeu, da spec 003 ou do código de
+hoje. Diga o número de qualquer um que não seja assim.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-1</span> Vale em todo caminho do Anonimizar <span class="dimensao">fluxo</span></div>
+    <div class="cartao-texto">PDF com texto por dentro, PDF lido pelo OCR, <code>.md</code> e <code>.txt</code>: em todos eles, o curto que fecha a conta é achado. O Gerar OCR continua sem nenhuma linha de CPF (RN-18).</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-2</span> Número grudado num número maior continua não contando <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">A RN-3 vale igual para o curto. Os 10 ou 9 dígitos que fazem parte de um CNPJ, de um número de processo ou da linha de um boleto, colados a outro dígito ou ligados a ele por ponto, traço ou barra, ficam inteiros.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-3</span> Com 8 dígitos ou menos fica de fora <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">O CPF que perdeu três zeros ou mais não entra. Você pediu até dois zeros perdidos (9 dígitos), e com menos dígitos sobra cada vez menos para a conta separar CPF de número qualquer.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-4</span> Soltar pede o mesmo cuidado de um CPF válido <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Liberar o curto pede a dupla conferência (RN-10), com "manter a máscara" já escolhido, e ele entra no aviso de antes de gravar (RN-11). Na contagem do alto da revisão, ele soma com os CPFs válidos.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-5</span> O telefone que fecha a conta sai mascarado <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Cerca de 1 em cada 100 números curtos soltos que não são CPF fecha a conta por acaso, como um telefone com DDD. Ele aparece na lista com a etiqueta "sem o zero da frente", sai mascarado se ninguém mexer, e a pessoa o solta pela dupla conferência. Entre um alarme falso e um CPF que escapa calado, fica o alarme.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-6</span> As pontuações aceitas no curto são as da RN-1 <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">O grupo da frente fica mais curto (2 ou 1 dígito), e o resto segue os jeitos já combinados: pontos e traço (<code>12.345.678-91</code>), só o traço (<code>12345678-91</code>), pontos e barra (<code>12.345.678/91</code>, cuja barra vira traço na máscara) e nada. Qualquer outra mistura fica de fora: o "quase CPF" curto não entra (R-8).</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-7</span> A massa de teste ganha casos inventados <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">CPF curto que fecha a conta (10 e 9 dígitos, com e sem pontuação), telefone que fecha a conta, curto que falha e curto colado num número maior: todos inventados, em <code>dados-exemplo/</code>. Nada do formulário do SIGPEX entra no repositório.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-8</span> Soltar devolve o número como estava escrito <span class="dimensao">estados</span></div>
+    <div class="cartao-texto">Na revisão, o curto mascarado já aparece com os 11 dígitos (<code>XXX345678XX</code>). Liberado pela dupla conferência, ele volta a ser exatamente o que estava no documento, com os 10 ou 9 dígitos e os espaços que a compensação da coluna tinha tirado. Mascarar de novo refaz os dois.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+</div>
+
+<h2><span class="marca marca-respondido"></span>Respondido por você</h2>
+<div class="cartoes">
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-1</span> O pedido <span class="dimensao">propósito</span></div>
+    <div class="cartao-texto">O CPF que perdeu o zero da frente e ficou com 10 dígitos, como no formulário do SIGPEX, passa a ser achado e mascarado. Hoje ele sai inteiro no arquivo, sem nenhuma marca na revisão: o programa só olha números de 11 posições. Isso foi achado no teste da 0.1.0, em 25/09/2026.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-2</span> Também o que perdeu dois zeros <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">O CPF com 9 dígitos entra também, pela mesma regra.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-3</span> Como se reconhece: pela conta <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Todo número solto de 10 ou 9 dígitos que, com os zeros de volta na frente, fecha a conta do dígito verificador é tratado como CPF. Não precisa estar perto da palavra "CPF". Medido no formulário real do SIGPEX (só a contagem, nenhum número):
+      <div class="medicao">
+        <div class="medida"><strong>6 de 6</strong>números de 10 dígitos fecham a conta</div>
+        <div class="medida"><strong>0 de 13</strong>números de 9 dígitos fecham a conta: nenhum alarme falso</div>
+        <div class="medida"><strong>0 de 6</strong>com "CPF" logo antes: estão numa coluna de tabela</div>
+      </div>
+    </div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-4</span> A máscara: o CPF volta a ter 11 dígitos <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">Reconhecido, o curto ganha de volta os zeros da frente e é mascarado como um CPF completo: as 3 primeiras e as 2 últimas posições viram <code>X</code>. Ele fica no mesmo jeito em que estava escrito: sem pontuação continua sem, com pontuação continua com. Fica à vista o mesmo miolo de 6 dígitos de qualquer CPF.
+      <table class="exemplos">
+        <tr><th>Como está escrito</th><th>O CPF completo</th><th>Como sai</th></tr>
+        <tr><td class="mono">1234567891</td><td class="mono">01234567891</td><td class="mono">XXX345678XX</td></tr>
+        <tr><td class="mono">123456789</td><td class="mono">00123456789</td><td class="mono">XXX234567XX</td></tr>
+        <tr><td class="mono">12.345.678-91</td><td class="mono">012.345.678-91</td><td class="mono">XXX.345.678-XX</td></tr>
+        <tr><td class="mono">1.234.567-89</td><td class="mono">001.234.567-89</td><td class="mono">XXX.234.567-XX</td></tr>
+      </table>
+      <div class="nota-exemplo">Números inventados, só para mostrar o formato. Isso desfaz, para o curto, uma premissa da spec 003: a de que a máscara tem sempre o tamanho do original. O efeito na tabela é a R-9. No mapa 04, a máscara mantinha o tamanho (<code>XXX45678XX</code>), e foi isso que você derrubou.</div>
+    </div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-5</span> Na revisão: entre os CPFs válidos, com uma etiqueta <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Ele entra na seção "CPF válido", em vermelho, com a etiqueta nova "sem o zero da frente" ao lado. A etiqueta explica por que um número de 10 dígitos está ali e ajuda a reconhecer o telefone que fechou a conta por acaso.
+      <div class="linha-lista"><span class="num">XXX345678XX</span><span class="etiqueta nova">sem o zero da frente</span></div>
+      <div class="nota-exemplo">Só a ideia, ainda não é o desenho: o lugar exato da etiqueta sai no rascunho de tela (A-2).</div>
+    </div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-6</span> Com pontuação também <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">O curto escrito com a pontuação do CPF nos lugares dela (<code>12.345.678-91</code>, <code>12345678-91</code>, <code>1.234.567-89</code>) entra também, sempre passando pela conta.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-7</span> O curto que não fecha a conta fica de fora <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Ele não é achado nem vira suspeito. Sem a conta, nada separa o CPF curto de um telefone ou de um número de processo: no SIGPEX seriam 13 suspeitos novos, e nenhum deles é CPF.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-8</span> O curto estragado pela leitura fica de fora <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Só o curto escrito certinho entra. Com letra no lugar de dígito, espaço no lugar do ponto ou partido em duas linhas, ele não conta. Nas suas palavras: é raro ler errado, e aceitar causaria muitos alarmes falsos no texto.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-9</span> A coluna da tabela continua reta <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">Na tabela de texto, o número que cresceu 1 ou 2 posições empurraria o resto da linha. O programa compensa tirando, logo depois do número, os espaços que ele cresceu. Isso só acontece onde houver pelo menos 2 espaços, e sempre sobra um: nunca junta duas colunas, e só espaço é tirado. Onde só há um espaço depois do número, a linha anda.
+      <table class="exemplos">
+        <tr><th>No documento</th><th>No arquivo gerado</th></tr>
+        <tr><td class="mono">| 1234567891     | R$ 1.500,00 |</td><td class="mono">| XXX345678XX    | R$ 1.500,00 |</td></tr>
+        <tr><td class="mono">| 111.111.111-11 | R$ 1.500,00 |</td><td class="mono">| XXX.111.111-XX | R$ 1.500,00 |</td></tr>
+      </table>
+    </div></div>
+</div>
+
+<h2><span class="marca marca-aberto"></span>Em aberto, e nenhum muda a regra</h2>
+<div class="cartoes">
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-1</span> De onde a construção parte <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">A funcionalidade 7 está pronta, mas ainda não entrou na linha principal (<code>master</code>). A 6 pode nascer em cima dela ou da linha principal. Isso se decide no começo da construção e não muda nada do que o programa faz.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-2</span> O desenho da etiqueta <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Onde a etiqueta "sem o zero da frente" fica na lista, na janela mínima de 900 px, sem espremer o que já está na linha. Sai no rascunho de tela, que você aprova antes do código.</div></div>
+</div>
+
+<div class="fora">
+  <h3>Fora de escopo desta funcionalidade</h3>
+  <ul>
+    <li>O curto estragado pela leitura: letra no lugar de dígito, espaço, quebra de linha (R-8).</li>
+    <li>O curto que não fecha a conta como suspeito (R-7).</li>
+    <li>O CPF com 8 dígitos ou menos (I-3).</li>
+    <li>O CPF escrito por extenso.</li>
+    <li>Qualquer dado sensível além do CPF.</li>
+    <li>A entrega da versão nova e os roteiros "Como instalar" e "Como usar". O aviso de "limitação conhecida" do <code>como-usar.html</code> cai quando os roteiros forem refeitos para a próxima entrega, num prompt próprio.</li>
+  </ul>
+</div>
+
+<p class="rodape">Página gerada em 20/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-02-analista-de-requisitos. As contagens do SIGPEX vieram de um script provisório, que imprimiu só totais e foi apagado em seguida.</p>
+</body>
+</html>
