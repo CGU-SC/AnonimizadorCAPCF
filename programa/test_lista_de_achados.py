@@ -580,6 +580,10 @@ def test_a_caixa_vem_com_manter_a_mascara_escolhido(aplicacao):
     ("CPF l11.111.111-11 fim", "letras trocadas de volta"),
     ("CPF 555.555.\n555-55 fim", "partido em duas linhas"),
     ("CPF 666 666 666 66 fim", "espaços pela pontuação"),
+    # O CPF sem o zero da frente (nona emenda, rascunho 09): a frase é mais
+    # comprida que as outras, e é a que mais corre o risco de sair cortada.
+    ("CPF 0000000000 fim", "um a menos que um CPF"),
+    ("CPF 000000000 fim", "dois a menos que um CPF"),
 ])
 def test_a_caixa_explica_por_que_aquele_numero_passa(aplicacao, texto, pedaco):
     achado = cpf.procurar(texto)[0]
@@ -680,3 +684,48 @@ def test_duas_etiquetas_que_nao_cabem_continuam_uma_por_linha(aplicacao):
     item = _itens(tela)[0]
     assert _linhas_de_etiquetas(item) == [["quase CPF · espaços no lugar dos pontos"],
                                           ["válido se corrigido"]]
+
+
+def test_a_caixa_do_curto_mostra_o_numero_como_esta_no_documento(aplicacao, monkeypatch):
+    """Nona emenda, etapa 4: a caixa mostra os 10 dígitos, e não a máscara.
+
+    E desfazer o curto passa pela caixa, como todo número que fecha a conta.
+    """
+    from PySide6.QtWidgets import QLabel
+    achado = cpf.procurar("Telefone do escritório: 0000000000 ramal 2")[0]
+    caixa = DuplaConferencia(achado)
+    textos = [rotulo.text() for rotulo in caixa.findChildren(QLabel)]
+    assert "0000000000" in textos
+    assert "telefone com DDD" in caixa.explicacao.text()
+    assert caixa.botao_manter.isDefault()
+
+    perguntou = []
+    monkeypatch.setattr("tela_revisao.liberar_mesmo_assim",
+                        lambda ocorrencia, _: perguntou.append(ocorrencia) or False)
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    texto = "Telefone do escritório: 0000000000 ramal 2"
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    curto = tela._ocorrencias[0]
+    tela.lista._itens[id(curto)].botao.click()
+    assert perguntou == [curto]
+    assert curto.situacao == cpf.MASCARADO
+
+
+def test_a_caixa_do_curto_aponta_o_numero_que_se_parece_de_verdade(aplicacao):
+    """Regressão da revisão da etapa 4 (lente crítica).
+
+    Com 9 dígitos, a caixa falava de "telefone com DDD", que nunca tem 9 dígitos;
+    e o "por isso" vinha logo depois do aviso do telefone, amarrado a ele.
+    """
+    # A caixa fica guardada antes de a frase ser lida: sem isso, o Python a
+    # descarta no meio da linha e a frase some junto com ela.
+    caixa_dez = DuplaConferencia(cpf.procurar("CPF 0000000000 fim")[0])
+    caixa_nove = DuplaConferencia(cpf.procurar("CPF 000000000 fim")[0])
+    dez = caixa_dez.explicacao.text()
+    nove = caixa_nove.explicacao.text()
+    assert "telefone com DDD" in dez
+    assert "celular escrito sem o DDD" in nove
+    assert "telefone com DDD" not in nove
+    for frase in (dez, nove):
+        # A conclusão vem antes do aviso.
+        assert frase.index("quase certamente é o CPF") < frase.index("por acaso")
