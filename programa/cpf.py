@@ -101,9 +101,13 @@ _GRUPOS_DE_SEPARADOR = (2, 4, 6)
 class Ocorrencia:
     """Um número achado no texto, ou um trecho mascarado à mão.
 
-    Começo e fim são as posições no texto de entrada. A máscara tem sempre o
-    mesmo tamanho do original (premissa da spec 003), então essas posições
-    valem igual no texto mascarado - e a tabela de texto continua alinhada.
+    Começo e fim são as posições no texto de entrada. Quase sempre a máscara tem
+    o mesmo tamanho do original (premissa da spec 003). A exceção é o CPF que
+    perdeu o zero da frente: ele volta a ter 11 dígitos na máscara, e cresce
+    (nona emenda). Para a coluna da tabela continuar reta, ele leva junto
+    `espacos_tirados`: quantos dos espaços logo depois dele somem no texto que
+    sai. Por isso a posição no texto mascarado se pede a `posicoes_na_saida`, e
+    não se supõe igual à de entrada.
     """
 
     inicio: int
@@ -114,6 +118,7 @@ class Ocorrencia:
     passa_na_conta: bool
     motivo: str | None = None
     situacao: str = MASCARADO
+    espacos_tirados: int = 0
 
     @property
     def suspeito(self):
@@ -217,15 +222,49 @@ def aplicar(texto, ocorrencias):
     apagariam os asteriscos da primeira: o CPF voltaria a aparecer no arquivo
     com a lista dizendo que ele está mascarado.
     """
-    letras = list(texto)
+    return "".join(_pecas(texto, ocorrencias))
+
+
+def posicoes_na_saida(texto, ocorrencias):
+    """Onde cada posição do texto de entrada vai parar no texto mascarado.
+
+    A lista tem uma casa a mais que o texto: a última é o tamanho do texto que
+    sai. Com todas as máscaras do tamanho do original, ela é só 0, 1, 2...; o
+    CPF sem o zero da frente, que cresce, e os espaços tirados depois dele
+    empurram o resto. É por ela que a tela de revisão põe o destaque em cima do
+    número - sem ela, o destaque escorregaria para o lado a cada CPF curto.
+    """
+    posicoes = [0]
+    for peca in _pecas(texto, ocorrencias):
+        posicoes.append(posicoes[-1] + len(peca))
+    return posicoes
+
+
+def _pecas(texto, ocorrencias):
+    """O texto de saída em pedaços, um para cada letra do texto de entrada.
+
+    Quase sempre cada pedaço é uma letra. A máscara que cresce põe o que tem a
+    mais no pedaço da primeira letra do número - é ali que voltam os zeros da
+    frente -, e o espaço tirado vira um pedaço vazio. Assim a troca continua
+    letra por letra, como antes, e a posição de cada uma no texto que sai é a
+    soma dos pedaços anteriores.
+    """
+    pecas = list(texto)
     for ocorrencia in ocorrencias:
         if ocorrencia.situacao != MASCARADO:
             continue
+        a_mais = len(ocorrencia.mascara) - len(ocorrencia.original)
+        primeira = ocorrencia.mascara[:a_mais + 1]
+        if primeira != ocorrencia.original[0]:
+            pecas[ocorrencia.inicio] = primeira
         for deslocamento, (antes, depois) in enumerate(
-                zip(ocorrencia.original, ocorrencia.mascara)):
+                zip(ocorrencia.original[1:], ocorrencia.mascara[a_mais + 1:]),
+                start=1):
             if antes != depois:
-                letras[ocorrencia.inicio + deslocamento] = depois
-    return "".join(letras)
+                pecas[ocorrencia.inicio + deslocamento] = depois
+        for deslocamento in range(ocorrencia.espacos_tirados):
+            pecas[ocorrencia.fim + deslocamento] = ""
+    return pecas
 
 
 def _avaliar(texto, encontro):

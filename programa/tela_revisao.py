@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 import math
+from bisect import bisect_left
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -111,6 +112,11 @@ class TelaRevisao(QWidget):
         super().__init__()
         self._ocorrencias = []
         self._texto = ""
+        # O texto como está na tela, e onde cada posição do documento foi parar
+        # nele. Os dois são refeitos a cada desenho: o CPF sem o zero da frente
+        # cresce na máscara, e as posições do documento deixam de valer na tela.
+        self._mostrado = ""
+        self._na_saida = [0]
         # Qual número da lista a navegação está mostrando. Começa sem nenhum:
         # o primeiro "próximo" leva ao primeiro número do texto.
         self._atual = None
@@ -419,9 +425,8 @@ class TelaRevisao(QWidget):
     def ir_para(self, ocorrencia):
         """Leva o texto até o número e marca o item dele na lista."""
         cursor = self.texto.textCursor()
-        cursor.setPosition(_posicao_no_qt(self._texto, ocorrencia.inicio))
-        cursor.setPosition(
-            _posicao_no_qt(self._texto, ocorrencia.fim), QTextCursor.KeepAnchor)
+        cursor.setPosition(self._no_qt(ocorrencia.inicio))
+        cursor.setPosition(self._no_qt(ocorrencia.fim), QTextCursor.KeepAnchor)
         self._selecionando = True
         self.texto.setTextCursor(cursor)
         self._selecionando = False
@@ -534,8 +539,8 @@ class TelaRevisao(QWidget):
         cursor = self.texto.textCursor()
         if not cursor.hasSelection():
             return
-        inicio = _posicao_no_texto(self._texto, cursor.selectionStart())
-        fim = _posicao_no_texto(self._texto, cursor.selectionEnd())
+        inicio = self._no_documento(cursor.selectionStart())
+        fim = self._no_documento(cursor.selectionEnd())
 
         # Trecho que encosta num número já mascarado fica de fora: duas máscaras
         # em cima do mesmo pedaço deixariam a lista dizendo duas coisas sobre o
@@ -686,6 +691,8 @@ class TelaRevisao(QWidget):
     def esquecer(self):
         self._ocorrencias = []
         self._texto = ""
+        self._mostrado = ""
+        self._na_saida = [0]
         self._atual = None
         self._filtro = None
         self.texto.clear()
@@ -694,13 +701,30 @@ class TelaRevisao(QWidget):
 
     # -------------------------------------------------------------- por dentro
 
+    def _no_qt(self, indice):
+        """Uma posição do documento, contada no texto da tela e do jeito do Qt."""
+        return _posicao_no_qt(self._mostrado, self._na_saida[indice])
+
+    def _no_documento(self, posicao_no_qt):
+        """O caminho de volta: do que a pessoa marcou na tela ao documento.
+
+        Uma posição no meio dos zeros que a máscara pôs de volta não existe no
+        documento; ela cai na letra seguinte dele, que é onde o trecho começa.
+        """
+        na_tela = _posicao_no_texto(self._mostrado, posicao_no_qt)
+        return bisect_left(self._na_saida, na_tela)
+
     def _escrever(self, texto):
         """Põe o texto mascarado na tela, com cada troca destacada no lugar dela.
 
-        O destaque é desenhado sobre as mesmas posições do texto original,
-        porque a máscara não muda o tamanho de nada (regra RN-6).
+        O destaque não cai nas posições do documento, e sim nas do texto como ele
+        sai: o CPF sem o zero da frente cresce na máscara e empurra o resto
+        (nona emenda da spec 003). Com as posições do documento, o destaque
+        escorregaria para o lado a cada CPF curto, e o número ficaria sem marca.
         """
         mascarado = cpf.aplicar(texto, self._ocorrencias)
+        self._mostrado = mascarado
+        self._na_saida = cpf.posicoes_na_saida(texto, self._ocorrencias)
         self.texto.setPlainText(mascarado)
 
         cursor = self.texto.textCursor()
@@ -718,9 +742,8 @@ class TelaRevisao(QWidget):
         for ocorrencia in sorted(self._ocorrencias, key=lambda o: o.inicio):
             if ocorrencia.situacao != cpf.MASCARADO:
                 continue
-            cursor.setPosition(_posicao_no_qt(texto, ocorrencia.inicio))
-            cursor.setPosition(
-                _posicao_no_qt(texto, ocorrencia.fim), QTextCursor.KeepAnchor)
+            cursor.setPosition(self._no_qt(ocorrencia.inicio))
+            cursor.setPosition(self._no_qt(ocorrencia.fim), QTextCursor.KeepAnchor)
             cursor.setCharFormat(_formato(ocorrencia))
         # O que foi liberado volta ao texto como estava, com traço tracejado:
         # ele não sumiu da revisão, e continua na lista para ser mascarado de
@@ -728,9 +751,8 @@ class TelaRevisao(QWidget):
         for ocorrencia in self._ocorrencias:
             if ocorrencia.situacao != cpf.LIBERADO:
                 continue
-            cursor.setPosition(_posicao_no_qt(texto, ocorrencia.inicio))
-            cursor.setPosition(
-                _posicao_no_qt(texto, ocorrencia.fim), QTextCursor.KeepAnchor)
+            cursor.setPosition(self._no_qt(ocorrencia.inicio))
+            cursor.setPosition(self._no_qt(ocorrencia.fim), QTextCursor.KeepAnchor)
             cursor.setCharFormat(_formato_de_liberado())
         # O cursor volta ao começo para a tela abrir no alto do documento.
         self.texto.moveCursor(QTextCursor.Start)

@@ -291,3 +291,64 @@ def test_o_pdf_com_texto_vai_da_conferencia_direto_para_a_revisao(aplicacao):
     # O caminho sugerido para salvar sai do PDF que foi lido.
     painel.abrir_o_salvar()
     assert painel.tela_salvar.campo.text().endswith("01-com-texto-e-tabela - sem CPF.md")
+
+
+def _que_cresce(texto, original, mascara, espacos_tirados=0):
+    """Uma ocorrência com a máscara maior que o número, montada à mão.
+
+    É o desenho do CPF sem o zero da frente (nona emenda): na etapa 1 a busca
+    ainda não o acha, e o teste confere só o que a tela faz com ele.
+    """
+    inicio = texto.index(original)
+    return cpf.Ocorrencia(inicio=inicio, fim=inicio + len(original),
+                          original=original, mascara=mascara,
+                          tipo=cpf.PASSA_NA_CONTA, passa_na_conta=True,
+                          espacos_tirados=espacos_tirados)
+
+
+def test_o_destaque_cai_em_cima_da_mascara_que_cresce(aplicacao):
+    """O destaque segue o texto como ele sai, e não o tamanho do original.
+
+    Contando pelo documento, o traço terminava uma casa antes do fim da
+    máscara, e o número seguinte ganhava o traço deslocado - e um CPF ficava
+    na tela sem marca nenhuma.
+    """
+    texto = "A 0000000000 e o CPF 111.111.111-11 fim"
+    curto = _que_cresce(texto, "0000000000", "XXX000000XX")
+    comum = cpf.procurar(texto)[0]
+    revisao = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    revisao.mostrar("t.md", texto, [curto, comum])
+
+    na_tela = revisao.texto_mascarado()
+    assert na_tela == "A XXX000000XX e o CPF XXX.111.111-XX fim"
+    cursor = revisao.texto.textCursor()
+    for mascara in ("XXX000000XX", "XXX.111.111-XX"):
+        inicio = na_tela.index(mascara)
+        for dentro in (inicio + 1, inicio + len(mascara)):
+            cursor.setPosition(dentro)
+            assert cursor.charFormat().underlineStyle() != QTextCharFormat.NoUnderline
+        cursor.setPosition(inicio + len(mascara) + 1)
+        assert cursor.charFormat().underlineStyle() == QTextCharFormat.NoUnderline
+
+    # Ir até o número marca exatamente a máscara inteira na tela.
+    revisao.ir_para(comum)
+    assert revisao.texto.textCursor().selectedText() == "XXX.111.111-XX"
+
+
+def test_o_trecho_marcado_depois_da_mascara_que_cresce_cai_no_lugar(aplicacao):
+    texto = "| 0000000000     | Ana |\nCódigo 1234 5678 910 da ficha"
+    curto = _que_cresce(texto, "0000000000", "XXX000000XX", espacos_tirados=1)
+    revisao = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    revisao.mostrar("t.md", texto, [curto])
+
+    na_tela = revisao.texto_mascarado()
+    inicio = na_tela.index("1234 5678 910")
+    cursor = revisao.texto.textCursor()
+    cursor.setPosition(_posicao_no_qt(na_tela, inicio))
+    cursor.setPosition(_posicao_no_qt(na_tela, inicio + len("1234 5678 910")),
+                       QTextCursor.KeepAnchor)
+    revisao.texto.setTextCursor(cursor)
+    revisao.botao_mascarar.click()
+
+    assert "XXX4 5678 9XX" in revisao.texto_mascarado()
+    assert "| XXX000000XX    | Ana |" in revisao.texto_mascarado()
