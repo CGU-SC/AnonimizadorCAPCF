@@ -171,16 +171,24 @@ class _Item(QFrame):
                  for texto_da_etiqueta, cor in _etiquetas(ocorrencia)]
         for peca in pecas:
             peca.ensurePolished()
-        largura_das_etiquetas = (sum(p.sizeHint().width() for p in pecas)
-                                 + estilo.ESPACO_1 * (len(pecas) - 1))
-        # Duas etiquetas que não cabem lado a lado vão uma embaixo da outra.
-        # Lado a lado à força, o item ficava mais largo que a coluna, a lista
-        # deslizava para o lado e cortava a primeira letra dos títulos
-        # ("uspeitos — olhe estes 9", conferência da etapa 3).
-        if largura_das_etiquetas <= LARGURA_UTIL_DO_ITEM:
-            linhas_de_etiquetas = [pecas]
-        else:
-            linhas_de_etiquetas = [[peca] for peca in pecas]
+        # A etiqueta que não cabe na linha desce para a de baixo. Lado a lado à
+        # força, o item ficava mais largo que a coluna, a lista deslizava para o
+        # lado e cortava a primeira letra dos títulos ("uspeitos — olhe estes
+        # 9", conferência da etapa 3). Desce só o que não cabe, e não todas: o
+        # CPF sem o zero da frente liberado tem três etiquetas, e uma por linha
+        # deixaria o item com três linhas só delas (rascunho 09).
+        linhas_de_etiquetas = [[]]
+        largura_da_linha = 0
+        for peca in pecas:
+            largura = peca.sizeHint().width()
+            if (linhas_de_etiquetas[-1] and largura_da_linha + estilo.ESPACO_1
+                    + largura > LARGURA_UTIL_DO_ITEM):
+                linhas_de_etiquetas.append([])
+                largura_da_linha = 0
+            if linhas_de_etiquetas[-1]:
+                largura_da_linha += estilo.ESPACO_1
+            largura_da_linha += largura
+            linhas_de_etiquetas[-1].append(peca)
         for pecas_da_linha in linhas_de_etiquetas:
             etiquetas = QHBoxLayout()
             etiquetas.setSpacing(estilo.ESPACO_1)
@@ -253,16 +261,25 @@ def _ainda_mascarados(ocorrencias):
 
 
 def _etiquetas(ocorrencia):
-    """O que o item diz que o número é, em uma ou duas etiquetas."""
+    """O que o item diz que o número é, em uma a três etiquetas."""
     if ocorrencia.situacao == cpf.LIBERADO:
         # Liberado, o item continua no mesmo lugar da lista: arrependimento
         # custa um clique. O que muda é a etiqueta e o botão.
         # A etiqueta "liberado" é verde, como o selo do alto e o número no
         # texto: numa lista longa, é o que deixa achar de relance o que foi
         # solto (pedido na conferência da etapa 3, em 17/09/2026).
-        return [(_nome_do_tipo(ocorrencia), estilo.COR_TEXTO_SECUNDARIO),
-                (tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.cor)]
+        # O "sem o zero da frente" continua, em cinza como o tipo: é ele que
+        # lembra por que aquele número de 10 dígitos foi solto (rascunho 09).
+        etiquetas = [(_nome_do_tipo(ocorrencia), estilo.COR_TEXTO_SECUNDARIO)]
+        if ocorrencia.sem_zero:
+            etiquetas.append((tipos_na_tela.SEM_ZERO[ocorrencia.sem_zero].nome,
+                              estilo.COR_TEXTO_SECUNDARIO))
+        etiquetas.append((tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.cor))
+        return etiquetas
     etiquetas = [(_nome_do_tipo(ocorrencia), _cor_do_tipo(ocorrencia))]
+    if ocorrencia.sem_zero:
+        sem_zero = tipos_na_tela.SEM_ZERO[ocorrencia.sem_zero]
+        etiquetas.append((sem_zero.nome, sem_zero.cor))
     # O "quase CPF" que passa na conta leva as duas: ele continua suspeito, e
     # também é um número que quase certamente é o CPF de alguém (RN-2).
     #

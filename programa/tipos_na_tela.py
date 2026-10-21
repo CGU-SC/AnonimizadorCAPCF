@@ -56,3 +56,15 @@ LIBERADO = ComoAparece("liberado", "liberados", estilo.COR_SUCESSO)
 # usuária em 17/09/2026).
 VALIDO_SE_CORRIGIDO = ComoAparece("válido se corrigido", "válidos se corrigidos",
                                   estilo.COR_ERRO_TEXTO)
+
+# A etiqueta do CPF que perdeu o zero da frente (nona emenda da spec 003,
+# rascunho 09). Ela fica ao lado de "CPF válido" e explica por que um número de
+# 10 dígitos está na lista - e é por ela que a pessoa reconhece o telefone que
+# fechou a conta por acaso. Com 9 dígitos foram dois zeros, e a frase vai para o
+# plural. A chave é quantos zeros faltavam.
+SEM_ZERO = {
+    1: ComoAparece("sem o zero da frente", "sem o zero da frente",
+                   estilo.COR_ERRO_TEXTO),
+    2: ComoAparece("sem os zeros da frente", "sem os zeros da frente",
+                   estilo.COR_ERRO_TEXTO),
+}

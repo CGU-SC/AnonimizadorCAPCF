@@ -604,3 +604,79 @@ def test_a_massa_inteira_abre_na_lista_sem_nenhum_cpf_solto(aplicacao):
     assert cpf.procurar(tela.texto_mascarado()) == []
     assert len(tela.lista._itens) == 12
     assert tela.selo_suspeitos.text() == "9 suspeitos"
+
+
+# ------------------- a etiqueta do CPF sem o zero da frente (nona emenda, etapa 3)
+
+def _linhas_de_etiquetas(item):
+    """As etiquetas do item, linha por linha, como elas estão dispostas."""
+    linhas = []
+    layout = item.layout()
+    for i in range(layout.count()):
+        linha = layout.itemAt(i).layout()
+        if linha is None:
+            continue
+        textos = [linha.itemAt(j).widget().text() for j in range(linha.count())
+                  if linha.itemAt(j).widget() is not None
+                  and "border-radius: 8px" in linha.itemAt(j).widget().styleSheet()]
+        if textos:
+            linhas.append(textos)
+    return linhas
+
+
+TEXTO_CURTO = ("| Davi Hipotético  | 0000000000     | R$ 1.500,00 |\n"
+               "| Ivo Fictício     | 000000000      | R$ 1.500,00 |\n")
+
+
+def test_o_curto_leva_a_etiqueta_ao_lado_de_cpf_valido(aplicacao):
+    import estilo
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("t.md", TEXTO_CURTO, cpf.procurar(TEXTO_CURTO))
+
+    dez = tela.lista._itens[id(_achado(tela, "0000000000"))]
+    nove = tela.lista._itens[id(_achado(tela, "000000000"))]
+    # Lado a lado, numa linha só: as duas cabem na coluna (rascunho 09).
+    assert _linhas_de_etiquetas(dez) == [["CPF válido", "sem o zero da frente"]]
+    assert _linhas_de_etiquetas(nove) == [["CPF válido", "sem os zeros da frente"]]
+    for etiqueta in _etiquetas_do_item(dez):
+        assert estilo.COR_ERRO_TEXTO in etiqueta.styleSheet()
+
+
+def test_liberado_o_curto_desce_so_a_etiqueta_que_nao_cabe(aplicacao, monkeypatch):
+    """Rascunho 09: liberado, o item tem três etiquetas, e desce só o que não cabe.
+
+    Medido na coluna de verdade: com 10 dígitos as três cabem numa linha (270 de
+    276 pontos), e com 9 a etiqueta do plural é mais comprida e "liberado" desce.
+    O rascunho desenhou o de 10 descendo, por uma estimativa de largura; a
+    regra aprovada é a de descer só o que não couber, medido na hora.
+    """
+    import estilo
+    monkeypatch.setattr("tela_revisao.liberar_mesmo_assim", lambda *_: True)
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("t.md", TEXTO_CURTO, cpf.procurar(TEXTO_CURTO))
+    for original in ("0000000000", "000000000"):
+        achado = _achado(tela, original)
+        tela.lista._itens[id(achado)].botao.click()
+        assert achado.situacao == cpf.LIBERADO
+
+    dez = tela.lista._itens[id(_achado(tela, "0000000000"))]
+    nove = tela.lista._itens[id(_achado(tela, "000000000"))]
+    assert _linhas_de_etiquetas(dez) == [
+        ["CPF válido", "sem o zero da frente", "liberado"]]
+    assert _linhas_de_etiquetas(nove) == [
+        ["CPF válido", "sem os zeros da frente"], ["liberado"]]
+    _, sem_zero, verde = _etiquetas_do_item(dez)
+    assert estilo.COR_TEXTO_SECUNDARIO in sem_zero.styleSheet()
+    assert estilo.COR_SUCESSO in verde.styleSheet()
+    # E o texto volta como estava no documento, com os espaços de depois dele.
+    assert tela.texto_mascarado() == TEXTO_CURTO
+
+
+def test_duas_etiquetas_que_nao_cabem_continuam_uma_por_linha(aplicacao):
+    """A regra nova não muda o item de hoje: o "quase CPF" de motivo comprido."""
+    texto = "Recibo de Paes, CPF 111 111 111 11, conferido."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    item = _itens(tela)[0]
+    assert _linhas_de_etiquetas(item) == [["quase CPF · espaços no lugar dos pontos"],
+                                          ["válido se corrigido"]]
