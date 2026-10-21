@@ -495,3 +495,126 @@ def test_liberada_a_mascara_que_cresce_o_texto_volta_inteiro():
     achado = _que_cresce(texto, "0000000000", "XXX000000XX", espacos_tirados=1)
     achado.situacao = LIBERADO
     assert aplicar(texto, [achado]) == texto
+
+
+# ------------------------- o CPF sem o zero da frente (nona emenda, etapa 2)
+#
+# Os critérios de aceite da seção "CPF sem o zero da frente" da spec 003. O curto
+# que fecha a conta é só de zeros (RN-22): nenhum curto de dígitos repetidos
+# fecha, e qualquer outro que feche pode ser o CPF de alguém.
+
+@pytest.mark.parametrize("original, mascarado, sem_zero", [
+    ("0000000000", "XXX000000XX", 1),
+    ("00.000.000-00", "XXX.000.000-XX", 1),
+    ("00000000-00", "XXX000000-XX", 1),
+    ("00.000.000/00", "XXX.000.000-XX", 1),
+    ("000000000", "XXX000000XX", 2),
+    ("0.000.000-00", "XXX.000.000-XX", 2),
+])
+def test_o_cpf_sem_o_zero_da_frente_e_cpf_valido(original, mascarado, sem_zero):
+    texto = f"Prestador inscrito sob {original}, conforme ficha."
+    achado = _unica(texto)
+    assert achado.original == original
+    assert achado.tipo == PASSA_NA_CONTA and achado.passa_na_conta
+    assert not achado.suspeito
+    assert achado.sem_zero == sem_zero
+    assert aplicar(texto, [achado]) == (
+        f"Prestador inscrito sob {mascarado}, conforme ficha.")
+
+
+@pytest.mark.parametrize("original, mascarado", [
+    ("1234567891", "XXX345678XX"),
+    ("123456789", "XXX234567XX"),
+    ("12.345.678-91", "XXX.345.678-XX"),
+    ("12345678-91", "XXX345678-XX"),
+    ("1.234.567-89", "XXX.234.567-XX"),
+    ("12.345.678/91", "XXX.345.678-XX"),
+])
+def test_a_mascara_do_curto_com_outros_digitos(original, mascarado):
+    """O formato, conferido direto na regra que mascara, sem passar pela conta.
+
+    Estes números não fecham a conta (por isso não são achados), e é o que deixa
+    usá-los aqui: com tudo zero, o teste não veria um dígito fora do lugar.
+    """
+    from cpf import _PADRAO_CURTO, _mascarar_curto
+    assert _mascarar_curto(_PADRAO_CURTO.fullmatch(original)) == mascarado
+
+
+@pytest.mark.parametrize("texto", [
+    # Não fecham a conta com os zeros de volta: nem achados, nem suspeitos.
+    "Código 1234567891 do fornecedor.",
+    "Código 123456789 do fornecedor.",
+    # Estragados pela leitura: fora da emenda, de propósito.
+    "Ficha 0000O00000 ilegível.",
+    "Ficha 00 000 000 00 com espaços.",
+    "Ficha 00.000.\n000-00 partida.",
+    # Colados a outro dígito, ou ligados a ele (RN-3).
+    "Processo 0000000000/2026 em andamento.",
+    "Empresa 00.000.000/0000-00 contratada.",
+    # Com 8 dígitos ou menos.
+    "Matrícula 00000000 ativa.",
+])
+def test_o_que_nao_e_cpf_sem_o_zero_sai_inteiro(texto):
+    assert procurar(texto) == []
+
+
+def test_letra_grudada_antes_do_curto_nao_o_impede_de_contar():
+    """Como no CPF completo: a leitura cola o "CPF" no número (quinta emenda)."""
+    texto = "CPF0000000000 do prestador."
+    assert aplicar(texto, procurar(texto)) == "CPFXXX000000XX do prestador."
+
+
+def test_a_coluna_da_tabela_continua_reta_com_o_curto():
+    linhas = [
+        "| Bolsista         | CPF            | Valor       |",
+        "| Ana Suposta Lima | 111.111.111-11 | R$ 1.500,00 |",
+        "| Davi Hipotético  | 0000000000     | R$ 1.500,00 |",
+        "| Ivo Fictício     | 000000000      | R$ 1.500,00 |",
+    ]
+    texto = "\n".join(linhas)
+    saida = aplicar(texto, procurar(texto)).split("\n")
+    assert saida[2] == "| Davi Hipotético  | XXX000000XX    | R$ 1.500,00 |"
+    assert saida[3] == "| Ivo Fictício     | XXX000000XX    | R$ 1.500,00 |"
+    assert len({len(linha) for linha in saida}) == 1
+
+
+def test_com_um_espaco_so_depois_do_curto_a_linha_cresce():
+    texto = "0000000000 R$ 10,00"
+    assert aplicar(texto, procurar(texto)) == "XXX000000XX R$ 10,00"
+
+
+def test_liberado_o_curto_volta_inteiro_com_os_espacos():
+    texto = "| Davi Hipotético  | 0000000000     | R$ 1.500,00 |"
+    achado = _unica(texto)
+    achado.situacao = LIBERADO
+    assert aplicar(texto, [achado]) == texto
+
+
+def test_o_curto_nao_ganha_mascara_por_cima_de_um_cpf_completo():
+    """O CPF de 11 dígitos é achado como sempre, e uma vez só."""
+    texto = "a 111.111.111-11 b 11111111111 c"
+    achados = procurar(texto)
+    assert [a.original for a in achados] == ["111.111.111-11", "11111111111"]
+    assert not any(a.sem_zero for a in achados)
+
+
+@pytest.mark.parametrize("texto, saida", [
+    ("000000000\n12 parcelas", "XXX000000XX\n12 parcelas"),
+    ("000000000 12 parcelas", "XXX000000XX 12 parcelas"),
+])
+def test_o_curto_que_fecha_ganha_do_quase_cpf_que_falha(texto, saida):
+    """Regressão da revisão da etapa 2 (lente crítica).
+
+    A busca do CPF completo juntava o curto com o número de baixo num "quase
+    CPF" que falha na conta: a máscara caía no "12" e os dígitos verificadores
+    do CPF ficavam à vista, liberáveis com um clique.
+    """
+    achado = _unica(texto)
+    assert achado.sem_zero == 2 and achado.tipo == PASSA_NA_CONTA
+    assert aplicar(texto, [achado]) == saida
+
+
+def test_o_quase_cpf_que_fecha_continua_ganhando_do_curto():
+    achado = _unica("111111111\n11 do prestador")
+    assert achado.tipo == QUASE_CPF and achado.passa_na_conta
+    assert not achado.sem_zero

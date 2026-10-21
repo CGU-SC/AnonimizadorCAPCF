@@ -96,6 +96,20 @@ _PADRAO = re.compile(
 _GRUPOS_DE_DIGITOS = (1, 3, 5, 7)
 _GRUPOS_DE_SEPARADOR = (2, 4, 6)
 
+# O CPF que perdeu o zero da frente (nona emenda da spec 003): 10 dígitos, ou 9
+# quando perdeu dois, nos mesmos jeitos de escrever da RN-1 com o grupo da
+# frente mais curto - `12.345.678-91`, `12345678-91`, `1234567891`,
+# `12.345.678/91`. Só dígitos e só a pontuação do CPF: o curto com letra no
+# lugar de dígito, com espaço ou partido em duas linhas fica de fora, porque é
+# raro e encheria o texto de alarme falso (decidido no levantamento). As travas
+# das pontas são as mesmas da RN-3, o que deixa inteiro o pedaço de um CNPJ ou de
+# um número de processo.
+_PADRAO_CURTO = re.compile(
+    r"(?<![0-9])(?<![0-9][.\-/])"
+    r"([0-9]{1,2})(\.?)([0-9]{3})(\.?)([0-9]{3})([-/]?)([0-9]{2})"
+    r"(?![0-9])(?![.\-/][0-9])"
+)
+
 
 @dataclass
 class Ocorrencia:
@@ -119,6 +133,9 @@ class Ocorrencia:
     motivo: str | None = None
     situacao: str = MASCARADO
     espacos_tirados: int = 0
+    # Quantos zeros da frente o CPF tinha perdido: 1 com 10 dígitos, 2 com 9.
+    # Zero em todo o resto.
+    sem_zero: int = 0
 
     @property
     def suspeito(self):
@@ -165,7 +182,7 @@ def procurar(texto):
     while True:
         encontro = _PADRAO.search(texto, posicao)
         if encontro is None:
-            return achados
+            break
         ocorrencia = _avaliar(texto, encontro)
         if ocorrencia is None:
             # Recusado, procura de novo uma letra adiante, e não do fim do
@@ -174,6 +191,30 @@ def procurar(texto):
         else:
             achados.append(ocorrencia)
             posicao = encontro.end()
+
+    # O curto vem depois, e não ganha uma segunda máscara por cima de um número
+    # já achado: ela mudaria o tamanho dele e deixaria a lista dizendo duas
+    # coisas sobre o mesmo número.
+    #
+    # Com uma exceção, achada na revisão da etapa 2: o "quase CPF" que falha na
+    # conta cede o lugar ao curto que fecha. A busca do CPF completo junta o
+    # curto com o número da linha de baixo ("000000000" e "12", cada um numa
+    # célula da tabela) num "quase CPF" que falha - e aí a máscara caía no "12",
+    # os dígitos verificadores do CPF de verdade ficavam à vista, e ele saía com
+    # um clique, sem a dupla conferência. O "quase CPF" que fecha a conta
+    # continua ganhando: é o CPF de verdade que a leitura estragou.
+    for encontro in _PADRAO_CURTO.finditer(texto):
+        por_cima = [a for a in achados
+                    if a.inicio < encontro.end() and encontro.start() < a.fim]
+        if any(a.tipo != QUASE_CPF or a.passa_na_conta for a in por_cima):
+            continue
+        ocorrencia = _avaliar_curto(texto, encontro)
+        if ocorrencia is not None:
+            for engolido in por_cima:
+                achados.remove(engolido)
+            achados.append(ocorrencia)
+    achados.sort(key=lambda a: a.inicio)
+    return achados
 
 
 def mascarar_a_mao(texto, inicio, fim):
@@ -314,6 +355,59 @@ def _avaliar(texto, encontro):
         passa_na_conta=conta,
         motivo=motivo,
     )
+
+
+def _avaliar_curto(texto, encontro):
+    """O CPF sem o zero da frente, ou None se o número curto não for CPF.
+
+    Só conta o que fecha a conta com os zeros de volta. O curto que falha não é
+    achado nem vira suspeito: sem a conta, nada separa um CPF curto de um
+    telefone ou de um número de processo, e no formulário real do SIGPEX seriam
+    13 suspeitos novos, nenhum deles CPF (nona emenda).
+    """
+    separadores = tuple(encontro.group(g) for g in _GRUPOS_DE_SEPARADOR)
+    if separadores not in FORMATOS_COMBINADOS:
+        return None
+    digitos = "".join(encontro.group(g) for g in _GRUPOS_DE_DIGITOS)
+    sem_zero = 11 - len(digitos)
+    if not passa_na_conta("0" * sem_zero + digitos):
+        return None
+
+    # A máscara cresce tantas casas quantos zeros voltaram. Para a coluna da
+    # tabela continuar reta, saem o mesmo tanto de espaços logo depois do
+    # número - mas sempre sobra um, para duas colunas nunca se juntarem. Só
+    # espaço de verdade é tirado: tabulação, quebra de linha ou outra letra
+    # ficam, e aí a linha cresce.
+    espacos = 0
+    while (encontro.end() + espacos < len(texto)
+           and texto[encontro.end() + espacos] == " "):
+        espacos += 1
+    return Ocorrencia(
+        inicio=encontro.start(),
+        fim=encontro.end(),
+        original=encontro.group(0),
+        mascara=_mascarar_curto(encontro),
+        tipo=PASSA_NA_CONTA,
+        passa_na_conta=True,
+        espacos_tirados=min(sem_zero, max(espacos - 1, 0)),
+        sem_zero=sem_zero,
+    )
+
+
+def _mascarar_curto(encontro):
+    """A máscara do CPF sem o zero da frente: a de um CPF completo.
+
+    Os zeros voltam e o número é escrito no jeito em que estava: o grupo da
+    frente inteiro vira `XXX`, e a barra antes dos dois últimos vira traço, como
+    na RN-6. Fica à vista o mesmo miolo de 6 dígitos de qualquer CPF
+    (`1234567891` -> `XXX345678XX`). Separada da conta de propósito: é aqui que
+    o teste confere o formato com dígitos diferentes, sem precisar de um número
+    que feche a conta e possa ser o CPF de alguém (RN-22).
+    """
+    ultimo_separador = "-" if encontro.group(6) == "/" else encontro.group(6)
+    return (MASCARA * 3 + encontro.group(2) + encontro.group(3)
+            + encontro.group(4) + encontro.group(5) + ultimo_separador
+            + MASCARA * 2)
 
 
 def _posicoes_do_trecho(trecho):
