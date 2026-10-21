@@ -452,3 +452,46 @@ def test_o_anonimizar_inteiro_nao_fala_com_a_internet():
         codigo = (PROGRAMA / f"{nome}.py").read_text(encoding="utf-8").lower()
         for sinal in ("http", "socket", "urllib", "requests", "ftplib"):
             assert sinal not in codigo, f"{nome}.py: {sinal}"
+
+
+# ------------------------------- a máscara que cresce (nona emenda, etapa 1)
+#
+# O CPF sem o zero da frente volta a ter 11 dígitos na máscara, e tira os
+# espaços de depois dele para a coluna continuar reta. Nesta etapa a busca ainda
+# não acha o número curto: a ocorrência é montada à mão, para conferir só o que
+# o resto do programa faz com uma máscara maior que o número.
+
+def _que_cresce(texto, original, mascara, espacos_tirados=0):
+    from cpf import Ocorrencia
+    inicio = texto.index(original)
+    return Ocorrencia(inicio=inicio, fim=inicio + len(original), original=original,
+                      mascara=mascara, tipo=PASSA_NA_CONTA, passa_na_conta=True,
+                      espacos_tirados=espacos_tirados)
+
+
+def test_a_mascara_que_cresce_tira_os_espacos_e_a_coluna_fica_reta():
+    texto = "| 0000000000     | R$ 1.500,00 |"
+    achado = _que_cresce(texto, "0000000000", "XXX000000XX", espacos_tirados=1)
+    assert aplicar(texto, [achado]) == "| XXX000000XX    | R$ 1.500,00 |"
+
+
+def test_as_posicoes_na_saida_andam_com_a_mascara_que_cresce():
+    from cpf import posicoes_na_saida
+    texto = "a 00.000.000-00  b"
+    achado = _que_cresce(texto, "00.000.000-00", "XXX.000.000-XX", espacos_tirados=1)
+    saida = aplicar(texto, [achado])
+    assert saida == "a XXX.000.000-XX b"
+    posicoes = posicoes_na_saida(texto, [achado])
+    assert len(posicoes) == len(texto) + 1
+    assert posicoes[-1] == len(saida)
+    # O número começa no mesmo lugar e termina uma casa adiante; o "b" depois
+    # dele volta ao lugar, porque o espaço tirado pagou a casa a mais.
+    assert saida[posicoes[achado.inicio]:posicoes[achado.fim]] == "XXX.000.000-XX"
+    assert saida[posicoes[texto.index("b")]] == "b"
+
+
+def test_liberada_a_mascara_que_cresce_o_texto_volta_inteiro():
+    texto = "| 0000000000     | R$ 1.500,00 |"
+    achado = _que_cresce(texto, "0000000000", "XXX000000XX", espacos_tirados=1)
+    achado.situacao = LIBERADO
+    assert aplicar(texto, [achado]) == texto
