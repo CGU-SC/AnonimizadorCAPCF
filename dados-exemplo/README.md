@@ -34,7 +34,7 @@ com a mesma garantia — veja a seção dela, mais abaixo.
 
 ## A massa de texto com CPF, do Anonimizar
 
-Os arquivos de `10` a `16` são outra massa, gerada por outro script, para o
+Os arquivos de `10` a `17` são outra massa, gerada por outro script, para o
 módulo Anonimizar (spec 003). Para refazê-los, da raiz do projeto:
 
 ```
@@ -54,7 +54,11 @@ arquivo). Diferente dos PDFs, estes saem idênticos toda vez que o script roda.
 - os **"quase CPF"** falham na conta mesmo com as letras trocadas de volta por
   dígitos (`l23.456.789-1O`), ou partem de dígitos repetidos
   (`l11.111.111-11`, `555.555.` / `555-55` partido em duas linhas,
-  `666 666 666 66`).
+  `666 666 666 66`);
+- o **CPF sem o zero da frente** que passa na conta (nona emenda) é **só de
+  zeros** — `0000000000`, `000000000`, `00.000.000-00` —, cujo CPF completo é o
+  `000.000.000-00`: nenhum curto de outro dígito repetido fecha a conta, e
+  qualquer outro que feche pode ser o CPF de alguém.
 
 Cuidado com número "de sequência" inventado na hora: nem todo falha na conta,
 e um que passe pode ser o CPF de alguém. Por isso nenhum número que passa na
@@ -72,6 +76,7 @@ que passa na conta sem ser de dígitos repetidos.
 | `14-folha-com-40-bolsistas.md` | tabela de 40 bolsistas, metade com CPF de forma válida e metade falhando na conta | a lista ao lado da revisão com muitos itens, e a tabela alinhada depois da máscara |
 | `15-vazio.md` | arquivo vazio | o erro de arquivo vazio, que volta à escolha |
 | `16-planilha-renomeada.md` | bytes de planilha com o nome trocado para `.md` | o erro de arquivo que não é texto |
+| `17-cpf-sem-o-zero.md` | ficha de bolsistas exportada de um sistema que perde o zero da frente, com frases de recibo, um telefone e as parcelas numa linha cada | a nona emenda inteira: o curto de 10 e de 9 dígitos nos formatos da RN-1, a coluna da tabela reta depois da máscara, o grudado em "CPF", o telefone que fecha a conta por acaso (para liberar), o curto com o "12" na linha de baixo (revisão 33), e os sete que ficam inteiros: falha na conta, letra, espaços, colado por barra, forma de CNPJ e 8 dígitos. É o arquivo da conferência 03 |
 
 ## Uma observação honesta sobre o `04`
 
