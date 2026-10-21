@@ -162,11 +162,54 @@ def liberar_mesmo_assim(ocorrencia, pai=None):
     return caixa.exec() == QDialog.Accepted
 
 
+# O CPF que perdeu o zero da frente (nona emenda, rascunho 09). A frase de cima
+# fala dos "nove primeiros", e o número na caixa tem 10 ou 9 dígitos: sem
+# explicar de onde veio o zero que falta, quem lê acha que o programa errou e
+# libera. Cada um leva também o número de verdade com que ele mais se parece,
+# que é o alarme falso mais provável: com 10 dígitos, o telefone com DDD; com
+# 9, o celular escrito sem o DDD - telefone com DDD nunca tem 9 dígitos, e a
+# primeira versão desta frase mandava procurar justamente ele (revisão da
+# etapa 4).
+POR_QUE_PASSA_SEM_ZERO = {
+    1: (
+        "Ele tem 10 dígitos, um a menos que um CPF: o zero da frente costuma se "
+        "perder quando o número passa por uma planilha ou por um sistema que o "
+        "guarda como número. Com o zero de volta, os dois últimos batem com a "
+        "conta do dígito verificador.",
+        "um telefone com DDD",
+    ),
+    2: (
+        "Ele tem 9 dígitos, dois a menos que um CPF: os zeros da frente costumam "
+        "se perder quando o número passa por uma planilha ou por um sistema que "
+        "o guarda como número. Com os zeros de volta, os dois últimos batem com "
+        "a conta do dígito verificador.",
+        "um celular escrito sem o DDD",
+    ),
+}
+
+_LIBERADO_VAI = (
+    " Liberado, ele vai para o arquivo como está aqui em cima — e do arquivo "
+    "para a conversa com o assistente de IA."
+)
+
+
 def _explicacao(ocorrencia):
+    if ocorrencia.sem_zero:
+        # A conclusão vem antes do aviso, e não depois: com o "por isso" logo
+        # em seguida ao telefone, ele ficava amarrado ao aviso, e a pessoa lia
+        # dois sinais opostos em seguida (revisão da etapa 4).
+        por_que, parecido = POR_QUE_PASSA_SEM_ZERO[ocorrencia.sem_zero]
+        return (
+            por_que
+            + " Por isso ele quase certamente é o CPF de alguém — mas "
+            + parecido
+            + " também pode fechar a conta por acaso, e as palavras ao redor "
+            "ajudam a decidir."
+            + _LIBERADO_VAI
+        )
     motivo = ocorrencia.motivo if ocorrencia.tipo == cpf.QUASE_CPF else None
     return (
         POR_QUE_PASSA.get(motivo, POR_QUE_PASSA[None])
-        + " Por isso ele quase certamente é o CPF de alguém. Liberado, ele vai "
-        "para o arquivo como está aqui em cima — e do arquivo para a conversa "
-        "com o assistente de IA."
+        + " Por isso ele quase certamente é o CPF de alguém."
+        + _LIBERADO_VAI
     )
