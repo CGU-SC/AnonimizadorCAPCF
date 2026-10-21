@@ -315,7 +315,7 @@ def test_o_destaque_cai_em_cima_da_mascara_que_cresce(aplicacao):
     """
     texto = "A 0000000000 e o CPF 111.111.111-11 fim"
     curto = _que_cresce(texto, "0000000000", "XXX000000XX")
-    comum = cpf.procurar(texto)[0]
+    comum = next(o for o in cpf.procurar(texto) if not o.sem_zero)
     revisao = TelaRevisao(ao_anonimizar_outro=lambda: None)
     revisao.mostrar("t.md", texto, [curto, comum])
 
@@ -352,3 +352,25 @@ def test_o_trecho_marcado_depois_da_mascara_que_cresce_cai_no_lugar(aplicacao):
 
     assert "XXX4 5678 9XX" in revisao.texto_mascarado()
     assert "| XXX000000XX    | Ana |" in revisao.texto_mascarado()
+
+
+def test_o_cpf_sem_o_zero_aparece_destacado_entre_os_validos(aplicacao):
+    """Nona emenda, etapa 2: achado pela busca, destacado e contado como válido."""
+    texto = ("| Bolsista         | CPF            | Valor       |\n"
+             "| Ana Suposta Lima | 111.111.111-11 | R$ 1.500,00 |\n"
+             "| Davi Hipotético  | 0000000000     | R$ 1.500,00 |\n")
+    revisao = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    revisao.mostrar("t.md", texto, cpf.procurar(texto))
+
+    assert revisao.selo_validos.text() == "2 CPFs válidos"
+    na_tela = revisao.texto_mascarado()
+    assert "| Davi Hipotético  | XXX000000XX    | R$ 1.500,00 |" in na_tela
+    # O arquivo sai igual à tela.
+    assert revisao.texto_para_o_arquivo() == na_tela
+
+    inicio = na_tela.index("XXX000000XX")
+    cursor = revisao.texto.textCursor()
+    cursor.setPosition(inicio + len("XXX000000XX"))
+    formato = cursor.charFormat()
+    assert formato.underlineStyle() == QTextCharFormat.SingleUnderline
+    assert formato.foreground().color().name() == estilo.COR_ERRO_TEXTO
