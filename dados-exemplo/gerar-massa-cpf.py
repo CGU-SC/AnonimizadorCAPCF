@@ -6,7 +6,8 @@ sujaria o histórico toda vez que só a massa de texto precisasse ser refeita.
 
 Nenhum número aqui pode ser de alguém (regra RN-22 da spec 003). Os que passam
 na conta do dígito verificador são SÓ de dígitos repetidos (111.111.111-11,
-222.222.222-22...), que a Receita não emite. Os suspeitos e os "quase CPF"
+222.222.222-22...), que a Receita não emite. O CPF sem o zero da frente que
+passa na conta (nona emenda) é SÓ de zeros (0000000000, 000000000). Os suspeitos e os "quase CPF"
 falham na conta, mesmo com as letras trocadas de volta por dígitos, ou partem
 de dígitos repetidos. Atenção: nem todo número "de sequência" inventado na
 hora falha na conta, e um que passe pode ser o CPF de alguém. Número novo nesta
@@ -158,6 +159,52 @@ def tabela_de_bolsistas():
     return "\n".join(linhas) + "\n"
 
 
+# O CPF que perdeu o zero da frente (nona emenda da spec 003). Todo curto que
+# fecha a conta aqui é SÓ de zeros: nenhum curto de dígitos repetidos fecha a
+# conta, e qualquer outro que feche pode ser o CPF de alguém (RN-22). Os que
+# ficam inteiros de propósito falham na conta, estão estragados pela leitura,
+# colados a outro dígito, ou têm 8 dígitos.
+BOLSISTAS_SEM_ZERO = [
+    ("Ana Suposta Lima", "111.111.111-11"),
+    ("Davi Hipotético Rocha", "0000000000"),
+    ("Ivo Fictício Prado", "000000000"),
+    ("Lia Inventada Moura", "00.000.000-00"),
+]
+
+
+def ficha_sem_o_zero():
+    linhas = [
+        "# Ficha de bolsistas — Projeto 042/2026",
+        "",
+        "Relação exportada de um sistema que guarda o CPF como número e, por",
+        "isso, perde o zero da frente.",
+        "",
+        "| Bolsista              | CPF            | Valor       |",
+        "| --------------------- | -------------- | ----------- |",
+    ]
+    for nome, numero in BOLSISTAS_SEM_ZERO:
+        linhas.append(f"| {nome:<21} | {numero:<14} | R$ 1.500,00 |")
+    linhas += [
+        "",
+        "Diária do colaborador externo Rui Exemplo Teles, CPF 0.000.000-00, e",
+        "recibos de Noé Suposto Vaz, inscrito sob 00000000-00, e de Bia Modelo",
+        "Reis, CPF 00.000.000/00. A ficha lida pela leitura do documento trouxe",
+        "CPF0000000000, com o número grudado na palavra.",
+        "",
+        "Telefone do escritório: 0000000000 ramal 2.",
+        "",
+        "Parcelas do bolsista, cada célula numa linha, como sai a leitura de PDF:",
+        "000000000",
+        "12",
+        "",
+        "Não são CPF: o código do fornecedor 1234567891, a referência",
+        "123456789, a ficha ilegível 0000O00000, o campo 00 000 000 00 lido",
+        "com espaços, o processo 0000000000/2026, a empresa 00.000.000/0000-00",
+        "e a matrícula 00000000.",
+    ]
+    return "\n".join(linhas) + "\n"
+
+
 def gravar_texto(nome, texto, codificacao="utf-8", fim_de_linha="\n"):
     caminho = PASTA / nome
     with open(caminho, "w", encoding=codificacao, newline=fim_de_linha) as arquivo:
@@ -183,6 +230,7 @@ def main():
                      codificacao="cp1252", fim_de_linha="\r\n"),
         gravar_texto("14-folha-com-40-bolsistas.md", tabela_de_bolsistas()),
         gravar_texto("15-vazio.md", ""),
+        gravar_texto("17-cpf-sem-o-zero.md", ficha_sem_o_zero()),
     ]
 
     # Um arquivo que não é texto, com nome de .md: o começo de um .xlsx (que

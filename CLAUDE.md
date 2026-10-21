@@ -327,3 +327,9 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   leitura melhorou ou empatou em todas as páginas medidas. Os dois só apareceram
   na conferência na tela: nenhum teste acusava, e o texto saía com cara de
   leitura ruim, não de defeito (etapa 3 da funcionalidade 7, 19/10/2026).
+- **Rodar o `gerar-massa-cpf.py` faz o git acusar mudança em arquivos que não
+  mudaram.** O script grava a quebra de linha do Linux, e o git desta máquina
+  (`core.autocrlf`) entrega os arquivos com a do Windows: o `git status` marca
+  os `.md` da massa como alterados, e o `git diff` não mostra nada. Confira com
+  `git diff --stat`; vazio, devolva os arquivos com `git restore` e commite só o
+  que mudou de verdade (etapa 5 da funcionalidade 6, 21/10/2026).

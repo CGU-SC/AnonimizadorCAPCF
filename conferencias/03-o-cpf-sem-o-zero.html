@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 03 — o CPF sem o zero da frente</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47;
+    --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5;
+    --cor-erro: #d9534f; --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto);
+         font-family: var(--fonte-texto); font-size: 15px; line-height: 1.55;
+         padding: 32px max(16px, calc((100vw - 1040px) / 2)); }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  code { font-family: var(--fonte-mono); font-size: 13px; }
+  .subtitulo, .nota { color: var(--cor-texto-secundario); }
+  .nota { font-size: 13px; }
+  .selos { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .selo { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+           border-radius: 12px; padding: 2px 12px; font-size: 13px; }
+  .caixa { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+            border-left: 4px solid var(--cor-destaque); border-radius: 6px;
+            padding: 16px 24px; margin: 16px 0; }
+  .caixas-duplas { display: flex; gap: 16px; flex-wrap: wrap; }
+  .caixa-dupla { flex: 1; min-width: 280px; background: rgba(217,83,79,0.10);
+                  border-left: 4px solid var(--cor-erro); border-radius: 6px; padding: 12px 20px; }
+  .caixa-dupla p { color: var(--cor-texto-secundario); font-size: 13px; margin: 8px 0 0; }
+  .rolar { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; font-size: 13px; }
+  .mono { font-family: var(--fonte-mono); white-space: nowrap; }
+  .forte { font-weight: 600; }
+  .quebra { color: var(--cor-texto-secundario); padding: 0 4px; }
+  .etq { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 10px;
+          padding: 1px 8px; margin: 1px 0; }
+  .etq.valido { border: 1px solid var(--cor-erro-texto); color: var(--cor-erro-texto); }
+  pre.documento { font-family: var(--fonte-mono); font-size: 12.5px; background: var(--cor-fundo-elevado);
+                   border: 1px solid var(--cor-borda); border-radius: 6px; padding: 16px;
+                   overflow-x: auto; white-space: pre; }
+  .d-valido { color: var(--cor-erro-texto); text-decoration: underline solid var(--cor-erro-texto); text-underline-offset: 3px; }
+  ol.roteiro li { margin-bottom: 14px; }
+  ol.roteiro .ver { color: var(--cor-texto-secundario); font-size: 14px; margin-top: 2px; }
+  .rodape { margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
+             font-size: 13px; color: var(--cor-texto-secundario); }
+</style>
+</head>
+<body>
+
+<h1>Conferência 03 — o CPF sem o zero da frente</h1>
+<p class="subtitulo">Funcionalidade 6, nona emenda da spec 003. Esta página mostra o que o programa decidiu
+sobre cada número da ficha <code>dados-exemplo/17-cpf-sem-o-zero.md</code> — ela foi montada rodando o programa de
+verdade, e não escrita à mão — e traz o roteiro da sua conferência final, na tela.</p>
+
+<div class="caixa">Todo curto que fecha a conta nesta ficha é <strong>só de zeros</strong>: é o único jeito de
+um número curto fechar a conta sem poder ser o CPF de alguém (RN-22). Na tela, o formato com outros dígitos
+fica igual: os três primeiros e os dois últimos viram <code>X</code>, e os zeros da frente voltam.</div>
+
+<h2>A ficha, depois do motor</h2>
+<p class="nota">Sublinhado reto e vermelho: CPF válido. Os números sem destaque ficaram inteiros de propósito.
+O ↵ marca a quebra de linha.</p>
+<div class="selos">
+  <span class="selo">10 números mascarados</span>
+  <span class="selo">9 sem o zero da frente</span>
+  <span class="selo">4 espaços tirados para a coluna ficar reta</span>
+  <span class="selo">0 números achados de novo no texto que sai</span>
+</div>
+<pre class="documento"># Ficha de bolsistas — Projeto 042/2026
+
+Relação exportada de um sistema que guarda o CPF como número e, por
+isso, perde o zero da frente.
+
+| Bolsista              | CPF            | Valor       |
+| --------------------- | -------------- | ----------- |
+| Ana Suposta Lima      | <span class="d-valido">XXX.111.111-XX</span> | R$ 1.500,00 |
+| Davi Hipotético Rocha | <span class="d-valido">XXX000000XX</span>    | R$ 1.500,00 |
+| Ivo Fictício Prado    | <span class="d-valido">XXX000000XX</span>    | R$ 1.500,00 |
+| Lia Inventada Moura   | <span class="d-valido">XXX.000.000-XX</span> | R$ 1.500,00 |
+
+Diária do colaborador externo Rui Exemplo Teles, CPF <span class="d-valido">XXX.000.000-XX</span>, e
+recibos de Noé Suposto Vaz, inscrito sob <span class="d-valido">XXX000000-XX</span>, e de Bia Modelo
+Reis, CPF <span class="d-valido">XXX.000.000-XX</span>. A ficha lida pela leitura do documento trouxe
+CPF<span class="d-valido">XXX000000XX</span>, com o número grudado na palavra.
+
+Telefone do escritório: <span class="d-valido">XXX000000XX</span> ramal 2.
+
+Parcelas do bolsista, cada célula numa linha, como sai a leitura de PDF:
+<span class="d-valido">XXX000000XX</span>
+12
+
+Não são CPF: o código do fornecedor 1234567891, a referência
+123456789, a ficha ilegível 0000O00000, o campo 00 000 000 00 lido
+com espaços, o processo 0000000000/2026, a empresa 00.000.000/0000-00
+e a matrícula 00000000.
+</pre>
+
+<h2>Cada número, antes e depois</h2>
+<div class="rolar"><table>
+  <tr><th>Como estava</th><th>Como ficou</th><th>O que a lista diz</th><th>Desfazer pede confirmação?</th></tr>
+  <tr><td class='mono'>111.111.111-11</td><td class='mono forte'>XXX.111.111-XX</td><td><span class="etq valido">CPF válido</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>0000000000</td><td class='mono forte'>XXX000000XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem o zero da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>000000000</td><td class='mono forte'>XXX000000XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem os zeros da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>00.000.000-00</td><td class='mono forte'>XXX.000.000-XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem o zero da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>0.000.000-00</td><td class='mono forte'>XXX.000.000-XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem os zeros da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>00000000-00</td><td class='mono forte'>XXX000000-XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem o zero da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>00.000.000/00</td><td class='mono forte'>XXX.000.000-XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem o zero da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>0000000000</td><td class='mono forte'>XXX000000XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem o zero da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>0000000000</td><td class='mono forte'>XXX000000XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem o zero da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr><tr><td class='mono'>000000000</td><td class='mono forte'>XXX000000XX</td><td><span class="etq valido">CPF válido</span> <span class="etq valido">sem os zeros da frente</span></td><td>sim — caixa vermelha antes de liberar</td></tr>
+</table></div>
+
+<h2>O que ficou inteiro, e por quê</h2>
+<div class="rolar"><table>
+  <tr><th>No texto</th><th>Por que não foi mascarado</th></tr>
+  <tr><td class='mono'>1234567891</td><td>10 dígitos que não fecham a conta com o zero de volta — não é achado nem vira suspeito</td></tr><tr><td class='mono'>123456789</td><td>9 dígitos que não fecham a conta com os zeros de volta</td></tr><tr><td class='mono'>0000O00000</td><td>letra no lugar de um dígito — o curto estragado pela leitura fica de fora</td></tr><tr><td class='mono'>00 000 000 00</td><td>espaços no lugar dos pontos — também fica de fora no curto</td></tr><tr><td class='mono'>0000000000/2026</td><td>colado a outro número por uma barra, como num número de processo (RN-3)</td></tr><tr><td class='mono'>00.000.000/0000-00</td><td>na forma de um CNPJ: o começo está ligado a mais dígitos (RN-3)</td></tr><tr><td class='mono'>00000000</td><td>8 dígitos — o CPF que perdeu três zeros fica de fora</td></tr>
+</table></div>
+
+<h2>A explicação da dupla conferência</h2>
+<p class="nota">O texto que a caixa vermelha mostra ao desfazer um curto — com 10 dígitos e com 9. Saiu da
+revisão 34: o de 9 dígitos fala do celular sem o DDD, porque telefone com DDD nunca tem 9 dígitos.</p>
+<div class="caixas-duplas"><div class='caixa-dupla'><div class='mono forte'>0000000000</div><p>Ele tem 10 dígitos, um a menos que um CPF: o zero da frente costuma se perder quando o número passa por uma planilha ou por um sistema que o guarda como número. Com o zero de volta, os dois últimos batem com a conta do dígito verificador. Por isso ele quase certamente é o CPF de alguém — mas um telefone com DDD também pode fechar a conta por acaso, e as palavras ao redor ajudam a decidir. Liberado, ele vai para o arquivo como está aqui em cima — e do arquivo para a conversa com o assistente de IA.</p></div><div class='caixa-dupla'><div class='mono forte'>000000000</div><p>Ele tem 9 dígitos, dois a menos que um CPF: os zeros da frente costumam se perder quando o número passa por uma planilha ou por um sistema que o guarda como número. Com os zeros de volta, os dois últimos batem com a conta do dígito verificador. Por isso ele quase certamente é o CPF de alguém — mas um celular escrito sem o DDD também pode fechar a conta por acaso, e as palavras ao redor ajudam a decidir. Liberado, ele vai para o arquivo como está aqui em cima — e do arquivo para a conversa com o assistente de IA.</p></div></div>
+
+<h2>O roteiro da sua conferência final</h2>
+<p class="nota">Feche o programa e abra de novo antes de começar: a janela não troca o código com ela de pé.</p>
+<ol class="roteiro"><li><div>Abra o programa pelo atalho <span class='mono'>abrir\abrir-dev.bat</span>, clique em <strong>Anonimizar</strong> e escolha <span class='mono'>dados-exemplo\17-cpf-sem-o-zero.md</span>.</div><div class='ver'>Você deve ver: a revisão abre com <strong>10 números encontrados</strong> e <strong>10 CPFs válidos</strong>, e nenhum suspeito.</div></li><li><div>Olhe a tabela de bolsistas no texto.</div><div class='ver'>Você deve ver: <span class='mono'>XXX000000XX</span> e <span class='mono'>XXX.000.000-XX</span> em vermelho, com traço reto, e a coluna do valor <strong>reta</strong>, igual à linha da Ana.</div></li><li><div>Olhe a lista à direita.</div><div class='ver'>Você deve ver: cada curto com <strong>"CPF válido"</strong> e, ao lado, <strong>"sem o zero da frente"</strong> — ou <strong>"sem os zeros da frente"</strong> nos de 9 dígitos. O número aparece como está no documento.</div></li><li><div>Clique em <strong>próximo ›</strong> até dar a volta.</div><div class='ver'>Você deve ver: o texto vai de número em número, o item certo acende na lista, e a contagem vai de 1 a 10.</div></li><li><div><em>Caminho torto:</em> no curto do <strong>telefone do escritório</strong>, clique em <strong>Desfazer…</strong> e aperte <strong>Enter</strong>.</div><div class='ver'>Você deve ver: a caixa vermelha mostra <span class='mono'>0000000000</span>, fala do zero perdido e do <strong>telefone com DDD</strong>, e o Enter <strong>mantém</strong> a máscara.</div></li><li><div>Desfaça de novo e clique em <strong>Liberar mesmo assim</strong>.</div><div class='ver'>Você deve ver: o texto volta a <span class='mono'>0000000000 ramal 2.</span>, verde e tracejado; na lista, as três etiquetas (cinza, cinza e a verde "liberado") <strong>numa linha só</strong>.</div></li><li><div>Faça o mesmo no curto das <strong>parcelas</strong> (9 dígitos, com o 12 embaixo).</div><div class='ver'>Você deve ver: a caixa fala do <strong>celular escrito sem o DDD</strong>; liberado, a etiqueta "liberado" <strong>desce</strong> para a linha de baixo — a de 9 é mais comprida.</div></li><li><div>Clique em <strong>Mascarar de novo</strong> no das parcelas.</div><div class='ver'>Você deve ver: ele volta a <span class='mono'>XXX000000XX</span>, com o 12 inteiro na linha de baixo.</div></li><li><div><em>Caminho torto:</em> marque com o mouse o <span class='mono'>1234567891</span> do fornecedor e clique em <strong>Mascarar o trecho marcado</strong>.</div><div class='ver'>Você deve ver: ele vira <span class='mono'>XXX45678XX</span>, destacado no lugar certo — e não ao lado, empurrado pelos curtos de cima.</div></li><li><div>Confira a última frase, a do "Não são CPF".</div><div class='ver'>Você deve ver: nenhum destaque: os sete números ficam inteiros (a tabela abaixo diz por quê).</div></li><li><div>Clique em <strong>Salvar o texto mascarado…</strong>.</div><div class='ver'>Você deve ver: antes de gravar, o aviso lista o telefone, que ficou liberado, como "CPF válido".</div></li><li><div>Grave e abra o arquivo no Bloco de Notas.</div><div class='ver'>Você deve ver: a tabela alinhada, os curtos com 11 dígitos de volta, e o telefone inteiro, porque você o liberou.</div></li><li><div>Por último, o documento de verdade: no Anonimizar, escolha <span class='mono'>dados-reais\01 - SIGPEX.pdf</span> e aproveite o texto de dentro.</div><div class='ver'>Você deve ver: os <strong>6</strong> CPFs de 10 dígitos aparecem mascarados, com a etiqueta "sem o zero da frente", e nenhum fica inteiro no texto.</div></li></ol>
+
+<p class="rodape">Página gerada em 21/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-08-construtor-de-funcionalidades, a partir do resultado do motor sobre a massa
+(<code>conferencias/gerar-03-o-cpf-sem-o-zero.py</code>). Todos os nomes e números são inventados; os que
+passam na conta são só de dígitos repetidos, e os curtos, só de zeros (RN-22).</p>
+</body>
+</html>

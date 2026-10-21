@@ -368,12 +368,46 @@ def _textos_da_massa():
 
 
 def test_a_massa_so_tem_numero_valido_de_digitos_repetidos():
-    """RN-22: nenhum número da massa que passa na conta pode ser de alguém."""
+    """RN-22: nenhum número da massa que passa na conta pode ser de alguém.
+
+    O CPF sem o zero da frente (nona emenda) passa pelo mesmo crivo, mais
+    apertado: só de zeros. Nenhum curto de outro dígito repetido fecha a conta,
+    e qualquer outro curto que feche pode ser o CPF de alguém.
+    """
     for nome, texto in _textos_da_massa():
         for achado in procurar(texto):
             if achado.passa_na_conta:
                 digitos = "".join(c for c in achado.original if c.isdigit())
                 assert len(set(digitos)) == 1, (nome, achado.original)
+                if achado.sem_zero:
+                    assert set(digitos) == {"0"}, (nome, achado.original)
+
+
+def test_a_ficha_sem_o_zero_da_massa():
+    """O arquivo da nona emenda: cada caso, com a decisão que a spec manda."""
+    texto = (MASSA / "17-cpf-sem-o-zero.md").read_text(encoding="utf-8")
+    achados = procurar(texto)
+    assert [(a.original, a.tipo, a.sem_zero) for a in achados] == [
+        ("111.111.111-11", PASSA_NA_CONTA, 0),
+        ("0000000000", PASSA_NA_CONTA, 1),
+        ("000000000", PASSA_NA_CONTA, 2),
+        ("00.000.000-00", PASSA_NA_CONTA, 1),
+        ("0.000.000-00", PASSA_NA_CONTA, 2),
+        ("00000000-00", PASSA_NA_CONTA, 1),
+        ("00.000.000/00", PASSA_NA_CONTA, 1),
+        ("0000000000", PASSA_NA_CONTA, 1),   # o grudado em "CPF"
+        ("0000000000", PASSA_NA_CONTA, 1),   # o do telefone, que fecha por acaso
+        ("000000000", PASSA_NA_CONTA, 2),    # o das parcelas, com o "12" embaixo
+    ]
+    saida = aplicar(texto, achados)
+    # A tabela continua alinhada, nada que é CPF sobra, e o que não é fica inteiro.
+    tabela = [linha for linha in saida.splitlines() if linha.startswith("|")]
+    assert len({len(linha) for linha in tabela}) == 1
+    assert procurar(saida) == []
+    for inteiro in ("1234567891", "123456789,", "0000O00000", "00 000 000 00",
+                    "0000000000/2026", "00.000.000/0000-00", "00000000.",
+                    "XXX000000XX\n12", "CPFXXX000000XX", "XXX000000XX ramal 2"):
+        assert inteiro in saida, inteiro
 
 
 def test_o_documento_principal_da_massa():
