@@ -183,6 +183,16 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   gerador lembra: ele para quando algum roteiro não cita a versão do
   `programa/versao.py`.
 
+- **Quando o backlog terminar, organizar a documentação num índice só**
+  (pedido da solicitante em 22/10/2026, que achou a documentação "muito
+  bagunçada"). Hoje ela está espalhada em `especificacoes/`, `mockups/`
+  (requisitos, specs ilustradas, rascunhos, revisões), `conferencias/`, o
+  backlog, o `CLAUDE.md` e o histórico do git. O `mockups/00-indice.html` lista
+  tudo, mas só por data. O pedido é uma capa que organize por assunto e deixe
+  clicar: os requisitos, cada funcionalidade com a spec, as telas, as revisões e
+  as conferências dela, e o histórico de alterações (o que mudou em cada
+  versão). Não é para agora: entra depois da última funcionalidade do backlog.
+
 ## O que já nos mordeu
 
 - Instalar programa em `Program Files` (como o Tesseract) exige confirmação do
