@@ -436,3 +436,84 @@ def test_o_arquivo_sai_com_a_quebra_de_linha_do_documento(tmp_path, aplicacao):
         if quebra == b"\n":
             assert b"\r" not in gravado, "apareceu quebra do Windows onde não havia"
         assert b"111.111.111-11" not in gravado
+
+
+# ---------------- as frases do CPF curto no aviso (acréscimo à nona emenda, etapa 7)
+
+FICHA = "17-cpf-sem-o-zero.md"
+
+
+def _liberar(painel, *qual):
+    """Libera os números escolhidos por `qual(ocorrencia)`, sem a caixa modal."""
+    for ocorrencia in painel.tela_revisao._ocorrencias:
+        if any(escolhe(ocorrencia) for escolhe in qual):
+            ocorrencia.situacao = cpf.LIBERADO
+    painel.tela_revisao._desenhar()
+    painel.abrir_o_salvar()
+    return painel.tela_salvar.aviso_dos_liberados
+
+
+def _curto(ocorrencia):
+    return bool(ocorrencia.sem_zero)
+
+
+def _completo(ocorrencia):
+    return ocorrencia.passa_na_conta and not ocorrencia.sem_zero
+
+
+def test_so_curto_liberado_o_aviso_so_relembra(tmp_path, aplicacao):
+    painel, _ = _painel_com(tmp_path, FICHA)
+    aviso = _liberar(painel, _curto)
+    assert aviso.explicacao.text() == (
+        "Você liberou estes números na revisão. Eles podem ser o CPF de alguém.")
+    linhas = aviso.texto_dos_numeros()
+    assert linhas and all("sem o" in linha and "da frente" in linha for linha in linhas)
+    # A frase inteira cabe na caixa (o defeito conhecido da caixa que corta).
+    assert aviso.explicacao.minimumHeight() >= aviso.explicacao.heightForWidth(
+        aviso.explicacao.width())
+
+
+def test_curto_e_completo_liberados_cada_um_com_a_sua_frase(tmp_path, aplicacao):
+    painel, _ = _painel_com(tmp_path, FICHA)
+    aviso = _liberar(painel, _curto, _completo)
+    assert aviso.explicacao.text() == (
+        "Você liberou estes números na revisão. Os válidos quase certamente são "
+        "o CPF de alguém e os sem o zero da frente podem ser CPF ou outro dado, "
+        "como um telefone.")
+    assert aviso.explicacao.minimumHeight() >= aviso.explicacao.heightForWidth(
+        aviso.explicacao.width())
+
+
+def test_so_completo_liberado_a_frase_fica_como_antes(tmp_path, aplicacao):
+    painel, _ = _painel_com(tmp_path, FICHA)
+    aviso = _liberar(painel, _completo)
+    assert aviso.explicacao.text() == (
+        "Você liberou estes números na revisão. Eles quase certamente são o CPF "
+        "de alguém.")
+    assert not any("da frente" in linha for linha in aviso.texto_dos_numeros())
+
+
+def test_a_contagem_do_salvar_nao_soma_o_liberado(tmp_path, aplicacao):
+    """Regressão da revisão da etapa 7 da funcionalidade 6 (lente crítica).
+
+    A conta de "quantos vão mascarados" somava também os liberados - desde
+    18/09/2026, e estava na versão 0.1.0.
+    """
+    painel, _ = _painel_com(tmp_path, FICHA)
+    revisao = painel.tela_revisao
+    total = len(revisao._ocorrencias)
+    um = revisao._ocorrencias[0]
+    um.situacao = cpf.LIBERADO
+    revisao._desenhar()
+    assert revisao.resumo_do_que_sai().startswith(f"{total - 1} números mascarados")
+    assert revisao.resumo_do_que_sai(por_tipo=False) == f"{total - 1} números mascarados."
+
+
+def test_com_tudo_liberado_a_tela_de_salvar_abre(tmp_path, aplicacao):
+    """Liberado tudo, a conta separava por tipo uma lista vazia e quebrava."""
+    painel, _ = _painel_com(tmp_path, FICHA)
+    aviso = _liberar(painel, lambda o: True)
+    assert painel.telas.currentWidget() is painel.tela_salvar
+    assert painel.tela_revisao.resumo_do_que_sai() == (
+        "Nenhum número foi mascarado neste texto.")
+    assert aviso.isVisibleTo(painel.tela_salvar)

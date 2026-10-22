@@ -91,6 +91,20 @@ coluna de tabela. Levantamento em
 máscara mantinha o tamanho, e a usuária derrubou isso). Uma premissa do mapa
 mudou ao escrever esta emenda: a massa não ganha telefone que fecha a conta, e o
 curto que fecha a conta é só de zeros, porque a RN-22 vale inteira.
+**Acréscimo à nona emenda:** aprovado em 2026-10-22, na conferência na tela da
+funcionalidade 6, em dois acordos curtos. **(a) O clique no número do texto**:
+um clique simples num número destacado do texto da revisão acende o item dele na
+lista, rola a lista até ele e acerta o "N de M", como o "próximo ›" - para todo
+número da lista. Arrastar o mouse para marcar um trecho continua como antes. Era
+preciso percorrer a lista inteira para achar o item de um número visto no texto.
+**(b) As frases do CPF curto**: ele tem mais chance de ser alarme falso, e o
+programa deixa de dizer que ele "quase certamente" é CPF. Na caixa da dupla
+conferência, "pode ser o CPF de alguém". No aviso de antes de gravar, ele leva a
+etiqueta "sem o zero da frente", e a frase do alto depende de quem foi liberado:
+só CPF completo, como antes ("Eles quase certamente são o CPF de alguém."); só
+curto, "Eles podem ser o CPF de alguém."; os dois, "Os válidos quase certamente
+são o CPF de alguém e os sem o zero da frente podem ser CPF ou outro dado, como
+um telefone." (texto da usuária). O título do aviso fica como está.
 **Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
 **Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
 contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
@@ -674,6 +688,17 @@ aprovação própria, antes da construção.
   com os zeros de volta, passa na conta, então só aparecem os feitos de zeros.
 - Dados todos os critérios das seções anteriores, então eles continuam passando
   depois desta emenda.
+- Dado um texto com vários números na revisão, quando a pessoa clica no
+  terceiro, no texto, então o item dele acende na lista, a lista rola até ele, a
+  posição mostra "3 de N", e o botão "Mascarar o trecho marcado" não acende
+  (acréscimo de 22/10/2026).
+- Dado que a pessoa liberou só CPFs sem o zero da frente, quando ela clica em
+  salvar, então o aviso diz "Eles podem ser o CPF de alguém." e cada um leva a
+  etiqueta "sem o zero da frente". Liberados um CPF completo e um curto, então a
+  frase é "Os válidos quase certamente são o CPF de alguém e os sem o zero da
+  frente podem ser CPF ou outro dado, como um telefone." Liberado só CPF
+  completo, a frase fica como antes. Na caixa da dupla conferência do curto, a
+  frase diz "pode ser o CPF de alguém" (acréscimo de 22/10/2026).
 
 **Revisão**
 

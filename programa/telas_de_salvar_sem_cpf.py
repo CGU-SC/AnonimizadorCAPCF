@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 import arquivo_md
 import estilo
+import tipos_na_tela
 from telas_de_salvar import escolher_onde_salvar
 
 LARGURA_DO_AVISO = 620
@@ -204,9 +205,8 @@ class _CaixaDeAviso(QFrame):
             f"font-size: {estilo.TEXTO_BASE}px; font-weight: 600;"
             f"color: {estilo.COR_ALERTA};"
         )
-        self.explicacao = QLabel(
-            "Você liberou estes números na revisão. Eles quase certamente são o "
-            "CPF de alguém.")
+        # A frase muda conforme quem foi liberado: vem em `mostrar`.
+        self.explicacao = QLabel()
         self.explicacao.setWordWrap(True)
         self.explicacao.setFixedWidth(LARGURA_DO_TEXTO_DO_AVISO)
         self.explicacao.setStyleSheet(
@@ -244,6 +244,7 @@ class _CaixaDeAviso(QFrame):
             if quantos != 1
             else "⚠ 1 número com CPF válido vai inteiro para o arquivo"
         )
+        self.explicacao.setText(_frase_dos_liberados(liberados))
         for liberado in liberados:
             self.numeros.addWidget(_linha_do_liberado(liberado))
         for rotulo in (self.explicacao, self.saida):
@@ -264,6 +265,28 @@ class _CaixaDeAviso(QFrame):
                 item.widget().deleteLater()
 
 
+def _frase_dos_liberados(liberados):
+    """A frase do alto do aviso, conforme quem foi liberado.
+
+    O CPF sem o zero da frente tem mais chance de ser alarme falso - um telefone
+    com DDD fecha a conta por acaso uma vez em cem -, e a certeza do CPF
+    completo, dita dele, confundia (conferência na tela, 22/10/2026). Só com
+    ele na lista, o aviso só relembra; com os dois, cada um com a sua frase. O
+    texto da frase dos dois é da usuária.
+    """
+    curtos = any(liberado.sem_zero for liberado in liberados)
+    completos = any(not liberado.sem_zero for liberado in liberados)
+    if curtos and completos:
+        return ("Você liberou estes números na revisão. Os válidos quase "
+                "certamente são o CPF de alguém e os sem o zero da frente podem "
+                "ser CPF ou outro dado, como um telefone.")
+    if curtos:
+        return ("Você liberou estes números na revisão. Eles podem ser o CPF de "
+                "alguém.")
+    return ("Você liberou estes números na revisão. Eles quase certamente são o "
+            "CPF de alguém.")
+
+
 def _linha_do_liberado(liberado):
     """Um número da caixa: o número, o tipo dele, e o que vem antes no texto.
 
@@ -273,11 +296,16 @@ def _linha_do_liberado(liberado):
     # A quebra de linha dentro do número vira uma seta: a linha do aviso tem uma
     # altura só, e sem a seta o número apareceria partido sem explicação.
     numero = html.escape(liberado.original.replace("\n", " ↵ "))
+    etiquetas = [liberado.etiqueta]
+    # O curto leva a mesma etiqueta da lista: sem ela, o aviso chamava de "CPF
+    # válido" um número de 10 dígitos, sem dizer por quê.
+    if liberado.sem_zero:
+        etiquetas.append(tipos_na_tela.SEM_ZERO[liberado.sem_zero].nome)
     linha = QLabel(
         f"<span style='font-family: {estilo.FONTE_MONO}; "
         f"color: {estilo.COR_TEXTO};'>{numero}</span>"
         f"&nbsp;&nbsp;<span style='color: {estilo.COR_ERRO_TEXTO};'>"
-        f"{html.escape(liberado.etiqueta)}</span>"
+        f"{html.escape(' · '.join(etiquetas))}</span>"
         f"&nbsp;&nbsp;<span style='color: {estilo.COR_TEXTO_SECUNDARIO};'>"
         f"{html.escape(liberado.contexto)}</span>"
     )
