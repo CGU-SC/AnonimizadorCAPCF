@@ -728,7 +728,9 @@ def test_a_caixa_do_curto_aponta_o_numero_que_se_parece_de_verdade(aplicacao):
     assert "telefone com DDD" not in nove
     for frase in (dez, nove):
         # A conclusão vem antes do aviso.
-        assert frase.index("quase certamente é o CPF") < frase.index("por acaso")
+        assert frase.index("pode ser o CPF") < frase.index("por acaso")
+        # Sem a certeza do CPF completo (acréscimo à nona emenda, 22/10/2026).
+        assert "quase certamente" not in frase
 
 
 # ------------------ o clique no número do texto (acréscimo à nona emenda, etapa 6)

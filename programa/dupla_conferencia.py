@@ -197,11 +197,13 @@ def _explicacao(ocorrencia):
     if ocorrencia.sem_zero:
         # A conclusão vem antes do aviso, e não depois: com o "por isso" logo
         # em seguida ao telefone, ele ficava amarrado ao aviso, e a pessoa lia
-        # dois sinais opostos em seguida (revisão da etapa 4).
+        # dois sinais opostos em seguida (revisão da etapa 4). E ela diz "pode
+        # ser", e não "quase certamente": o curto tem mais chance de ser alarme
+        # falso, e a certeza confundia (conferência na tela, 22/10/2026).
         por_que, parecido = POR_QUE_PASSA_SEM_ZERO[ocorrencia.sem_zero]
         return (
             por_que
-            + " Por isso ele quase certamente é o CPF de alguém — mas "
+            + " Por isso ele pode ser o CPF de alguém — mas "
             + parecido
             + " também pode fechar a conta por acaso, e as palavras ao redor "
             "ajudam a decidir."

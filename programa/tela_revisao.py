@@ -46,11 +46,14 @@ class Liberado:
     """Um número que passa na conta e vai inteiro para o arquivo (regra RN-11).
 
     A tela de salvar mostra os três pedaços: o número como está escrito no
-    texto, o que vem antes dele, e o nome do tipo.
+    texto, o que vem antes dele, e o nome do tipo. O CPF sem o zero da frente
+    leva também quantos zeros faltavam: é o que põe a etiqueta dele ao lado, e o
+    que muda a frase do alto do aviso (acréscimo à nona emenda).
     """
     original: str
     contexto: str
     etiqueta: str
+    sem_zero: int = 0
 
 # Os grupos dos selos e da navegação, cada um com quem pertence a ele e como ele
 # se chama na posição ("2 de 3 CPFs válidos"). Eles são separados: cada número
@@ -669,6 +672,7 @@ class TelaRevisao(QWidget):
                 # número, e trocar de nome entre uma tela e outra confunde.
                 etiqueta=(tipos_na_tela.VALIDO_SE_CORRIGIDO.nome
                           if o.tipo == cpf.QUASE_CPF else _VALIDO.nome),
+                sem_zero=o.sem_zero,
             )
             for o in self._em_ordem_no_texto()
             if o.situacao == cpf.LIBERADO and o.passa_na_conta
@@ -683,7 +687,12 @@ class TelaRevisao(QWidget):
         sem a separação por tipo (`por_tipo=False`): lá já não há o que decidir.
         """
         contas = quantos_em_cada_grupo(self._ocorrencias)
-        mascarados = sum(contas.values())
+        # Só o que continua mascarado: o liberado vai inteiro. A conta somava
+        # também os liberados - a tela dizia "4 números mascarados" com 3 indo
+        # mascarados, e, com tudo liberado, separava por tipo uma lista vazia e
+        # quebrava, sem a tela de salvar abrir (revisão da etapa 7 da
+        # funcionalidade 6, 22/10/2026; estava assim desde 18/09/2026).
+        mascarados = contas[VALIDOS] + contas[SUSPEITOS] + contas[A_MAO]
         if not mascarados:
             return "Nenhum número foi mascarado neste texto."
         quantos = (f"{mascarados} números mascarados" if mascarados != 1
