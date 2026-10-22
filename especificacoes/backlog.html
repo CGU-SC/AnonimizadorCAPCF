@@ -99,19 +99,20 @@
 </div>
 
 <div class="coluna">
-  <h2>Em construção <span class="contagem">1</span></h2>
+  <h2>Em construção <span class="contagem">0</span></h2>
   <div class="cartoes">
-    <div class="cartao">
-      <div class="cartao-titulo">6. CPF sem o zero da frente</div>
-      <div class="cartao-entrega">Reconhece o CPF que perdeu o zero da frente e ficou com 10 dígitos, como no formulário do SIGPEX, ou que perdeu dois e ficou com 9: com os zeros de volta, o que fecha a conta do dígito verificador é CPF válido, com a etiqueta "sem o zero da frente", e sai mascarado com os 11 dígitos, a coluna da tabela continuando reta.</div>
-      <div class="cartao-entrega"><strong>As 5 etapas construídas e revisadas pela lente crítica</strong>, em 20 e 21/10/2026, com 2 defeitos achados e consertados (revisões 33 e 34). <strong>Falta a conferência na tela</strong>, que a solicitante pediu para fazer de uma vez no fim, pelo roteiro da conferência 03. Nona emenda da spec 003 e rascunho 09 aprovados em 20/10/2026. Na branch <code>feature-006-cpf-sem-o-zero</code>.</div>
-    </div>
+    <p class="vazio">Nenhuma funcionalidade em construção.</p>
   </div>
 </div>
 
 <div class="coluna">
-  <h2>Construída <span class="contagem">4</span></h2>
+  <h2>Construída <span class="contagem">5</span></h2>
   <div class="cartoes">
+    <div class="cartao">
+      <div class="cartao-titulo">6. CPF sem o zero da frente</div>
+      <div class="cartao-entrega">Reconhece o CPF que perdeu o zero da frente e ficou com 10 dígitos, como no formulário do SIGPEX, ou que perdeu dois e ficou com 9: com os zeros de volta, o que fecha a conta do dígito verificador é CPF válido, com a etiqueta "sem o zero da frente", e sai mascarado com os 11 dígitos, a coluna da tabela continuando reta. Nona emenda da spec 003 e rascunho 09 aprovados em 20/10/2026.</div>
+      <div class="cartao-entrega"><strong>As 7 etapas conferidas na tela</strong> pela solicitante, de uma vez no fim: as 5 primeiras em 21/10/2026, e as 6 e 7 (o clique no número do texto e as frases do CPF curto, pedidos naquela conferência) em 22/10/2026. Os 18 critérios passando; 3 defeitos da construção achados pela lente crítica e consertados, mais um antigo da tela de salvar, presente na 0.1.0. Na branch <code>feature-006-cpf-sem-o-zero</code>; a entrega da versão nova é trabalho à parte.</div>
+    </div>
     <div class="cartao">
       <div class="cartao-titulo">7. Ler com o PaddleOCR</div>
       <div class="cartao-entrega">O PaddleOCR entra primeiro e já marcado na escolha do motor, com o Tesseract como alternativa, nos dois módulos: lê a tabela com grade, a página torta e a de contraste fraco, onde o Tesseract lê pior. Roda na própria máquina, sem internet, com os modelos dentro do programa. Emenda da spec 002 aprovada em 18/10/2026; rascunho 11 aprovado.</div>
