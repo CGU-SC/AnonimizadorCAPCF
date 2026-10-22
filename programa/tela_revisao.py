@@ -14,7 +14,7 @@ A lista do que o programa achou fica ao lado do texto, e a navegação "anterior
 próximo" fica acima dele (acréscimo da spec 003, 17/09/2026). Mascarar à mão e
 salvar entram nas etapas seguintes.
 """
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QFrame,
@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 import math
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -173,6 +173,10 @@ class TelaRevisao(QWidget):
         # propósito: lá ela dizia "dá para digitar"; aqui não dá (RN-8).
         self.texto.setFont(QFont("Cascadia Mono", 11))
         self.texto.selectionChanged.connect(self._trecho_marcado_mudou)
+        # O clique num número do texto leva ao item dele na lista (acréscimo à
+        # nona emenda, 22/10/2026). O clique chega à área de dentro da caixa de
+        # texto, e não à caixa, por isso é ali que a tela fica escutando.
+        self.texto.viewport().installEventFilter(self)
 
         self.lista = ListaDeAchados(
             ao_ir_para=self.ir_para,
@@ -434,6 +438,52 @@ class TelaRevisao(QWidget):
         self.lista.marcar(ocorrencia)
         self._atual = ocorrencia
         self._atualizar_navegacao()
+
+    def eventFilter(self, objeto, evento):
+        """O clique simples num número do texto vai até o item dele na lista.
+
+        Só o clique que não marcou nada: quem arrasta o mouse está marcando um
+        trecho para mascarar à mão, e levar a tela para outro lugar no meio
+        disso desfaria o que a pessoa acabou de marcar.
+        """
+        if (objeto is self.texto.viewport()
+                and evento.type() == QEvent.MouseButtonRelease
+                and evento.button() == Qt.LeftButton
+                and not self.texto.textCursor().hasSelection()):
+            ponto = evento.position().toPoint()
+            cursor = self.texto.cursorForPosition(ponto)
+            # O Qt devolve o ponto entre duas letras mais perto do clique. A
+            # letra que está debaixo do mouse é a de depois dele, ou a de antes,
+            # quando o clique caiu na metade direita dela.
+            letra = cursor.position()
+            if ponto.x() < self.texto.cursorRect(cursor).x():
+                letra -= 1
+            ocorrencia = self._numero_em(letra)
+            if ocorrencia is not None:
+                # Logo depois, e não agora: a caixa de texto ainda vai tratar
+                # o mesmo clique, e mexeria na seleção que o "ir até" acabou de
+                # fazer.
+                QTimer.singleShot(0, lambda: self.ir_para(ocorrencia))
+        return super().eventFilter(objeto, evento)
+
+    def _numero_em(self, letra_no_qt):
+        """O número da lista a que pertence aquela letra do texto, ou None.
+
+        Conta a letra, e não o ponto entre duas letras: com o ponto, o clique no
+        branco depois do fim de uma linha caía no fim do número que encosta na
+        borda, e a tela pulava para ele sem a pessoa ter clicado nele (revisão
+        da etapa 6). Agora o branco depois da linha cai na quebra de linha, que
+        não é número.
+        """
+        if letra_no_qt < 0:
+            return None
+        na_tela = _posicao_no_texto(self._mostrado, letra_no_qt)
+        # A letra do documento que desenhou aquela letra da tela: a última cujo
+        # pedaço começa nela ou antes. Os zeros que a máscara pôs de volta são
+        # da primeira letra do número, e os espaços tirados não ocupam lugar.
+        indice = bisect_right(self._na_saida, na_tela) - 1
+        return next((o for o in self._ocorrencias if o.inicio <= indice < o.fim),
+                    None)
 
     def filtrar(self, grupo):
         """Faz a navegação percorrer só um grupo - ou todos, com `None`.

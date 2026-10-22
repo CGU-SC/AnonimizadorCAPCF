@@ -729,3 +729,107 @@ def test_a_caixa_do_curto_aponta_o_numero_que_se_parece_de_verdade(aplicacao):
     for frase in (dez, nove):
         # A conclusão vem antes do aviso.
         assert frase.index("quase certamente é o CPF") < frase.index("por acaso")
+
+
+# ------------------ o clique no número do texto (acréscimo à nona emenda, etapa 6)
+
+def _clicar_no_texto(tela, aplicacao, posicao_na_tela):
+    """Um clique simples no texto da revisão, no ponto daquela letra."""
+    from PySide6.QtCore import Qt as _Qt
+    from PySide6.QtTest import QTest
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(posicao_na_tela)
+    ponto = tela.texto.cursorRect(cursor).center()
+    QTest.mouseClick(tela.texto.viewport(), _Qt.LeftButton, pos=ponto)
+    aplicacao.processEvents()
+
+
+def test_clicar_no_numero_do_texto_acende_o_item_dele(aplicacao):
+    texto = ("Ana, CPF 111.111.111-11; Ciclano, CPF 777.777.777-78;\n"
+             "| Davi Hipotético  | 0000000000     | R$ 1.500,00 |\n"
+             "Recibo de Otávio, CPF l11.111.111-11.")
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    na_tela = tela.texto_mascarado()
+    terceiro = _achado(tela, "0000000000")
+    # No meio da máscara que cresceu, que é onde a posição mais escorregaria.
+    _clicar_no_texto(tela, aplicacao, na_tela.index("XXX000000XX") + 5)
+
+    item = tela.lista._itens[id(terceiro)]
+    assert item.marcado
+    assert sum(1 for i in tela.lista._itens.values() if i.marcado) == 1
+    assert tela.posicao.text() == "3 de 4"
+    assert not tela.botao_mascarar.isEnabled()
+
+
+def test_clicar_fora_de_numero_nao_muda_nada(aplicacao):
+    texto = "Ana, CPF 111.111.111-11, e mais nada aqui."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    _clicar_no_texto(tela, aplicacao, tela.texto_mascarado().index("nada"))
+    assert not any(i.marcado for i in tela.lista._itens.values())
+    assert tela.posicao.text().startswith("—")
+
+
+def test_marcar_um_trecho_com_o_mouse_continua_como_antes(aplicacao):
+    """Arrastar para marcar não pode levar a tela para o número vizinho."""
+    texto = "Ana, CPF 111.111.111-11; código 1234 5678 910 da ficha."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    # O fim de um arrasto: o trecho já está marcado quando o botão do mouse é
+    # solto - e aqui ele é solto em cima do CPF, o pior caso.
+    from PySide6.QtCore import Qt as _Qt
+    from PySide6.QtTest import QTest
+    _marcar_no_texto(tela, "1234 5678 910")
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(tela.texto_mascarado().index("XXX.111") + 3)
+    ponto = tela.texto.cursorRect(cursor).center()
+    QTest.mouseRelease(tela.texto.viewport(), _Qt.LeftButton, pos=ponto)
+    aplicacao.processEvents()
+
+    assert tela.texto.textCursor().selectedText() == "1234 5678 910"
+    assert tela.botao_mascarar.isEnabled()
+    assert not any(i.marcado for i in tela.lista._itens.values())
+
+
+def test_clicar_no_branco_depois_da_linha_nao_pula_para_o_numero(aplicacao):
+    """Regressão da revisão da etapa 6 (lente crítica).
+
+    A linha termina com um CPF, e a pessoa clica no branco à direita dela. O
+    ponto do clique caía no fim do número, e a tela pulava para ele.
+    """
+    from PySide6.QtCore import QPoint, Qt as _Qt
+    from PySide6.QtTest import QTest
+    texto = "Linha que termina no CPF 111.111.111-11\nOutra linha sem número."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(tela.texto_mascarado().index("\n"))
+    fim_da_linha = tela.texto.cursorRect(cursor).center()
+    QTest.mouseClick(tela.texto.viewport(), _Qt.LeftButton,
+                     pos=fim_da_linha + QPoint(150, 0))
+    aplicacao.processEvents()
+    assert not any(i.marcado for i in tela.lista._itens.values())
+
+    # E a metade direita do último X continua contando.
+    cursor.setPosition(tela.texto_mascarado().index("\n") - 1)
+    ultimo_x = tela.texto.cursorRect(cursor).center() + QPoint(3, 0)
+    QTest.mouseClick(tela.texto.viewport(), _Qt.LeftButton, pos=ultimo_x)
+    aplicacao.processEvents()
+    assert all(i.marcado for i in tela.lista._itens.values())
