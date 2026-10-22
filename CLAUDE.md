@@ -80,6 +80,14 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
   Era asterisco até 18/09/2026, e ele quebrava na tela de quem abre o arquivo:
   num `.md`, `***` e `**` são a marcação de negrito e itálico (sétima emenda da
   spec 003).
+  Reconhece também o **CPF sem o zero da frente**: o número de 10 ou 9 dígitos
+  que, com os zeros de volta na frente, passa na conta do dígito verificador
+  (nona emenda da spec 003, de 20/10/2026, que veio do formulário do SIGPEX do
+  teste da 0.1.0). Só é achado se passar na conta — sem ela, nada o separa de
+  um telefone. Na máscara ele ganha os zeros de volta e sai com 11 dígitos, no
+  mesmo jeito em que estava escrito (`1234567891` → `XXX345678XX`); numa
+  tabela, a coluna é compensada; na revisão, leva a etiqueta "sem o zero da
+  frente".
 - **Motor de OCR**: três na escolha, desde a emenda de 18/10/2026 da spec 002 —
   o PaddleOCR, primeiro e já marcado; o Tesseract, como alternativa; e (fora do
   escopo ainda) uma IA local, na própria máquina (LM Studio) ou num servidor
