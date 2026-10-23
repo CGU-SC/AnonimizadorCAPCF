@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 
 import arquivo_md
 import arquivo_texto
+import arquivo_word
 import cpf
 import estilo
 from caminho_do_pdf import CaminhoDoPdf, FaixaDoTopo
@@ -44,13 +45,17 @@ from telas_de_salvar import (
 from telas_de_salvar_sem_cpf import TelaGravadoSemCpf, TelaSalvarSemCpf
 
 EXTENSOES_DE_TEXTO = (".md", ".txt")
-EXTENSOES_ACEITAS = EXTENSOES_DE_TEXTO + (".pdf",)
+# Só o `.docx`: o `.doc` antigo exigiria o Word instalado, e o `.docm` e o
+# `.dotx` ficaram de fora na décima emenda - quem tiver um deles salva como
+# `.docx` no Word.
+EXTENSAO_DO_WORD = ".docx"
+EXTENSOES_ACEITAS = EXTENSOES_DE_TEXTO + (".pdf", EXTENSAO_DO_WORD)
 
-# Word, planilha e imagem não estão a caminho: eles estão fora do escopo da
-# spec. Dizer "numa etapa seguinte" para eles seria prometer o que o programa
-# nunca vai cumprir - e quem espera não reclama, só some.
+# Planilha, imagem e o Word antigo não estão a caminho: eles estão fora do
+# escopo da spec. Dizer "numa etapa seguinte" para eles seria prometer o que o
+# programa nunca vai cumprir - e quem espera não reclama, só some.
 OUTRO_TIPO = (
-    "O Anonimizar abre PDF, .md e .txt. O {nome} é de outro tipo."
+    "O Anonimizar abre PDF, .docx, .md e .txt. O {nome} é de outro tipo."
 )
 
 
@@ -111,8 +116,8 @@ class PainelAnonimizar(QWidget):
                 "funcionando — veja abaixo o que dá para anonimizar agora."),
             rotulo_de_outro="Escolher outro arquivo",
             lembrete=(
-                "Um .md, um .txt ou um PDF com texto por dentro podem ser "
-                "anonimizados normalmente."),
+                "Um .md, um .txt, um .docx ou um PDF com texto por dentro podem "
+                "ser anonimizados normalmente."),
         )
         self.tela_escolher = self._montar_tela_escolher()
         self.tela_revisao = TelaRevisao(
@@ -236,7 +241,7 @@ class PainelAnonimizar(QWidget):
             "border: none;"
         )
 
-        self.tipos = tipos = QLabel("PDF, .md ou .txt")
+        self.tipos = tipos = QLabel("PDF, .docx, .md ou .txt")
         tipos.setAlignment(Qt.AlignCenter)
         tipos.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
@@ -249,7 +254,7 @@ class PainelAnonimizar(QWidget):
         # falhou, falta uma peça.
         self.lista_sem_motor = QLabel(
             "<b>O que dá para anonimizar agora</b><br>"
-            f"<span style='color:{estilo.COR_SUCESSO}'>✓</span> .md e .txt<br>"
+            f"<span style='color:{estilo.COR_SUCESSO}'>✓</span> .md, .txt e .docx<br>"
             f"<span style='color:{estilo.COR_SUCESSO}'>✓</span> PDF com texto por "
             "dentro, como os do sistema de processos<br>"
             f"<span style='color:{estilo.COR_ALERTA}'>✗</span> PDF escaneado — "
@@ -297,7 +302,7 @@ class PainelAnonimizar(QWidget):
         # uso e outro, nem a última pasta usada (regra RN-19).
         caminho, _ = QFileDialog.getOpenFileName(
             self, "Escolher arquivo", "",
-            "Documentos (*.pdf *.md *.txt)",
+            "Documentos (*.pdf *.docx *.md *.txt)",
         )
         if caminho:
             self.receber_arquivo(Path(caminho))
@@ -332,11 +337,14 @@ class PainelAnonimizar(QWidget):
         # com o nome e a quebra de linha do outro (revisão da etapa 7).
         self.pdf.abandonar_leitura()
         self._conferindo = False
-        if caminho.suffix.lower() not in EXTENSOES_DE_TEXTO:
+        e_word = caminho.suffix.lower() == EXTENSAO_DO_WORD
+        if not e_word and caminho.suffix.lower() not in EXTENSOES_DE_TEXTO:
             self._mostrar_erro(OUTRO_TIPO.format(nome=caminho.name))
             return
         try:
-            texto = ler(caminho)
+            # O Word já tem o texto pronto, como o .md: vai direto para a
+            # revisão, sem leitura de imagem nem conferência (RN-23).
+            texto = arquivo_word.ler(caminho) if e_word else ler(caminho)
         except ArquivoNaoServe as problema:
             self._mostrar_erro(str(problema))
             return
@@ -352,8 +360,10 @@ class PainelAnonimizar(QWidget):
         self._origem = caminho
         self._salvo = False
         # A quebra de linha do documento fica guardada agora, com o arquivo em
-        # mãos: o arquivo gravado sai com a mesma, e não com a do programa.
-        self._quebra_da_origem = quebra_de_linha(caminho)
+        # mãos: o arquivo gravado sai com a mesma, e não com a do programa. O
+        # Word não é arquivo de texto, e não tem quebra de onde herdar.
+        self._quebra_da_origem = (arquivo_texto.QUEBRA_SIMPLES if e_word
+                                  else quebra_de_linha(caminho))
         self._abrir_revisao(texto)
 
     def voltar_para_escolher(self):

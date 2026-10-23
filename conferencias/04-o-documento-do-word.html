@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 04 — o documento do Word</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47;
+    --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d; --cor-erro: #d9534f; --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto);
+         font-family: var(--fonte-texto); font-size: 15px; line-height: 1.55;
+         padding: 32px max(16px, calc((100vw - 1040px) / 2)); }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  code { font-family: var(--fonte-mono); font-size: 13px; }
+  .subtitulo, .nota { color: var(--cor-texto-secundario); }
+  .nota { font-size: 13px; }
+  .selos { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .selo { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+           border-radius: 12px; padding: 2px 12px; font-size: 13px; }
+  .caixa { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+            border-left: 4px solid var(--cor-destaque); border-radius: 6px;
+            padding: 16px 24px; margin: 16px 0; }
+  .rolar { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; font-size: 13px; }
+  .mono { font-family: var(--fonte-mono); white-space: nowrap; }
+  .feito { color: var(--cor-sucesso); font-weight: 600; }
+  .falta { color: var(--cor-texto-secundario); }
+  pre.documento { font-family: var(--fonte-mono); font-size: 12.5px; background: var(--cor-fundo-elevado);
+                   border: 1px solid var(--cor-borda); border-radius: 6px; padding: 16px;
+                   overflow-x: auto; white-space: pre; }
+  .d-valido { color: var(--cor-erro-texto); text-decoration: underline solid var(--cor-erro-texto); text-underline-offset: 3px; }
+  .rodape { margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
+             font-size: 13px; color: var(--cor-texto-secundario); }
+</style>
+</head>
+<body>
+
+<h1>Conferência 04 — o documento do Word</h1>
+<p class="subtitulo">Funcionalidade 5, décima emenda da spec 003. Esta página abre os documentos do Word da
+massa com o programa de verdade e mostra o que ele tirou de dentro deles — o texto que vai para a revisão e,
+depois, para o <code>.md</code>. Ela cresce a cada etapa; o roteiro da sua conferência na tela entra na última.</p>
+
+<div class="caixa">O Word de teste <code>dados-exemplo/18-documento-do-word.docx</code> é inventado e gerado por script
+(<code>dados-exemplo/gerar-massa-word.py</code>). Os CPFs que passam na conta são só de dígitos repetidos
+(RN-22). Um deles está, de propósito, <strong>partido em três pedaços</strong> dentro do Word, como o Word faz
+quando a correção ortográfica passa no meio de um número: só juntando os pedaços na ordem ele aparece inteiro
+para a busca — e mascarado no texto.</div>
+
+<h2>Onde a construção está</h2>
+<div class="rolar"><table>
+  <tr><th>Etapa</th><th>O que ela põe no programa</th><th>Situação</th></tr>
+  <tr><td>1</td><td>O Word abre no Anonimizar, com o corpo do texto: parágrafos, títulos e listas com marcador</td><td class='feito'>no programa</td></tr><tr><td>2</td><td>As tabelas, com barras e colunas alinhadas, a célula mesclada e a de dois parágrafos</td><td class='falta'>a fazer</td></tr><tr><td>3</td><td>Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar</td><td class='falta'>a fazer</td></tr><tr><td>4</td><td>O que o Word guarda e não imprime, e a faixa azul do que ficou de fora</td><td class='falta'>a fazer</td></tr><tr><td>5</td><td>As imagens, e a frase de cada Word que não abre</td><td class='falta'>a fazer</td></tr><tr><td>6</td><td>A lista numerada como o Word mostra, e o roteiro da conferência na tela</td><td class='falta'>a fazer</td></tr>
+</table></div>
+
+<h2>O Word de teste, depois do programa</h2>
+<p class="nota">É este o texto que a revisão mostra, já mascarado. Sublinhado vermelho: CPF válido.</p>
+<div class="selos">
+  <span class="selo">4 números mascarados</span>
+  <span class="selo">0 números achados de novo no texto que sai</span>
+</div>
+<pre class="documento"># Relatório de execução
+
+Projeto Exemplo de Extensão — termo de outorga nº 4521/2026.
+
+# Identificação
+
+Coordenadora: Ana Suposta Lima, CPF <span class="d-valido">XXX.111.111-XX</span>.
+
+Vice-coordenador: Davi Hipotético, CPF <span class="d-valido">XXX.222.222-XX</span>.
+
+## Bolsistas
+
+- Ivo Fictício, CPF <span class="d-valido">XXX.333.333-XX</span>
+  - bolsa de extensão, 12 parcelas
+- Otávio Suposto, CPF <span class="d-valido">XXX.444.444-XX</span>
+
+## Prestação de contas
+
+Saldo devolvido à conta do projeto.
+
+Florianópolis, 30 de setembro de 2026.</pre>
+
+<h2>Os Words que não abrem</h2>
+<p class="nota">Cada um volta à escolha do arquivo, com a frase que a tela de erro mostra.</p>
+<div class="rolar"><table>
+  <tr><th>Arquivo</th><th>O que ele é</th><th>A frase</th></tr>
+  <tr><td class='mono'>19-nao-e-word.docx</td><td>um arquivo de texto comum com o nome trocado para .docx</td><td>O 19-nao-e-word.docx não pôde ser lido como documento do Word: ele pode estar estragado ou ser outro tipo de arquivo com o nome trocado.</td></tr>
+</table></div>
+
+<p class="rodape">Página gerada em 23/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-08-construtor-de-funcionalidades, a partir do resultado do programa sobre a massa
+(<code>conferencias/gerar-04-o-documento-do-word.py</code>). Todos os nomes e números são inventados; os que
+passam na conta são só de dígitos repetidos (RN-22).</p>
+</body>
+</html>

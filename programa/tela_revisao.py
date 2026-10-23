@@ -423,8 +423,13 @@ class TelaRevisao(QWidget):
         self._texto = texto
         self._atual = None
         self._filtro = None
+        # O Word chega aqui já transformado em texto, com títulos e tabelas
+        # remontados: dizer "documento do Word" explica por que o texto não tem
+        # a cara do documento aberto no Word (rascunho 10).
+        tipo = ("documento do Word" if nome_da_origem.lower().endswith(".docx")
+                else "arquivo de texto")
         self.legenda.setText(
-            f"{nome_da_origem} — arquivo de texto. Aqui não se digita: só se "
+            f"{nome_da_origem} — {tipo}. Aqui não se digita: só se "
             "mascara e se desfaz a máscara."
         )
         self._desenhar()

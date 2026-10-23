@@ -78,6 +78,27 @@ que passa na conta sem ser de dígitos repetidos.
 | `16-planilha-renomeada.md` | bytes de planilha com o nome trocado para `.md` | o erro de arquivo que não é texto |
 | `17-cpf-sem-o-zero.md` | ficha de bolsistas exportada de um sistema que perde o zero da frente, com frases de recibo, um telefone e as parcelas numa linha cada | a nona emenda inteira: o curto de 10 e de 9 dígitos nos formatos da RN-1, a coluna da tabela reta depois da máscara, o grudado em "CPF", o telefone que fecha a conta por acaso (para liberar), o curto com o "12" na linha de baixo (revisão 33), e os sete que ficam inteiros: falha na conta, letra, espaços, colado por barra, forma de CNPJ e 8 dígitos. É o arquivo da conferência 03 |
 
+## Os documentos do Word, do Anonimizar
+
+Os arquivos a partir do `18` são documentos do Word (`.docx`) inventados, da
+décima emenda da spec 003 (funcionalidade 5). Saem de um terceiro script, que
+monta o `.docx` peça por peça com o que já vem no Python — nenhum documento de
+verdade serve de modelo. Para refazê-los, da raiz do projeto:
+
+```
+.\.venv\Scripts\python.exe dados-exemplo\gerar-massa-word.py
+```
+
+Saem idênticos toda vez: a data de cada peça dentro do pacote é fixa. Os CPFs
+seguem a mesma regra da massa de texto, e o teste que vigia esta pasta abre
+cada `.docx` e lê todas as peças de dentro dele — inclusive as que o programa
+não leva para a revisão, como um comentário.
+
+| Arquivo | O que ele é | O que ele existe para testar |
+| --- | --- | --- |
+| `18-documento-do-word.docx` | relatório de execução de um projeto inventado, com títulos, lista de bolsistas com subitem e um estilo próprio que herda do "Título 2" | o caminho do Word inteiro, crescendo a cada etapa da construção. Um CPF está partido em três pedaços dentro do Word, como a correção ortográfica faz, e só aparece inteiro para a busca se os pedaços forem juntados na ordem. É o arquivo da conferência 04 |
+| `19-nao-e-word.docx` | texto comum com o nome trocado para `.docx` | o Word "estragado", que dá a frase dele e volta à escolha (RN-30) |
+
 ## Uma observação honesta sobre o `04`
 
 O documento de verdade que motivou esse caso tem a tabela de caracteres

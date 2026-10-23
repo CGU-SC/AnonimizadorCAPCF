@@ -203,18 +203,58 @@ def test_ignorar_o_texto_leva_a_tela_de_ler_e_ela_volta_a_decisao(aplicacao):
 
 
 def test_arquivo_de_outro_tipo_nao_promete_etapa_seguinte(aplicacao, tmp_path):
-    """Regressão da revisão da etapa 2: o .docx recebia a frase do PDF.
+    """Regressão da revisão da etapa 2: o .docx recebia a frase do PDF. Desde
+    a décima emenda o Word entra, e o exemplo de outro tipo passa a planilha.
 
-    Word e planilha estão fora do escopo da spec: não entram nesta versão nem
-    nas seguintes, e a tela não pode sugerir que entram.
+    A planilha está fora do escopo da spec: não entra nesta versão nem nas
+    seguintes, e a tela não pode sugerir que entra.
     """
-    arquivo = tmp_path / "relatorio.docx"
+    arquivo = tmp_path / "relatorio.xlsx"
     arquivo.write_bytes(b"PK")
     painel = PainelAnonimizar()
     painel.receber_arquivo(arquivo)
     frase = painel.tela_erro.explicacao.text()
     assert "de outro tipo" in frase
+    assert ".docx" in frase
     assert "etapa seguinte" not in frase
+
+
+def test_os_words_que_ficaram_de_fora_sao_de_outro_tipo(aplicacao, tmp_path):
+    """O .doc antigo, o .docm e o .dotx não entram (décima emenda)."""
+    for nome in ("antigo.doc", "com-macro.docm", "modelo.dotx"):
+        arquivo = tmp_path / nome
+        arquivo.write_bytes(b"PK")
+        painel = PainelAnonimizar()
+        painel.receber_arquivo(arquivo)
+        assert painel.telas.currentWidget() is painel.tela_erro, nome
+        assert "de outro tipo" in painel.tela_erro.explicacao.text(), nome
+
+
+def test_o_word_da_massa_abre_na_revisao(aplicacao):
+    """O .docx vai direto para a revisão, sem leitura nem conferência (RN-23).
+
+    O CPF partido em pedaços dentro do Word chega inteiro à busca, e sai
+    mascarado como qualquer outro.
+    """
+    painel = _painel_com("18-documento-do-word.docx", aplicacao)
+    assert painel.telas.currentWidget() is painel.tela_revisao
+    na_tela = painel.tela_revisao.texto_mascarado()
+    assert cpf.procurar(na_tela) == []
+    assert "XXX.222.222-XX" in na_tela
+    assert "documento do Word" in painel.tela_revisao.legenda.text()
+    assert painel._quebra_da_origem == "\n"
+
+
+def test_um_arquivo_qualquer_com_nome_de_docx_nao_trava(aplicacao):
+    painel = _painel_com("19-nao-e-word.docx", aplicacao)
+    assert painel.telas.currentWidget() is painel.tela_erro
+    assert "estragado" in painel.tela_erro.explicacao.text()
+
+
+def test_a_tela_de_escolher_cita_o_word(aplicacao):
+    painel = PainelAnonimizar()
+    assert painel.tipos.text() == "PDF, .docx, .md ou .txt"
+    assert ".docx" in painel.lista_sem_motor.text()
 
 
 def test_sair_da_revisao_solta_o_texto(aplicacao):

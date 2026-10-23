@@ -5,6 +5,7 @@ números da própria spec. Os que passam na conta são só de dígitos repetidos
 os suspeitos falham na conta mesmo com as letras trocadas de volta (RN-22).
 """
 import ast
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -359,6 +360,19 @@ def _textos_da_massa():
                     break
                 except UnicodeDecodeError:
                     continue
+        elif arquivo.suffix == ".docx":
+            # O Word é lido peça por peça, e não pelo texto que o programa
+            # tira dele: um CPF num comentário ou num trecho apagado não vai
+            # para a revisão, mas está dentro do arquivo versionado do mesmo
+            # jeito (décima emenda).
+            try:
+                with zipfile.ZipFile(arquivo) as pacote:
+                    for peca in pacote.namelist():
+                        if peca.endswith(".xml"):
+                            yield (f"{arquivo.name}:{peca}",
+                                   pacote.read(peca).decode("utf-8"))
+            except zipfile.BadZipFile:
+                yield arquivo.name, arquivo.read_bytes().decode("utf-8", "replace")
         elif arquivo.suffix == ".pdf":
             try:
                 with pymupdf.open(arquivo) as documento:
@@ -480,10 +494,17 @@ def test_o_anonimizar_inteiro_nao_fala_com_a_internet():
     arquivos = _arquivos_do_anonimizar()
     # A varredura só vale se ela estiver mesmo pegando o módulo, e não um
     # arquivo solto: as peças centrais têm que estar na lista.
-    for peca in ("cpf", "tela_revisao", "telas_de_salvar_sem_cpf", "arquivo_md"):
+    for peca in ("cpf", "tela_revisao", "telas_de_salvar_sem_cpf", "arquivo_md",
+                 "arquivo_word"):
         assert peca in arquivos, peca
     for nome in arquivos:
         codigo = (PROGRAMA / f"{nome}.py").read_text(encoding="utf-8").lower()
+        # O endereço do formato do Word é o "sobrenome" das marcações dentro
+        # do .docx, escrito em todo documento - o programa nunca o visita. Só
+        # ele sai da conta; qualquer outro endereço continua barrado
+        # (décima emenda).
+        codigo = codigo.replace(
+            "http://schemas.openxmlformats.org/wordprocessingml/", "")
         for sinal in ("http", "socket", "urllib", "requests", "ftplib"):
             assert sinal not in codigo, f"{nome}.py: {sinal}"
 
