@@ -2,14 +2,16 @@
 
 Por dentro, o `.docx` é um pacote compactado (um `.zip` com outro nome) de
 arquivos de texto com marcações - o XML. O corpo do documento mora no
-`word/document.xml`. O programa abre esse pacote com o que já vem no próprio
-Python, sem biblioteca nova (décima emenda da spec 003, decisão de 23/10/2026):
-a de PDF que o programa usa só abre Word na versão paga, e a python-docx não lê
-caixa de texto, nota nem alteração controlada.
+`word/document.xml`; o cabeçalho, o rodapé e as notas, em peças ao lado dele.
+O programa abre esse pacote com o que já vem no próprio Python, sem biblioteca
+nova (décima emenda da spec 003, decisão de 23/10/2026): a de PDF que o
+programa usa só abre Word na versão paga, e a python-docx não lê caixa de
+texto, nota nem alteração controlada.
 
-O que sai daqui é o texto do documento já no formato do `.md` - títulos com
-`#`, listas com `-` -, pronto para a revisão. Nenhuma macro é executada e nada
-sai da máquina: o programa só lê texto (RN-20 e RN-23).
+O que sai daqui é o texto do documento impresso já no formato do `.md` - títulos
+com `#`, listas com `-`, tabelas com barras, notas com `[^1]` -, pronto para a
+revisão. Nenhuma macro é executada e nada sai da máquina: o programa só lê
+texto (RN-20 e RN-23).
 """
 import zipfile
 import zlib
@@ -21,6 +23,8 @@ from arquivo_texto import ArquivoNaoServe
 # O endereço que o Word põe na frente de cada marcação do documento. O
 # ElementTree escreve as marcações com ele por extenso, entre chaves.
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+R = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+LIGACAO = "{http://schemas.openxmlformats.org/package/2006/relationships}Relationship"
 
 # Nomes que o Word grava em inglês mesmo no Word em português: "heading 1" é o
 # "Título 1" da tela, e "title" é o "Título" (RN-28).
@@ -29,6 +33,10 @@ PREFIXO_DE_TITULO = "heading "
 
 # Até que nível de título o `.md` tem marcação: de `#` a `######`.
 NIVEL_MAXIMO = 6
+
+# A ordem em que os cabeçalhos (e os rodapés) de uma mesma parte do documento
+# aparecem: o da primeira página vem antes do das outras.
+TIPOS_DE_CABECALHO = ("first", "default", "even")
 
 ESTRAGADO = (
     "O {nome} não pôde ser lido como documento do Word: ele pode estar "
@@ -39,44 +47,378 @@ ESTRAGADO = (
 def ler(caminho):
     """O texto do documento do Word, no formato do `.md`.
 
-    Arquivo que não é um pacote do Word, ou que não tem a parte do corpo, dá
-    a frase de "estragado" (RN-30) e não chega à revisão.
+    A ordem é a do documento impresso (RN-24): o cabeçalho, o corpo, o rodapé
+    e, no fim, as notas. Arquivo que não é um pacote do Word, ou que não tem a
+    parte do corpo, dá a frase de "estragado" (RN-30) e não chega à revisão.
     """
     caminho = Path(caminho)
     try:
         with zipfile.ZipFile(caminho) as pacote:
-            corpo = ElementTree.fromstring(pacote.read("word/document.xml"))
-            estilos = _estilos(pacote)
+            return _Leitura(pacote).texto()
     # O pacote pode abrir e o conteúdo de dentro estar estragado: um byte
     # trocado no meio dá erro de descompactação (zlib.error), e um Word
     # compactado num formato que o Python não lê dá NotImplementedError. Os dois
     # escapavam e deixavam a tela parada, sem frase nenhuma (lente crítica da
     # etapa 1).
     except (zipfile.BadZipFile, KeyError, ElementTree.ParseError, zlib.error,
-            EOFError, NotImplementedError):
+            EOFError, NotImplementedError, _SemCorpo):
         raise ArquivoNaoServe(ESTRAGADO.format(nome=caminho.name))
 
-    documento = corpo.find(f"{W}body")
-    if documento is None:
-        raise ArquivoNaoServe(ESTRAGADO.format(nome=caminho.name))
-    return _juntar_blocos(_blocos(documento, estilos))
+
+class _SemCorpo(Exception):
+    """O pacote abriu, mas o documento não tem a parte do corpo."""
 
 
-# ------------------------------------------------------------------ estilos
+class _Leitura:
+    """Uma passada pelo documento, guardando o que precisa ser lembrado.
 
-def _estilos(pacote):
+    As notas ganham número na ordem em que são chamadas no texto, e a caixa de
+    texto sai depois do parágrafo em que está presa: as duas coisas só se sabem
+    andando pelo documento na ordem, e é isto que esta leitura guarda.
+    """
+
+    def __init__(self, pacote):
+        self.pacote = pacote
+        self.estilos = _estilos(self._peca("word/styles.xml"))
+        self.ligacoes = self._ligacoes()
+        ajustes = self._peca("word/settings.xml")
+        # "Páginas pares e ímpares diferentes" é uma opção do documento
+        # inteiro; sem ela, o cabeçalho das páginas pares nunca é impresso.
+        self.pares_diferentes = _ligado(
+            ajustes.find(f"{W}evenAndOddHeaders") if ajustes is not None else None)
+        # As notas chamadas no texto, na ordem: (tipo, código da nota no Word).
+        self.notas_chamadas = []
+        # O número de cada nota, depois que a ordem delas é conhecida.
+        self.numeros = None
+
+    def texto(self):
+        raiz = self._peca("word/document.xml")
+        corpo = raiz.find(f"{W}body") if raiz is not None else None
+        if corpo is None:
+            raise _SemCorpo()
+        # Duas passadas pelo corpo. A primeira só descobre a ordem em que as
+        # notas são chamadas: as de fim continuam a numeração das de rodapé, e
+        # o número de uma nota de fim só se sabe depois de contar todas as de
+        # rodapé. A segunda escreve o texto já com os números certos - um
+        # número posto depois entortaria a coluna da tabela em que a nota é
+        # chamada.
+        list(self._blocos(corpo))
+        ordem = ([n for n in self.notas_chamadas if n[0] == "footnote"]
+                 + [n for n in self.notas_chamadas if n[0] == "endnote"])
+        self.numeros = {nota: numero for numero, nota in enumerate(ordem, start=1)}
+        blocos_do_corpo = list(self._blocos(corpo))
+        blocos = (self._partes_de_borda(corpo, "headerReference")
+                  + blocos_do_corpo
+                  + self._partes_de_borda(corpo, "footerReference"))
+        texto = _juntar_blocos(blocos)
+        notas = self._notas()
+        return texto + "\n\n" + notas if notas and texto else texto or notas
+
+    # -------------------------------------------------------- peças do pacote
+
+    def _peca(self, nome):
+        """Uma peça do pacote já lida, ou None quando o documento não a tem."""
+        try:
+            return ElementTree.fromstring(self.pacote.read(nome))
+        except KeyError:
+            return None
+
+    def _ligacoes(self):
+        """De cada código de ligação do corpo, a peça do pacote a que ele leva.
+
+        O corpo não diz "header1.xml": ele diz "rId7", e a lista do que cada
+        código quer dizer mora numa peça à parte.
+        """
+        raiz = self._peca("word/_rels/document.xml.rels")
+        ligacoes = {}
+        for ligacao in (raiz.iter(LIGACAO) if raiz is not None else ()):
+            alvo = ligacao.get("Target") or ""
+            if ligacao.get("TargetMode") == "External":
+                continue  # endereço de internet de um link: nunca é aberto
+            ligacoes[ligacao.get("Id")] = (alvo.lstrip("/") if alvo.startswith("/")
+                                           else "word/" + alvo)
+        return ligacoes
+
+    # ------------------------------------------------ cabeçalho e rodapé
+
+    def _partes_de_borda(self, corpo, marcacao):
+        """Os cabeçalhos (ou os rodapés) do documento, cada diferente uma vez.
+
+        Cada parte do documento (cada "seção" do Word) diz qual cabeçalho usa.
+        Quase sempre é o mesmo em todas, e ele aparece uma vez só; havendo um
+        diferente, ele aparece também, na ordem em que surge (RN-24).
+        """
+        # A marca de seção guardada dentro de uma alteração controlada é a de
+        # antes da alteração: o cabeçalho que ela cita foi trocado, e o
+        # documento com tudo aceito não o tem mais (RN-25, lente crítica da
+        # etapa 3).
+        antigas = {id(secao) for mudanca in corpo.iter(f"{W}sectPrChange")
+                   for secao in mudanca.iter(f"{W}sectPr")}
+        vistos, blocos = set(), []
+        for secao in corpo.iter(f"{W}sectPr"):
+            if id(secao) in antigas:
+                continue
+            referencias = {ref.get(f"{W}type", "default"): ref.get(f"{R}id")
+                           for ref in secao.findall(f"{W}{marcacao}")}
+            # O Word guarda o cabeçalho da primeira página (e o das pares)
+            # mesmo depois de a opção ser desligada. Só entra o que é impresso:
+            # o da primeira página com "Primeira página diferente" ligada, e o
+            # das pares com "Pares e ímpares diferentes" (lente crítica da
+            # etapa 3).
+            if not _ligado(secao.find(f"{W}titlePg")):
+                referencias.pop("first", None)
+            if not self.pares_diferentes:
+                referencias.pop("even", None)
+            for tipo in TIPOS_DE_CABECALHO:
+                peca = self.ligacoes.get(referencias.get(tipo))
+                raiz = self._peca(peca) if peca else None
+                if raiz is None:
+                    continue
+                dela = list(self._blocos(raiz))
+                chave = _juntar_blocos(dela)
+                if chave and chave not in vistos:
+                    vistos.add(chave)
+                    blocos += dela
+        return blocos
+
+    # -------------------------------------------------------------- notas
+
+    def _notas(self):
+        """As notas, numeradas na ordem em que foram chamadas no texto.
+
+        As de rodapé vêm primeiro, de 1 em diante, e as de fim continuam a
+        numeração (premissa da décima emenda). Cada uma sai no formato de nota
+        do `.md`, `[^1]: texto`, que o assistente de IA reconhece.
+        """
+        pecas = {"footnote": self._peca("word/footnotes.xml"),
+                 "endnote": self._peca("word/endnotes.xml")}
+        linhas = []
+        for (tipo, codigo), numero in self.numeros.items():
+            texto = ""
+            raiz = pecas[tipo]
+            for nota in (raiz.findall(f"{W}{tipo}") if raiz is not None else ()):
+                if nota.get(f"{W}id") == codigo:
+                    partes = []
+                    self._partes_da_celula(nota, partes, na_tabela=False)
+                    texto = SEPARADOR_NA_CELULA.join(partes)
+            linhas.append(f"[^{numero}]: {texto}".rstrip())
+        return "\n".join(linhas)
+
+    def _marca_da_nota(self, tipo, codigo):
+        """A marca `[^n]` no ponto do texto em que a nota é chamada.
+
+        Na primeira passada pelo corpo a nota só é anotada, e a marca fica
+        vazia; na segunda, ela já tem número (veja `texto`).
+        """
+        if self.numeros is None:
+            if (tipo, codigo) not in self.notas_chamadas:
+                self.notas_chamadas.append((tipo, codigo))
+            return ""
+        numero = self.numeros.get((tipo, codigo))
+        # Uma nota chamada fora do corpo (de dentro de um cabeçalho, que o Word
+        # não grava, mas outro programa pode) fica sem número e sem marca, e o
+        # resto do documento abre. Antes, ela fazia o documento inteiro ser
+        # recusado como "estragado" (lente crítica da etapa 3).
+        return f"[^{numero}]" if numero else ""
+
+    # ------------------------------------------------------------- blocos
+
+    def _blocos(self, no):
+        """Os parágrafos e tabelas, na ordem, cada um com o seu jeito de sair.
+
+        Cada bloco é (texto, é item de lista).
+        """
+        for filho in no:
+            nome = _nome(filho)
+            if nome == "p":
+                caixas = []
+                bloco = self._paragrafo(filho, caixas)
+                if bloco:
+                    yield bloco
+                # A caixa de texto sai logo depois do parágrafo em que está
+                # presa, uma vez só (RN-24).
+                for conteudo in caixas:
+                    yield from self._blocos(conteudo)
+            elif nome == "tbl":
+                tabela = self._tabela(filho)
+                if tabela:
+                    yield tabela, False
+            elif nome in EMBRULHOS_DE_BLOCO:
+                yield from self._blocos(filho)
+
+    def _paragrafo(self, paragrafo, caixas):
+        texto = self._texto_do_paragrafo(paragrafo, caixas).strip()
+        if not texto:
+            return None
+        nivel = _nivel_do_titulo(paragrafo, self.estilos)
+        if nivel:
+            return "#" * nivel + " " + texto, False
+        profundidade = _profundidade_na_lista(paragrafo)
+        if profundidade is not None:
+            # Dois espaços por nível é o recuo que o `.md` entende como subitem
+            # de uma lista com marcador.
+            return "  " * profundidade + "- " + texto, True
+        return texto, False
+
+    # ------------------------------------------------------------- tabelas
+
+    def _tabela(self, tabela):
+        """A tabela do Word como tabela do `.md`, com barras e colunas alinhadas.
+
+        A primeira linha vira o cabeçalho, que é como o `.md` monta toda tabela.
+        Tabela sem nenhum texto não sai: seria só um desenho de barras vazio.
+        """
+        linhas = [self._celulas_da_linha(linha) for linha in _filhos(tabela, "tr")]
+        if not any(any(celula for celula in linha) for linha in linhas):
+            return None
+        colunas = max(len(linha) for linha in linhas)
+        linhas = [linha + [""] * (colunas - len(linha)) for linha in linhas]
+        larguras = [max(LARGURA_MINIMA, *(len(linha[i]) for linha in linhas))
+                    for i in range(colunas)]
+
+        def montar(celulas):
+            return "| " + " | ".join(
+                texto.ljust(largura) for texto, largura in zip(celulas, larguras)) + " |"
+
+        saida = [montar(linhas[0]), montar(["-" * largura for largura in larguras])]
+        saida += [montar(linha) for linha in linhas[1:]]
+        return "\n".join(saida)
+
+    def _celulas_da_linha(self, linha):
+        """O texto de cada posição da linha, com as posições vazias no lugar.
+
+        A célula mesclada na horizontal ocupa várias posições: o texto fica na
+        primeira, e as outras ficam vazias (RN-27). A mesclada na vertical o
+        Word já grava vazia nas linhas de baixo. Cada texto aparece uma vez só,
+        como no Word - repetido, um CPF seria contado e liberado mais de uma
+        vez na revisão.
+        """
+        celulas = []
+        propriedades = linha.find(f"{W}trPr")
+        # As posições que a linha pula no começo, quando ela começa mais para
+        # a direita que as outras.
+        celulas += [""] * _numero(_valor(propriedades, "gridBefore"))
+        for celula in _filhos(linha, "tc"):
+            partes = []
+            self._partes_da_celula(celula, partes)
+            celulas.append(SEPARADOR_NA_CELULA.join(partes))
+            ocupa = _numero(_valor(celula.find(f"{W}tcPr"), "gridSpan"), 1)
+            celulas += [""] * (ocupa - 1)
+        return celulas
+
+    def _partes_da_celula(self, no, partes, na_tabela=True):
+        """Os parágrafos da célula, um por parte, para irem numa linha só.
+
+        Na célula, os parágrafos ficam separados por ` / ` (RN-27); a tabela
+        dentro de outra entra do mesmo jeito, como texto corrido; e a caixa de
+        texto presa num parágrafo da célula entra logo depois dele. A nota de
+        rodapé usa o mesmo arranjo, por isso `na_tabela` diz se a barra
+        vertical do texto precisa ser protegida.
+        """
+        for filho in no:
+            nome = _nome(filho)
+            if nome == "p":
+                caixas = []
+                texto = self._texto_do_paragrafo(filho, caixas)
+                # Uma quebra de linha dentro do parágrafo é outra linha da
+                # célula; a tabulação vira espaço. Na tabela, a barra vertical
+                # do texto sai como `\|`, senão ela partiria a coluna em duas.
+                texto = texto.replace("\n", SEPARADOR_NA_CELULA).replace("\t", " ")
+                if na_tabela:
+                    texto = texto.replace("|", "\\|")
+                if texto.strip():
+                    partes.append(texto.strip())
+                # A caixa de texto presa na célula é lida como o resto da
+                # célula: a barra protegida e a tabela de dentro dela como
+                # texto corrido. Lida como bloco solto, ela partia a tabela de
+                # fora em colunas a mais (lente crítica da etapa 3).
+                for conteudo in caixas:
+                    self._partes_da_celula(conteudo, partes, na_tabela)
+            elif nome == "tbl":
+                for linha in _filhos(filho, "tr"):
+                    for celula in _filhos(linha, "tc"):
+                        self._partes_da_celula(celula, partes, na_tabela)
+            elif nome in EMBRULHOS_DE_BLOCO:
+                self._partes_da_celula(filho, partes, na_tabela)
+
+    # ------------------------------------------------- o texto do parágrafo
+
+    def _texto_do_paragrafo(self, paragrafo, caixas):
+        partes = []
+        self._ler_pedacos(paragrafo, partes, caixas)
+        return "".join(partes)
+
+    def _ler_pedacos(self, no, partes, caixas):
+        """Junta o texto do parágrafo, pedaço por pedaço, na ordem.
+
+        O Word corta o texto em pedaços onde quiser - uma mudança de fonte, a
+        correção ortográfica - e um número pode vir partido entre dois. Juntar
+        na ordem devolve o número inteiro, e é ele que a busca do CPF vai ver.
+
+        O trecho apagado com o controle de alterações (`del`) não entra: o
+        documento sai como ficaria com tudo aceito (RN-25).
+        """
+        for filho in no:
+            nome = _nome(filho)
+            if nome == "r":
+                self._ler_trecho(filho, partes, caixas)
+            elif nome in EMBRULHOS:
+                self._ler_pedacos(filho, partes, caixas)
+
+    def _ler_trecho(self, trecho, partes, caixas):
+        for filho in trecho:
+            nome = _nome(filho)
+            if nome == "t":
+                partes.append(filho.text or "")
+            elif nome == "tab":
+                partes.append("\t")
+            elif nome in ("br", "cr"):
+                partes.append("\n")
+            elif nome == "noBreakHyphen":
+                partes.append("-")
+            elif nome == "footnoteReference":
+                partes.append(self._marca_da_nota("footnote", filho.get(f"{W}id")))
+            elif nome == "endnoteReference":
+                partes.append(self._marca_da_nota("endnote", filho.get(f"{W}id")))
+            elif nome in ("AlternateContent", "drawing", "pict"):
+                caixas += _conteudos_de_caixa(filho)
+
+
+def _conteudos_de_caixa(no):
+    """O miolo de cada caixa de texto de um desenho, uma vez cada.
+
+    O Word grava a caixa de texto duas vezes: no jeito de hoje e num jeito
+    antigo, para versões velhas do Word, lado a lado. Só o primeiro jeito é
+    lido; os dois juntos fariam o texto da caixa - e um CPF dentro dela -
+    aparecer duas vezes.
+
+    E a busca não entra no miolo de uma caixa já achada: a caixa dentro dela é
+    achada de novo quando o miolo for lido. Entrando, ela saía duas ou três
+    vezes (lente crítica da etapa 3).
+    """
+    nome = _nome(no)
+    if nome == "txbxContent":
+        return [no]
+    if nome == "AlternateContent":
+        escolhas = [filho for filho in no if _nome(filho) in ("Choice", "Fallback")]
+        return _conteudos_de_caixa(escolhas[0]) if escolhas else []
+    achados = []
+    for filho in no:
+        achados += _conteudos_de_caixa(filho)
+    return achados
+
+
+# ----------------------------------------------------------------- estilos
+
+def _estilos(raiz):
     """Os estilos do documento, pelo código que o parágrafo usa para citá-los.
 
     O parágrafo não diz "Título 1": ele diz o código do estilo, que muda de
     documento para documento (e com o idioma do Word). O nome de verdade e o
     estilo de que ele herda moram no `word/styles.xml`.
     """
-    try:
-        raiz = ElementTree.fromstring(pacote.read("word/styles.xml"))
-    except KeyError:
-        return {}
     estilos = {}
-    for estilo in raiz.iter(f"{W}style"):
+    for estilo in (raiz.iter(f"{W}style") if raiz is not None else ()):
         nome = estilo.find(f"{W}name")
         base = estilo.find(f"{W}basedOn")
         estilos[estilo.get(f"{W}styleId")] = (
@@ -130,45 +472,27 @@ def _nivel_de_topico(propriedades):
     return 0
 
 
-# ------------------------------------------------------------------- blocos
+# ------------------------------------------------------------------ blocos
 
 # O controle de conteúdo do Word (um campo de formulário, um bloco de citação)
 # só embrulha parágrafos, linhas ou células: entra-se nele e segue-se a ordem de
 # dentro.
 EMBRULHOS_DE_BLOCO = ("sdt", "sdtContent", "customXml")
 
-def _blocos(no, estilos):
-    """Os parágrafos do documento, na ordem, cada um com o seu jeito de sair.
+# O que embrulha um pedaço do parágrafo sem mudar o texto dele: o link, o
+# trecho inserido com o controle de alterações ligado, o campo simples, as
+# marcas de idioma. Entra-se e lê-se o que está dentro.
+EMBRULHOS = EMBRULHOS_DE_BLOCO + ("hyperlink", "ins", "smartTag", "fldSimple",
+                                  "moveTo", "dir", "bdo")
 
-    Cada bloco é (texto, é item de lista).
-    """
-    for filho in no:
-        nome = _nome(filho)
-        if nome == "p":
-            bloco = _paragrafo(filho, estilos)
-            if bloco:
-                yield bloco
-        elif nome == "tbl":
-            tabela = _tabela(filho)
-            if tabela:
-                yield tabela, False
-        elif nome in EMBRULHOS_DE_BLOCO:
-            yield from _blocos(filho, estilos)
+# Entre dois parágrafos da mesma célula. O `.md` não aceita quebra de linha
+# dentro da célula da tabela, e os espaços dos dois lados impedem que a barra
+# grude num número - grudada, ela faria um CPF parecer ligado a outro (RN-3).
+SEPARADOR_NA_CELULA = " / "
 
-
-def _paragrafo(paragrafo, estilos):
-    texto = _texto_do_paragrafo(paragrafo).strip()
-    if not texto:
-        return None
-    nivel = _nivel_do_titulo(paragrafo, estilos)
-    if nivel:
-        return "#" * nivel + " " + texto, False
-    profundidade = _profundidade_na_lista(paragrafo)
-    if profundidade is not None:
-        # Dois espaços por nível é o recuo que o `.md` entende como subitem
-        # de uma lista com marcador.
-        return "  " * profundidade + "- " + texto, True
-    return texto, False
+# A linha de separação de baixo do cabeçalho precisa de pelo menos três traços
+# para o `.md` reconhecer a tabela.
+LARGURA_MINIMA = 3
 
 
 def _profundidade_na_lista(paragrafo):
@@ -181,108 +505,7 @@ def _profundidade_na_lista(paragrafo):
     marca = propriedades.find(f"{W}numPr") if propriedades is not None else None
     if marca is None or _valor(marca, "numId") in (None, "0"):
         return None
-    nivel = _valor(marca, "ilvl")
-    return int(nivel) if nivel and nivel.isdigit() else 0
-
-
-# ------------------------------------------------------------------- tabelas
-
-# Entre dois parágrafos da mesma célula. O `.md` não aceita quebra de linha
-# dentro da célula da tabela, e os espaços dos dois lados impedem que a barra
-# grude num número - grudada, ela faria um CPF parecer ligado a outro (RN-3).
-SEPARADOR_NA_CELULA = " / "
-
-# A linha de separação de baixo do cabeçalho precisa de pelo menos três traços
-# para o `.md` reconhecer a tabela.
-LARGURA_MINIMA = 3
-
-
-def _tabela(tabela):
-    """A tabela do Word como tabela do `.md`, com barras e colunas alinhadas.
-
-    A primeira linha vira o cabeçalho, que é como o `.md` monta toda tabela.
-    Tabela sem nenhum texto não sai: seria só um desenho de barras vazio.
-    """
-    linhas = [_celulas_da_linha(linha) for linha in _filhos(tabela, "tr")]
-    if not any(any(celula for celula in linha) for linha in linhas):
-        return None
-    colunas = max(len(linha) for linha in linhas)
-    linhas = [linha + [""] * (colunas - len(linha)) for linha in linhas]
-    larguras = [max(LARGURA_MINIMA, *(len(linha[i]) for linha in linhas))
-                for i in range(colunas)]
-
-    def montar(celulas):
-        return "| " + " | ".join(
-            texto.ljust(largura) for texto, largura in zip(celulas, larguras)) + " |"
-
-    saida = [montar(linhas[0]), montar(["-" * largura for largura in larguras])]
-    saida += [montar(linha) for linha in linhas[1:]]
-    return "\n".join(saida)
-
-
-def _celulas_da_linha(linha):
-    """O texto de cada posição da linha, com as posições vazias no lugar.
-
-    A célula mesclada na horizontal ocupa várias posições: o texto fica na
-    primeira, e as outras ficam vazias (RN-27). A mesclada na vertical o Word
-    já grava vazia nas linhas de baixo. Cada texto aparece uma vez só, como no
-    Word - repetido, um CPF seria contado e liberado mais de uma vez na revisão.
-    """
-    celulas = []
-    propriedades = linha.find(f"{W}trPr")
-    # As posições que a linha pula no começo, quando ela começa mais para a
-    # direita que as outras.
-    celulas += [""] * _numero(_valor(propriedades, "gridBefore"))
-    for celula in _filhos(linha, "tc"):
-        celulas.append(_texto_da_celula(celula))
-        ocupa = _numero(_valor(celula.find(f"{W}tcPr"), "gridSpan"), 1)
-        celulas += [""] * (ocupa - 1)
-    return celulas
-
-
-def _texto_da_celula(celula):
-    """Os parágrafos da célula numa linha só, separados por ` / ` (RN-27).
-
-    A tabela dentro de outra entra do mesmo jeito: o texto de cada célula dela,
-    na ordem, como texto corrido na célula de fora.
-    """
-    partes = []
-    _partes_da_celula(celula, partes)
-    return SEPARADOR_NA_CELULA.join(partes)
-
-
-def _partes_da_celula(no, partes):
-    for filho in no:
-        nome = _nome(filho)
-        if nome == "p":
-            texto = _texto_do_paragrafo(filho)
-            # Uma quebra de linha dentro do parágrafo é outra linha da célula;
-            # a tabulação vira espaço. A barra vertical do texto sai como `\|`,
-            # senão ela partiria a coluna em duas.
-            texto = (texto.replace("\n", SEPARADOR_NA_CELULA).replace("\t", " ")
-                     .replace("|", "\\|").strip())
-            if texto:
-                partes.append(texto)
-        elif nome == "tbl":
-            for linha in _filhos(filho, "tr"):
-                for celula in _filhos(linha, "tc"):
-                    _partes_da_celula(celula, partes)
-        elif nome in EMBRULHOS_DE_BLOCO:
-            _partes_da_celula(filho, partes)
-
-
-def _filhos(no, procurado):
-    """As linhas da tabela, ou as células da linha, na ordem.
-
-    Um controle de conteúdo pode embrulhar uma linha ou uma célula: entra-se
-    nele, senão o que está dentro sumiria da tabela.
-    """
-    for filho in no:
-        nome = _nome(filho)
-        if nome == procurado:
-            yield filho
-        elif nome in EMBRULHOS_DE_BLOCO:
-            yield from _filhos(filho, procurado)
+    return _numero(_valor(marca, "ilvl"))
 
 
 def _juntar_blocos(blocos):
@@ -301,50 +524,18 @@ def _juntar_blocos(blocos):
     return "".join(partes)
 
 
-# ----------------------------------------------------------- o texto do parágrafo
+def _filhos(no, procurado):
+    """As linhas da tabela, ou as células da linha, na ordem.
 
-# O que embrulha um pedaço do parágrafo sem mudar o texto dele: o link, o
-# trecho inserido com o controle de alterações ligado, o campo simples, as
-# marcas de idioma. Entra-se e lê-se o que está dentro.
-EMBRULHOS = ("hyperlink", "ins", "smartTag", "customXml", "fldSimple", "sdt",
-             "sdtContent", "moveTo", "dir", "bdo")
-
-
-def _texto_do_paragrafo(paragrafo):
-    partes = []
-    _ler_pedacos(paragrafo, partes)
-    return "".join(partes)
-
-
-def _ler_pedacos(no, partes):
-    """Junta o texto do parágrafo, pedaço por pedaço, na ordem.
-
-    O Word corta o texto em pedaços onde quiser - uma mudança de fonte, a
-    correção ortográfica - e um número pode vir partido entre dois. Juntar na
-    ordem devolve o número inteiro, e é ele que a busca do CPF vai ver.
-
-    O trecho apagado com o controle de alterações (`del`) não entra: o
-    documento sai como ficaria com tudo aceito (RN-25).
+    Um controle de conteúdo pode embrulhar uma linha ou uma célula: entra-se
+    nele, senão o que está dentro sumiria da tabela.
     """
     for filho in no:
         nome = _nome(filho)
-        if nome == "r":
-            _ler_trecho(filho, partes)
-        elif nome in EMBRULHOS:
-            _ler_pedacos(filho, partes)
-
-
-def _ler_trecho(trecho, partes):
-    for filho in trecho:
-        nome = _nome(filho)
-        if nome == "t":
-            partes.append(filho.text or "")
-        elif nome == "tab":
-            partes.append("\t")
-        elif nome in ("br", "cr"):
-            partes.append("\n")
-        elif nome == "noBreakHyphen":
-            partes.append("-")
+        if nome == procurado:
+            yield filho
+        elif nome in EMBRULHOS_DE_BLOCO:
+            yield from _filhos(filho, procurado)
 
 
 # ------------------------------------------------------------------- miúdos
@@ -352,6 +543,14 @@ def _ler_trecho(trecho, partes):
 def _nome(no):
     """O nome da marcação sem o endereço na frente: `p`, `r`, `t`."""
     return no.tag.rsplit("}", 1)[-1]
+
+
+def _ligado(marcacao):
+    """Uma opção do Word como `<w:titlePg/>`: ligada quando existe, a não ser
+    que ela diga com todas as letras que está desligada."""
+    if marcacao is None:
+        return False
+    return marcacao.get(f"{W}val") not in ("0", "false", "off")
 
 
 def _numero(valor, padrao=0):

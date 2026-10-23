@@ -23,7 +23,8 @@ PASTA = Path(__file__).parent
 DATA_FIXA = (2026, 1, 1, 0, 0, 0)
 
 ESPACOS = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
-           'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"')
+           'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
+           'xmlns:v="urn:schemas-microsoft-com:vml"')
 
 TIPOS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -32,6 +33,11 @@ TIPOS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
 <Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
+<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>
+<Override PartName="/word/header2.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>
+<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>
+<Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>
+<Override PartName="/word/endnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml"/>
 </Types>"""
 
 LIGACOES_DO_PACOTE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -43,6 +49,11 @@ LIGACOES_DO_DOCUMENTO = """<?xml version="1.0" encoding="UTF-8" standalone="yes"
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>
+<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header2.xml"/>
+<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>
+<Relationship Id="rId6" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/>
+<Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes" Target="endnotes.xml"/>
 </Relationships>"""
 
 # Os códigos dos estilos imitam os do Word em português ("Ttulo1"), que não
@@ -108,6 +119,54 @@ def tabela(*linhas):
     return "<w:tbl>" + "".join(f"<w:tr>{''.join(l)}</w:tr>" for l in linhas) + "</w:tbl>"
 
 
+def chamada_de_nota(tipo, codigo):
+    """O número pequeno, no meio do texto, que chama a nota de rodapé ou de fim."""
+    return f'<w:r><w:{tipo}Reference w:id="{codigo}"/></w:r>'
+
+
+def caixa_de_texto(*paragrafos):
+    """Uma caixa de texto, no jeito que todo Word abre (o desenho antigo).
+
+    O jeito de hoje grava a caixa duas vezes, lado a lado; esse caso é
+    conferido nos testes do programa, com o Word montado ali mesmo.
+    """
+    return ('<w:r><w:pict><v:shape style="width:260pt;height:40pt" type="#_x0000_t202">'
+            '<v:textbox><w:txbxContent>' + "".join(paragrafos)
+            + '</w:txbxContent></v:textbox></v:shape></w:pict></w:r>')
+
+
+def secao(cabecalho, rodape):
+    """A marca de fim de uma parte do documento, com o cabeçalho e o rodapé dela."""
+    return (f'<w:sectPr><w:headerReference w:type="default" r:id="{cabecalho}"/>'
+            f'<w:footerReference w:type="default" r:id="{rodape}"/></w:sectPr>')
+
+
+def peca(raiz, conteudo):
+    return (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            f"<w:{raiz} {ESPACOS}>{conteudo}</w:{raiz}>")
+
+
+# O cabeçalho da primeira parte do documento, e um diferente para o anexo: os
+# dois aparecem no começo do .md, uma vez cada. O rodapé é o mesmo nas duas
+# partes, e aparece uma vez só.
+CABECALHO_1 = peca("hdr", paragrafo("FUNDAÇÃO EXEMPLO DE APOIO — Processo 23000.000000/2026-00"))
+CABECALHO_2 = peca("hdr", paragrafo("ANEXO — Comprovantes de pagamento"))
+RODAPE = peca("ftr", paragrafo("Relatório de execução — documento de exemplo, inventado"))
+
+# As duas primeiras notas são as separadoras que o Word grava sozinho em todo
+# documento com nota; elas não são chamadas no texto e não saem no .md.
+SEPARADORAS = ('<w:{t} w:type="separator" w:id="-1"><w:p><w:r><w:separator/></w:r></w:p></w:{t}>'
+               '<w:{t} w:type="continuationSeparator" w:id="0"><w:p><w:r>'
+               '<w:continuationSeparator/></w:r></w:p></w:{t}>')
+NOTAS_DE_RODAPE = peca("footnotes", SEPARADORAS.format(t="footnote") + (
+    '<w:footnote w:id="1"><w:p><w:r><w:footnoteRef/></w:r>'
+    + trecho(" Conforme o plano de trabalho aprovado; bolsista substituto, CPF 666.666.666-66.")
+    + "</w:p></w:footnote>"))
+NOTAS_DE_FIM = peca("endnotes", SEPARADORAS.format(t="endnote") + (
+    '<w:endnote w:id="1"><w:p><w:r><w:endnoteRef/></w:r>'
+    + trecho(" Valores conferidos pela coordenação do projeto.") + "</w:p></w:endnote>"))
+
+
 # ------------------------------------------------------------- o documento 18
 
 def corpo_do_documento():
@@ -120,7 +179,10 @@ def corpo_do_documento():
         paragrafo("Projeto Exemplo de Extensão — termo de outorga nº 4521/2026."),
         paragrafo("Identificação", estilo="Ttulo1"),
         # O CPF inteiro num pedaço só: o caso simples.
-        paragrafo("Coordenadora: Ana Suposta Lima, CPF 111.111.111-11."),
+        # A nota de rodapé é chamada aqui, e o texto dela (com um CPF) vai para
+        # o fim do .md.
+        paragrafo("Coordenadora: Ana Suposta Lima, CPF 111.111.111-11.",
+                  chamada_de_nota("footnote", 1)),
         # O mesmo CPF partido em três pedaços, como o Word faz quando a
         # correção ortográfica ou uma mudança de fonte passa no meio dele. Só
         # juntando os pedaços na ordem a busca vê o número inteiro.
@@ -156,11 +218,20 @@ def corpo_do_documento():
             [celula(mescla_vertical="continue"), celula("Relatório final"),
              celula("Ana Suposta Lima")],
         ),
+        # A caixa de texto presa neste parágrafo sai logo depois dele.
+        paragrafo("Observação da coordenação:",
+                  caixa_de_texto(paragrafo("Pagamento ao bolsista Ivo Fictício confirmado; "
+                                           "conta do CPF 777.777.777-77."))),
+        # O fim da primeira parte do documento: daqui para baixo vale o
+        # cabeçalho do anexo, diferente, e o mesmo rodapé.
+        f"<w:p><w:pPr>{secao('rId3', 'rId5')}</w:pPr></w:p>",
         # Um estilo próprio da fundação, que herda do "Título 2": continua
         # sendo título, de nível 2.
         paragrafo("Prestação de contas", estilo="Destaque"),
-        # Texto em negrito não é título (premissa da décima emenda).
-        paragrafo(trecho("Saldo devolvido à conta do projeto.", negrito=True)),
+        # Texto em negrito não é título (premissa da décima emenda). E a nota
+        # de fim chamada aqui continua a numeração da de rodapé.
+        paragrafo(trecho("Saldo devolvido à conta do projeto.", negrito=True),
+                  chamada_de_nota("endnote", 1)),
         # Parágrafo vazio: o Word grava, e o .md não precisa de três linhas em
         # branco por causa dele.
         paragrafo(),
@@ -170,7 +241,7 @@ def corpo_do_documento():
 
 def documento(corpo):
     return (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            f"<w:document {ESPACOS}><w:body>{corpo}<w:sectPr/></w:body></w:document>")
+            f"<w:document {ESPACOS}><w:body>{corpo}{secao('rId4', 'rId5')}</w:body></w:document>")
 
 
 def gravar_pacote(caminho, pecas):
@@ -189,6 +260,11 @@ def main():
         "word/document.xml": documento(corpo_do_documento()),
         "word/styles.xml": ESTILOS,
         "word/numbering.xml": NUMERACAO,
+        "word/header1.xml": CABECALHO_1,
+        "word/header2.xml": CABECALHO_2,
+        "word/footer1.xml": RODAPE,
+        "word/footnotes.xml": NOTAS_DE_RODAPE,
+        "word/endnotes.xml": NOTAS_DE_FIM,
     })
     # Um arquivo de texto qualquer com o nome trocado para .docx: não é pacote
     # do Word, e tem de dar a frase de "estragado" em vez de travar (RN-30).

@@ -224,10 +224,12 @@ def test_pacote_sem_a_parte_do_corpo_da_a_frase_de_estragado(tmp_path):
 def test_o_word_da_massa():
     """O documento 18, inteiro: é ele que a conferência 04 mostra."""
     assert arquivo_word.ler(MASSA / "18-documento-do-word.docx") == (
+        "FUNDAÇÃO EXEMPLO DE APOIO — Processo 23000.000000/2026-00\n\n"
+        "ANEXO — Comprovantes de pagamento\n\n"
         "# Relatório de execução\n\n"
         "Projeto Exemplo de Extensão — termo de outorga nº 4521/2026.\n\n"
         "# Identificação\n\n"
-        "Coordenadora: Ana Suposta Lima, CPF 111.111.111-11.\n\n"
+        "Coordenadora: Ana Suposta Lima, CPF 111.111.111-11.[^1]\n\n"
         "Vice-coordenador: Davi Hipotético, CPF 222.222.222-22.\n\n"
         "## Bolsistas\n\n"
         "- Ivo Fictício, CPF 333.333.333-33\n"
@@ -244,6 +246,238 @@ def test_o_word_da_massa():
         "| --------------- | ----------------------------- | ------------------------------------------------------ |\n"
         "| Projeto Exemplo | Oficinas \\| rodas de conversa | Ana Suposta Lima / Davi Hipotético, CPF 222.222.222-22 |\n"
         "|                 | Relatório final               | Ana Suposta Lima                                       |\n\n"
+        "Observação da coordenação:\n\n"
+        "Pagamento ao bolsista Ivo Fictício confirmado; conta do CPF 777.777.777-77.\n\n"
         "## Prestação de contas\n\n"
-        "Saldo devolvido à conta do projeto.\n\n"
-        "Florianópolis, 30 de setembro de 2026.")
+        "Saldo devolvido à conta do projeto.[^2]\n\n"
+        "Florianópolis, 30 de setembro de 2026.\n\n"
+        "Relatório de execução — documento de exemplo, inventado\n\n"
+        "[^1]: Conforme o plano de trabalho aprovado; bolsista substituto, CPF 666.666.666-66.\n"
+        "[^2]: Valores conferidos pela coordenação do projeto.")
+
+
+# ------------------------------------- cabeçalho, rodapé, notas e caixas (etapa 3)
+
+LIGACOES = "http://schemas.openxmlformats.org/package/2006/relationships"
+TIPO = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
+ESPACOS_R = ESPACOS + (' xmlns:r="http://schemas.openxmlformats.org/officeDocument/'
+                       '2006/relationships"')
+
+
+def _word_com_pecas(tmp_path, corpo, pecas, ligacoes=()):
+    """Um Word com peças a mais (cabeçalho, notas) e as ligações do corpo."""
+    caminho = tmp_path / "teste.docx"
+    with zipfile.ZipFile(caminho, "w") as pacote:
+        pacote.writestr(
+            "word/document.xml",
+            f"<w:document {ESPACOS_R}><w:body>{corpo}</w:body></w:document>")
+        for nome, conteudo in pecas.items():
+            pacote.writestr(nome, conteudo)
+        pacote.writestr("word/_rels/document.xml.rels", (
+            f'<Relationships xmlns="{LIGACOES}">'
+            + "".join(f'<Relationship Id="{i}" Type="{TIPO}{t}" Target="{alvo}"{extra}/>'
+                      for i, t, alvo, extra in ligacoes)
+            + "</Relationships>"))
+    return caminho
+
+
+def _secao(*referencias):
+    return "<w:sectPr>" + "".join(
+        f'<w:{m}Reference w:type="{tipo}" r:id="{i}"/>' for m, tipo, i in referencias
+    ) + "</w:sectPr>"
+
+
+def _borda(raiz, texto):
+    return f"<w:{raiz} {ESPACOS}>{_p(texto)}</w:{raiz}>"
+
+
+def test_cabecalho_abre_e_rodape_fecha_cada_diferente_uma_vez(tmp_path):
+    """RN-24: o mesmo cabeçalho em três partes aparece uma vez; o diferente,
+    também, na ordem em que surge."""
+    quebra = "<w:p><w:pPr>{}</w:pPr></w:p>"
+    corpo = (_p("Parte 1") + quebra.format(_secao(("header", "default", "c1"),
+                                                  ("footer", "default", "r1")))
+             + _p("Parte 2") + quebra.format(_secao(("header", "default", "c1")))
+             + _p("Parte 3") + _secao(("header", "default", "c2"),
+                                      ("footer", "default", "r1")))
+    caminho = _word_com_pecas(
+        tmp_path, corpo,
+        {"word/header1.xml": _borda("hdr", "Cabeçalho A"),
+         "word/header2.xml": _borda("hdr", "Cabeçalho B"),
+         "word/footer1.xml": _borda("ftr", "Rodapé")},
+        [("c1", "header", "header1.xml", ""), ("c2", "header", "header2.xml", ""),
+         ("r1", "footer", "footer1.xml", "")])
+    assert arquivo_word.ler(caminho) == (
+        "Cabeçalho A\n\nCabeçalho B\n\nParte 1\n\nParte 2\n\nParte 3\n\nRodapé")
+
+
+def test_cabecalho_da_primeira_pagina_vem_antes(tmp_path):
+    corpo = _p("Corpo") + _secao(("header", "default", "c1"),
+                                 ("header", "first", "c2")).replace(
+        "</w:sectPr>", "<w:titlePg/></w:sectPr>")
+    caminho = _word_com_pecas(
+        tmp_path, corpo,
+        {"word/header1.xml": _borda("hdr", "Das outras"),
+         "word/header2.xml": _borda("hdr", "Da primeira")},
+        [("c1", "header", "header1.xml", ""), ("c2", "header", "header2.xml", "")])
+    assert arquivo_word.ler(caminho) == "Da primeira\n\nDas outras\n\nCorpo"
+
+
+def test_cabecalho_de_opcao_desligada_nao_entra(tmp_path):
+    """Regressão da lente crítica da etapa 3: o Word guarda o cabeçalho da
+    primeira página (e o das pares) depois de a opção ser desligada, e ele
+    aparecia no .md sem nunca ser impresso."""
+    corpo = _p("Corpo") + _secao(("header", "default", "c1"), ("header", "first", "c2"),
+                                 ("header", "even", "c3"))
+    pecas = {"word/header1.xml": _borda("hdr", "Impresso"),
+             "word/header2.xml": _borda("hdr", "Primeira, desligada"),
+             "word/header3.xml": _borda("hdr", "Pares")}
+    ligacoes = [("c1", "header", "header1.xml", ""), ("c2", "header", "header2.xml", ""),
+                ("c3", "header", "header3.xml", "")]
+    assert arquivo_word.ler(_word_com_pecas(tmp_path, corpo, pecas, ligacoes)) == (
+        "Impresso\n\nCorpo")
+    # Com "pares e ímpares diferentes" ligada, o das pares entra.
+    pecas["word/settings.xml"] = f"<w:settings {ESPACOS}><w:evenAndOddHeaders/></w:settings>"
+    assert arquivo_word.ler(_word_com_pecas(tmp_path, corpo, pecas, ligacoes)) == (
+        "Impresso\n\nPares\n\nCorpo")
+
+
+def test_cabecalho_de_antes_de_uma_alteracao_controlada_nao_entra(tmp_path):
+    """Regressão da lente crítica da etapa 3 (RN-25): a marca de seção guardada
+    na alteração cita o cabeçalho de antes, que o documento aceito não tem."""
+    antiga = f"<w:sectPrChange>{_secao(('header', 'default', 'velho'))}</w:sectPrChange>"
+    corpo = _p("Corpo") + _secao(("header", "default", "novo")).replace(
+        "</w:sectPr>", antiga + "</w:sectPr>")
+    caminho = _word_com_pecas(
+        tmp_path, corpo,
+        {"word/header1.xml": _borda("hdr", "Cabeçalho novo"),
+         "word/header2.xml": _borda("hdr", "Velho, CPF 111.111.111-11")},
+        [("novo", "header", "header1.xml", ""), ("velho", "header", "header2.xml", "")])
+    assert arquivo_word.ler(caminho) == "Cabeçalho novo\n\nCorpo"
+
+
+def test_cabecalho_que_falta_no_pacote_nao_trava(tmp_path):
+    corpo = _p("Corpo") + _secao(("header", "default", "c1"))
+    caminho = _word_com_pecas(tmp_path, corpo, {},
+                              [("c1", "header", "header1.xml", "")])
+    assert arquivo_word.ler(caminho) == "Corpo"
+
+
+def _notas(raiz, *notas):
+    separadoras = (f'<w:{raiz} w:type="separator" w:id="-1"><w:p><w:r><w:separator/>'
+                   f"</w:r></w:p></w:{raiz}>")
+    return (f"<w:{raiz}s {ESPACOS}>{separadoras}" + "".join(
+        f'<w:{raiz} w:id="{i}"><w:p><w:r><w:{raiz}Ref/></w:r><w:r><w:t xml:space="preserve"> '
+        f"{texto}</w:t></w:r></w:p></w:{raiz}>" for i, texto in notas) + f"</w:{raiz}s>")
+
+
+def _chama(tipo, i):
+    return f'<w:r><w:{tipo}Reference w:id="{i}"/></w:r>'
+
+
+def test_notas_numeradas_na_ordem_e_as_de_fim_continuam(tmp_path):
+    """Premissa da décima emenda: as de rodapé primeiro, as de fim depois."""
+    corpo = (f"<w:p><w:r><w:t>Fim antes</w:t></w:r>{_chama('endnote', 5)}</w:p>"
+             f"<w:p><w:r><w:t>Rodapé A</w:t></w:r>{_chama('footnote', 9)}</w:p>"
+             f"<w:p><w:r><w:t>Rodapé B</w:t></w:r>{_chama('footnote', 2)}</w:p>")
+    caminho = _word_com_pecas(tmp_path, corpo, {
+        "word/footnotes.xml": _notas("footnote", (2, "Nota B, CPF 111.111.111-11."),
+                                     (9, "Nota A.")),
+        "word/endnotes.xml": _notas("endnote", (5, "Nota de fim."))})
+    assert arquivo_word.ler(caminho) == (
+        "Fim antes[^3]\n\nRodapé A[^1]\n\nRodapé B[^2]\n\n"
+        "[^1]: Nota A.\n[^2]: Nota B, CPF 111.111.111-11.\n[^3]: Nota de fim.")
+
+
+def test_nota_chamada_numa_celula_nao_entorta_a_coluna(tmp_path):
+    corpo = _tbl([_tc("Nome"), _tc("Valor")],
+                 [_tc(f"<w:p><w:r><w:t>Ana</w:t></w:r>{_chama('footnote', 1)}</w:p>"),
+                  _tc("R$ 1,00")])
+    caminho = _word_com_pecas(tmp_path, corpo, {
+        "word/footnotes.xml": _notas("footnote", (1, "Bolsista."))})
+    linhas = arquivo_word.ler(caminho).splitlines()
+    assert linhas[2] == "| Ana[^1] | R$ 1,00 |"
+    assert len({len(linha) for linha in linhas[:3]}) == 1
+
+
+VML = 'xmlns:v="urn:schemas-microsoft-com:vml"'
+MC = 'xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"'
+
+
+def _caixa(texto):
+    """A caixa de texto como o Word de hoje grava: duas vezes, lado a lado."""
+    return (f"<mc:AlternateContent {MC}><mc:Choice Requires=\"wps\"><w:drawing>"
+            f"<w:txbxContent>{_p(texto)}</w:txbxContent></w:drawing></mc:Choice>"
+            f"<mc:Fallback><w:pict><v:shape {VML}><v:textbox><w:txbxContent>"
+            f"{_p(texto)}</w:txbxContent></v:textbox></v:shape></w:pict></mc:Fallback>"
+            f"</mc:AlternateContent>")
+
+
+def test_caixa_de_texto_sai_uma_vez_depois_do_paragrafo(tmp_path):
+    corpo = (f"<w:p><w:r><w:t>Presa aqui.</w:t></w:r>"
+             f"<w:r>{_caixa('Na caixa, CPF 111.111.111-11.')}</w:r></w:p>" + _p("Depois."))
+    assert arquivo_word.ler(_word(tmp_path, corpo)) == (
+        "Presa aqui.\n\nNa caixa, CPF 111.111.111-11.\n\nDepois.")
+
+
+def test_caixa_de_texto_num_paragrafo_sem_texto(tmp_path):
+    corpo = f"<w:p><w:r>{_caixa('Só a caixa.')}</w:r></w:p>"
+    assert arquivo_word.ler(_word(tmp_path, corpo)) == "Só a caixa."
+
+
+def test_caixa_de_texto_dentro_da_celula(tmp_path):
+    celula = f"<w:p><w:r><w:t>Nome</w:t></w:r><w:r>{_caixa('da caixa')}</w:r></w:p>"
+    corpo = _tbl([_tc(celula), _tc("x")])
+    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0] == (
+        "| Nome / da caixa | x   |")
+
+
+def test_caixa_na_celula_com_barra_e_tabela_nao_parte_a_tabela(tmp_path):
+    """Regressão da lente crítica da etapa 3: o texto da caixa entrava na
+    célula sem a barra protegida, e a tabela de dentro dela como tabela."""
+    miolo = _p("Banco | Conta") + _tbl([_tc("Ag"), _tc("123")])
+    caixa = (f"<w:pict><v:shape {VML}><v:textbox><w:txbxContent>{miolo}"
+             f"</w:txbxContent></v:textbox></v:shape></w:pict>")
+    celula = f"<w:p><w:r><w:t>Dados</w:t></w:r><w:r>{caixa}</w:r></w:p>"
+    corpo = _tbl([_tc("A"), _tc("B")], [_tc(celula), _tc("x")])
+    linhas = arquivo_word.ler(_word(tmp_path, corpo)).splitlines()
+    assert linhas[2].startswith("| Dados / Banco \\| Conta / Ag / 123 |")
+    assert len({len(linha) for linha in linhas}) == 1
+    assert all(linha.count("|") - linha.count("\\|") == 3 for linha in linhas)
+
+
+def test_caixa_dentro_de_caixa_sai_uma_vez(tmp_path):
+    """Regressão da lente crítica da etapa 3: a caixa de dentro saía duas ou
+    três vezes, e o CPF dela era contado repetido na revisão."""
+    de_dentro = f"<w:p><w:r>{_caixa('Dentro, CPF 111.111.111-11.')}</w:r></w:p>"
+    de_fora = (f"<mc:AlternateContent {MC}><mc:Choice Requires=\"wps\"><w:drawing>"
+               f"<w:txbxContent>{_p('Fora.')}{de_dentro}</w:txbxContent></w:drawing>"
+               f"</mc:Choice><mc:Fallback><w:pict><v:shape {VML}><v:textbox><w:txbxContent>"
+               f"{_p('Fora.')}{de_dentro}</w:txbxContent></v:textbox></v:shape></w:pict>"
+               f"</mc:Fallback></mc:AlternateContent>")
+    corpo = f"<w:p><w:r>{de_fora}</w:r></w:p>"
+    texto = arquivo_word.ler(_word(tmp_path, corpo))
+    assert texto.count("111.111.111-11") == 1
+    assert texto.count("Fora.") == 1
+
+
+def test_nota_chamada_fora_do_corpo_nao_derruba_o_documento(tmp_path):
+    """Regressão da lente crítica da etapa 3: uma nota chamada de dentro do
+    cabeçalho fazia o documento inteiro ser recusado como "estragado"."""
+    cabecalho = (f"<w:hdr {ESPACOS}><w:p><w:r><w:t>Topo</w:t></w:r>"
+                 f"{_chama('footnote', 1)}</w:p></w:hdr>")
+    corpo = _p("Corpo") + _secao(("header", "default", "c1"))
+    caminho = _word_com_pecas(
+        tmp_path, corpo,
+        {"word/header1.xml": cabecalho,
+         "word/footnotes.xml": _notas("footnote", (1, "Nota."))},
+        [("c1", "header", "header1.xml", "")])
+    assert arquivo_word.ler(caminho) == "Topo\n\nCorpo"
+
+
+def test_o_endereco_de_um_link_nunca_vira_peca_lida(tmp_path):
+    """Ligação para fora (um link) não é peça do pacote: nem é procurada."""
+    corpo = _p("Corpo") + _secao(("header", "default", "x"))
+    caminho = _word_com_pecas(tmp_path, corpo, {}, [
+        ("x", "hyperlink", "http://exemplo.invalid/cpf", ' TargetMode="External"')])
+    assert arquivo_word.ler(caminho) == "Corpo"

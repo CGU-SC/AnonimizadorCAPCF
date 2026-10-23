@@ -499,12 +499,12 @@ def test_o_anonimizar_inteiro_nao_fala_com_a_internet():
         assert peca in arquivos, peca
     for nome in arquivos:
         codigo = (PROGRAMA / f"{nome}.py").read_text(encoding="utf-8").lower()
-        # O endereço do formato do Word é o "sobrenome" das marcações dentro
-        # do .docx, escrito em todo documento - o programa nunca o visita. Só
-        # ele sai da conta; qualquer outro endereço continua barrado
-        # (décima emenda).
-        codigo = codigo.replace(
-            "http://schemas.openxmlformats.org/wordprocessingml/", "")
+        # Os endereços do formato do Word são os "sobrenomes" das marcações
+        # dentro do .docx (o das palavras, o das ligações entre as peças),
+        # escritos em todo documento - o programa nunca os visita. Só eles
+        # saem da conta; qualquer outro endereço continua barrado (décima
+        # emenda).
+        codigo = codigo.replace("http://schemas.openxmlformats.org/", "")
         for sinal in ("http", "socket", "urllib", "requests", "ftplib"):
             assert sinal not in codigo, f"{nome}.py: {sinal}"
 

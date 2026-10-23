@@ -33,7 +33,7 @@ DATA = "23/10/2026"
 ETAPAS = [
     ("1", "O Word abre no Anonimizar, com o corpo do texto: parágrafos, títulos e listas com marcador", "no programa"),
     ("2", "As tabelas, com barras e colunas alinhadas, a célula mesclada e a de dois parágrafos", "no programa"),
-    ("3", "Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar", "a fazer"),
+    ("3", "Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar", "no programa"),
     ("4", "O que o Word guarda e não imprime, e a faixa azul do que ficou de fora", "a fazer"),
     ("5", "As imagens, e a frase de cada Word que não abre", "a fazer"),
     ("6", "A lista numerada como o Word mostra, e o roteiro da conferência na tela", "a fazer"),
