@@ -105,6 +105,21 @@ só CPF completo, como antes ("Eles quase certamente são o CPF de alguém."); s
 curto, "Eles podem ser o CPF de alguém."; os dois, "Os válidos quase certamente
 são o CPF de alguém e os sem o zero da frente podem ser CPF ou outro dado, como
 um telefone." (texto da usuária). O título do aviso fica como está.
+**Décima emenda:** aprovada em 2026-10-23 — **o documento do Word**
+(funcionalidade 5 do backlog). O Anonimizar passa a abrir o `.docx` e leva para
+a revisão tudo o que aparece no documento impresso: o corpo, as tabelas (com
+barras, no formato de tabela do `.md`), o cabeçalho e o rodapé, as notas e as
+caixas de texto, com as alterações controladas aceitas. O que o Word guarda e
+não imprime (comentários, texto oculto) e as imagens ficam de fora, e uma faixa
+na revisão diz o que ficou (RN-23 a RN-30). Só o `.docx`: o `.doc` antigo, o
+`.docm` e o `.dotx` continuam de fora. O arquivo gerado continua sendo só o
+`.md`, e o fora de escopo registra por que o programa não devolve o próprio
+Word mascarado. A leitura usa só o que já vem no Python (o `zipfile` e o
+`xml.etree.ElementTree`), sem biblioteca nova: a de PDF que o programa usa não
+abre `.docx` na versão gratuita, e a python-docx não lê caixa de texto, nota nem
+alteração controlada (decisão de 23/10/2026). Levantamento em
+`mockups/requisitos/06-mapa-do-entendimento.html`. Pedida em 16/09/2026, na
+conferência da etapa 2 do Anonimizar.
 **Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
 **Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
 contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
@@ -120,8 +135,9 @@ para os dois arquivos que o programa gera.
 ## Objetivo
 
 Entregar à pessoa um `.md` **sem nenhum CPF inteiro**, pronto para arrastar
-para a conversa com o assistente de IA, partindo de um PDF, de um `.md` ou
-`.txt` que já existe, ou do texto que ela acabou de conferir no "Gerar OCR". É o
+para a conversa com o assistente de IA, partindo de um PDF, de um documento do
+Word (`.docx`, décima emenda), de um `.md` ou `.txt` que já existe, ou do texto
+que ela acabou de conferir no "Gerar OCR". É o
 módulo que dá razão ao programa existir: documento com CPF não pode ir para um
 chatbot.
 
@@ -135,6 +151,13 @@ chatbot.
   camada de texto, leitura, **conferência obrigatória**) e, conferido, seguir
   direto para a revisão, sem oferecer salvar o texto com CPF inteiro.
 - **`.md` ou `.txt`**: ir direto para a revisão.
+- **`.docx`** (décima emenda): tirar de dentro dele o texto do documento
+  impresso — corpo, tabelas, cabeçalho, rodapé, notas e caixas de texto, com as
+  alterações controladas aceitas —, montar o `.md` com títulos, listas e
+  tabelas, e ir direto para a revisão, com a faixa do que ficou de fora quando
+  houver. A escolha do arquivo passa a aceitar **PDF, `.docx`, `.md` ou
+  `.txt`**, e a massa de teste ganha documentos do Word inventados, gerados por
+  script.
 - **Acender o botão "Seguir para Anonimizar"** no fim do "Gerar OCR", que leva o
   texto conferido para a revisão por dentro do programa, sem passar por arquivo.
 - Encontrar CPF nos quatro formatos combinados e também o **"quase CPF"**: o
@@ -198,6 +221,35 @@ chatbot.
   Para esses, a rede continua sendo a revisão humana e o "mascarar à mão".
 - **O aviso de "limitação conhecida" do roteiro `como-usar.html`.** Ele cai
   quando os roteiros forem refeitos para a próxima entrega, num prompt próprio.
+- **Do documento do Word** (décima emenda):
+  - **o `.doc` antigo**, que exigiria o Word instalado ou um programa a mais nas
+    máquinas do núcleo; **o `.docm`** (documento com macros) **e o `.dotx`**
+    (modelo), que recebem a frase de "outro tipo";
+  - **ler o texto de dentro das imagens** coladas no documento. Quem precisar,
+    salva o documento como PDF pelo Word e usa o caminho do PDF, que lê
+    imagens;
+  - **comentários, texto oculto, o trecho apagado das alterações controladas,
+    a descrição escondida das imagens e o endereço por trás dos links**: nada
+    disso vai para o arquivo;
+  - **negrito, itálico, cor, fonte** e qualquer formatação além de títulos e
+    listas;
+  - **planilha (`.xlsx`) e apresentação (`.pptx`)**.
+- **Devolver o próprio Word com os CPFs mascarados.** Perguntado em 23/10/2026,
+  e decidido que não se faz, nem agora nem depois: não vai para o backlog. Os
+  motivos, para ninguém refazer a conta: (1) o Word guarda o texto em pedaços
+  cortados onde ele quiser — uma mudança de fonte, a correção ortográfica, uma
+  edição antiga —, e `123.456` pode estar num pedaço e `.789-10` no seguinte;
+  mascarar ali é trocar dígito dentro de cada pedaço sem estragar o resto. (2)
+  Cada decisão da revisão — a máscara à mão, o número liberado, a coluna
+  compensada do CPF curto — é tomada sobre o texto do `.md` e teria de voltar à
+  posição exata dentro do Word. (3) O `.md` só leva o que o programa leu; o Word
+  leva o arquivo inteiro, e o CPF teria de sair também dos comentários, do
+  trecho apagado das alterações, do texto oculto, do endereço dos links, das
+  propriedades do arquivo, da miniatura da primeira página e da planilha colada
+  dentro do documento — o que faltasse escaparia calado. (4) O CPF numa imagem
+  não se reescreve: pela regra "tarja nunca substitui remoção", a imagem teria
+  de sair do arquivo, ou o arquivo ser recusado. (5) Somaria umas cinco ou seis
+  etapas às do `.md`, e seria a parte com mais chance de vazar sem ninguém ver.
 - **Vários arquivos de uma vez**, e separar um PDF que traz vários documentos.
 - **Guardar histórico** do que foi anonimizado.
 - **A leitura por IA local.** É o item 4 do backlog.
@@ -309,13 +361,61 @@ duas que apareceram ao escrever (marcadas com *nova*):
   não veria um dígito fora do lugar. O telefone que fecha a conta não entra na
   massa: ele seria um CPF que pode existir.
 
+Da décima emenda, as inferências do mapa 06 que a usuária leu e não derrubou,
+mais quatro que apareceram ao escrever (marcadas com *nova*):
+
+- premissa: o texto do `.docx` vai direto para a revisão, sem leitura nem
+  conferência, como o `.md` e o `.txt`: é texto de verdade, e não leitura de
+  imagem. A revisão, a máscara, a dupla conferência e o salvar são os de hoje.
+- premissa: o `.docx` protegido por senha, o `.doc` antigo com o nome trocado
+  para `.docx`, o arquivo estragado e o vazio (sem texto e sem imagem) dão erro,
+  cada um com a sua frase, e voltam à escolha do arquivo.
+- premissa: o Word entra só no Anonimizar. O Gerar OCR continua abrindo só PDF.
+- premissa: `relatorio.docx` sugere `relatorio - sem CPF.md`, na mesma pasta
+  (RN-13), e o `.docx` original nunca é alterado nem apagado (RN-14).
+- premissa: num campo automático (número de página, data, mala direta), vai o
+  que o Word mostra no documento, e não a fórmula por trás do campo.
+- premissa: num link, vai o texto que aparece. O endereço por trás dele não vai:
+  ele não aparece na impressão e pode carregar número de pessoa dentro.
+- premissa: a descrição escondida da imagem (o "texto alternativo") não vai. A
+  imagem conta na faixa.
+- premissa: há um tamanho máximo para o Word (RN-30), bem maior que qualquer
+  documento de prestação de contas: um pacote pequeno pode esconder um conteúdo
+  enorme, feito para travar quem o abre.
+- premissa: a massa de teste ganha documentos do Word inventados, gerados por
+  script, com uma de cada coisa da RN-24 à RN-28, mais um só de imagem, um
+  protegido e um `.doc` renomeado. Os CPFs seguem a RN-22.
+- premissa: a tela de escolher passa a dizer "PDF, .docx, .md ou .txt", a janela
+  de procurar arquivo mostra o `.docx`, e a frase de "outro tipo" passa a
+  listá-lo. Sem o motor de leitura, o `.docx` aparece com ✓ na lista do que dá
+  para anonimizar agora: ele não precisa de motor.
+- premissa: quebra de página e de seção não deixam marca no `.md`. A lista com
+  subitens sai com recuo, um nível por vez, e a lista numerada sai com o número
+  (ou a letra) que o Word mostra: `1.`, `a)`, `I.`, `1.1`.
+- premissa: o teste que dizia que Word "não entra nesta versão nem nas
+  seguintes" passa a usar outro tipo de fora (uma planilha `.xlsx`), e o `.docx`
+  ganha os testes dele.
+- premissa (*nova*): gráfico, planilha colada, desenho e outros objetos
+  colados no documento contam como **imagem** na faixa: o programa não lê o que
+  está dentro deles.
+- premissa (*nova*): as notas de rodapé vêm primeiro, numeradas de 1 em diante,
+  e as notas de fim continuam a numeração. A marca no texto é a do formato de
+  nota do `.md` (`[^1]`), e o texto da nota vai no fim do arquivo.
+- premissa (*nova*): título é o parágrafo que o Word marca como título (os
+  estilos "Título", "Título 1" a "Título 6", ou o nível de tópico do parágrafo).
+  Texto só em negrito e maior não vira título.
+- premissa (*nova*): quando o CPF sem o zero da frente é o texto mais largo da
+  coluna, a compensação da nona emenda não acha espaço sobrando, e aquela linha
+  da tabela anda 1 ou 2 posições. A tabela continua tabela para o assistente e
+  para o visualizador: só o alinhamento visual daquela linha muda.
+
 ## Fluxos
 
 ### Fluxo normal — um PDF pelo "Anonimizar"
 
 1. A pessoa clica em "Anonimizar" no menu lateral.
 2. O painel mostra a área para escolher o arquivo, dizendo que aceita PDF,
-   `.md` e `.txt`. A escolha do motor não aparece aqui.
+   `.docx`, `.md` e `.txt`. A escolha do motor não aparece aqui.
 3. Ela escolhe um PDF.
 4. O programa confere o documento. Sem texto por dentro, abre a tela "Este
    documento precisa ser lido", com o nome, as páginas e a escolha do motor
@@ -346,6 +446,22 @@ duas que apareceram ao escrever (marcadas com *nova*):
     conferência, porque o texto já existe.
 3c. No passo 10, o lembrete fala do `.md` (ou `.txt`) de origem, que continua
     na pasta com os CPFs inteiros.
+
+### Fluxo alternativo — um documento do Word pelo "Anonimizar" (décima emenda)
+
+3a. Ela escolhe um `.docx`, pelo botão ou arrastando.
+3b. O programa abre o documento e monta o texto: o cabeçalho no começo, o corpo
+    na ordem do documento (títulos, listas, tabelas com barras, caixas de texto
+    onde estão presas), o rodapé, e as notas no fim. As alterações controladas
+    entram aceitas.
+3c. Vai direto para o passo 7, sem leitura nem conferência.
+3d. Se o documento tinha comentários, texto oculto, imagens ou alterações
+    controladas, a revisão abre com a faixa no alto dizendo o que ficou de fora
+    e que as alterações saíram aceitas. Sem nenhum desses, a revisão é a de
+    sempre.
+3e. No passo 10, o caminho sugerido é a pasta do `.docx` com `- sem CPF.md`, e o
+    lembrete fala do `.docx` de origem, que continua na pasta com os CPFs
+    inteiros.
 
 ### Fluxo alternativo — vindo do "Gerar OCR"
 
@@ -407,7 +523,18 @@ revisão aberta e nada salvo. O programa pergunta antes de descartar.
 Arquivo `.md` ou `.txt` vazio, ou que não é texto de verdade (algo renomeado
 para `.md`), dá uma frase dizendo o que houve e volta à escolha do arquivo. PDF
 corrompido, protegido por senha ou que não é PDF recebe o mesmo tratamento da
-spec 002.
+spec 002. O `.docx` protegido por senha, o `.doc` antigo com o nome trocado, o
+`.docx` estragado, o vazio e o grande demais recebem cada um a sua frase (RN-30),
+e também voltam à escolha. O `.docm`, o `.dotx` e o `.doc` recebem a frase de
+"outro tipo".
+
+### Caminho torto — o Word só tem imagens (décima emenda)
+
+Ela escolhe um `.docx` com páginas escaneadas coladas, e nenhum texto. O programa
+não abre a revisão: diz que o documento não tem texto, só imagens, e que o
+caminho é salvá-lo como PDF pelo Word e escolher o PDF, que o programa lê e ela
+confere. Volta à escolha do arquivo. Assim ela nunca chega a uma revisão vazia
+dizendo "nenhum CPF encontrado", que se leria como "este documento não tem CPF".
 
 ### Caminho torto — já existe arquivo com aquele nome
 
@@ -436,8 +563,9 @@ memória durante o uso:
 
 | Informação | De onde vem | Obrigatória | Observação |
 | --- | --- | --- | --- |
-| arquivo de origem | a pessoa (botão ou arrastar), ou o PDF que veio do "Gerar OCR" | sim | PDF, `.md` ou `.txt`. Decide o caminho sugerido para salvar |
-| texto de entrada | a conferência do OCR, ou o conteúdo do `.md`/`.txt` | sim | nunca é gravado como está |
+| arquivo de origem | a pessoa (botão ou arrastar), ou o PDF que veio do "Gerar OCR" | sim | PDF, `.docx`, `.md` ou `.txt`. Decide o caminho sugerido para salvar |
+| texto de entrada | a conferência do OCR, o conteúdo do `.md`/`.txt`, ou o texto montado do `.docx` (RN-24 a RN-28) | sim | nunca é gravado como está |
+| o que ficou de fora do Word | derivado, ao abrir o `.docx` (décima emenda) | não | quantos comentários e quantas imagens (objetos colados inclusive), se havia texto oculto, se havia alterações controladas. Só aparece na faixa da revisão, e nunca vai para o arquivo |
 | lista de ocorrências | derivada: busca no texto + ações da pessoa | sim | cada ocorrência tem: **onde** está no texto, **o que estava escrito**, o **tipo** (passa na conta · suspeito: falha na conta · suspeito: quase CPF · mascarado à mão), a **situação** (mascarado · liberado) e, para o quase CPF, se ele **passa na conta** depois de trocadas as letras e juntadas as partes. Na tela, "passa na conta" aparece como **"CPF válido"**, em vermelho (nome encurtado e cor trocada em 16/09/2026, na conferência da construção: entre 14 e 16/09 o rótulo era "forma CPF válido", no mesmo amarelo do suspeito, e na tela de verdade a diferença entre os dois ficou sutil demais). O suspeito fica no amarelo de alerta, e a caixa da dupla conferência continua vermelha: o número que passa na conta é o mais perigoso, e o verde de antes dava a impressão de coisa boa (decidido em 14/09/2026, nos rascunhos de tela 06 e 07). Desde a nona emenda, a ocorrência do tipo "passa na conta" diz também se ele é um **CPF sem o zero da frente** — na tela, a etiqueta "sem o zero da frente" (ou "sem os zeros da frente", com 9 dígitos), em vermelho, ao lado dele na lista |
 | texto de saída | derivado | sim | o texto de entrada com a máscara aplicada a toda ocorrência "mascarada". É só isto que vai para o arquivo |
 | caminho de destino | sugerido pelo programa, alterável | sim, na hora de salvar | padrão: pasta da origem, nome da origem sem a terminação, mais ` - sem CPF.md` |
@@ -447,8 +575,8 @@ O `.env` não é usado neste módulo: não há segredo nenhum aqui.
 ## Estados da interface
 
 - **vazio:** a área de escolher o arquivo (botão e "arraste aqui"), dizendo que
-  aceita PDF, `.md` e `.txt`, sem a escolha do motor. É o estado de quando ela
-  clica em "Anonimizar".
+  aceita PDF, `.docx`, `.md` e `.txt`, sem a escolha do motor. É o estado de
+  quando ela clica em "Anonimizar".
 - **vazio, com o motor faltando:** o mesmo painel, mais o aviso no alto com as
   três saídas da spec 002. A escolha do arquivo continua funcionando.
 - **PDF em andamento:** as telas da spec 002 (conferindo o arquivo, decidindo
@@ -461,6 +589,10 @@ O `.env` não é usado neste módulo: não há segredo nenhum aqui.
   contagem do que foi mascarado, e o salvar liberado.
 - **revisão, sem CPF:** o texto como veio, o aviso bem visível de "nenhum CPF
   encontrado neste texto", a lista vazia, e o salvar liberado.
+- **revisão de um Word com algo de fora** (décima emenda): qualquer um dos dois
+  estados de revisão acima, mais a faixa no alto, uma linha por aviso, à vista o
+  tempo todo e sem botão de fechar (RN-29).
+- **abrindo o Word:** dura um instante, como o "procurando os CPFs".
 - **dupla conferência:** a caixa com o número como está escrito no texto, a explicação e "manter a
   máscara" já escolhido.
 - **salvando:** o caminho preenchido e editável. Havendo número que passa na
@@ -554,8 +686,8 @@ aprovação própria, antes da construção.
   gravar: a pasta da origem, o nome da origem sem a terminação, mais
   ` - sem CPF.md`. Existindo arquivo com esse nome, o programa pergunta antes de
   escrever por cima.
-- RN-14: **O arquivo de origem nunca é alterado nem apagado**, seja PDF, `.md`
-  ou `.txt`. A tela de sucesso lembra, em uma linha, que ele continua na pasta
+- RN-14: **O arquivo de origem nunca é alterado nem apagado**, seja PDF,
+  `.docx`, `.md` ou `.txt`. A tela de sucesso lembra, em uma linha, que ele continua na pasta
   com os CPFs inteiros.
 - RN-15: **PDF pelo "Anonimizar"** passa pelo caminho inteiro da spec 002, com
   todas as regras dela, **conferência obrigatória inclusive**. No fim da
@@ -593,6 +725,90 @@ aprovação própria, antes da construção.
   outro curto que feche é um CPF que pode existir. O formato da máscara com
   outros dígitos é conferido direto na regra que mascara, com números que não
   fecham a conta.
+  **O documento do Word da massa** (décima emenda) segue a mesma regra, e é
+  gerado por script, como o resto: nenhum documento de verdade, nem como
+  modelo.
+
+Da décima emenda — o documento do Word:
+
+- RN-23: **O `.docx` entra no Anonimizar** pelo botão ou arrastando, e vai
+  direto para a revisão, sem leitura nem conferência. Só o `.docx`: o `.docm`,
+  o `.dotx` e o `.doc` recebem a frase de "outro tipo", que passa a listar o
+  `.docx` entre os aceitos. O Word não entra no Gerar OCR. A leitura usa só o
+  que vem no próprio Python, nada é instalado nem baixado, e nenhuma macro é
+  executada: o programa só lê o texto (RN-20 vale inteira).
+- RN-24: **O que vai para o arquivo é o documento impresso**, nesta ordem: o
+  cabeçalho; o corpo, na ordem do documento; o rodapé; e as notas. Cabeçalho e
+  rodapé aparecem uma vez cada — e, havendo cabeçalhos (ou rodapés) diferentes
+  em partes diferentes do documento, cada um diferente aparece uma vez, na
+  ordem em que surge. A **caixa de texto** entra no ponto do corpo onde está
+  presa, uma vez só. As **notas de rodapé** vão para o fim, numeradas de 1 em
+  diante, e as **notas de fim** continuam a numeração; no ponto onde cada uma é
+  chamada, o texto leva a marca de nota do `.md` (`[^1]`), e no fim vem
+  `[^1]: <texto da nota>`. O programa não escreve rótulo nenhum
+  ("Cabeçalho:", "Notas:"): a RN-12 vale inteira.
+- RN-25: **O Word como ficaria com tudo aceito.** Nas alterações controladas, o
+  trecho inserido entra e o apagado sai. Ficam de fora os **comentários**, o
+  **texto oculto**, a **descrição escondida das imagens** e o **endereço por
+  trás dos links** (do link, vai o texto que aparece). Num **campo automático**
+  vai o que o Word mostra, e não a fórmula. Quebra de página e de seção não
+  deixam marca.
+- RN-26: **Imagem não vai para o arquivo**, e o programa não lê o que está
+  escrito nela. Gráfico, planilha colada, desenho e outros objetos colados
+  contam como imagem.
+- RN-27: **Tabela do Word vira tabela do `.md`**, com barras e com as colunas
+  alinhadas por espaços, e a linha de separação depois da primeira linha:
+
+  ```
+  | Nome          | CPF            | Valor       |
+  | ------------- | -------------- | ----------- |
+  | Fulano de Tal | XXX.111.111-XX | R$ 1.500,00 |
+  ```
+
+  A **célula mesclada** põe o texto na primeira posição que ocupa, e as outras
+  ficam vazias. Os **parágrafos de uma célula** ficam na mesma linha, separados
+  por ` / `, com espaço dos dois lados. A **tabela dentro de outra** vira texto
+  corrido na célula dela, do mesmo jeito. A **barra vertical** escrita dentro
+  de uma célula sai como `\|`, para não partir a coluna. Cada texto aparece no
+  arquivo uma vez só, como no Word.
+- RN-28: **Títulos e listas sim, o resto da formatação não.** O parágrafo que o
+  Word marca como título ("Título" e "Título 1" a "Título 6", ou o nível de
+  tópico) vira título do `.md` (`#` a `######`). A lista com marcador vira
+  `- item`; a lista numerada leva o número (ou a letra) que o Word mostra
+  (`1.`, `a)`, `I.`, `1.1`); o subitem sai com recuo, um nível por vez. Negrito,
+  itálico, sublinhado, cor e fonte ficam de fora.
+- RN-29: **A faixa do que ficou de fora.** Abrindo um `.docx` que tinha
+  comentários, texto oculto, imagens ou alterações controladas, a revisão
+  mostra uma faixa no alto, à vista o tempo todo, sem botão de fechar, com uma
+  linha por aviso. A primeira junta o que ficou fora do arquivo, só com o que o
+  documento tinha: "Ficou fora do arquivo: 3 comentários · texto oculto · 2
+  imagens (o programa não lê o que está escrito nelas)." (com 1, no singular:
+  "1 comentário", "1 imagem"). A segunda aparece só havendo alterações
+  controladas: "As alterações controladas saíram aceitas, como o documento
+  ficaria no fim." Nada disso vai para o arquivo. O `.docx` sem nenhum desses
+  casos abre a revisão sem faixa. O desenho dela vem no rascunho de tela.
+- RN-30: **O Word que não abre** dá uma frase e volta à escolha do arquivo,
+  sem travar:
+  - **protegido por senha:** "O {nome} está protegido por senha. Abra no Word,
+    tire a senha e salve de novo, e escolha o arquivo outra vez.";
+  - **`.doc` antigo com o nome trocado:** "O {nome} é um documento do Word
+    antigo (.doc) com o nome de .docx. Abra no Word e salve como .docx.";
+  - **estragado** (não é um pacote do Word, ou falta a parte do corpo): "O
+    {nome} não pôde ser lido como documento do Word: ele pode estar estragado
+    ou ser outro tipo de arquivo com o nome trocado.";
+  - **vazio**, sem texto e sem imagem: "O {nome} está vazio: não há texto
+    nele.";
+  - **só imagens**, sem texto e com ao menos uma imagem: "O {nome} não tem
+    texto, só imagens. Salve-o como PDF pelo Word e escolha o PDF: o programa lê
+    as imagens e você confere.";
+  - **grande demais:** as partes de texto do pacote, descompactadas, passam de
+    **50 MB**. O texto de um documento comum, mesmo de centenas de páginas,
+    fica muito abaixo disso; o limite é conferido antes de descompactar, porque um pacote
+    pequeno pode esconder um conteúdo enorme, feito para travar quem o abre.
+    As imagens não contam, porque não são descompactadas. A frase: "O {nome} é
+    grande demais para o programa abrir com segurança."
+
+  As frases são a proposta; o texto final sai no rascunho de tela.
 
 ## Critérios de aceite
 
@@ -699,6 +915,85 @@ aprovação própria, antes da construção.
   frente podem ser CPF ou outro dado, como um telefone." Liberado só CPF
   completo, a frase fica como antes. Na caixa da dupla conferência do curto, a
   frase diz "pode ser o CPF de alguém" (acréscimo de 22/10/2026).
+
+**Documento do Word (décima emenda)**
+
+- Dado um `.docx` com `111.111.111-11` no corpo, quando a pessoa o escolhe no
+  "Anonimizar" (pelo botão ou arrastando), então a revisão abre sem passar por
+  leitura nem conferência, com o número mascarado entre os "CPF válido".
+- Dado um `.docx` com um CPF no cabeçalho, outro no rodapé, outro numa nota de
+  rodapé, outro numa nota de fim e outro numa caixa de texto, quando a revisão
+  abre, então os cinco estão mascarados; o cabeçalho é a primeira linha do
+  texto, o rodapé vem depois do corpo, as notas vêm no fim como `[^1]: …` e
+  `[^2]: …`, com `[^1]` e `[^2]` no ponto onde são chamadas, e o texto da caixa
+  aparece uma vez só.
+- Dado um `.docx` com o mesmo cabeçalho em três seções e um cabeçalho diferente
+  na quarta, então o texto traz os dois cabeçalhos, uma vez cada.
+- Dado um `.docx` com uma alteração controlada que inseriu `111.111.111-11` e
+  outra que apagou `222.222.222-22`, quando a revisão abre, então o primeiro
+  está no texto, mascarado, e o segundo não aparece em lugar nenhum — nem no
+  texto, nem na lista.
+- Dado um `.docx` com `333.333.333-33` num comentário e `444.444.444-44` em
+  texto oculto, então nenhum dos dois aparece no texto nem na lista, e a faixa
+  diz "1 comentário · texto oculto".
+- Dado um `.docx` com um link cujo texto é "sistema" e cujo endereço termina em
+  `555.555.555-55`, então o texto traz "sistema", e o número não aparece.
+- Dado um `.docx` com uma tabela de 3 colunas, quando a revisão abre, então ela
+  aparece com barras, as colunas alinhadas e a linha de separação depois da
+  primeira linha; e salvo o arquivo, a tabela continua assim.
+- Dado um `.docx` com uma célula mesclada em duas colunas, uma célula com dois
+  parágrafos e uma tabela dentro de uma célula, então o texto da mesclada
+  aparece uma vez, na primeira posição; os dois parágrafos aparecem na mesma
+  célula, separados por ` / `; e o texto da tabela de dentro aparece na célula
+  dela, sem partir a tabela de fora.
+- Dado um `.docx` com `111.111.111-11` sozinho numa célula, então ele é achado e
+  mascarado como em qualquer texto. Dado `0000000000` sozinho numa célula,
+  então ele é achado como CPF sem o zero da frente.
+- Dado um `.docx` com uma célula que tem `a | b` escrito, então a tabela continua
+  com o mesmo número de colunas, e a célula traz `a \| b`.
+- Dado um `.docx` com "Título 1", "Título 2", uma lista com marcador, uma lista
+  numerada com subitens e um trecho em negrito, então o texto traz `#` e `##`,
+  `- `, os números como o Word mostra, o subitem com recuo, e o trecho em negrito
+  sem asterisco nenhum.
+- Dado um `.docx` com duas imagens e um gráfico, então o texto não traz nada
+  delas, nem a descrição escondida, e a faixa diz "3 imagens (o programa não lê
+  o que está escrito nelas)".
+- Dado um `.docx` com alteração controlada, então a faixa traz a linha "As
+  alterações controladas saíram aceitas, como o documento ficaria no fim."
+- Dado um `.docx` sem comentário, texto oculto, imagem nem alteração
+  controlada, então a revisão abre sem faixa.
+- Dado um `.docx` com um campo de número de página mostrando "Página 1 de 3",
+  então o texto traz "Página 1 de 3", e não a fórmula do campo.
+- Dado um `.docx` só com imagens, quando ele é escolhido, então a revisão não
+  abre: aparece a frase de que ele não tem texto, só imagens, com o caminho do
+  PDF, e a volta à escolha do arquivo.
+- Dado um `.docx` protegido por senha, um `.doc` renomeado para `.docx`, um
+  arquivo qualquer renomeado para `.docx` e um `.docx` vazio, quando cada um é
+  escolhido, então aparece a frase dele (RN-30) e a volta à escolha, sem travar.
+- Dado um `.docx` cujas partes de texto, descompactadas, passam de 50 MB,
+  então ele é recusado com a frase de grande demais, sem que o programa
+  descompacte o conteúdo.
+- Dado um `.docm`, um `.dotx` e um `.doc`, quando cada um é escolhido, então
+  aparece a frase de "outro tipo", que cita o `.docx` entre os aceitos. Dada uma
+  planilha `.xlsx`, então a frase é a mesma, e não promete etapa seguinte.
+- Dado `relatorio.docx`, quando a pessoa chega a salvar, então o caminho
+  sugerido é a pasta dele com `relatorio - sem CPF.md`; e o `relatorio.docx`,
+  comparado antes e depois, está idêntico.
+- Dado que o arquivo foi gravado a partir de um `.docx`, quando ele é aberto,
+  então não tem nenhuma linha escrita pelo programa — nem a faixa, nem rótulo
+  de cabeçalho ou de notas.
+- Dado que o motor de leitura não está instalado, quando a pessoa abre o
+  "Anonimizar", então a lista do que dá para anonimizar agora traz o `.docx`
+  com ✓, e um `.docx` escolhido abre a revisão normalmente.
+- Dada a tela de escolher do "Anonimizar", então ela diz "PDF, .docx, .md ou
+  .txt", e a janela de procurar arquivo mostra os `.docx`.
+- Dado o "Gerar OCR", então ele continua aceitando só PDF.
+- Dado o código que lê o Word, quando se procura por biblioteca de fora do
+  Python, endereço de internet ou execução de macro, então não há nenhum; e o
+  `requirements.txt` não ganhou linha nova.
+- Dado `dados-exemplo/`, quando se procura nos documentos do Word por número de
+  11 dígitos que passa na conta, então só aparecem números de dígitos
+  repetidos (RN-22).
 
 **Revisão**
 
