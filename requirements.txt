@@ -18,5 +18,7 @@ onnxruntime==1.31.0
 # Testes automatizados
 pytest>=8.0,<9
 
-# Empacotamento do programa em um .exe único para instalar nas máquinas do núcleo
+# Empacotamento: monta o programa numa pasta que roda sem Python, e o Inno
+# Setup faz dela o instalador das máquinas do núcleo. Era um .exe único até
+# 23/09/2026; com instalador a pasta não aparece para quem usa.
 pyinstaller>=6.0,<7
