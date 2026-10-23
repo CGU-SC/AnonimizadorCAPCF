@@ -23,6 +23,7 @@ sys.path.insert(0, str(RAIZ / "programa"))
 import arquivo_word  # noqa: E402
 from arquivo_texto import ArquivoNaoServe  # noqa: E402
 from cpf import aplicar, procurar  # noqa: E402
+from tela_revisao import FRASE_DAS_ALTERACOES, frase_do_que_ficou_de_fora  # noqa: E402
 
 MASSA = RAIZ / "dados-exemplo"
 PRINCIPAL = "18-documento-do-word.docx"
@@ -34,7 +35,7 @@ ETAPAS = [
     ("1", "O Word abre no Anonimizar, com o corpo do texto: parágrafos, títulos e listas com marcador", "no programa"),
     ("2", "As tabelas, com barras e colunas alinhadas, a célula mesclada e a de dois parágrafos", "no programa"),
     ("3", "Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar", "no programa"),
-    ("4", "O que o Word guarda e não imprime, e a faixa azul do que ficou de fora", "a fazer"),
+    ("4", "O que o Word guarda e não imprime, e a faixa azul do que ficou de fora", "no programa"),
     ("5", "As imagens, e a frase de cada Word que não abre", "a fazer"),
     ("6", "A lista numerada como o Word mostra, e o roteiro da conferência na tela", "a fazer"),
 ]
@@ -61,7 +62,10 @@ def destacado(texto, achados):
 
 
 def main():
-    texto = arquivo_word.ler(MASSA / PRINCIPAL)
+    word = arquivo_word.ler(MASSA / PRINCIPAL)
+    texto = word.texto
+    faixa = [f for f in (frase_do_que_ficou_de_fora(word),
+                         FRASE_DAS_ALTERACOES if word.alteracoes else "") if f]
     achados = procurar(texto)
     sobra = len(procurar(aplicar(texto, achados)))
 
@@ -120,6 +124,9 @@ def main():
                    border: 1px solid var(--cor-borda); border-radius: 6px; padding: 16px;
                    overflow-x: auto; white-space: pre; }}
   .d-valido {{ color: var(--cor-erro-texto); text-decoration: underline solid var(--cor-erro-texto); text-underline-offset: 3px; }}
+  .faixa {{ background: rgba(59,110,165,0.10); border-left: 4px solid var(--cor-destaque);
+            border-radius: 6px; padding: 8px 16px; font-size: 13px; }}
+  .faixa div:first-child {{ font-weight: 600; }}
   .rodape {{ margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
              font-size: 13px; color: var(--cor-texto-secundario); }}
 </style>
@@ -142,6 +149,11 @@ para a busca — e mascarado no texto.</div>
   <tr><th>Etapa</th><th>O que ela põe no programa</th><th>Situação</th></tr>
   {linhas_etapas}
 </table></div>
+
+<h2>A faixa da revisão</h2>
+<p class="nota">Só na tela, no alto da revisão: nada disso vai para o arquivo. O comentário, o texto oculto e o
+trecho apagado do Word de teste têm, cada um, um CPF — e nenhum deles aparece no texto abaixo.</p>
+<div class="faixa">{"".join(f"<div>{e(f)}</div>" for f in faixa)}</div>
 
 <h2>O Word de teste, depois do programa</h2>
 <p class="nota">É este o texto que a revisão mostra, já mascarado. Sublinhado vermelho: CPF válido.</p>

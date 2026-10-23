@@ -368,7 +368,9 @@ def _textos_da_massa():
             try:
                 with zipfile.ZipFile(arquivo) as pacote:
                     for peca in pacote.namelist():
-                        if peca.endswith(".xml"):
+                        # As .rels guardam o endereço dos links, que pode
+                        # carregar um número (desde a etapa 4).
+                        if peca.endswith((".xml", ".rels")):
                             yield (f"{arquivo.name}:{peca}",
                                    pacote.read(peca).decode("utf-8"))
             except zipfile.BadZipFile:

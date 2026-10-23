@@ -245,6 +245,38 @@ def test_o_word_da_massa_abre_na_revisao(aplicacao):
     assert painel._quebra_da_origem == "\n"
 
 
+def test_a_faixa_do_word_diz_o_que_ficou_de_fora(aplicacao):
+    """RN-29: a faixa aparece no Word que tinha algo de fora, e só na tela."""
+    painel = _painel_com("18-documento-do-word.docx", aplicacao)
+    revisao = painel.tela_revisao
+    assert not revisao.faixa_do_word.isHidden()
+    assert revisao.faixa_ficou_de_fora.text() == (
+        "Ficou fora do arquivo: 2 comentários · texto oculto.")
+    assert not revisao.faixa_alteracoes.isHidden()
+    # A faixa nunca vai para o arquivo: o texto que se grava é o do documento.
+    assert "Ficou fora" not in revisao.texto_mascarado()
+
+
+def test_a_faixa_some_no_arquivo_que_nao_e_word(aplicacao):
+    painel = _painel_com("18-documento-do-word.docx", aplicacao)
+    painel.voltar_para_escolher()
+    painel.tela_descartar.botao_descartar.click()
+    painel.receber_arquivo(MASSA / "10-prestacao-com-cpf.md")
+    assert painel.tela_revisao.faixa_do_word.isHidden()
+
+
+def test_as_frases_da_faixa(aplicacao):
+    from arquivo_word import DocumentoDoWord
+    from tela_revisao import frase_do_que_ficou_de_fora as frase
+    assert frase(DocumentoDoWord("")) == ""
+    assert frase(DocumentoDoWord("", comentarios=1)) == "Ficou fora do arquivo: 1 comentário."
+    assert frase(DocumentoDoWord("", imagens=1)) == (
+        "Ficou fora do arquivo: 1 imagem (o programa não lê o que está escrito nela).")
+    assert frase(DocumentoDoWord("", comentarios=3, imagens=2, texto_oculto=True)) == (
+        "Ficou fora do arquivo: 3 comentários · texto oculto · 2 imagens "
+        "(o programa não lê o que está escrito nelas).")
+
+
 def test_um_arquivo_qualquer_com_nome_de_docx_nao_trava(aplicacao):
     painel = _painel_com("19-nao-e-word.docx", aplicacao)
     assert painel.telas.currentWidget() is painel.tela_erro

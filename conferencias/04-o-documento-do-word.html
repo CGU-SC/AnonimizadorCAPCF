@@ -38,6 +38,9 @@
                    border: 1px solid var(--cor-borda); border-radius: 6px; padding: 16px;
                    overflow-x: auto; white-space: pre; }
   .d-valido { color: var(--cor-erro-texto); text-decoration: underline solid var(--cor-erro-texto); text-underline-offset: 3px; }
+  .faixa { background: rgba(59,110,165,0.10); border-left: 4px solid var(--cor-destaque);
+            border-radius: 6px; padding: 8px 16px; font-size: 13px; }
+  .faixa div:first-child { font-weight: 600; }
   .rodape { margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
              font-size: 13px; color: var(--cor-texto-secundario); }
 </style>
@@ -58,13 +61,18 @@ para a busca — e mascarado no texto.</div>
 <h2>Onde a construção está</h2>
 <div class="rolar"><table>
   <tr><th>Etapa</th><th>O que ela põe no programa</th><th>Situação</th></tr>
-  <tr><td>1</td><td>O Word abre no Anonimizar, com o corpo do texto: parágrafos, títulos e listas com marcador</td><td class='feito'>no programa</td></tr><tr><td>2</td><td>As tabelas, com barras e colunas alinhadas, a célula mesclada e a de dois parágrafos</td><td class='feito'>no programa</td></tr><tr><td>3</td><td>Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar</td><td class='feito'>no programa</td></tr><tr><td>4</td><td>O que o Word guarda e não imprime, e a faixa azul do que ficou de fora</td><td class='falta'>a fazer</td></tr><tr><td>5</td><td>As imagens, e a frase de cada Word que não abre</td><td class='falta'>a fazer</td></tr><tr><td>6</td><td>A lista numerada como o Word mostra, e o roteiro da conferência na tela</td><td class='falta'>a fazer</td></tr>
+  <tr><td>1</td><td>O Word abre no Anonimizar, com o corpo do texto: parágrafos, títulos e listas com marcador</td><td class='feito'>no programa</td></tr><tr><td>2</td><td>As tabelas, com barras e colunas alinhadas, a célula mesclada e a de dois parágrafos</td><td class='feito'>no programa</td></tr><tr><td>3</td><td>Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar</td><td class='feito'>no programa</td></tr><tr><td>4</td><td>O que o Word guarda e não imprime, e a faixa azul do que ficou de fora</td><td class='feito'>no programa</td></tr><tr><td>5</td><td>As imagens, e a frase de cada Word que não abre</td><td class='falta'>a fazer</td></tr><tr><td>6</td><td>A lista numerada como o Word mostra, e o roteiro da conferência na tela</td><td class='falta'>a fazer</td></tr>
 </table></div>
+
+<h2>A faixa da revisão</h2>
+<p class="nota">Só na tela, no alto da revisão: nada disso vai para o arquivo. O comentário, o texto oculto e o
+trecho apagado do Word de teste têm, cada um, um CPF — e nenhum deles aparece no texto abaixo.</p>
+<div class="faixa"><div>Ficou fora do arquivo: 2 comentários · texto oculto.</div><div>As alterações controladas saíram aceitas, como o documento ficaria no fim.</div></div>
 
 <h2>O Word de teste, depois do programa</h2>
 <p class="nota">É este o texto que a revisão mostra, já mascarado. Sublinhado vermelho: CPF válido.</p>
 <div class="selos">
-  <span class="selo">10 números mascarados</span>
+  <span class="selo">11 números mascarados</span>
   <span class="selo">0 números achados de novo no texto que sai</span>
 </div>
 <pre class="documento">FUNDAÇÃO EXEMPLO DE APOIO — Processo 23000.000000/2026-00
@@ -94,6 +102,16 @@ Vice-coordenador: Davi Hipotético, CPF <span class="d-valido">XXX.222.222-XX</s
 | Otávio Suposto / (bolsa encerrada em agosto) | <span class="d-valido">XXX.444.444-XX</span> | R$ 0,00     |
 | Total pago                                   |                | R$ 2.400,00 |
 
+## Análise
+
+Parecer: aprovado.
+
+Pagamentos conferidos.
+
+Bolsista incluída na revisão: Beatriz Inventada, CPF <span class="d-valido">XXX.111.111-XX</span>.
+
+Ficha completa no sistema de bolsas.
+
 ## Plano de trabalho
 
 | Projeto         | Atividade                     | Responsáveis                                           |
@@ -111,7 +129,7 @@ Saldo devolvido à conta do projeto.[^2]
 
 Florianópolis, 30 de setembro de 2026.
 
-Relatório de execução — documento de exemplo, inventado
+Relatório de execução — documento de exemplo, inventado — Página 1 de 3
 
 [^1]: Conforme o plano de trabalho aprovado; bolsista substituto, CPF <span class="d-valido">XXX.666.666-XX</span>.
 [^2]: Valores conferidos pela coordenação do projeto.</pre>

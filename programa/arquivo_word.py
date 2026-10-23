@@ -16,6 +16,7 @@ texto (RN-20 e RN-23).
 import zipfile
 import zlib
 from pathlib import Path
+from typing import NamedTuple
 from xml.etree import ElementTree
 
 from arquivo_texto import ArquivoNaoServe
@@ -38,14 +39,36 @@ NIVEL_MAXIMO = 6
 # aparecem: o da primeira página vem antes do das outras.
 TIPOS_DE_CABECALHO = ("first", "default", "even")
 
+# As peças do pacote que o documento impresso usa. É nelas que uma alteração
+# controlada muda o texto; nos estilos e nos ajustes, ela não muda nada que se
+# leia.
+PECAS_DE_TEXTO = ("word/document", "word/header", "word/footer",
+                  "word/footnotes", "word/endnotes")
+
+# As marcas da alteração controlada no texto: o trecho inserido, o apagado, e
+# o que foi movido de um lugar (de onde sai) para outro (aonde chega).
+ALTERACOES = ("ins", "del", "moveFrom", "moveTo")
+
 ESTRAGADO = (
     "O {nome} não pôde ser lido como documento do Word: ele pode estar "
     "estragado ou ser outro tipo de arquivo com o nome trocado."
 )
 
 
+class DocumentoDoWord(NamedTuple):
+    """O texto que vai para a revisão, e o que ficou de fora dele (RN-29).
+
+    O que ficou de fora só vira a faixa da revisão: nunca vai para o arquivo.
+    """
+    texto: str
+    comentarios: int = 0
+    imagens: int = 0
+    texto_oculto: bool = False
+    alteracoes: bool = False
+
+
 def ler(caminho):
-    """O texto do documento do Word, no formato do `.md`.
+    """O documento do Word: o texto no formato do `.md`, e o que ficou de fora.
 
     A ordem é a do documento impresso (RN-24): o cabeçalho, o corpo, o rodapé
     e, no fim, as notas. Arquivo que não é um pacote do Word, ou que não tem a
@@ -54,7 +77,7 @@ def ler(caminho):
     caminho = Path(caminho)
     try:
         with zipfile.ZipFile(caminho) as pacote:
-            return _Leitura(pacote).texto()
+            return _Leitura(pacote).documento()
     # O pacote pode abrir e o conteúdo de dentro estar estragado: um byte
     # trocado no meio dá erro de descompactação (zlib.error), e um Word
     # compactado num formato que o Python não lê dá NotImplementedError. Os dois
@@ -90,6 +113,23 @@ class _Leitura:
         self.notas_chamadas = []
         # O número de cada nota, depois que a ordem delas é conhecida.
         self.numeros = None
+        # O que fica de fora do arquivo e a faixa da revisão conta (RN-29).
+        self.texto_oculto = False
+        self.pecas_lidas = []
+        # Se o estilo do parágrafo que está sendo lido esconde o texto.
+        self._paragrafo_oculto = None
+
+    def documento(self):
+        texto = self.texto()
+        comentarios = self._peca("word/comments.xml")
+        return DocumentoDoWord(
+            texto=texto,
+            comentarios=(len(comentarios.findall(f"{W}comment"))
+                         if comentarios is not None else 0),
+            texto_oculto=self.texto_oculto,
+            alteracoes=any(next(raiz.iter(f"{W}{marca}"), None) is not None
+                           for raiz in self.pecas_lidas for marca in ALTERACOES),
+        )
 
     def texto(self):
         raiz = self._peca("word/document.xml")
@@ -119,9 +159,12 @@ class _Leitura:
     def _peca(self, nome):
         """Uma peça do pacote já lida, ou None quando o documento não a tem."""
         try:
-            return ElementTree.fromstring(self.pacote.read(nome))
+            raiz = ElementTree.fromstring(self.pacote.read(nome))
         except KeyError:
             return None
+        if nome.startswith(PECAS_DE_TEXTO):
+            self.pecas_lidas.append(raiz)
+        return raiz
 
     def _ligacoes(self):
         """De cada código de ligação do corpo, a peça do pacote a que ele leva.
@@ -268,7 +311,10 @@ class _Leitura:
         A primeira linha vira o cabeçalho, que é como o `.md` monta toda tabela.
         Tabela sem nenhum texto não sai: seria só um desenho de barras vazio.
         """
-        linhas = [self._celulas_da_linha(linha) for linha in _filhos(tabela, "tr")]
+        # A linha apagada com o controle de alterações ligado não sai: o Word a
+        # mostra riscada, e o documento com tudo aceito não a tem (RN-25).
+        linhas = [self._celulas_da_linha(linha) for linha in _filhos(tabela, "tr")
+                  if not _tem(linha.find(f"{W}trPr"), "del")]
         if not any(any(celula for celula in linha) for linha in linhas):
             return None
         colunas = max(len(linha) for linha in linhas)
@@ -345,7 +391,13 @@ class _Leitura:
 
     def _texto_do_paragrafo(self, paragrafo, caixas):
         partes = []
+        # O estilo do parágrafo também pode esconder o texto dele. Guardado
+        # aqui porque é de cada trecho que se decide o que é oculto.
+        anterior = self._paragrafo_oculto
+        self._paragrafo_oculto = _estilo_oculto(
+            _valor(paragrafo.find(f"{W}pPr"), "pStyle"), self.estilos)
         self._ler_pedacos(paragrafo, partes, caixas)
+        self._paragrafo_oculto = anterior
         return "".join(partes)
 
     def _ler_pedacos(self, no, partes, caixas):
@@ -366,6 +418,23 @@ class _Leitura:
                 self._ler_pedacos(filho, partes, caixas)
 
     def _ler_trecho(self, trecho, partes, caixas):
+        # O texto oculto não é impresso nem aparece na tela do Word: fica de
+        # fora, e a faixa da revisão avisa que ele existia (RN-25 e RN-29). O
+        # oculto pode estar marcado no trecho, no estilo do trecho ou no do
+        # parágrafo - o que estiver mais perto do texto vale.
+        propriedades = trecho.find(f"{W}rPr")
+        oculto = _oculto_escrito(propriedades)
+        if oculto is None:
+            oculto = _estilo_oculto(_valor(propriedades, "rStyle"), self.estilos)
+        if oculto is None:
+            oculto = self._paragrafo_oculto
+        if oculto:
+            # Só conta para a faixa o trecho com letra de verdade: o Word marca
+            # como ocultos pedaços sem texto (a marca de um campo), e a faixa
+            # avisaria de um texto que não existe (lente crítica da etapa 4).
+            if any((t.text or "").strip() for t in trecho.iter(f"{W}t")):
+                self.texto_oculto = True
+            return
         for filho in trecho:
             nome = _nome(filho)
             if nome == "t":
@@ -425,8 +494,33 @@ def _estilos(raiz):
             (nome.get(f"{W}val") or "").lower() if nome is not None else "",
             base.get(f"{W}val") if base is not None else None,
             _nivel_de_topico(estilo.find(f"{W}pPr")),
+            _oculto_escrito(estilo.find(f"{W}rPr")),
         )
     return estilos
+
+
+def _oculto_escrito(propriedades):
+    """O que as propriedades dizem do "oculto": True, False, ou None quando
+    não dizem nada - e aí vale o que vem de cima (o estilo de que herda)."""
+    marca = _marcacao(propriedades, "vanish")
+    return None if marca is None else _ligado(marca)
+
+
+def _estilo_oculto(codigo, estilos):
+    """Se o estilo esconde o texto, por ele mesmo ou pelo estilo de que herda.
+
+    Esconder pelo estilo é o mesmo que esconder no trecho: o Word não mostra
+    nem imprime (lente crítica da etapa 4). Um estilo que diz "não oculto"
+    vale sobre o de cima.
+    """
+    for _ in range(10):
+        if codigo not in estilos:
+            return None
+        _, base, _, oculto = estilos[codigo]
+        if oculto is not None:
+            return oculto
+        codigo = base
+    return None
 
 
 def _nivel_do_titulo(paragrafo, estilos):
@@ -447,7 +541,7 @@ def _nivel_do_titulo(paragrafo, estilos):
     for _ in range(10):
         if codigo not in estilos:
             return 0
-        nome, base, nivel = estilos[codigo]
+        nome, base, nivel, _ = estilos[codigo]
         if nome == TITULO:
             return 1
         if nome.startswith(PREFIXO_DE_TITULO):
@@ -543,6 +637,16 @@ def _filhos(no, procurado):
 def _nome(no):
     """O nome da marcação sem o endereço na frente: `p`, `r`, `t`."""
     return no.tag.rsplit("}", 1)[-1]
+
+
+def _marcacao(no, nome):
+    """A marcação de dentro com aquele nome, ou None."""
+    return no.find(f"{W}{nome}") if no is not None else None
+
+
+def _tem(no, nome):
+    """Se a marcação existe dentro do nó, valha o que valer."""
+    return _marcacao(no, nome) is not None
 
 
 def _ligado(marcacao):

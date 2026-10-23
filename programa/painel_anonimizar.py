@@ -343,8 +343,10 @@ class PainelAnonimizar(QWidget):
             return
         try:
             # O Word já tem o texto pronto, como o .md: vai direto para a
-            # revisão, sem leitura de imagem nem conferência (RN-23).
-            texto = arquivo_word.ler(caminho) if e_word else ler(caminho)
+            # revisão, sem leitura de imagem nem conferência (RN-23). O que
+            # ficou de fora dele vai junto, para a faixa da revisão (RN-29).
+            word = arquivo_word.ler(caminho) if e_word else None
+            texto = word.texto if e_word else ler(caminho)
         except ArquivoNaoServe as problema:
             self._mostrar_erro(str(problema))
             return
@@ -364,7 +366,7 @@ class PainelAnonimizar(QWidget):
         # Word não é arquivo de texto, e não tem quebra de onde herdar.
         self._quebra_da_origem = (arquivo_texto.QUEBRA_SIMPLES if e_word
                                   else quebra_de_linha(caminho))
-        self._abrir_revisao(texto)
+        self._abrir_revisao(texto, word)
 
     def voltar_para_escolher(self):
         """Volta à escolha do arquivo - perguntando antes, quando há o que perder."""
@@ -530,14 +532,15 @@ class PainelAnonimizar(QWidget):
         self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
         self._abrir_revisao(arquivo_md.montar_conteudo(paginas))
 
-    def _abrir_revisao(self, texto):
+    def _abrir_revisao(self, texto, word=None):
         """O único jeito de abrir a revisão, venha o texto de onde vier.
 
         Os três caminhos terminam aqui - o arquivo de texto, o PDF lido neste
         módulo e o texto que chega do "Gerar OCR" -, para que um passo novo ao
         abrir a revisão nunca entre em dois deles e esqueça o terceiro.
         """
-        self.tela_revisao.mostrar(self._origem.name, texto, cpf.procurar(texto))
+        self.tela_revisao.mostrar(self._origem.name, texto, cpf.procurar(texto),
+                                  word)
         self.telas.setCurrentWidget(self.tela_revisao)
 
     def encerrar(self):

@@ -17,6 +17,11 @@ MASSA = Path(__file__).parent.parent / "dados-exemplo"
 ESPACOS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
 
 
+def _texto(caminho):
+    """Só o texto que vai para a revisão; o que ficou de fora tem testes à parte."""
+    return arquivo_word.ler(caminho).texto
+
+
 def _word(tmp_path, corpo, estilos=None, nome="teste.docx"):
     caminho = tmp_path / nome
     with zipfile.ZipFile(caminho, "w") as pacote:
@@ -35,13 +40,13 @@ def _p(texto, propriedades=""):
 
 def test_paragrafos_separados_por_linha_em_branco(tmp_path):
     caminho = _word(tmp_path, _p("Primeiro.") + _p("Segundo."))
-    assert arquivo_word.ler(caminho) == "Primeiro.\n\nSegundo."
+    assert _texto(caminho) == "Primeiro.\n\nSegundo."
 
 
 def test_o_numero_partido_em_pedacos_volta_inteiro(tmp_path):
     corpo = ("<w:p><w:r><w:t>CPF 111.111</w:t></w:r><w:r><w:t>.111</w:t></w:r>"
              "<w:r><w:t>-11</w:t></w:r></w:p>")
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "CPF 111.111.111-11"
+    assert _texto(_word(tmp_path, corpo)) == "CPF 111.111.111-11"
 
 
 def test_titulo_pelo_nome_do_estilo_e_pela_heranca(tmp_path):
@@ -54,26 +59,26 @@ def test_titulo_pelo_nome_do_estilo_e_pela_heranca(tmp_path):
              + _p("Seção", '<w:pStyle w:val="Ttulo2"/>')
              + _p("Herdado", '<w:pStyle w:val="Meu"/>')
              + _p("Tópico", '<w:outlineLvl w:val="2"/>'))
-    assert arquivo_word.ler(_word(tmp_path, corpo, estilos)) == (
+    assert _texto(_word(tmp_path, corpo, estilos)) == (
         "# Capa\n\n## Seção\n\n## Herdado\n\n### Tópico")
 
 
 def test_negrito_nao_vira_titulo_nem_asterisco(tmp_path):
     corpo = "<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Saldo</w:t></w:r></w:p>"
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "Saldo"
+    assert _texto(_word(tmp_path, corpo)) == "Saldo"
 
 
 def test_lista_com_subitem_fica_colada_e_recuada(tmp_path):
     item = '<w:numPr><w:ilvl w:val="{}"/><w:numId w:val="1"/></w:numPr>'
     corpo = (_p("Antes.") + _p("um", item.format(0)) + _p("sub", item.format(1))
              + _p("dois", item.format(0)) + _p("Depois."))
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == (
+    assert _texto(_word(tmp_path, corpo)) == (
         "Antes.\n\n- um\n  - sub\n- dois\n\nDepois.")
 
 
 def test_paragrafo_vazio_nao_deixa_buraco(tmp_path):
     corpo = _p("A") + "<w:p/>" + "<w:p><w:r><w:t> </w:t></w:r></w:p>" + _p("B")
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "A\n\nB"
+    assert _texto(_word(tmp_path, corpo)) == "A\n\nB"
 
 
 def test_o_trecho_apagado_nao_entra_e_o_inserido_entra(tmp_path):
@@ -81,17 +86,17 @@ def test_o_trecho_apagado_nao_entra_e_o_inserido_entra(tmp_path):
     corpo = ("<w:p><w:r><w:t>CPF </w:t></w:r>"
              "<w:del><w:r><w:delText>222.222.222-22</w:delText></w:r></w:del>"
              "<w:ins><w:r><w:t>111.111.111-11</w:t></w:r></w:ins></w:p>")
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "CPF 111.111.111-11"
+    assert _texto(_word(tmp_path, corpo)) == "CPF 111.111.111-11"
 
 
 def test_controle_de_conteudo_e_lido_por_dentro(tmp_path):
     corpo = f"<w:sdt><w:sdtContent>{_p('Dentro do campo.')}</w:sdtContent></w:sdt>"
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "Dentro do campo."
+    assert _texto(_word(tmp_path, corpo)) == "Dentro do campo."
 
 
 def test_quebra_de_linha_e_tabulacao(tmp_path):
     corpo = "<w:p><w:r><w:t>a</w:t><w:tab/><w:t>b</w:t><w:br/><w:t>c</w:t></w:r></w:p>"
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "a\tb\nc"
+    assert _texto(_word(tmp_path, corpo)) == "a\tb\nc"
 
 
 # ------------------------------------------------------------------ tabelas
@@ -110,7 +115,7 @@ def _tbl(*linhas, propriedades_da_linha=""):
 def test_tabela_com_barras_e_colunas_alinhadas(tmp_path):
     corpo = _tbl([_tc("Nome"), _tc("CPF")],
                  [_tc("Ana Suposta Lima"), _tc("111.111.111-11")])
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == (
+    assert _texto(_word(tmp_path, corpo)) == (
         "| Nome             | CPF            |\n"
         "| ---------------- | -------------- |\n"
         "| Ana Suposta Lima | 111.111.111-11 |")
@@ -120,7 +125,7 @@ def test_a_celula_mesclada_aparece_uma_vez_na_primeira_posicao(tmp_path):
     """RN-27: o texto não se repete - repetido, um CPF seria contado duas vezes."""
     corpo = _tbl([_tc("a"), _tc("b"), _tc("c")],
                  [_tc("111.111.111-11", propriedades='<w:gridSpan w:val="2"/>'), _tc("d")])
-    texto = arquivo_word.ler(_word(tmp_path, corpo))
+    texto = _texto(_word(tmp_path, corpo))
     assert texto.count("111.111.111-11") == 1
     assert texto.splitlines()[2] == "| 111.111.111-11 |     | d   |"
 
@@ -128,26 +133,26 @@ def test_a_celula_mesclada_aparece_uma_vez_na_primeira_posicao(tmp_path):
 def test_mesclada_na_vertical_fica_vazia_embaixo(tmp_path):
     corpo = _tbl([_tc("Projeto", propriedades='<w:vMerge w:val="restart"/>'), _tc("x")],
                  [_tc(propriedades="<w:vMerge/>"), _tc("y")])
-    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[2] == "|         | y   |"
+    assert _texto(_word(tmp_path, corpo)).splitlines()[2] == "|         | y   |"
 
 
 def test_dois_paragrafos_e_quebra_de_linha_na_celula(tmp_path):
     quebra = "<w:p><w:r><w:t>linha 1</w:t><w:br/><w:t>linha 2</w:t></w:r></w:p>"
     corpo = _tbl([_tc("um", "dois"), _tc(quebra)])
-    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0] == (
+    assert _texto(_word(tmp_path, corpo)).splitlines()[0] == (
         "| um / dois | linha 1 / linha 2 |")
 
 
 def test_tabela_dentro_de_outra_vira_texto_corrido(tmp_path):
     de_dentro = _tbl([_tc("Ana"), _tc("CPF 222.222.222-22")])
     corpo = _tbl([_tc("Responsáveis"), _tc(de_dentro)])
-    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0] == (
+    assert _texto(_word(tmp_path, corpo)).splitlines()[0] == (
         "| Responsáveis | Ana / CPF 222.222.222-22 |")
 
 
 def test_a_barra_vertical_do_texto_nao_parte_a_coluna(tmp_path):
     corpo = _tbl([_tc("a | b"), _tc("c")])
-    linha = arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0]
+    linha = _texto(_word(tmp_path, corpo)).splitlines()[0]
     assert linha == "| a \\| b | c   |"
 
 
@@ -155,12 +160,12 @@ def test_linha_que_comeca_mais_a_direita(tmp_path):
     corpo = (_tbl([_tc("a"), _tc("b")])[:-len("</w:tbl>")]
              + '<w:tr><w:trPr><w:gridBefore w:val="1"/></w:trPr>'
              + _tc("só b") + "</w:tr></w:tbl>")
-    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[2] == "|     | só b |"
+    assert _texto(_word(tmp_path, corpo)).splitlines()[2] == "|     | só b |"
 
 
 def test_tabela_vazia_nao_sai_e_texto_em_volta_continua(tmp_path):
     corpo = _p("Antes.") + _tbl([_tc(), _tc()]) + _p("Depois.")
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "Antes.\n\nDepois."
+    assert _texto(_word(tmp_path, corpo)) == "Antes.\n\nDepois."
 
 
 def test_o_cpf_curto_na_coluna_continua_com_a_coluna_reta(tmp_path):
@@ -170,7 +175,7 @@ def test_o_cpf_curto_na_coluna_continua_com_a_coluna_reta(tmp_path):
     corpo = _tbl([_tc("Bolsista"), _tc("CPF"), _tc("Valor")],
                  [_tc("Ana Suposta Lima"), _tc("111.111.111-11"), _tc("R$ 1,00")],
                  [_tc("Ivo"), _tc("0000000000"), _tc("R$ 2,00")])
-    texto = arquivo_word.ler(_word(tmp_path, corpo))
+    texto = _texto(_word(tmp_path, corpo))
     saida = aplicar(texto, procurar(texto))
     assert "XXX000000XX" in saida
     assert len({len(linha) for linha in saida.splitlines()}) == 1
@@ -181,7 +186,7 @@ def test_o_que_nao_e_pacote_do_word_da_a_frase_de_estragado(tmp_path, conteudo):
     caminho = tmp_path / "relatorio.docx"
     caminho.write_bytes(conteudo)
     with pytest.raises(ArquivoNaoServe) as erro:
-        arquivo_word.ler(caminho)
+        _texto(caminho)
     assert "relatorio.docx" in str(erro.value)
     assert "estragado" in str(erro.value)
 
@@ -198,7 +203,7 @@ def test_conteudo_estragado_por_dentro_da_a_frase_e_nao_escapa(tmp_path):
     caminho = tmp_path / "corrompido.docx"
     caminho.write_bytes(bytes(corrompido))
     with pytest.raises(ArquivoNaoServe):
-        arquivo_word.ler(caminho)
+        _texto(caminho)
 
     with zipfile.ZipFile(tmp_path / "base.zip", "w", zipfile.ZIP_STORED) as pacote:
         pacote.writestr("word/document.xml", "<a/>")
@@ -210,7 +215,7 @@ def test_conteudo_estragado_por_dentro_da_a_frase_e_nao_escapa(tmp_path):
     caminho = tmp_path / "formato-raro.docx"
     caminho.write_bytes(bytes(formato_raro))
     with pytest.raises(ArquivoNaoServe):
-        arquivo_word.ler(caminho)
+        _texto(caminho)
 
 
 def test_pacote_sem_a_parte_do_corpo_da_a_frase_de_estragado(tmp_path):
@@ -218,12 +223,12 @@ def test_pacote_sem_a_parte_do_corpo_da_a_frase_de_estragado(tmp_path):
     with zipfile.ZipFile(caminho, "w") as pacote:
         pacote.writestr("outra-coisa.xml", "<a/>")
     with pytest.raises(ArquivoNaoServe):
-        arquivo_word.ler(caminho)
+        _texto(caminho)
 
 
 def test_o_word_da_massa():
     """O documento 18, inteiro: é ele que a conferência 04 mostra."""
-    assert arquivo_word.ler(MASSA / "18-documento-do-word.docx") == (
+    assert _texto(MASSA / "18-documento-do-word.docx") == (
         "FUNDAÇÃO EXEMPLO DE APOIO — Processo 23000.000000/2026-00\n\n"
         "ANEXO — Comprovantes de pagamento\n\n"
         "# Relatório de execução\n\n"
@@ -241,6 +246,11 @@ def test_o_word_da_massa():
         "| Ivo Fictício                                 | 0000000000     | R$ 900,00   |\n"
         "| Otávio Suposto / (bolsa encerrada em agosto) | 444.444.444-44 | R$ 0,00     |\n"
         "| Total pago                                   |                | R$ 2.400,00 |\n\n"
+        "## Análise\n\n"
+        "Parecer: aprovado.\n\n"
+        "Pagamentos conferidos.\n\n"
+        "Bolsista incluída na revisão: Beatriz Inventada, CPF 111.111.111-11.\n\n"
+        "Ficha completa no sistema de bolsas.\n\n"
         "## Plano de trabalho\n\n"
         "| Projeto         | Atividade                     | Responsáveis                                           |\n"
         "| --------------- | ----------------------------- | ------------------------------------------------------ |\n"
@@ -251,7 +261,7 @@ def test_o_word_da_massa():
         "## Prestação de contas\n\n"
         "Saldo devolvido à conta do projeto.[^2]\n\n"
         "Florianópolis, 30 de setembro de 2026.\n\n"
-        "Relatório de execução — documento de exemplo, inventado\n\n"
+        "Relatório de execução — documento de exemplo, inventado — Página 1 de 3\n\n"
         "[^1]: Conforme o plano de trabalho aprovado; bolsista substituto, CPF 666.666.666-66.\n"
         "[^2]: Valores conferidos pela coordenação do projeto.")
 
@@ -307,7 +317,7 @@ def test_cabecalho_abre_e_rodape_fecha_cada_diferente_uma_vez(tmp_path):
          "word/footer1.xml": _borda("ftr", "Rodapé")},
         [("c1", "header", "header1.xml", ""), ("c2", "header", "header2.xml", ""),
          ("r1", "footer", "footer1.xml", "")])
-    assert arquivo_word.ler(caminho) == (
+    assert _texto(caminho) == (
         "Cabeçalho A\n\nCabeçalho B\n\nParte 1\n\nParte 2\n\nParte 3\n\nRodapé")
 
 
@@ -320,7 +330,7 @@ def test_cabecalho_da_primeira_pagina_vem_antes(tmp_path):
         {"word/header1.xml": _borda("hdr", "Das outras"),
          "word/header2.xml": _borda("hdr", "Da primeira")},
         [("c1", "header", "header1.xml", ""), ("c2", "header", "header2.xml", "")])
-    assert arquivo_word.ler(caminho) == "Da primeira\n\nDas outras\n\nCorpo"
+    assert _texto(caminho) == "Da primeira\n\nDas outras\n\nCorpo"
 
 
 def test_cabecalho_de_opcao_desligada_nao_entra(tmp_path):
@@ -334,11 +344,11 @@ def test_cabecalho_de_opcao_desligada_nao_entra(tmp_path):
              "word/header3.xml": _borda("hdr", "Pares")}
     ligacoes = [("c1", "header", "header1.xml", ""), ("c2", "header", "header2.xml", ""),
                 ("c3", "header", "header3.xml", "")]
-    assert arquivo_word.ler(_word_com_pecas(tmp_path, corpo, pecas, ligacoes)) == (
+    assert _texto(_word_com_pecas(tmp_path, corpo, pecas, ligacoes)) == (
         "Impresso\n\nCorpo")
     # Com "pares e ímpares diferentes" ligada, o das pares entra.
     pecas["word/settings.xml"] = f"<w:settings {ESPACOS}><w:evenAndOddHeaders/></w:settings>"
-    assert arquivo_word.ler(_word_com_pecas(tmp_path, corpo, pecas, ligacoes)) == (
+    assert _texto(_word_com_pecas(tmp_path, corpo, pecas, ligacoes)) == (
         "Impresso\n\nPares\n\nCorpo")
 
 
@@ -353,14 +363,14 @@ def test_cabecalho_de_antes_de_uma_alteracao_controlada_nao_entra(tmp_path):
         {"word/header1.xml": _borda("hdr", "Cabeçalho novo"),
          "word/header2.xml": _borda("hdr", "Velho, CPF 111.111.111-11")},
         [("novo", "header", "header1.xml", ""), ("velho", "header", "header2.xml", "")])
-    assert arquivo_word.ler(caminho) == "Cabeçalho novo\n\nCorpo"
+    assert _texto(caminho) == "Cabeçalho novo\n\nCorpo"
 
 
 def test_cabecalho_que_falta_no_pacote_nao_trava(tmp_path):
     corpo = _p("Corpo") + _secao(("header", "default", "c1"))
     caminho = _word_com_pecas(tmp_path, corpo, {},
                               [("c1", "header", "header1.xml", "")])
-    assert arquivo_word.ler(caminho) == "Corpo"
+    assert _texto(caminho) == "Corpo"
 
 
 def _notas(raiz, *notas):
@@ -384,7 +394,7 @@ def test_notas_numeradas_na_ordem_e_as_de_fim_continuam(tmp_path):
         "word/footnotes.xml": _notas("footnote", (2, "Nota B, CPF 111.111.111-11."),
                                      (9, "Nota A.")),
         "word/endnotes.xml": _notas("endnote", (5, "Nota de fim."))})
-    assert arquivo_word.ler(caminho) == (
+    assert _texto(caminho) == (
         "Fim antes[^3]\n\nRodapé A[^1]\n\nRodapé B[^2]\n\n"
         "[^1]: Nota A.\n[^2]: Nota B, CPF 111.111.111-11.\n[^3]: Nota de fim.")
 
@@ -395,7 +405,7 @@ def test_nota_chamada_numa_celula_nao_entorta_a_coluna(tmp_path):
                   _tc("R$ 1,00")])
     caminho = _word_com_pecas(tmp_path, corpo, {
         "word/footnotes.xml": _notas("footnote", (1, "Bolsista."))})
-    linhas = arquivo_word.ler(caminho).splitlines()
+    linhas = _texto(caminho).splitlines()
     assert linhas[2] == "| Ana[^1] | R$ 1,00 |"
     assert len({len(linha) for linha in linhas[:3]}) == 1
 
@@ -416,19 +426,19 @@ def _caixa(texto):
 def test_caixa_de_texto_sai_uma_vez_depois_do_paragrafo(tmp_path):
     corpo = (f"<w:p><w:r><w:t>Presa aqui.</w:t></w:r>"
              f"<w:r>{_caixa('Na caixa, CPF 111.111.111-11.')}</w:r></w:p>" + _p("Depois."))
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == (
+    assert _texto(_word(tmp_path, corpo)) == (
         "Presa aqui.\n\nNa caixa, CPF 111.111.111-11.\n\nDepois.")
 
 
 def test_caixa_de_texto_num_paragrafo_sem_texto(tmp_path):
     corpo = f"<w:p><w:r>{_caixa('Só a caixa.')}</w:r></w:p>"
-    assert arquivo_word.ler(_word(tmp_path, corpo)) == "Só a caixa."
+    assert _texto(_word(tmp_path, corpo)) == "Só a caixa."
 
 
 def test_caixa_de_texto_dentro_da_celula(tmp_path):
     celula = f"<w:p><w:r><w:t>Nome</w:t></w:r><w:r>{_caixa('da caixa')}</w:r></w:p>"
     corpo = _tbl([_tc(celula), _tc("x")])
-    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0] == (
+    assert _texto(_word(tmp_path, corpo)).splitlines()[0] == (
         "| Nome / da caixa | x   |")
 
 
@@ -440,7 +450,7 @@ def test_caixa_na_celula_com_barra_e_tabela_nao_parte_a_tabela(tmp_path):
              f"</w:txbxContent></v:textbox></v:shape></w:pict>")
     celula = f"<w:p><w:r><w:t>Dados</w:t></w:r><w:r>{caixa}</w:r></w:p>"
     corpo = _tbl([_tc("A"), _tc("B")], [_tc(celula), _tc("x")])
-    linhas = arquivo_word.ler(_word(tmp_path, corpo)).splitlines()
+    linhas = _texto(_word(tmp_path, corpo)).splitlines()
     assert linhas[2].startswith("| Dados / Banco \\| Conta / Ag / 123 |")
     assert len({len(linha) for linha in linhas}) == 1
     assert all(linha.count("|") - linha.count("\\|") == 3 for linha in linhas)
@@ -456,7 +466,7 @@ def test_caixa_dentro_de_caixa_sai_uma_vez(tmp_path):
                f"{_p('Fora.')}{de_dentro}</w:txbxContent></v:textbox></v:shape></w:pict>"
                f"</mc:Fallback></mc:AlternateContent>")
     corpo = f"<w:p><w:r>{de_fora}</w:r></w:p>"
-    texto = arquivo_word.ler(_word(tmp_path, corpo))
+    texto = _texto(_word(tmp_path, corpo))
     assert texto.count("111.111.111-11") == 1
     assert texto.count("Fora.") == 1
 
@@ -472,7 +482,116 @@ def test_nota_chamada_fora_do_corpo_nao_derruba_o_documento(tmp_path):
         {"word/header1.xml": cabecalho,
          "word/footnotes.xml": _notas("footnote", (1, "Nota."))},
         [("c1", "header", "header1.xml", "")])
-    assert arquivo_word.ler(caminho) == "Topo\n\nCorpo"
+    assert _texto(caminho) == "Topo\n\nCorpo"
+
+
+# ----------------------------------- o que o Word guarda e não imprime (etapa 4)
+
+def test_o_word_da_massa_conta_o_que_ficou_de_fora():
+    word = arquivo_word.ler(MASSA / "18-documento-do-word.docx")
+    assert (word.comentarios, word.texto_oculto, word.alteracoes) == (2, True, True)
+    # Nenhum dos CPFs que o Word guarda e não imprime chega ao texto: o do
+    # comentário, o do texto oculto e o da pessoa excluída na revisão.
+    for numero in ("888.888.888-88", "999.999.999-99", "555.555.555-55"):
+        assert numero not in word.texto, numero
+
+
+def test_texto_oculto_fica_de_fora_e_e_contado(tmp_path):
+    corpo = ("<w:p><w:r><w:t>Visível.</w:t></w:r><w:r><w:rPr><w:vanish/></w:rPr>"
+             "<w:t> CPF 111.111.111-11</w:t></w:r></w:p>")
+    word = arquivo_word.ler(_word(tmp_path, corpo))
+    assert (word.texto, word.texto_oculto) == ("Visível.", True)
+
+
+def test_texto_oculto_pelo_estilo_tambem_fica_de_fora(tmp_path):
+    """Regressão da lente crítica da etapa 4: o oculto vindo do estilo do
+    trecho (ou do parágrafo, ou herdado) entrava no .md, e a faixa não avisava."""
+    estilos = (
+        '<w:style w:styleId="Oculto"><w:name w:val="Oculto"/>'
+        "<w:rPr><w:vanish/></w:rPr></w:style>"
+        '<w:style w:styleId="Herda"><w:name w:val="Herda"/>'
+        '<w:basedOn w:val="Oculto"/></w:style>'
+        '<w:style w:styleId="Volta"><w:name w:val="Volta"/><w:basedOn w:val="Oculto"/>'
+        '<w:rPr><w:vanish w:val="0"/></w:rPr></w:style>')
+    corpo = ('<w:p><w:r><w:t>Visível.</w:t></w:r><w:r><w:rPr><w:rStyle w:val="Oculto"/>'
+             "</w:rPr><w:t> CPF 111.111.111-11</w:t></w:r></w:p>"
+             + _p("Do parágrafo, CPF 222.222.222-22", '<w:pStyle w:val="Herda"/>')
+             + _p("Desfeito no estilo.", '<w:pStyle w:val="Volta"/>'))
+    word = arquivo_word.ler(_word(tmp_path, corpo, estilos))
+    assert word.texto == "Visível.\n\nDesfeito no estilo."
+    assert word.texto_oculto
+
+
+def test_oculto_sem_letra_nao_acende_a_faixa(tmp_path):
+    """Regressão da lente crítica da etapa 4: o Word marca como ocultos pedaços
+    sem texto (a marca de um campo), e a faixa dizia "texto oculto" à toa."""
+    corpo = ('<w:p><w:r><w:t>Texto.</w:t></w:r><w:r><w:rPr><w:vanish/></w:rPr>'
+             '<w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:vanish/></w:rPr>'
+             "<w:t> </w:t></w:r></w:p>")
+    word = arquivo_word.ler(_word(tmp_path, corpo))
+    assert (word.texto, word.texto_oculto) == ("Texto.", False)
+
+
+def test_trecho_marcado_como_nao_oculto_continua(tmp_path):
+    corpo = ('<w:p><w:r><w:rPr><w:vanish w:val="false"/></w:rPr>'
+             "<w:t>Aparece.</w:t></w:r></w:p>")
+    word = arquivo_word.ler(_word(tmp_path, corpo))
+    assert (word.texto, word.texto_oculto) == ("Aparece.", False)
+
+
+def test_comentarios_contados_e_fora_do_texto(tmp_path):
+    caminho = _word_com_pecas(
+        tmp_path, _p("Texto.") + '<w:p><w:r><w:commentReference w:id="0"/></w:r></w:p>',
+        {"word/comments.xml": (f"<w:comments {ESPACOS}>"
+                               f'<w:comment w:id="0">{_p("CPF 111.111.111-11")}</w:comment>'
+                               f'<w:comment w:id="1">{_p("Outro.")}</w:comment></w:comments>')})
+    word = arquivo_word.ler(caminho)
+    assert (word.texto, word.comentarios) == ("Texto.", 2)
+
+
+def test_alteracao_controlada_e_avisada_e_sai_aceita(tmp_path):
+    corpo = ("<w:p><w:r><w:t>Antes </w:t></w:r>"
+             "<w:moveFrom><w:r><w:t>saiu daqui </w:t></w:r></w:moveFrom>"
+             "<w:moveTo><w:r><w:t>chegou aqui</w:t></w:r></w:moveTo></w:p>")
+    word = arquivo_word.ler(_word(tmp_path, corpo))
+    assert (word.texto, word.alteracoes) == ("Antes chegou aqui", True)
+
+
+def test_documento_sem_nada_de_fora(tmp_path):
+    word = arquivo_word.ler(_word(tmp_path, _p("Só texto.")))
+    assert word == arquivo_word.DocumentoDoWord("Só texto.")
+
+
+def test_linha_de_tabela_apagada_nao_sai(tmp_path):
+    apagada = ('<w:tr><w:trPr><w:del w:id="1"/></w:trPr>'
+               + _tc("<w:p><w:del><w:r><w:delText>Caio</w:delText></w:r></w:del></w:p>")
+               + _tc("x") + "</w:tr>")
+    corpo = _tbl([_tc("Nome"), _tc("Valor")], [_tc("Ana"), _tc("1")])
+    corpo = corpo.replace("</w:tbl>", apagada + "</w:tbl>")
+    linhas = _texto(_word(tmp_path, corpo)).splitlines()
+    assert len(linhas) == 3
+    assert "x" not in linhas[-1]
+
+
+def test_campo_entra_com_o_que_mostra_e_nao_a_formula(tmp_path):
+    corpo = ('<w:p><w:r><w:t xml:space="preserve">Página </w:t></w:r>'
+             '<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+             "<w:r><w:instrText> PAGE </w:instrText></w:r>"
+             '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+             "<w:r><w:t>4</w:t></w:r>"
+             '<w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>'
+             '<w:p><w:fldSimple w:instr=" DATE "><w:r><w:t>30/09/2026</w:t></w:r>'
+             "</w:fldSimple></w:p>")
+    assert _texto(_word(tmp_path, corpo)) == "Página 4\n\n30/09/2026"
+
+
+def test_do_link_vai_so_o_texto(tmp_path):
+    corpo = ('<w:p><w:hyperlink r:id="x"><w:r><w:t>sistema</w:t></w:r>'
+             "</w:hyperlink></w:p>")
+    caminho = _word_com_pecas(tmp_path, corpo, {}, [
+        ("x", "hyperlink", "https://exemplo.invalid/ficha?cpf=11111111111",
+         ' TargetMode="External"')])
+    assert _texto(caminho) == "sistema"
 
 
 def test_o_endereco_de_um_link_nunca_vira_peca_lida(tmp_path):
@@ -480,4 +599,4 @@ def test_o_endereco_de_um_link_nunca_vira_peca_lida(tmp_path):
     corpo = _p("Corpo") + _secao(("header", "default", "x"))
     caminho = _word_com_pecas(tmp_path, corpo, {}, [
         ("x", "hyperlink", "http://exemplo.invalid/cpf", ' TargetMode="External"')])
-    assert arquivo_word.ler(caminho) == "Corpo"
+    assert _texto(caminho) == "Corpo"

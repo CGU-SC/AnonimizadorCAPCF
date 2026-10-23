@@ -40,6 +40,30 @@ from lista_de_achados import ListaDeAchados, contexto
 
 AVISO_SEM_CPF = "Nenhum CPF encontrado neste texto"
 
+# As frases da faixa do Word (RN-29), com o texto aprovado no rascunho 10.
+FRASE_DAS_ALTERACOES = (
+    "As alterações controladas saíram aceitas, como o documento ficaria no fim.")
+
+
+def frase_do_que_ficou_de_fora(word):
+    """A primeira linha da faixa: "Ficou fora do arquivo: 3 comentários · ...".
+
+    Só entra o que o documento tinha; sem nada, a frase é vazia. A explicação
+    das imagens vai junto delas: quem lê "ficou de fora" pensa que o programa
+    deixou passar, e precisa saber que o texto de dentro da imagem não é lido.
+    """
+    partes = []
+    if word.comentarios:
+        partes.append(f"{word.comentarios} comentário"
+                      + ("s" if word.comentarios > 1 else ""))
+    if word.texto_oculto:
+        partes.append("texto oculto")
+    if word.imagens:
+        partes.append(f"{word.imagens} image" + ("ns" if word.imagens > 1 else "m")
+                      + " (o programa não lê o que está escrito "
+                      + ("nelas)" if word.imagens > 1 else "nela)"))
+    return f"Ficou fora do arquivo: {' · '.join(partes)}." if partes else ""
+
 
 @dataclass(frozen=True)
 class Liberado:
@@ -143,6 +167,12 @@ class TelaRevisao(QWidget):
         )
         layout.addWidget(self.legenda)
         layout.addSpacing(estilo.ESPACO_3)
+
+        # A faixa do que ficou de fora do Word vem antes do aviso de "nenhum
+        # CPF": no Word sem CPF e com imagens, os dois aparecem, e o que ficou
+        # de fora é lido primeiro (rascunho 10).
+        self.faixa_do_word = self._montar_faixa_do_word()
+        layout.addWidget(self.faixa_do_word)
 
         self.aviso_sem_cpf = self._montar_aviso_sem_cpf()
         layout.addWidget(self.aviso_sem_cpf)
@@ -364,6 +394,74 @@ class TelaRevisao(QWidget):
         acoes.addWidget(self.botao_proximo)
         return linha, acoes
 
+    def _montar_faixa_do_word(self):
+        """A faixa do que ficou fora do arquivo, no documento do Word (RN-29).
+
+        Tem a cara do aviso de "nenhum CPF" - o quadro azul com a borda grossa
+        à esquerda -, e não o amarelo: na revisão o amarelo quer dizer "CPF
+        suspeito", e uma faixa amarela no alto seria lida como alarme sobre os
+        números (rascunho 10). Fica à vista o tempo todo, sem botão de fechar.
+        """
+        # A faixa e o espaço de baixo dela aparecem e somem juntos: sem o
+        # embrulho, o espaço ficaria na tela de todo documento que não é Word.
+        embrulho = QWidget()
+        fora = QVBoxLayout(embrulho)
+        fora.setContentsMargins(0, 0, 0, 0)
+        fora.setSpacing(0)
+
+        caixa = QFrame()
+        caixa.setObjectName("faixa_do_word")
+        caixa.setFixedWidth(self.LARGURA_DO_AVISO)
+        caixa.setStyleSheet(
+            f"""
+            QFrame#faixa_do_word {{
+                background-color: rgba(59, 110, 165, 26);
+                border-left: 4px solid {estilo.COR_DESTAQUE};
+                border-radius: {estilo.RAIO}px;
+            }}
+            """
+        )
+        dentro = QVBoxLayout(caixa)
+        dentro.setContentsMargins(estilo.ESPACO_3, estilo.ESPACO_2,
+                                  estilo.ESPACO_3, estilo.ESPACO_2)
+        dentro.setSpacing(estilo.ESPACO_1)
+
+        self.faixa_ficou_de_fora = QLabel()
+        self.faixa_ficou_de_fora.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 600;"
+            f"color: {estilo.COR_TEXTO}; border: none; background: transparent;"
+        )
+        self.faixa_alteracoes = QLabel(FRASE_DAS_ALTERACOES)
+        self.faixa_alteracoes.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+            "border: none; background: transparent;"
+        )
+        for frase in (self.faixa_ficou_de_fora, self.faixa_alteracoes):
+            frase.setWordWrap(True)
+            frase.setFixedWidth(self.LARGURA_DO_TEXTO_DO_AVISO)
+            dentro.addWidget(frase)
+        fora.addWidget(caixa)
+        fora.addSpacing(estilo.ESPACO_2)
+        embrulho.setVisible(False)
+        return embrulho
+
+    def _mostrar_faixa_do_word(self, word):
+        """Acende a faixa com o que este Word tinha; sem nada, ela fica escondida."""
+        ficou_de_fora = frase_do_que_ficou_de_fora(word) if word else ""
+        alteracoes = bool(word and word.alteracoes)
+        for frase, texto, visivel in (
+                (self.faixa_ficou_de_fora, ficou_de_fora, bool(ficou_de_fora)),
+                (self.faixa_alteracoes, FRASE_DAS_ALTERACOES, alteracoes)):
+            frase.setText(texto)
+            frase.setVisible(visivel)
+            # A altura é calculada a partir da largura, com o estilo já posto:
+            # sem isso a última linha da frase some para fora da borda, sem
+            # nada acusar ("O que já nos mordeu").
+            frase.ensurePolished()
+            frase.setMinimumHeight(frase.heightForWidth(self.LARGURA_DO_TEXTO_DO_AVISO))
+        self.faixa_do_word.setVisible(bool(ficou_de_fora) or alteracoes)
+
     def _montar_aviso_sem_cpf(self):
         caixa = QFrame()
         caixa.setObjectName("aviso_sem_cpf")
@@ -415,8 +513,11 @@ class TelaRevisao(QWidget):
 
     # ------------------------------------------------------------------ uso
 
-    def mostrar(self, nome_da_origem, texto, ocorrencias):
+    def mostrar(self, nome_da_origem, texto, ocorrencias, word=None):
+        """Abre a revisão do texto. `word` é o que ficou de fora do documento
+        do Word, para a faixa; nos outros tipos de arquivo, não há faixa."""
         self._ocorrencias = list(ocorrencias)
+        self._mostrar_faixa_do_word(word)
         # O texto de origem fica guardado porque a tela é redesenhada a cada
         # máscara desfeita ou refeita - e ela se redesenha a partir do original,
         # nunca do que já está na tela.
@@ -761,6 +862,7 @@ class TelaRevisao(QWidget):
         self._filtro = None
         self.texto.clear()
         self.lista.mostrar("", [])
+        self._mostrar_faixa_do_word(None)
         self._atualizar_navegacao()
 
     # -------------------------------------------------------------- por dentro

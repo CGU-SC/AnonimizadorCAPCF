@@ -38,6 +38,7 @@ TIPOS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>
 <Override PartName="/word/footnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>
 <Override PartName="/word/endnotes.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml"/>
+<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>
 </Types>"""
 
 LIGACOES_DO_PACOTE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -54,6 +55,8 @@ LIGACOES_DO_DOCUMENTO = """<?xml version="1.0" encoding="UTF-8" standalone="yes"
 <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>
 <Relationship Id="rId6" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes" Target="footnotes.xml"/>
 <Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes" Target="endnotes.xml"/>
+<Relationship Id="rId8" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://bolsas.exemplo.invalid/ficha?cpf=11111111111" TargetMode="External"/>
+<Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="comments.xml"/>
 </Relationships>"""
 
 # Os códigos dos estilos imitam os do Word em português ("Ttulo1"), que não
@@ -119,6 +122,46 @@ def tabela(*linhas):
     return "<w:tbl>" + "".join(f"<w:tr>{''.join(l)}</w:tr>" for l in linhas) + "</w:tbl>"
 
 
+MARCA_DE_ALTERACAO = 'w:author="Revisora Exemplo" w:date="2026-09-30T00:00:00Z"'
+
+
+def oculto(texto):
+    """Um trecho formatado como "oculto": não aparece no Word nem é impresso."""
+    return (f'<w:r><w:rPr><w:vanish/></w:rPr>'
+            f'<w:t xml:space="preserve">{escape(texto)}</w:t></w:r>')
+
+
+def inserido(texto, codigo):
+    """Um trecho incluído com o "controlar alterações" ligado."""
+    return f'<w:ins w:id="{codigo}" {MARCA_DE_ALTERACAO}>{trecho(texto)}</w:ins>'
+
+
+def apagado(texto, codigo):
+    """Um trecho apagado com o "controlar alterações" ligado: o Word o mostra
+    riscado, e ele continua dentro do arquivo."""
+    return (f'<w:del w:id="{codigo}" {MARCA_DE_ALTERACAO}><w:r>'
+            f'<w:delText xml:space="preserve">{escape(texto)}</w:delText></w:r></w:del>')
+
+
+def link(texto, ligacao):
+    return f'<w:hyperlink r:id="{ligacao}">{trecho(texto)}</w:hyperlink>'
+
+
+def comentario_chamado(codigo):
+    """O ponto do texto em que um comentário (o balão na margem) está preso."""
+    return f'<w:r><w:commentReference w:id="{codigo}"/></w:r>'
+
+
+def campo(instrucao, resultado):
+    """Um campo automático, como o número da página: a fórmula fica guardada
+    (instrText) e o Word mostra o resultado, que é o que vai para o .md."""
+    return ('<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+            f'<w:r><w:instrText xml:space="preserve"> {instrucao} </w:instrText></w:r>'
+            '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+            f"{trecho(resultado)}"
+            '<w:r><w:fldChar w:fldCharType="end"/></w:r>')
+
+
 def chamada_de_nota(tipo, codigo):
     """O número pequeno, no meio do texto, que chama a nota de rodapé ou de fim."""
     return f'<w:r><w:{tipo}Reference w:id="{codigo}"/></w:r>'
@@ -151,7 +194,16 @@ def peca(raiz, conteudo):
 # partes, e aparece uma vez só.
 CABECALHO_1 = peca("hdr", paragrafo("FUNDAÇÃO EXEMPLO DE APOIO — Processo 23000.000000/2026-00"))
 CABECALHO_2 = peca("hdr", paragrafo("ANEXO — Comprovantes de pagamento"))
-RODAPE = peca("ftr", paragrafo("Relatório de execução — documento de exemplo, inventado"))
+RODAPE = peca("ftr", paragrafo("Relatório de execução — documento de exemplo, inventado — Página ",
+                               campo("PAGE", "1"), " de 3"))
+
+# Os comentários (os balões na margem): nunca vão para o .md, e a faixa conta
+# quantos eram. O segundo tem um CPF, que não pode aparecer em lugar nenhum.
+COMENTARIOS = peca("comments", (
+    '<w:comment w:id="0" w:author="Revisora Exemplo">'
+    + paragrafo("Conferir o termo de outorga.") + "</w:comment>"
+    '<w:comment w:id="1" w:author="Revisora Exemplo">'
+    + paragrafo("Ver a ficha do CPF 888.888.888-88.") + "</w:comment>"))
 
 # As duas primeiras notas são as separadoras que o Word grava sozinho em todo
 # documento com nota; elas não são chamadas no texto e não saem no .md.
@@ -205,7 +257,24 @@ def corpo_do_documento():
              celula("444.444.444-44"), celula("R$ 0,00")],
             # Mesclada em duas colunas: o texto fica na primeira posição.
             [celula("Total pago", ocupa=2), celula("R$ 2.400,00")],
+            # Uma linha apagada com o "controlar alterações" ligado: não sai.
+            ['<w:trPr><w:del w:id="20" ' + MARCA_DE_ALTERACAO + "/></w:trPr>",
+             celula(paragrafo(apagado("Caio Removido", 21))),
+             celula(paragrafo(apagado("555.555.555-55", 22))),
+             celula(paragrafo(apagado("R$ 300,00", 23)))],
         ),
+        # O que o Word guarda e não imprime (etapa 4): nada disso vai para o
+        # .md, e a faixa da revisão avisa.
+        paragrafo("Análise", estilo="Ttulo2"),
+        paragrafo("Parecer: aprovado.", comentario_chamado(0)),
+        paragrafo("Pagamentos conferidos.", comentario_chamado(1),
+                  oculto(" Conferidos contra a ficha do CPF 999.999.999-99.")),
+        paragrafo("Bolsista incluída na revisão: ",
+                  inserido("Beatriz Inventada, CPF 111.111.111-11", 10),
+                  apagado("Caio Removido, CPF 555.555.555-55", 11), "."),
+        # Do link vai só o texto que aparece; o endereço por trás dele, que
+        # aqui termina num número de 11 dígitos, não vai.
+        paragrafo("Ficha completa no ", link("sistema de bolsas", "rId8"), "."),
         paragrafo("Plano de trabalho", estilo="Ttulo2"),
         tabela(
             [celula("Projeto"), celula("Atividade"), celula("Responsáveis")],
@@ -265,6 +334,7 @@ def main():
         "word/footer1.xml": RODAPE,
         "word/footnotes.xml": NOTAS_DE_RODAPE,
         "word/endnotes.xml": NOTAS_DE_FIM,
+        "word/comments.xml": COMENTARIOS,
     })
     # Um arquivo de texto qualquer com o nome trocado para .docx: não é pacote
     # do Word, e tem de dar a frase de "estragado" em vez de travar (RN-30).
