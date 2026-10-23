@@ -216,7 +216,7 @@
 <body>
 
 <h1>Spec ilustrada 003 — Anonimizador de CPF</h1>
-<p class="subtitulo">O combinado do item 3 do backlog, desenhado — 13/09/2026 · situação: aprovada em 14/09/2026, com oito emendas aprovadas até 18/09/2026 · <strong>nona emenda aprovada em 20/10/2026</strong> (funcionalidade 6, o CPF sem o zero da frente)</p>
+<p class="subtitulo">O combinado do item 3 do backlog, desenhado — 13/09/2026 · situação: aprovada em 14/09/2026, com oito emendas aprovadas até 18/09/2026 · <strong>nona emenda aprovada em 20/10/2026</strong> (funcionalidade 6, o CPF sem o zero da frente) · <strong>décima emenda aprovada em 23/10/2026</strong> (funcionalidade 5, o documento do Word)</p>
 
 <div class="objetivo">
   <strong>Objetivo.</strong> Entregar um <code>.md</code> <strong>sem nenhum CPF inteiro</strong>,
@@ -359,8 +359,35 @@
   </div>
 </div>
 
+<div class="emenda">
+  <strong>Décima emenda de 23/10/2026, aprovada — o documento do Word.</strong>
+  O Anonimizar passa a abrir o <code>.docx</code> e leva para a revisão <strong>tudo o que aparece no documento
+  impresso</strong>: o corpo, as tabelas com barras, o cabeçalho e o rodapé, as notas e as caixas de texto, com as
+  alterações controladas aceitas. O que o Word guarda e não imprime (comentários, texto oculto) e as imagens ficam de
+  fora, e uma <strong>faixa na revisão</strong> diz o que ficou. Só o <code>.docx</code>. O arquivo gerado continua
+  sendo só o <code>.md</code>: devolver o próprio Word mascarado foi perguntado e decidido que não se faz (os motivos
+  estão em "Não entra"). A leitura usa só o que já vem no Python, sem biblioteca nova. Levantamento no mapa 06.
+  <div class="classes" style="margin-top:16px">
+    <div class="classe">
+      <h3>Vai para o arquivo</h3>
+      <div class="destino">nesta ordem · sem rótulo do programa</div>
+      <div class="exemplo"><span class="porque">1. o cabeçalho (cada um diferente, uma vez)</span></div>
+      <div class="exemplo"><span class="porque">2. o corpo: títulos, listas, tabelas com barras, caixas de texto onde estão presas</span></div>
+      <div class="exemplo"><span class="porque">3. o rodapé (cada um diferente, uma vez)</span></div>
+      <div class="exemplo"><span class="porque">4. as notas, numeradas: <code>[^1]</code> no texto, <code>[^1]: …</code> no fim</span></div>
+    </div>
+    <div class="classe ignorado">
+      <h3>Fica de fora, e a faixa conta</h3>
+      <div class="destino">nunca vai para o arquivo</div>
+      <div class="exemplo"><span class="porque">comentários · texto oculto · imagens, gráficos e objetos colados</span></div>
+      <div class="exemplo"><span class="porque">o trecho apagado das alterações controladas (o inserido entra)</span></div>
+      <div class="exemplo"><span class="porque">sem aviso: a descrição escondida das imagens, o endereço por trás dos links, a fórmula dos campos</span></div>
+    </div>
+  </div>
+</div>
+
 <h2>O percurso do texto</h2>
-<p class="nota">Três portas de entrada, e todas terminam na mesma revisão. O único momento em que algo vai para o disco é o último.</p>
+<p class="nota">Quatro portas de entrada (o Word desde a décima emenda), e todas terminam na mesma revisão. O único momento em que algo vai para o disco é o último.</p>
 
 <div class="mapa">
   <div class="ramos">
@@ -377,6 +404,12 @@
       <div class="caixa"><div class="rotulo">Lê o arquivo</div><div class="detalhe">com os acentos certos</div></div>
       <div class="seta">↓</div>
       <div class="caixa"><div class="rotulo">Direto</div><div class="detalhe">o texto já existe, não há leitura nem conferência</div></div>
+    </div>
+    <div class="ramo">
+      <div class="ramo-titulo">Menu "Anonimizar" · <code>.docx</code> (décima emenda)</div>
+      <div class="caixa"><div class="rotulo">Monta o texto do documento impresso</div><div class="detalhe">cabeçalho · corpo · rodapé · notas · alterações aceitas</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Direto, com a faixa se algo ficou de fora</div><div class="detalhe">sem leitura nem conferência: o texto já existe</div></div>
     </div>
     <div class="ramo">
       <div class="ramo-titulo">Fim do "Gerar OCR"</div>
@@ -471,11 +504,14 @@
     <div class="fluxo-titulo"><span class="marca"></span>Alternativos — as outras duas portas</div>
     <div class="fluxo-quando">Mais curtos que o normal, e terminam no mesmo passo 7</div>
     <div class="passo"><div class="passo-numero">3a</div><div class="passo-texto"><strong><code>.md</code> ou <code>.txt</code>:</strong> o programa lê o arquivo e pula direto para a revisão.</div></div>
+    <div class="passo"><div class="passo-numero">3a</div><div class="passo-texto"><strong><code>.docx</code> (décima emenda):</strong> o programa monta o texto do documento impresso e pula direto para a revisão. Se havia comentários, texto oculto, imagens ou alterações controladas, a faixa no alto diz o que ficou de fora.</div></div>
     <div class="passo"><div class="passo-numero">1a</div><div class="passo-texto"><strong>Do "Gerar OCR":</strong> "Seguir para Anonimizar" leva o texto conferido para a revisão, e o menu passa a marcar "Anonimizar".</div></div>
   </div>
   <div class="fluxo-coluna torto">
     <div class="fluxo-titulo"><span class="marca"></span>Torto — desistências e tropeços</div>
-    <div class="fluxo-quando">Seis casos, e nenhum deixa arquivo pela metade</div>
+    <div class="fluxo-quando">Oito casos, e nenhum deixa arquivo pela metade</div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Word só com imagens (décima emenda):</strong> a revisão não abre. A frase diz que ele não tem texto, só imagens, e manda salvar como PDF pelo Word e escolher o PDF. Volta à escolha.</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Word que não abre (décima emenda):</strong> protegido por senha, <code>.doc</code> com o nome trocado, estragado, vazio ou grande demais — cada um com a sua frase, e volta à escolha. <code>.docm</code>, <code>.dotx</code> e <code>.doc</code> recebem a frase de "outro tipo".</div></div>
     <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Nenhum CPF:</strong> a revisão abre com o aviso "nenhum CPF encontrado neste texto".</div></div>
     <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Sai sem salvar:</strong> o programa pergunta antes de descartar.</div></div>
     <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Arquivo que não serve:</strong> uma frase dizendo o que houve, e volta à escolha.</div></div>
@@ -491,7 +527,7 @@
 <div class="estados">
   <div class="estado-quadro">
     <div class="estado-cabecalho cab-vazio">vazio</div>
-    <div class="estado-corpo">A área de escolher o arquivo, dizendo que aceita PDF, <code>.md</code> e <code>.txt</code>, sem a escolha do motor.</div>
+    <div class="estado-corpo">A área de escolher o arquivo, dizendo que aceita PDF, <code>.docx</code>, <code>.md</code> e <code>.txt</code>, sem a escolha do motor.</div>
   </div>
   <div class="estado-quadro">
     <div class="estado-cabecalho cab-vazio">vazio, com o motor faltando</div>
@@ -518,6 +554,10 @@
   <div class="estado-quadro">
     <div class="estado-cabecalho cab-decisao">dupla conferência</div>
     <div class="estado-corpo">O número como está escrito no texto, a explicação, e "manter a máscara" já escolhido.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">revisão de um Word com algo de fora</div>
+    <div class="estado-corpo">Qualquer uma das duas revisões, mais a faixa no alto: uma linha por aviso, à vista o tempo todo, sem fechar (décima emenda).</div>
   </div>
 </div>
 <div class="estados" style="margin-top:16px">
@@ -556,6 +596,9 @@
         <li>O aviso da tela de salvar do OCR, atualizado</li>
         <li>Massa de teste nova, sem CPF de ninguém</li>
         <li><strong>Nona emenda:</strong> o CPF de 10 ou 9 dígitos que fecha a conta com os zeros de volta, com ou sem pontuação, mascarado com 11 dígitos e a coluna da tabela compensada</li>
+        <li><strong>Décima emenda:</strong> o <code>.docx</code>, com tudo o que aparece impresso — corpo, tabelas com barras, cabeçalho, rodapé, notas, caixas de texto —, as alterações aceitas, títulos e listas, e a faixa do que ficou de fora</li>
+        <li><strong>Décima emenda:</strong> uma frase para cada Word que não abre, e para o Word só com imagens</li>
+        <li><strong>Décima emenda:</strong> documentos do Word inventados na massa, gerados por script</li>
       </ul>
     </div>
   </div>
@@ -577,6 +620,8 @@
         <li>A leitura por IA local (item 4 do backlog)</li>
         <li><strong>Nona emenda:</strong> o curto que não fecha a conta, o curto estragado pela leitura, o de 8 dígitos ou menos, e procurar "CPF" por perto para decidir</li>
         <li>O aviso de "limitação conhecida" do <code>como-usar.html</code>: cai quando os roteiros forem refeitos para a próxima entrega</li>
+        <li><strong>Décima emenda:</strong> o <code>.doc</code> antigo, o <code>.docm</code> e o <code>.dotx</code>; ler o texto de dentro das imagens; comentários, texto oculto e o trecho apagado; negrito, itálico, cor e fonte; planilha e apresentação</li>
+        <li><strong>Décima emenda — devolver o próprio Word mascarado, nem agora nem depois.</strong> O Word guarda o texto em pedaços, e o CPF pode vir partido entre dois; cada decisão da revisão teria de voltar à posição exata dentro dele; o arquivo inteiro iria junto, e o CPF teria de sair também dos comentários, do trecho apagado, do texto oculto, dos links, das propriedades, da miniatura e da planilha colada; o CPF numa imagem não se reescreve; e seriam umas cinco ou seis etapas a mais, as com mais chance de vazar sem ninguém ver</li>
       </ul>
     </div>
   </div>
@@ -605,7 +650,7 @@
 </div>
 
 <h2>Premissas — o que está sendo assumido</h2>
-<p class="nota">As 15 de antes, mais as 10 da nona emenda no fim. Das da nona, as 3 marcadas como "nova" apareceram ao escrever a emenda, e você ainda não as viu no mapa 05.</p>
+<p class="nota">As 15 de antes, as 10 da nona emenda e as 16 da décima, no fim. Das da décima, as 4 marcadas como "nova" apareceram ao escrever a emenda, e você ainda não as viu no mapa 06.</p>
 <div class="cartoes">
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — No "Anonimizar", o aviso de motor faltando aparece igual ao "Gerar OCR", na primeira tela; a escolha do motor aparece só quando o PDF vai ser lido como imagem (terceira emenda). Para <code>.md</code> e <code>.txt</code>, o motor não importa.</div>
   <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — "Quase CPF" tem o limite de letras no lugar de dígito <strong>depende da pontuação</strong>: até <strong>4</strong> com ponto, traço ou barra separando os grupos, e <strong>2</strong> sem separador ou só com espaços (quarta emenda).</div>
@@ -633,6 +678,22 @@
   <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Letra grudada <strong>antes</strong> do curto não o impede de contar (<code>CPF0000000000</code>), como no CPF completo.</div>
   <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Com 9 dígitos, a etiqueta diz "sem os zeros da frente", no plural.</div>
   <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Na massa e nos testes, o curto que fecha a conta é só de zeros. O formato com outros dígitos é conferido direto na regra da máscara, e o telefone que fecha a conta não entra na massa.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — Gráfico, planilha colada, desenho e outros objetos colados contam como <strong>imagem</strong> na faixa: o programa não lê o que está dentro deles.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — As notas de rodapé vêm primeiro, numeradas de 1 em diante, e as de fim continuam a numeração, no formato de nota do <code>.md</code> (<code>[^1]</code>).</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — Título é o parágrafo que o Word marca como título (estilo "Título", "Título 1" a "Título 6", ou nível de tópico). Texto só em negrito e maior não vira título.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — Quando o CPF sem o zero da frente é o texto mais largo da coluna, aquela linha da tabela anda 1 ou 2 posições: continua tabela, só o alinhamento visual muda.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — O texto do <code>.docx</code> vai direto para a revisão, sem leitura nem conferência.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Protegido por senha, <code>.doc</code> renomeado, estragado e vazio: cada um com a sua frase, e volta à escolha.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — O Word entra só no Anonimizar. O Gerar OCR continua só com PDF.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — <code>relatorio.docx</code> sugere <code>relatorio - sem CPF.md</code>, e o <code>.docx</code> original nunca é alterado.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Campo automático: vai o que o Word mostra, e não a fórmula.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Link: vai o texto que aparece, nunca o endereço por trás.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — A descrição escondida da imagem não vai.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Há um tamanho máximo para o Word: 50 MB de texto descompactado, conferido antes de descompactar.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — A massa ganha documentos do Word inventados, gerados por script, com os CPFs da RN-22.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — A tela de escolher diz "PDF, .docx, .md ou .txt", e o <code>.docx</code> funciona sem motor.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Quebra de página não deixa marca; subitem sai com recuo; lista numerada leva o número que o Word mostra.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — O teste que proibia o Word passa a usar uma planilha como "outro tipo".</div>
 </div>
 
 <h2>As regras que mais pesam</h2>
@@ -645,6 +706,10 @@
   <div class="cartao regra"><span class="chave">RN-22</span> — A massa de teste nunca tem CPF que possa ser de alguém. Na nona emenda, o curto que fecha a conta é só de zeros.</div>
   <div class="cartao regra"><span class="chave">RN-1 · nona emenda</span> — O número de 10 ou 9 dígitos que fecha a conta com os zeros de volta é CPF válido. O que falha não é achado.</div>
   <div class="cartao regra"><span class="chave">RN-6 · nona emenda</span> — Ele é mascarado com os 11 dígitos de volta, no jeito em que estava escrito, e a coluna é compensada.</div>
+  <div class="cartao regra"><span class="chave">RN-24 · décima emenda</span> — Do Word vai o documento impresso, na ordem cabeçalho, corpo, rodapé, notas, sem rótulo do programa.</div>
+  <div class="cartao regra"><span class="chave">RN-25 · décima emenda</span> — O Word como ficaria com tudo aceito: o trecho apagado, os comentários e o texto oculto nunca vão para o arquivo.</div>
+  <div class="cartao regra"><span class="chave">RN-29 · décima emenda</span> — A faixa diz o que ficou de fora, só na tela, e nunca no arquivo.</div>
+  <div class="cartao regra"><span class="chave">RN-30 · décima emenda</span> — O Word só com imagens não abre a revisão: a frase manda pelo caminho do PDF.</div>
 </div>
 
 <h2>Questões em aberto</h2>

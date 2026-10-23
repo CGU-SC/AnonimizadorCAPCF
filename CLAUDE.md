@@ -18,6 +18,7 @@ maduro do mercado para ler PDF, rodar OCR e achar padrão com regex.
 | Interface | PySide6 (Qt) — menu lateral + painel principal |
 | Leitura de PDF | PyMuPDF — extrai texto, detecta ausência de texto, converte página em imagem para o OCR |
 | OCR | Dois motores na escolha (spec 002, emenda de 18/10/2026). **PaddleOCR**, o padrão: os modelos PP-OCRv6 pequenos, rodados pelo RapidOCR 3.10.0 com o onnxruntime 1.31.0, dentro do programa — nada é baixado. **Tesseract**, a alternativa, via pytesseract, com pacote de português; o detector de orientação dele endireita a página também para o PaddleOCR |
+| Leitura de Word | Sem biblioteca — o `.docx` é um pacote compactado de XML, aberto com o `zipfile` e o `xml.etree.ElementTree`, que já vêm no Python (funcionalidade 5, decidido em 23/10/2026). Descartados: o PyMuPDF, que só abre `.docx` na versão paga (Pro); a python-docx, que não lê caixa de texto, nota nem alteração controlada; o mammoth, que deixa de fora cabeçalho e rodapé; o docx2python, mantido por uma pessoa só; e o pandoc, programa a mais em cada máquina |
 | Validação de CPF | Sem biblioteca — dígito verificador calculado na mão |
 | Dados | Sem banco — cada documento é processado sozinho, sem estado entre usos |
 | Testes | pytest |

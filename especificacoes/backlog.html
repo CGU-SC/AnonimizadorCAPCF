@@ -71,17 +71,12 @@
 <p class="subtitulo">O que está previsto para o Anonimizador CAPCF — espelha <code>especificacoes/backlog.md</code>, sempre a versão vigente</p>
 
 <div class="coluna">
-  <h2>Prevista <span class="contagem">3</span></h2>
+  <h2>Prevista <span class="contagem">2</span></h2>
   <div class="cartoes">
     <div class="cartao">
       <div class="cartao-titulo">8. Lembrar as escolhas de quem usa</div>
       <div class="cartao-entrega">O programa lembra, de um uso para o outro, as escolhas da pessoa — o motor de leitura marcado, e depois a configuração da IA local —, em vez de voltar ao padrão a cada vez que abre.</div>
       <div class="cartao-entrega">Pedida em 18/10/2026, no levantamento da funcionalidade 7, onde ficou de fora. Ligada à funcionalidade 4, que parou na mesma pergunta: <strong>onde guardar</strong>, e a emenda da RN-22 da spec 002 — separando a configuração da pessoa, que poderia ser guardada, da memória do trabalho (documento, texto lido, pasta), que continua proibida.</div>
-    </div>
-    <div class="cartao">
-      <div class="cartao-titulo">5. Abrir documento do Word</div>
-      <div class="cartao-entrega">Aceita <code>.docx</code> no Anonimizar, tirando o texto e as tabelas de dentro dele sem instalar nada a mais na máquina.</div>
-      <div class="cartao-entrega">Pedida em 16/09/2026, na conferência da etapa 2 do Anonimizar. Antes de construir, precisa de levantamento próprio: as tabelas, o que mora fora do corpo do texto (cabeçalho, rodapé, nota, caixa de texto, comentário) e a imagem colada dentro do documento. O <code>.doc</code> antigo fica de fora — exigiria o Word instalado ou um programa a mais nas máquinas do núcleo.</div>
     </div>
     <div class="cartao">
       <div class="cartao-titulo">4. Revisão por IA local</div>
@@ -92,9 +87,13 @@
 </div>
 
 <div class="coluna">
-  <h2>Em spec <span class="contagem">0</span></h2>
+  <h2>Em spec <span class="contagem">1</span></h2>
   <div class="cartoes">
-    <p class="vazio">Nenhuma spec esperando construção.</p>
+    <div class="cartao">
+      <div class="cartao-titulo">5. Abrir documento do Word</div>
+      <div class="cartao-entrega">Aceita <code>.docx</code> no Anonimizar, tirando o texto e as tabelas de dentro dele sem instalar nada a mais na máquina.</div>
+      <div class="cartao-entrega">Décima emenda da spec 003 aprovada em 23/10/2026: vai tudo o que aparece no documento impresso (corpo, tabelas com barras, cabeçalho, rodapé, notas, caixas de texto), com as alterações aceitas, e uma faixa na revisão diz o que ficou de fora. Lido só com o que vem no Python. Fica de fora o <code>.doc</code>, ler o texto das imagens e devolver o próprio Word mascarado. <strong>Falta o rascunho da faixa e das frases</strong>, antes da construção.</div>
+    </div>
   </div>
 </div>
 
