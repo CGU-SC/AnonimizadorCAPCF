@@ -94,6 +94,88 @@ def test_quebra_de_linha_e_tabulacao(tmp_path):
     assert arquivo_word.ler(_word(tmp_path, corpo)) == "a\tb\nc"
 
 
+# ------------------------------------------------------------------ tabelas
+
+def _tc(*conteudo, propriedades=""):
+    miolo = "".join(c if c.startswith("<w:") else _p(c) for c in conteudo) or "<w:p/>"
+    return f"<w:tc><w:tcPr>{propriedades}</w:tcPr>{miolo}</w:tc>"
+
+
+def _tbl(*linhas, propriedades_da_linha=""):
+    return "<w:tbl>" + "".join(
+        f"<w:tr><w:trPr>{propriedades_da_linha}</w:trPr>{''.join(l)}</w:tr>"
+        for l in linhas) + "</w:tbl>"
+
+
+def test_tabela_com_barras_e_colunas_alinhadas(tmp_path):
+    corpo = _tbl([_tc("Nome"), _tc("CPF")],
+                 [_tc("Ana Suposta Lima"), _tc("111.111.111-11")])
+    assert arquivo_word.ler(_word(tmp_path, corpo)) == (
+        "| Nome             | CPF            |\n"
+        "| ---------------- | -------------- |\n"
+        "| Ana Suposta Lima | 111.111.111-11 |")
+
+
+def test_a_celula_mesclada_aparece_uma_vez_na_primeira_posicao(tmp_path):
+    """RN-27: o texto não se repete - repetido, um CPF seria contado duas vezes."""
+    corpo = _tbl([_tc("a"), _tc("b"), _tc("c")],
+                 [_tc("111.111.111-11", propriedades='<w:gridSpan w:val="2"/>'), _tc("d")])
+    texto = arquivo_word.ler(_word(tmp_path, corpo))
+    assert texto.count("111.111.111-11") == 1
+    assert texto.splitlines()[2] == "| 111.111.111-11 |     | d   |"
+
+
+def test_mesclada_na_vertical_fica_vazia_embaixo(tmp_path):
+    corpo = _tbl([_tc("Projeto", propriedades='<w:vMerge w:val="restart"/>'), _tc("x")],
+                 [_tc(propriedades="<w:vMerge/>"), _tc("y")])
+    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[2] == "|         | y   |"
+
+
+def test_dois_paragrafos_e_quebra_de_linha_na_celula(tmp_path):
+    quebra = "<w:p><w:r><w:t>linha 1</w:t><w:br/><w:t>linha 2</w:t></w:r></w:p>"
+    corpo = _tbl([_tc("um", "dois"), _tc(quebra)])
+    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0] == (
+        "| um / dois | linha 1 / linha 2 |")
+
+
+def test_tabela_dentro_de_outra_vira_texto_corrido(tmp_path):
+    de_dentro = _tbl([_tc("Ana"), _tc("CPF 222.222.222-22")])
+    corpo = _tbl([_tc("Responsáveis"), _tc(de_dentro)])
+    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0] == (
+        "| Responsáveis | Ana / CPF 222.222.222-22 |")
+
+
+def test_a_barra_vertical_do_texto_nao_parte_a_coluna(tmp_path):
+    corpo = _tbl([_tc("a | b"), _tc("c")])
+    linha = arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[0]
+    assert linha == "| a \\| b | c   |"
+
+
+def test_linha_que_comeca_mais_a_direita(tmp_path):
+    corpo = (_tbl([_tc("a"), _tc("b")])[:-len("</w:tbl>")]
+             + '<w:tr><w:trPr><w:gridBefore w:val="1"/></w:trPr>'
+             + _tc("só b") + "</w:tr></w:tbl>")
+    assert arquivo_word.ler(_word(tmp_path, corpo)).splitlines()[2] == "|     | só b |"
+
+
+def test_tabela_vazia_nao_sai_e_texto_em_volta_continua(tmp_path):
+    corpo = _p("Antes.") + _tbl([_tc(), _tc()]) + _p("Depois.")
+    assert arquivo_word.ler(_word(tmp_path, corpo)) == "Antes.\n\nDepois."
+
+
+def test_o_cpf_curto_na_coluna_continua_com_a_coluna_reta(tmp_path):
+    """A máscara do CPF sem o zero cresce, e a compensação da nona emenda tira
+    os espaços de depois dele: a tabela do Word continua alinhada."""
+    from cpf import aplicar, procurar
+    corpo = _tbl([_tc("Bolsista"), _tc("CPF"), _tc("Valor")],
+                 [_tc("Ana Suposta Lima"), _tc("111.111.111-11"), _tc("R$ 1,00")],
+                 [_tc("Ivo"), _tc("0000000000"), _tc("R$ 2,00")])
+    texto = arquivo_word.ler(_word(tmp_path, corpo))
+    saida = aplicar(texto, procurar(texto))
+    assert "XXX000000XX" in saida
+    assert len({len(linha) for linha in saida.splitlines()}) == 1
+
+
 @pytest.mark.parametrize("conteudo", [b"texto comum", b"PK\x03\x04quebrado"])
 def test_o_que_nao_e_pacote_do_word_da_a_frase_de_estragado(tmp_path, conteudo):
     caminho = tmp_path / "relatorio.docx"
@@ -151,6 +233,17 @@ def test_o_word_da_massa():
         "- Ivo Fictício, CPF 333.333.333-33\n"
         "  - bolsa de extensão, 12 parcelas\n"
         "- Otávio Suposto, CPF 444.444.444-44\n\n"
+        "| Bolsista                                     | CPF            | Valor       |\n"
+        "| -------------------------------------------- | -------------- | ----------- |\n"
+        "| Ana Suposta Lima                             | 111.111.111-11 | R$ 1.500,00 |\n"
+        "| Ivo Fictício                                 | 0000000000     | R$ 900,00   |\n"
+        "| Otávio Suposto / (bolsa encerrada em agosto) | 444.444.444-44 | R$ 0,00     |\n"
+        "| Total pago                                   |                | R$ 2.400,00 |\n\n"
+        "## Plano de trabalho\n\n"
+        "| Projeto         | Atividade                     | Responsáveis                                           |\n"
+        "| --------------- | ----------------------------- | ------------------------------------------------------ |\n"
+        "| Projeto Exemplo | Oficinas \\| rodas de conversa | Ana Suposta Lima / Davi Hipotético, CPF 222.222.222-22 |\n"
+        "|                 | Relatório final               | Ana Suposta Lima                                       |\n\n"
         "## Prestação de contas\n\n"
         "Saldo devolvido à conta do projeto.\n\n"
         "Florianópolis, 30 de setembro de 2026.")

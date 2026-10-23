@@ -132,12 +132,15 @@ def _nivel_de_topico(propriedades):
 
 # ------------------------------------------------------------------- blocos
 
+# O controle de conteúdo do Word (um campo de formulário, um bloco de citação)
+# só embrulha parágrafos, linhas ou células: entra-se nele e segue-se a ordem de
+# dentro.
+EMBRULHOS_DE_BLOCO = ("sdt", "sdtContent", "customXml")
+
 def _blocos(no, estilos):
     """Os parágrafos do documento, na ordem, cada um com o seu jeito de sair.
 
-    Cada bloco é (texto, é item de lista). O controle de conteúdo do Word (um
-    campo de formulário, um bloco de citação) só embrulha parágrafos: entra-se
-    nele e segue-se a ordem de dentro.
+    Cada bloco é (texto, é item de lista).
     """
     for filho in no:
         nome = _nome(filho)
@@ -145,7 +148,11 @@ def _blocos(no, estilos):
             bloco = _paragrafo(filho, estilos)
             if bloco:
                 yield bloco
-        elif nome in ("sdt", "sdtContent", "customXml"):
+        elif nome == "tbl":
+            tabela = _tabela(filho)
+            if tabela:
+                yield tabela, False
+        elif nome in EMBRULHOS_DE_BLOCO:
             yield from _blocos(filho, estilos)
 
 
@@ -176,6 +183,106 @@ def _profundidade_na_lista(paragrafo):
         return None
     nivel = _valor(marca, "ilvl")
     return int(nivel) if nivel and nivel.isdigit() else 0
+
+
+# ------------------------------------------------------------------- tabelas
+
+# Entre dois parágrafos da mesma célula. O `.md` não aceita quebra de linha
+# dentro da célula da tabela, e os espaços dos dois lados impedem que a barra
+# grude num número - grudada, ela faria um CPF parecer ligado a outro (RN-3).
+SEPARADOR_NA_CELULA = " / "
+
+# A linha de separação de baixo do cabeçalho precisa de pelo menos três traços
+# para o `.md` reconhecer a tabela.
+LARGURA_MINIMA = 3
+
+
+def _tabela(tabela):
+    """A tabela do Word como tabela do `.md`, com barras e colunas alinhadas.
+
+    A primeira linha vira o cabeçalho, que é como o `.md` monta toda tabela.
+    Tabela sem nenhum texto não sai: seria só um desenho de barras vazio.
+    """
+    linhas = [_celulas_da_linha(linha) for linha in _filhos(tabela, "tr")]
+    if not any(any(celula for celula in linha) for linha in linhas):
+        return None
+    colunas = max(len(linha) for linha in linhas)
+    linhas = [linha + [""] * (colunas - len(linha)) for linha in linhas]
+    larguras = [max(LARGURA_MINIMA, *(len(linha[i]) for linha in linhas))
+                for i in range(colunas)]
+
+    def montar(celulas):
+        return "| " + " | ".join(
+            texto.ljust(largura) for texto, largura in zip(celulas, larguras)) + " |"
+
+    saida = [montar(linhas[0]), montar(["-" * largura for largura in larguras])]
+    saida += [montar(linha) for linha in linhas[1:]]
+    return "\n".join(saida)
+
+
+def _celulas_da_linha(linha):
+    """O texto de cada posição da linha, com as posições vazias no lugar.
+
+    A célula mesclada na horizontal ocupa várias posições: o texto fica na
+    primeira, e as outras ficam vazias (RN-27). A mesclada na vertical o Word
+    já grava vazia nas linhas de baixo. Cada texto aparece uma vez só, como no
+    Word - repetido, um CPF seria contado e liberado mais de uma vez na revisão.
+    """
+    celulas = []
+    propriedades = linha.find(f"{W}trPr")
+    # As posições que a linha pula no começo, quando ela começa mais para a
+    # direita que as outras.
+    celulas += [""] * _numero(_valor(propriedades, "gridBefore"))
+    for celula in _filhos(linha, "tc"):
+        celulas.append(_texto_da_celula(celula))
+        ocupa = _numero(_valor(celula.find(f"{W}tcPr"), "gridSpan"), 1)
+        celulas += [""] * (ocupa - 1)
+    return celulas
+
+
+def _texto_da_celula(celula):
+    """Os parágrafos da célula numa linha só, separados por ` / ` (RN-27).
+
+    A tabela dentro de outra entra do mesmo jeito: o texto de cada célula dela,
+    na ordem, como texto corrido na célula de fora.
+    """
+    partes = []
+    _partes_da_celula(celula, partes)
+    return SEPARADOR_NA_CELULA.join(partes)
+
+
+def _partes_da_celula(no, partes):
+    for filho in no:
+        nome = _nome(filho)
+        if nome == "p":
+            texto = _texto_do_paragrafo(filho)
+            # Uma quebra de linha dentro do parágrafo é outra linha da célula;
+            # a tabulação vira espaço. A barra vertical do texto sai como `\|`,
+            # senão ela partiria a coluna em duas.
+            texto = (texto.replace("\n", SEPARADOR_NA_CELULA).replace("\t", " ")
+                     .replace("|", "\\|").strip())
+            if texto:
+                partes.append(texto)
+        elif nome == "tbl":
+            for linha in _filhos(filho, "tr"):
+                for celula in _filhos(linha, "tc"):
+                    _partes_da_celula(celula, partes)
+        elif nome in EMBRULHOS_DE_BLOCO:
+            _partes_da_celula(filho, partes)
+
+
+def _filhos(no, procurado):
+    """As linhas da tabela, ou as células da linha, na ordem.
+
+    Um controle de conteúdo pode embrulhar uma linha ou uma célula: entra-se
+    nele, senão o que está dentro sumiria da tabela.
+    """
+    for filho in no:
+        nome = _nome(filho)
+        if nome == procurado:
+            yield filho
+        elif nome in EMBRULHOS_DE_BLOCO:
+            yield from _filhos(filho, procurado)
 
 
 def _juntar_blocos(blocos):
@@ -245,6 +352,11 @@ def _ler_trecho(trecho, partes):
 def _nome(no):
     """O nome da marcação sem o endereço na frente: `p`, `r`, `t`."""
     return no.tag.rsplit("}", 1)[-1]
+
+
+def _numero(valor, padrao=0):
+    """O número escrito numa marcação, ou o padrão quando ela não existe."""
+    return int(valor) if valor and valor.isdigit() else padrao
 
 
 def _valor(no, marcacao):

@@ -233,7 +233,14 @@ chatbot.
     disso vai para o arquivo;
   - **negrito, itálico, cor, fonte** e qualquer formatação além de títulos e
     listas;
-  - **planilha (`.xlsx`) e apresentação (`.pptx`)**.
+  - **planilha (`.xlsx`) e apresentação (`.pptx`)**;
+  - **o CPF partido por uma tecla apertada no meio dele** (Enter ou Shift+Enter
+    dentro de uma célula de tabela, ou Enter no corpo do texto). Dentro da
+    célula, a quebra vira ` / ` (RN-27), e a busca não reconhece o número
+    partido. O Word não parte número sozinho - na célula estreita ele só mostra
+    o texto em duas linhas -, então o caso pede alguém digitando no meio do CPF.
+    A rede é a revisão humana e o "mascarar à mão" (achado da lente crítica na
+    etapa 2 da construção, 23/10/2026, e deixado assim pela usuária).
 - **Devolver o próprio Word com os CPFs mascarados.** Perguntado em 23/10/2026,
   e decidido que não se faz, nem agora nem depois: não vai para o backlog. Os
   motivos, para ninguém refazer a conta: (1) o Word guarda o texto em pedaços

@@ -88,6 +88,26 @@ def paragrafo(*trechos, estilo=None, lista=None, nivel=0):
     return f"<w:p>{propriedades}{conteudo}</w:p>"
 
 
+def celula(*conteudo, ocupa=1, mescla_vertical=None):
+    """Uma célula da tabela. `ocupa` mescla na horizontal; `mescla_vertical` é
+    "restart" na primeira linha da mescla e "continue" nas de baixo, que o Word
+    grava vazias."""
+    propriedades = ""
+    if ocupa > 1:
+        propriedades += f'<w:gridSpan w:val="{ocupa}"/>'
+    if mescla_vertical:
+        propriedades += f'<w:vMerge w:val="{mescla_vertical}"/>'
+    if propriedades:
+        propriedades = f"<w:tcPr>{propriedades}</w:tcPr>"
+    # A célula do Word tem sempre pelo menos um parágrafo, mesmo vazia.
+    miolo = "".join(c if c.startswith("<w:") else paragrafo(c) for c in conteudo)
+    return f"<w:tc>{propriedades}{miolo or paragrafo()}</w:tc>"
+
+
+def tabela(*linhas):
+    return "<w:tbl>" + "".join(f"<w:tr>{''.join(l)}</w:tr>" for l in linhas) + "</w:tbl>"
+
+
 # ------------------------------------------------------------- o documento 18
 
 def corpo_do_documento():
@@ -111,6 +131,31 @@ def corpo_do_documento():
         paragrafo("Ivo Fictício, CPF 333.333.333-33", lista=1),
         paragrafo("bolsa de extensão, 12 parcelas", lista=1, nivel=1),
         paragrafo("Otávio Suposto, CPF 444.444.444-44", lista=1),
+        # A tabela de pagamentos, com um caso difícil em cada linha.
+        tabela(
+            [celula("Bolsista"), celula("CPF"), celula("Valor")],
+            [celula("Ana Suposta Lima"), celula("111.111.111-11"), celula("R$ 1.500,00")],
+            # O CPF que perdeu o zero da frente, numa coluna: a máscara cresce
+            # e a coluna tem de continuar reta (nona emenda).
+            [celula("Ivo Fictício"), celula("0000000000"), celula("R$ 900,00")],
+            # Dois parágrafos na mesma célula: saem na mesma linha, com " / ".
+            [celula("Otávio Suposto", "(bolsa encerrada em agosto)"),
+             celula("444.444.444-44"), celula("R$ 0,00")],
+            # Mesclada em duas colunas: o texto fica na primeira posição.
+            [celula("Total pago", ocupa=2), celula("R$ 2.400,00")],
+        ),
+        paragrafo("Plano de trabalho", estilo="Ttulo2"),
+        tabela(
+            [celula("Projeto"), celula("Atividade"), celula("Responsáveis")],
+            # Mesclada na vertical; uma barra escrita no texto, que não pode
+            # partir a coluna; e uma tabela dentro da célula.
+            [celula("Projeto Exemplo", mescla_vertical="restart"),
+             celula("Oficinas | rodas de conversa"),
+             celula(tabela([celula("Ana Suposta Lima"),
+                            celula("Davi Hipotético, CPF 222.222.222-22")]))],
+            [celula(mescla_vertical="continue"), celula("Relatório final"),
+             celula("Ana Suposta Lima")],
+        ),
         # Um estilo próprio da fundação, que herda do "Título 2": continua
         # sendo título, de nível 2.
         paragrafo("Prestação de contas", estilo="Destaque"),
