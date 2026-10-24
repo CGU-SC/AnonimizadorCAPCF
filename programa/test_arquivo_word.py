@@ -594,6 +594,162 @@ def test_do_link_vai_so_o_texto(tmp_path):
     assert _texto(caminho) == "sistema"
 
 
+# ------------------------------- as imagens e os Words que não abrem (etapa 5)
+
+A = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"'
+
+
+def _foto(descricao="foto"):
+    return (f'<w:r><w:drawing><wp:docPr descr="{descricao}"/><a:blip {A} r:embed="x"/>'
+            "</w:drawing></w:r>")
+
+
+def test_imagens_contadas_e_a_descricao_escondida_nao_vai(tmp_path):
+    corpo = (f"<w:p><w:r><w:t>Com foto.</w:t></w:r>{_foto('Assinatura, CPF 111.111.111-11')}</w:p>"
+             # a imagem do jeito antigo, um objeto colado (planilha) e um gráfico
+             f'<w:p><w:r><w:pict><v:shape {VML}><v:imagedata/></v:shape></w:pict></w:r></w:p>'
+             "<w:p><w:r><w:object/></w:r></w:p>"
+             f'<w:p><w:r><w:drawing><c:chart xmlns:c="urn:grafico"/></w:drawing></w:r></w:p>')
+    corpo = corpo.replace("<wp:docPr", '<wp:docPr xmlns:wp="urn:wp"').replace(
+        'r:embed="x"', 'xmlns:r="urn:r" r:embed="x"')
+    word = arquivo_word.ler(_word(tmp_path, corpo))
+    assert (word.texto, word.imagens) == ("Com foto.", 4)
+
+
+def test_caixa_de_texto_nao_e_imagem_e_a_dupla_conta_uma_vez(tmp_path):
+    corpo = (f"<w:p><w:r><w:t>Texto.</w:t></w:r><w:r>{_caixa('Na caixa.')}</w:r></w:p>"
+             f"<w:p><w:r><w:t>Foto:</w:t></w:r><w:r><mc:AlternateContent {MC}>"
+             f"<mc:Choice><w:drawing><a:blip {A}/></w:drawing></mc:Choice>"
+             f"<mc:Fallback><w:pict><v:shape {VML}><v:imagedata/></v:shape></w:pict>"
+             "</mc:Fallback></mc:AlternateContent></w:r></w:p>")
+    word = arquivo_word.ler(_word(tmp_path, corpo))
+    assert word.imagens == 1
+
+
+def test_o_logotipo_do_cabecalho_repetido_conta_uma_vez(tmp_path):
+    cabecalho = (f"<w:hdr {ESPACOS}><w:p><w:r><w:t>Topo</w:t></w:r>"
+                 f"<w:r><w:drawing><a:blip {A}/></w:drawing></w:r></w:p></w:hdr>")
+    quebra = "<w:p><w:pPr>{}</w:pPr></w:p>"
+    corpo = (_p("Parte 1") + quebra.format(_secao(("header", "default", "c1")))
+             + _p("Parte 2") + _secao(("header", "default", "c1")))
+    caminho = _word_com_pecas(tmp_path, corpo, {"word/header1.xml": cabecalho},
+                              [("c1", "header", "header1.xml", "")])
+    assert arquivo_word.ler(caminho).imagens == 1
+
+
+def test_imagem_dentro_de_nota_conta_uma_vez(tmp_path):
+    """O corpo é lido duas vezes por causa das notas; a imagem, contada uma."""
+    corpo = (f"<w:p><w:r><w:t>Texto</w:t></w:r>{_chama('footnote', 1)}</w:p>"
+             f"<w:p><w:r><w:drawing><a:blip {A}/></w:drawing></w:r></w:p>")
+    caminho = _word_com_pecas(tmp_path, corpo, {
+        "word/footnotes.xml": _notas("footnote", (1, "Nota."))})
+    assert arquivo_word.ler(caminho).imagens == 1
+
+
+@pytest.mark.parametrize("nome, trecho_da_frase", [
+    ("19-nao-e-word.docx", "estragado"),
+    ("21-word-so-com-imagens.docx", "não tem texto, só imagens. Salve-o como PDF"),
+    ("22-word-protegido.docx", "está protegido por senha"),
+    ("23-doc-antigo-renomeado.docx", "documento do Word antigo (.doc)"),
+    ("24-word-vazio.docx", "está vazio: não há texto nele"),
+    ("25-word-grande-demais.docx", "grande demais para o programa abrir com segurança"),
+])
+def test_cada_word_que_nao_abre_tem_a_sua_frase(nome, trecho_da_frase):
+    """RN-30: cada um volta à escolha com a frase dele, e o nome no começo."""
+    with pytest.raises(ArquivoNaoServe) as erro:
+        arquivo_word.ler(MASSA / nome)
+    assert str(erro.value).startswith(f"O {nome} ")
+    assert trecho_da_frase in str(erro.value)
+
+
+def test_o_grande_demais_e_recusado_sem_descompactar(tmp_path, monkeypatch):
+    """O limite é conferido pelo tamanho que cada peça declara: nenhuma peça é
+    aberta antes disso."""
+    import zipfile as zf
+    abertas = []
+    original = zf.ZipFile.read
+    monkeypatch.setattr(zf.ZipFile, "read",
+                        lambda self, nome, *a: abertas.append(nome) or original(self, nome, *a))
+    with pytest.raises(ArquivoNaoServe):
+        arquivo_word.ler(MASSA / "25-word-grande-demais.docx")
+    assert abertas == []
+
+
+def test_escaneado_com_timbre_e_numero_de_pagina_e_so_imagens(tmp_path):
+    """Regressão da lente crítica da etapa 5: com texto só no cabeçalho e no
+    rodapé, a revisão abria quase vazia em vez de mandar pelo caminho do PDF."""
+    corpo = (f"<w:p><w:r><w:drawing><a:blip {A}/></w:drawing></w:r></w:p>"
+             + _secao(("header", "default", "c1"), ("footer", "default", "r1")))
+    caminho = _word_com_pecas(
+        tmp_path, corpo,
+        {"word/header1.xml": _borda("hdr", "Fundação Exemplo"),
+         "word/footer1.xml": _borda("ftr", "Página 1 de 3")},
+        [("c1", "header", "header1.xml", ""), ("r1", "footer", "footer1.xml", "")])
+    with pytest.raises(ArquivoNaoServe) as erro:
+        arquivo_word.ler(caminho)
+    assert "só imagens" in str(erro.value)
+
+
+def test_corpo_sem_texto_e_sem_imagem_com_logotipo_no_cabecalho_e_vazio(tmp_path):
+    cabecalho = f"<w:hdr {ESPACOS}><w:p><w:r><w:drawing><a:blip {A}/></w:drawing></w:r></w:p></w:hdr>"
+    caminho = _word_com_pecas(
+        tmp_path, "<w:p/>" + _secao(("header", "default", "c1")),
+        {"word/header1.xml": cabecalho}, [("c1", "header", "header1.xml", "")])
+    with pytest.raises(ArquivoNaoServe) as erro:
+        arquivo_word.ler(caminho)
+    assert "está vazio" in str(erro.value)
+
+
+def test_imagem_dentro_de_caixa_de_texto_conta_uma_vez(tmp_path):
+    """Regressão da lente crítica da etapa 5: a foto dentro da caixa era
+    contada pela caixa e de novo pelo miolo dela."""
+    miolo = f"<w:p><w:r><w:drawing><a:blip {A}/></w:drawing></w:r></w:p>"
+    caixa = (f"<w:pict><v:shape {VML}><v:textbox><w:txbxContent>{_p('Legenda.')}{miolo}"
+             "</w:txbxContent></v:textbox></v:shape></w:pict>")
+    corpo = f"<w:p><w:r><w:t>Texto.</w:t></w:r><w:r>{caixa}</w:r></w:p>"
+    word = arquivo_word.ler(_word(tmp_path, corpo))
+    assert (word.imagens, word.texto) == (1, "Texto.\n\nLegenda.")
+
+
+def test_peca_de_nome_estranho_tambem_soma_no_limite(tmp_path, monkeypatch):
+    """Regressão da lente crítica da etapa 5: a ligação do cabeçalho podia
+    levar a uma peça que não termina em .xml, e o limite não a contava."""
+    monkeypatch.setattr(arquivo_word, "LIMITE_DO_TEXTO", 5_000)
+    corpo = _p("Corpo") + _secao(("header", "default", "c1"))
+    caminho = _word_com_pecas(
+        tmp_path, corpo,
+        {"word/cabecalho.bin": f"<w:hdr {ESPACOS}>{_p('x' * 10_000)}</w:hdr>"},
+        [("c1", "header", "cabecalho.bin", "")])
+    with pytest.raises(ArquivoNaoServe) as erro:
+        arquivo_word.ler(caminho)
+    assert "grande demais" in str(erro.value)
+
+
+def test_cabecalho_copiado_com_o_logotipo_conta_uma_vez(tmp_path):
+    """Regressão da lente crítica da etapa 5: ao desligar "Vincular ao
+    anterior", o Word copia o cabeçalho para outra peça, igual."""
+    cabecalho = (f"<w:hdr {ESPACOS}><w:p><w:r><w:t>Topo</w:t></w:r>"
+                 f"<w:r><w:drawing><a:blip {A}/></w:drawing></w:r></w:p></w:hdr>")
+    quebra = "<w:p><w:pPr>{}</w:pPr></w:p>"
+    corpo = (_p("Parte 1") + quebra.format(_secao(("header", "default", "c1")))
+             + _p("Parte 2") + _secao(("header", "default", "c2")))
+    caminho = _word_com_pecas(
+        tmp_path, corpo,
+        {"word/header1.xml": cabecalho, "word/header2.xml": cabecalho},
+        [("c1", "header", "header1.xml", ""), ("c2", "header", "header2.xml", "")])
+    word = arquivo_word.ler(caminho)
+    assert (word.imagens, word.texto) == (1, "Topo\n\nParte 1\n\nParte 2")
+
+
+def test_o_limite_vale_para_o_texto_e_nao_para_as_imagens(tmp_path):
+    caminho = tmp_path / "foto-grande.docx"
+    with zipfile.ZipFile(caminho, "w", zipfile.ZIP_DEFLATED) as pacote:
+        pacote.writestr("word/document.xml",
+                        f"<w:document {ESPACOS}><w:body>{_p('Texto.')}</w:body></w:document>")
+        pacote.writestr("word/media/foto.png", bytes(arquivo_word.LIMITE_DO_TEXTO + 1))
+    assert _texto(caminho) == "Texto."
+
+
 def test_o_endereco_de_um_link_nunca_vira_peca_lida(tmp_path):
     """Ligação para fora (um link) não é peça do pacote: nem é procurada."""
     corpo = _p("Corpo") + _secao(("header", "default", "x"))

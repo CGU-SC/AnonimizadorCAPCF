@@ -251,7 +251,8 @@ def test_a_faixa_do_word_diz_o_que_ficou_de_fora(aplicacao):
     revisao = painel.tela_revisao
     assert not revisao.faixa_do_word.isHidden()
     assert revisao.faixa_ficou_de_fora.text() == (
-        "Ficou fora do arquivo: 2 comentários · texto oculto.")
+        "Ficou fora do arquivo: 2 comentários · texto oculto · 1 imagem "
+        "(o programa não lê o que está escrito nela).")
     assert not revisao.faixa_alteracoes.isHidden()
     # A faixa nunca vai para o arquivo: o texto que se grava é o do documento.
     assert "Ficou fora" not in revisao.texto_mascarado()
@@ -275,6 +276,13 @@ def test_as_frases_da_faixa(aplicacao):
     assert frase(DocumentoDoWord("", comentarios=3, imagens=2, texto_oculto=True)) == (
         "Ficou fora do arquivo: 3 comentários · texto oculto · 2 imagens "
         "(o programa não lê o que está escrito nelas).")
+
+
+def test_o_word_so_com_imagens_nao_abre_a_revisao(aplicacao):
+    """RN-30: a pessoa nunca chega a uma revisão vazia com "nenhum CPF"."""
+    painel = _painel_com("21-word-so-com-imagens.docx", aplicacao)
+    assert painel.telas.currentWidget() is painel.tela_erro
+    assert "Salve-o como PDF" in painel.tela_erro.explicacao.text()
 
 
 def test_um_arquivo_qualquer_com_nome_de_docx_nao_trava(aplicacao):

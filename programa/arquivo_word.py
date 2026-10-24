@@ -49,10 +49,43 @@ PECAS_DE_TEXTO = ("word/document", "word/header", "word/footer",
 # o que foi movido de um lugar (de onde sai) para outro (aonde chega).
 ALTERACOES = ("ins", "del", "moveFrom", "moveTo")
 
+# As frases de cada Word que não abre (RN-30), com o texto aprovado no
+# rascunho 10. Todas voltam à escolha do arquivo, sem travar.
 ESTRAGADO = (
     "O {nome} não pôde ser lido como documento do Word: ele pode estar "
     "estragado ou ser outro tipo de arquivo com o nome trocado."
 )
+PROTEGIDO = (
+    "O {nome} está protegido por senha. Abra no Word, tire a senha e salve de "
+    "novo, e escolha o arquivo outra vez."
+)
+DOC_ANTIGO = (
+    "O {nome} é um documento do Word antigo (.doc) com o nome de .docx. Abra no "
+    "Word e salve como .docx."
+)
+VAZIO = "O {nome} está vazio: não há texto nele."
+SO_IMAGENS = (
+    "O {nome} não tem texto, só imagens. Salve-o como PDF pelo Word e escolha o "
+    "PDF: o programa lê as imagens e você confere."
+)
+GRANDE_DEMAIS = "O {nome} é grande demais para o programa abrir com segurança."
+
+# O limite do texto do pacote, descompactado (RN-30). O texto de um documento
+# comum, mesmo de centenas de páginas, fica muito abaixo disso. É conferido
+# antes de descompactar: um pacote pequeno pode esconder um conteúdo enorme,
+# feito para travar quem o abre. As imagens não contam, porque não são
+# descompactadas.
+LIMITE_DO_TEXTO = 50 * 1024 * 1024
+
+# Os primeiros bytes de um arquivo do Office antigo, o mesmo formato por fora
+# do .doc e do .docx protegido por senha: o Word cifra o .docx guardando-o
+# dentro de um pacote desse tipo, com uma parte chamada "EncryptionInfo".
+CABECALHO_DO_OFFICE_ANTIGO = bytes.fromhex("D0CF11E0A1B11AE1")
+MARCA_DE_CIFRADO = "EncryptionInfo".encode("utf-16-le")
+
+# O que dentro de um desenho é imagem para a faixa: a foto colada, a imagem do
+# jeito antigo, o gráfico e o diagrama (RN-26).
+MARCAS_DE_IMAGEM = ("blip", "imagedata", "chart", "relIds")
 
 
 class DocumentoDoWord(NamedTuple):
@@ -75,9 +108,12 @@ def ler(caminho):
     parte do corpo, dá a frase de "estragado" (RN-30) e não chega à revisão.
     """
     caminho = Path(caminho)
+    _recusar_o_que_nao_e_pacote(caminho)
     try:
         with zipfile.ZipFile(caminho) as pacote:
-            return _Leitura(pacote).documento()
+            _recusar_o_grande_demais(pacote, caminho.name)
+            leitura = _Leitura(pacote, caminho.name)
+            documento = leitura.documento()
     # O pacote pode abrir e o conteúdo de dentro estar estragado: um byte
     # trocado no meio dá erro de descompactação (zlib.error), e um Word
     # compactado num formato que o Python não lê dá NotImplementedError. Os dois
@@ -86,6 +122,43 @@ def ler(caminho):
     except (zipfile.BadZipFile, KeyError, ElementTree.ParseError, zlib.error,
             EOFError, NotImplementedError, _SemCorpo):
         raise ArquivoNaoServe(ESTRAGADO.format(nome=caminho.name))
+    # Sem texto, a revisão não abre: ela diria "nenhum CPF encontrado", e isso
+    # se leria como "este documento não tem CPF" (RN-30). O "só imagens" olha o
+    # corpo: páginas escaneadas coladas num Word com timbre no cabeçalho e
+    # número de página no rodapé têm texto só nas bordas, e abriam uma revisão
+    # quase vazia (lente crítica da etapa 5).
+    if not leitura.texto_do_corpo.strip() and leitura.imagens_no_corpo:
+        raise ArquivoNaoServe(SO_IMAGENS.format(nome=caminho.name))
+    if not documento.texto.strip():
+        raise ArquivoNaoServe(VAZIO.format(nome=caminho.name))
+    return documento
+
+
+def _recusar_o_que_nao_e_pacote(caminho):
+    """O .docx protegido por senha e o .doc antigo com o nome trocado.
+
+    Nenhum dos dois é um pacote do Word: os dois são o formato antigo do
+    Office por fora, e cada um tem a frase dele, com o que fazer (RN-30). O
+    que não é nem um nem outro segue, e cai na frase de "estragado" se não for
+    pacote.
+    """
+    with open(caminho, "rb") as arquivo:
+        if arquivo.read(len(CABECALHO_DO_OFFICE_ANTIGO)) != CABECALHO_DO_OFFICE_ANTIGO:
+            return
+        dados = arquivo.read()
+    frase = PROTEGIDO if MARCA_DE_CIFRADO in dados else DOC_ANTIGO
+    raise ArquivoNaoServe(frase.format(nome=caminho.name))
+
+
+def _recusar_o_grande_demais(pacote, nome):
+    """Recusa o pacote cujo texto, descompactado, passaria do limite (RN-30).
+
+    A conta usa o tamanho que cada peça declara, sem descompactar nada.
+    """
+    texto = sum(peca.file_size for peca in pacote.infolist()
+                if peca.filename.endswith((".xml", ".rels")))
+    if texto > LIMITE_DO_TEXTO:
+        raise ArquivoNaoServe(GRANDE_DEMAIS.format(nome=nome))
 
 
 class _SemCorpo(Exception):
@@ -100,8 +173,11 @@ class _Leitura:
     andando pelo documento na ordem, e é isto que esta leitura guarda.
     """
 
-    def __init__(self, pacote):
+    def __init__(self, pacote, nome):
         self.pacote = pacote
+        self.nome = nome
+        # Quanto já foi descompactado, para o limite da RN-30 (veja `_peca`).
+        self.descompactado = 0
         self.estilos = _estilos(self._peca("word/styles.xml"))
         self.ligacoes = self._ligacoes()
         ajustes = self._peca("word/settings.xml")
@@ -115,6 +191,7 @@ class _Leitura:
         self.numeros = None
         # O que fica de fora do arquivo e a faixa da revisão conta (RN-29).
         self.texto_oculto = False
+        self.imagens = 0
         self.pecas_lidas = []
         # Se o estilo do parágrafo que está sendo lido esconde o texto.
         self._paragrafo_oculto = None
@@ -126,6 +203,7 @@ class _Leitura:
             texto=texto,
             comentarios=(len(comentarios.findall(f"{W}comment"))
                          if comentarios is not None else 0),
+            imagens=self.imagens,
             texto_oculto=self.texto_oculto,
             alteracoes=any(next(raiz.iter(f"{W}{marca}"), None) is not None
                            for raiz in self.pecas_lidas for marca in ALTERACOES),
@@ -147,6 +225,10 @@ class _Leitura:
                  + [n for n in self.notas_chamadas if n[0] == "endnote"])
         self.numeros = {nota: numero for numero, nota in enumerate(ordem, start=1)}
         blocos_do_corpo = list(self._blocos(corpo))
+        # O corpo sozinho decide o "só imagens" (veja `ler`). As imagens dele
+        # são as contadas até aqui: as do cabeçalho e as das notas vêm depois.
+        self.texto_do_corpo = _juntar_blocos(blocos_do_corpo)
+        self.imagens_no_corpo = self.imagens
         blocos = (self._partes_de_borda(corpo, "headerReference")
                   + blocos_do_corpo
                   + self._partes_de_borda(corpo, "footerReference"))
@@ -157,11 +239,20 @@ class _Leitura:
     # -------------------------------------------------------- peças do pacote
 
     def _peca(self, nome):
-        """Uma peça do pacote já lida, ou None quando o documento não a tem."""
+        """Uma peça do pacote já lida, ou None quando o documento não a tem.
+
+        Cada peça soma no limite da RN-30 antes de ser descompactada, tenha o
+        nome que tiver: a ligação do cabeçalho pode levar a uma peça que não
+        termina em .xml, e a conta de antes da leitura não a via (lente crítica
+        da etapa 5).
+        """
         try:
-            raiz = ElementTree.fromstring(self.pacote.read(nome))
+            self.descompactado += self.pacote.getinfo(nome).file_size
         except KeyError:
             return None
+        if self.descompactado > LIMITE_DO_TEXTO:
+            raise ArquivoNaoServe(GRANDE_DEMAIS.format(nome=self.nome))
+        raiz = ElementTree.fromstring(self.pacote.read(nome))
         if nome.startswith(PECAS_DE_TEXTO):
             self.pecas_lidas.append(raiz)
         return raiz
@@ -197,7 +288,7 @@ class _Leitura:
         # etapa 3).
         antigas = {id(secao) for mudanca in corpo.iter(f"{W}sectPrChange")
                    for secao in mudanca.iter(f"{W}sectPr")}
-        vistos, blocos = set(), []
+        vistos, assinaturas, pecas_vistas, blocos = set(), set(), set(), []
         for secao in corpo.iter(f"{W}sectPr"):
             if id(secao) in antigas:
                 continue
@@ -214,11 +305,26 @@ class _Leitura:
                 referencias.pop("even", None)
             for tipo in TIPOS_DE_CABECALHO:
                 peca = self.ligacoes.get(referencias.get(tipo))
-                raiz = self._peca(peca) if peca else None
+                # Cada peça é lida uma vez só, mesmo citada por várias partes
+                # do documento: lida de novo, a imagem dela (um logotipo) seria
+                # contada de novo na faixa.
+                if not peca or peca in pecas_vistas:
+                    continue
+                pecas_vistas.add(peca)
+                raiz = self._peca(peca)
                 if raiz is None:
                     continue
+                antes = self.imagens
                 dela = list(self._blocos(raiz))
                 chave = _juntar_blocos(dela)
+                # Ao desligar "Vincular ao anterior", o Word copia o cabeçalho
+                # para uma peça nova, igual: o mesmo texto e o mesmo logotipo
+                # não contam de novo (lente crítica da etapa 5).
+                assinatura = (chave, self.imagens - antes)
+                if assinatura in assinaturas:
+                    self.imagens = antes
+                    continue
+                assinaturas.add(assinatura)
                 if chave and chave not in vistos:
                     vistos.add(chave)
                     blocos += dela
@@ -449,8 +555,38 @@ class _Leitura:
                 partes.append(self._marca_da_nota("footnote", filho.get(f"{W}id")))
             elif nome == "endnoteReference":
                 partes.append(self._marca_da_nota("endnote", filho.get(f"{W}id")))
-            elif nome in ("AlternateContent", "drawing", "pict"):
+            elif nome in ("AlternateContent", "drawing", "pict", "object"):
                 caixas += _conteudos_de_caixa(filho)
+                # A imagem é contada só na passada que escreve o texto: a
+                # primeira passada pelo corpo, a das notas, a contaria de novo.
+                if self.numeros is not None and _e_imagem(filho):
+                    self.imagens += 1
+
+
+def _e_imagem(desenho):
+    """Se o desenho é imagem para a faixa (RN-26): foto, gráfico, diagrama,
+    objeto colado (uma planilha) ou forma. Só a caixa de texto pura não é: o
+    texto dela vai para o arquivo."""
+    if _nome(desenho) == "AlternateContent":
+        escolhas = [filho for filho in desenho if _nome(filho) in ("Choice", "Fallback")]
+        if not escolhas:
+            return False
+        desenho = escolhas[0]
+    nomes = set(_nomes_fora_da_caixa(desenho))
+    return any(marca in nomes for marca in MARCAS_DE_IMAGEM) or "txbxContent" not in nomes
+
+
+def _nomes_fora_da_caixa(no):
+    """As marcações do desenho, sem entrar no miolo de uma caixa de texto.
+
+    A imagem colada dentro da caixa é contada quando o miolo da caixa é lido;
+    olhando lá dentro também aqui, ela era contada duas vezes (lente crítica
+    da etapa 5).
+    """
+    yield _nome(no)
+    if _nome(no) != "txbxContent":
+        for filho in no:
+            yield from _nomes_fora_da_caixa(filho)
 
 
 def _conteudos_de_caixa(no):

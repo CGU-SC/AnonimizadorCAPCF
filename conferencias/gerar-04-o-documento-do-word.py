@@ -36,13 +36,18 @@ ETAPAS = [
     ("2", "As tabelas, com barras e colunas alinhadas, a célula mesclada e a de dois parágrafos", "no programa"),
     ("3", "Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar", "no programa"),
     ("4", "O que o Word guarda e não imprime, e a faixa azul do que ficou de fora", "no programa"),
-    ("5", "As imagens, e a frase de cada Word que não abre", "a fazer"),
+    ("5", "As imagens, e a frase de cada Word que não abre", "no programa"),
     ("6", "A lista numerada como o Word mostra, e o roteiro da conferência na tela", "a fazer"),
 ]
 
 # Os outros Words da massa, que não chegam à revisão, com o que cada um testa.
 QUE_NAO_ABREM = [
     ("19-nao-e-word.docx", "um arquivo de texto comum com o nome trocado para .docx"),
+    ("21-word-so-com-imagens.docx", "duas páginas escaneadas coladas num Word, sem texto nenhum"),
+    ("22-word-protegido.docx", "imitação de um Word protegido por senha (o formato por fora, sem o conteúdo)"),
+    ("23-doc-antigo-renomeado.docx", "imitação de um .doc antigo com o nome trocado para .docx"),
+    ("24-word-vazio.docx", "um Word sem texto e sem imagem"),
+    ("25-word-grande-demais.docx", "53 KB compactado, mais de 50 MB de texto descompactado"),
 ]
 
 

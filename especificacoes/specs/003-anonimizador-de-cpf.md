@@ -805,7 +805,9 @@ Da décima emenda — o documento do Word:
     ou ser outro tipo de arquivo com o nome trocado.";
   - **vazio**, sem texto e sem imagem: "O {nome} está vazio: não há texto
     nele.";
-  - **só imagens**, sem texto e com ao menos uma imagem: "O {nome} não tem
+  - **só imagens**, sem texto no corpo e com ao menos uma imagem nele - o texto
+    do cabeçalho e do rodapé, como um timbre ou o número da página, não conta
+    (acerto da lente crítica na etapa 5 da construção, 24/10/2026): "O {nome} não tem
     texto, só imagens. Salve-o como PDF pelo Word e escolha o PDF: o programa lê
     as imagens e você confere.";
   - **grande demais:** as partes de texto do pacote, descompactadas, passam de

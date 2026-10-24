@@ -80,7 +80,7 @@ que passa na conta sem ser de dígitos repetidos.
 
 ## Os documentos do Word, do Anonimizar
 
-Os arquivos a partir do `18` são documentos do Word (`.docx`) inventados, da
+Os arquivos `18`, `19` e de `21` a `25` são documentos do Word (`.docx`) inventados, da
 décima emenda da spec 003 (funcionalidade 5). Saem de um terceiro script, que
 monta o `.docx` peça por peça com o que já vem no Python — nenhum documento de
 verdade serve de modelo. Para refazê-los, da raiz do projeto:
@@ -96,8 +96,13 @@ não leva para a revisão, como um comentário.
 
 | Arquivo | O que ele é | O que ele existe para testar |
 | --- | --- | --- |
-| `18-documento-do-word.docx` | relatório de execução de um projeto inventado, com títulos, lista de bolsistas com subitem, um estilo próprio que herda do "Título 2" e duas tabelas | o caminho do Word inteiro, crescendo a cada etapa da construção. Um CPF está partido em três pedaços dentro do Word, como a correção ortográfica faz, e só aparece inteiro para a busca se os pedaços forem juntados na ordem. As tabelas trazem um caso difícil por linha: o CPF sem o zero da frente na coluna, dois parágrafos numa célula, a célula mesclada na horizontal e na vertical, uma barra escrita no texto e uma tabela dentro de outra. O documento tem duas partes, com cabeçalhos diferentes e o mesmo rodapé (cada diferente aparece uma vez), uma nota de rodapé e uma de fim (a de fim continua a numeração) e uma caixa de texto, cada uma com um CPF de dígitos repetidos. E o que o Word guarda e não imprime, com um CPF em cada um que não pode aparecer no `.md`: dois comentários, um texto oculto, uma exclusão com o "controlar alterações" ligado (e uma inclusão, que entra), uma linha de tabela apagada, um link cujo endereço termina num número de 11 dígitos e o campo do número da página no rodapé. É o arquivo da conferência 04 |
+| `18-documento-do-word.docx` | relatório de execução de um projeto inventado, com títulos, lista de bolsistas com subitem, um estilo próprio que herda do "Título 2" e duas tabelas | o caminho do Word inteiro, crescendo a cada etapa da construção. Um CPF está partido em três pedaços dentro do Word, como a correção ortográfica faz, e só aparece inteiro para a busca se os pedaços forem juntados na ordem. As tabelas trazem um caso difícil por linha: o CPF sem o zero da frente na coluna, dois parágrafos numa célula, a célula mesclada na horizontal e na vertical, uma barra escrita no texto e uma tabela dentro de outra. O documento tem duas partes, com cabeçalhos diferentes e o mesmo rodapé (cada diferente aparece uma vez), uma nota de rodapé e uma de fim (a de fim continua a numeração) e uma caixa de texto, cada uma com um CPF de dígitos repetidos. E o que o Word guarda e não imprime, com um CPF em cada um que não pode aparecer no `.md`: dois comentários, um texto oculto, uma exclusão com o "controlar alterações" ligado (e uma inclusão, que entra), uma linha de tabela apagada, um link cujo endereço termina num número de 11 dígitos e o campo do número da página no rodapé. E uma imagem colada, com a descrição escondida dela trazendo um CPF. É o arquivo da conferência 04 |
 | `19-nao-e-word.docx` | texto comum com o nome trocado para `.docx` | o Word "estragado", que dá a frase dele e volta à escolha (RN-30) |
+| `21-word-so-com-imagens.docx` | duas páginas "escaneadas" (imagens de 1 ponto) coladas num Word, sem texto | a revisão não abre: a frase manda salvar como PDF e usar o caminho do PDF (RN-30) |
+| `22-word-protegido.docx` | **imitação**: o cabeçalho do formato antigo do Office e o nome da parte que o Word usa ao cifrar com senha, sem conteúdo nenhum | a frase de "protegido por senha". Não abre no Word; para ver um de verdade, proteja com senha um Word inventado no próprio Word |
+| `23-doc-antigo-renomeado.docx` | **imitação** de um `.doc` antigo com o nome trocado, do mesmo jeito | a frase do `.doc` antigo |
+| `24-word-vazio.docx` | um Word com um parágrafo vazio | a frase de "vazio" |
+| `25-word-grande-demais.docx` | um Word de 53 KB que, descompactado, passa de 50 MB de texto (espaços em branco) | a frase de "grande demais", dada sem descompactar nada |
 
 ## Uma observação honesta sobre o `04`
 

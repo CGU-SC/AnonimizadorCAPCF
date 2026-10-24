@@ -12,7 +12,9 @@ são só de dígitos repetidos (RN-22 da spec 003).
 O arquivo sai idêntico toda vez: a data de cada peça dentro do pacote é fixa,
 para o git não acusar mudança num documento que não mudou.
 """
+import struct
 import zipfile
+import zlib
 from pathlib import Path
 from xml.sax.saxutils import escape
 
@@ -24,12 +26,14 @@ DATA_FIXA = (2026, 1, 1, 0, 0, 0)
 
 ESPACOS = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
-           'xmlns:v="urn:schemas-microsoft-com:vml"')
+           'xmlns:v="urn:schemas-microsoft-com:vml" '
+           'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"')
 
 TIPOS = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
 <Default Extension="xml" ContentType="application/xml"/>
+<Default Extension="png" ContentType="image/png"/>
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
 <Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>
@@ -57,6 +61,7 @@ LIGACOES_DO_DOCUMENTO = """<?xml version="1.0" encoding="UTF-8" standalone="yes"
 <Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/endnotes" Target="endnotes.xml"/>
 <Relationship Id="rId8" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://bolsas.exemplo.invalid/ficha?cpf=11111111111" TargetMode="External"/>
 <Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments" Target="comments.xml"/>
+<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/imagem1.png"/>
 </Relationships>"""
 
 # Os códigos dos estilos imitam os do Word em português ("Ttulo1"), que não
@@ -160,6 +165,23 @@ def campo(instrucao, resultado):
             '<w:r><w:fldChar w:fldCharType="separate"/></w:r>'
             f"{trecho(resultado)}"
             '<w:r><w:fldChar w:fldCharType="end"/></w:r>')
+
+
+def imagem(descricao, codigo):
+    """Uma imagem colada no texto, com a descrição escondida que o Word guarda
+    para leitor de tela (o "texto alternativo")."""
+    tamanho = 'cx="914400" cy="914400"'
+    return (f'<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">'
+            f'<wp:extent {tamanho}/><wp:docPr id="{codigo}" name="Imagem {codigo}" '
+            f'descr="{escape(descricao)}"/>'
+            '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+            '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+            '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+            f'<pic:nvPicPr><pic:cNvPr id="{codigo}" name="imagem.png"/><pic:cNvPicPr/></pic:nvPicPr>'
+            '<pic:blipFill><a:blip r:embed="rId10"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+            f'<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext {tamanho}/></a:xfrm>'
+            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>'
+            "</a:graphicData></a:graphic></wp:inline></w:drawing></w:r>")
 
 
 def chamada_de_nota(tipo, codigo):
@@ -305,6 +327,9 @@ def corpo_do_documento():
         # branco por causa dele.
         paragrafo(),
         paragrafo("Florianópolis, 30 de setembro de 2026."),
+        # A assinatura colada como imagem: não vai para o .md, a faixa a
+        # conta, e a descrição escondida dela (com um CPF) também não vai.
+        paragrafo(imagem("Assinatura da coordenadora, CPF 111.111.111-11", 1)),
     ])
 
 
@@ -321,6 +346,47 @@ def gravar_pacote(caminho, pecas):
             pacote.writestr(info, conteudo)
 
 
+def imagem_png():
+    """Uma imagem PNG de 1 por 1 ponto, montada à mão: o conteúdo não importa,
+    só que seja uma imagem de verdade, que o Word abre."""
+    def bloco(tipo, dados):
+        return (struct.pack(">I", len(dados)) + tipo + dados
+                + struct.pack(">I", zlib.crc32(tipo + dados)))
+    return (b"\x89PNG\r\n\x1a\n"
+            + bloco(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0))
+            + bloco(b"IDAT", zlib.compress(b"\x00\xff\xff\xff"))
+            + bloco(b"IEND", b""))
+
+
+def pacote_minimo(corpo, ligacoes="", pecas=None):
+    """Um Word com só o corpo (e o que mais for passado), para os casos tortos."""
+    tudo = {
+        "[Content_Types].xml": TIPOS,
+        "_rels/.rels": LIGACOES_DO_PACOTE,
+        "word/_rels/document.xml.rels": (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            f"{ligacoes}</Relationships>"),
+        "word/document.xml": documento_simples(corpo),
+    }
+    tudo.update(pecas or {})
+    return tudo
+
+
+def documento_simples(corpo):
+    return (f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            f"<w:document {ESPACOS}><w:body>{corpo}<w:sectPr/></w:body></w:document>")
+
+
+def office_antigo(*partes):
+    """Imitação do formato antigo do Office por fora: o cabeçalho dele e o nome
+    das partes que o programa procura. Não abre no Word - serve só para o
+    programa reconhecer o tipo e dar a frase certa. Para ver de verdade, proteja
+    com senha um Word inventado no próprio Word."""
+    return (bytes.fromhex("D0CF11E0A1B11AE1") + bytes(504)
+            + b"".join(parte.encode("utf-16-le") + bytes(8) for parte in partes))
+
+
 def main():
     gravar_pacote(PASTA / "18-documento-do-word.docx", {
         "[Content_Types].xml": TIPOS,
@@ -335,12 +401,31 @@ def main():
         "word/footnotes.xml": NOTAS_DE_RODAPE,
         "word/endnotes.xml": NOTAS_DE_FIM,
         "word/comments.xml": COMENTARIOS,
+        "word/media/imagem1.png": imagem_png(),
     })
+    ligacao_da_imagem = ('<Relationship Id="rId10" Type="http://schemas.openxmlformats.org/'
+                         'officeDocument/2006/relationships/image" Target="media/imagem1.png"/>')
+    # Páginas escaneadas coladas num Word, sem texto nenhum: a revisão não
+    # abre, e a frase manda pelo caminho do PDF (RN-30).
+    gravar_pacote(PASTA / "21-word-so-com-imagens.docx", pacote_minimo(
+        paragrafo(imagem("Página 1 escaneada", 1)) + paragrafo(imagem("Página 2 escaneada", 2)),
+        ligacao_da_imagem, {"word/media/imagem1.png": imagem_png()}))
+    # O Word protegido por senha e o .doc antigo com o nome trocado: os dois
+    # são o formato antigo do Office por fora, cada um com a sua frase.
+    (PASTA / "22-word-protegido.docx").write_bytes(
+        office_antigo("EncryptionInfo", "EncryptedPackage"))
+    (PASTA / "23-doc-antigo-renomeado.docx").write_bytes(office_antigo("WordDocument"))
+    # Um Word sem texto e sem imagem.
+    gravar_pacote(PASTA / "24-word-vazio.docx", pacote_minimo(paragrafo()))
+    # Um Word cujo texto passa de 50 MB descompactado, mas que pesa poucos KB
+    # compactado: o programa recusa sem descompactar (RN-30).
+    gravar_pacote(PASTA / "25-word-grande-demais.docx", pacote_minimo(
+        paragrafo("Texto."), pecas={"word/enchimento.xml": " " * (51 * 1024 * 1024)}))
     # Um arquivo de texto qualquer com o nome trocado para .docx: não é pacote
     # do Word, e tem de dar a frase de "estragado" em vez de travar (RN-30).
     (PASTA / "19-nao-e-word.docx").write_bytes(
         "Este arquivo é texto comum, com o nome trocado para .docx.\n".encode("utf-8"))
-    print("Gerados 18-documento-do-word.docx e 19-nao-e-word.docx")
+    print("Gerados os Words de 18, 19 e de 21 a 25")
 
 
 if __name__ == "__main__":
