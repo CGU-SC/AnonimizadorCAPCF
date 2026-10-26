@@ -27,7 +27,7 @@ from tela_revisao import FRASE_DAS_ALTERACOES, frase_do_que_ficou_de_fora  # noq
 
 MASSA = RAIZ / "dados-exemplo"
 PRINCIPAL = "18-documento-do-word.docx"
-DATA = "23/10/2026"
+DATA = "26/10/2026"
 
 # As seis etapas da construção, e o que cada uma põe no programa. A coluna da
 # situação é mudada à mão a cada etapa fechada: é o registro de onde estamos.
@@ -37,7 +37,7 @@ ETAPAS = [
     ("3", "Cabeçalho, rodapé, notas e caixas de texto, cada um no seu lugar", "no programa"),
     ("4", "O que o Word guarda e não imprime, e a faixa azul do que ficou de fora", "no programa"),
     ("5", "As imagens, e a frase de cada Word que não abre", "no programa"),
-    ("6", "A lista numerada como o Word mostra, e o roteiro da conferência na tela", "a fazer"),
+    ("6", "A lista numerada como o Word mostra, e o roteiro da conferência na tela", "no programa"),
 ]
 
 # Os outros Words da massa, que não chegam à revisão, com o que cada um testa.
@@ -48,6 +48,57 @@ QUE_NAO_ABREM = [
     ("23-doc-antigo-renomeado.docx", "imitação de um .doc antigo com o nome trocado para .docx"),
     ("24-word-vazio.docx", "um Word sem texto e sem imagem"),
     ("25-word-grande-demais.docx", "53 KB compactado, mais de 50 MB de texto descompactado"),
+]
+
+# O roteiro da conferência final, para a pessoa fazer na tela: cada passo diz o
+# que fazer e o que ela deve ver. Os caminhos tortos estão no meio, e não no
+# fim. O número de CPFs é posto na hora, contado do Word de teste.
+ROTEIRO = [
+    ("Feche o programa se estiver aberto, abra de novo pelo atalho <span class='mono'>abrir\\abrir-dev.bat</span> "
+     "e clique em <strong>Anonimizar</strong>.",
+     "a área de arrastar dizendo <strong>\"PDF, .docx, .md ou .txt\"</strong>."),
+    ("Clique em <strong>Escolher arquivo…</strong>.",
+     "a janela de procurar mostra também os <span class='mono'>.docx</span>. Escolha "
+     "<span class='mono'>dados-exemplo\\18-documento-do-word.docx</span>."),
+    ("Olhe o alto da revisão.",
+     "ela abre <strong>direto</strong>, sem leitura nem conferência; a legenda diz "
+     "<strong>\"18-documento-do-word.docx — documento do Word\"</strong>; e a <strong>faixa azul</strong>, "
+     "logo abaixo, com as duas linhas da tabela \"A faixa da revisão\" desta página."),
+    ("Olhe os selos do alto e percorra os números com <strong>próximo ›</strong>.",
+     "<strong>{n} CPFs válidos</strong>, todos mascarados, e nenhum suspeito."),
+    ("Leia o texto de cima a baixo, comparando com \"O Word de teste, depois do programa\", abaixo.",
+     "os dois cabeçalhos no começo; os títulos com <span class='mono'>#</span>; as tabelas com barras e as "
+     "colunas retas, inclusive a do Ivo com <span class='mono'>XXX000000XX</span>; a caixa de texto logo depois de "
+     "\"Observação da coordenação:\"; as listas com <span class='mono'>a)</span>, <span class='mono'>I.</span> e "
+     "<span class='mono'>1.1</span>; o rodapé \"Página 1 de 3\"; e as notas <span class='mono'>[^1]</span> e "
+     "<span class='mono'>[^2]</span> no fim."),
+    ("<em>Caminho torto:</em> procure no texto por <span class='mono'>888</span>, <span class='mono'>999</span> e "
+     "<span class='mono'>555</span>.",
+     "nada: o CPF do comentário, o do texto oculto e o da pessoa excluída não aparecem em lugar nenhum. "
+     "E do link aparece só \"sistema de bolsas\"."),
+    ("Clique em <strong>Salvar o texto mascarado…</strong>.",
+     "o caminho sugerido termina em <span class='mono'>18-documento-do-word - sem CPF.md</span>. Troque a pasta "
+     "por uma sua (a Área de Trabalho, por exemplo), para o arquivo não ficar na pasta da massa, e grave."),
+    ("Abra o arquivo gravado no Bloco de Notas.",
+     "o mesmo texto da revisão, mascarado, <strong>sem a faixa</strong> e sem nenhuma linha escrita pelo programa."),
+    ("Clique em <strong>Anonimizar outro documento</strong> e <strong>arraste</strong> o mesmo Word para a janela.",
+     "a mesma revisão, com a mesma faixa: arrastar funciona como o botão."),
+    ("<em>Caminho torto:</em> escolha, um de cada vez, os Words de "
+     "<span class='mono'>19</span> e de <span class='mono'>21</span> a <span class='mono'>25</span>.",
+     "a tela \"Não foi possível usar este arquivo\" com a frase de cada um — as da tabela \"Os Words que não "
+     "abrem\" — e o botão de escolher outro. Nenhum chega à revisão."),
+    ("<em>Caminho torto:</em> escolha <span class='mono'>26-documento-com-macro.docm</span> (mude o tipo da janela de "
+     "procurar para \"Todos os arquivos\", ou arraste).",
+     "a frase de \"outro tipo\": \"O Anonimizar abre PDF, .docx, .md e .txt\"."),
+    ("Feche o programa e abra pelo atalho <span class='mono'>abrir\\abrir-sem-nenhum-motor.bat</span>.",
+     "na lista do que dá para anonimizar agora, <strong>\"✓ .md, .txt e .docx\"</strong>; e o Word de teste abre "
+     "a revisão normalmente, sem motor nenhum."),
+    ("No <strong>Gerar OCR</strong>, tente arrastar o Word de teste.",
+     "o Gerar OCR continua só com PDF: o Word não é aceito ali."),
+    ("Se tiver o Word: abra o <span class='mono'>18-documento-do-word.docx</span> nele, ao lado da revisão.",
+     "o que o Word mostra impresso é o que está na revisão; os comentários e o texto oculto, que o Word mostra só "
+     "com as marcas ligadas, não estão. Opcional: proteja com senha um Word inventado e escolha-o no programa — a "
+     "frase de \"protegido por senha\"."),
 ]
 
 
@@ -73,6 +124,9 @@ def main():
                          FRASE_DAS_ALTERACOES if word.alteracoes else "") if f]
     achados = procurar(texto)
     sobra = len(procurar(aplicar(texto, achados)))
+    roteiro = "".join(
+        f"<li><div>{fazer}</div><div class='ver'>Você deve ver: {ver.format(n=len(achados))}</div></li>"
+        for fazer, ver in ROTEIRO)
 
     linhas_etapas = "".join(
         f"<tr><td>{n}</td><td>{e(o_que)}</td>"
@@ -132,6 +186,8 @@ def main():
   .faixa {{ background: rgba(59,110,165,0.10); border-left: 4px solid var(--cor-destaque);
             border-radius: 6px; padding: 8px 16px; font-size: 13px; }}
   .faixa div:first-child {{ font-weight: 600; }}
+  ol.roteiro li {{ margin-bottom: 14px; }}
+  ol.roteiro .ver {{ color: var(--cor-texto-secundario); font-size: 14px; margin-top: 2px; }}
   .rodape {{ margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
              font-size: 13px; color: var(--cor-texto-secundario); }}
 </style>
@@ -167,6 +223,11 @@ trecho apagado do Word de teste têm, cada um, um CPF — e nenhum deles aparece
   <span class="selo">{sobra} números achados de novo no texto que sai</span>
 </div>
 <pre class="documento">{destacado(texto, achados)}</pre>
+
+<h2>O roteiro da sua conferência final</h2>
+<p class="nota">Feche o programa e abra de novo antes de começar: a janela não troca o código com ela de pé.
+Me diga o que apareceu em cada passo, principalmente se foi diferente do que está escrito.</p>
+<ol class="roteiro">{roteiro}</ol>
 
 <h2>Os Words que não abrem</h2>
 <p class="nota">Cada um volta à escolha do arquivo, com a frase que a tela de erro mostra.</p>

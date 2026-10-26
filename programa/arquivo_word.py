@@ -13,6 +13,7 @@ com `#`, listas com `-`, tabelas com barras, notas com `[^1]` -, pronto para a
 revisão. Nenhuma macro é executada e nada sai da máquina: o programa só lê
 texto (RN-20 e RN-23).
 """
+import re
 import zipfile
 import zlib
 from pathlib import Path
@@ -180,6 +181,7 @@ class _Leitura:
         self.descompactado = 0
         self.estilos = _estilos(self._peca("word/styles.xml"))
         self.ligacoes = self._ligacoes()
+        self.numeracao = _Numeracao(self._peca("word/numbering.xml"))
         ajustes = self._peca("word/settings.xml")
         # "Páginas pares e ímpares diferentes" é uma opção do documento
         # inteiro; sem ela, o cabeçalho das páginas pares nunca é impresso.
@@ -224,6 +226,10 @@ class _Leitura:
         ordem = ([n for n in self.notas_chamadas if n[0] == "footnote"]
                  + [n for n in self.notas_chamadas if n[0] == "endnote"])
         self.numeros = {nota: numero for numero, nota in enumerate(ordem, start=1)}
+        # A primeira passada também contou os itens das listas: a contagem
+        # recomeça, senão a segunda passada continuaria do número em que a
+        # primeira parou.
+        self.numeracao.recomecar()
         blocos_do_corpo = list(self._blocos(corpo))
         # O corpo sozinho decide o "só imagens" (veja `ler`). As imagens dele
         # são as contadas até aqui: as do cabeçalho e as das notas vêm depois.
@@ -397,17 +403,47 @@ class _Leitura:
 
     def _paragrafo(self, paragrafo, caixas):
         texto = self._texto_do_paragrafo(paragrafo, caixas).strip()
+        # O item numerado é contado antes de ver se tem texto: o Word mostra e
+        # conta o número do item vazio (ou só com uma imagem), e sem contá-lo
+        # todo número dali em diante sairia um a menos (lente crítica da
+        # etapa 6).
+        item = _item_de_lista(paragrafo, self.estilos)
+        formato, rotulo = (self.numeracao.rotulo(*item) if item
+                           else ("marcador", ""))
         if not texto:
             return None
+        # No título e no item de lista, a quebra de linha (Shift+Enter no
+        # Word) vira espaço: no .md, a linha de baixo deixaria de ser parte do
+        # título, ou do item (anotado na revisão 37).
         nivel = _nivel_do_titulo(paragrafo, self.estilos)
         if nivel:
-            return "#" * nivel + " " + texto, False
-        profundidade = _profundidade_na_lista(paragrafo)
-        if profundidade is not None:
-            # Dois espaços por nível é o recuo que o `.md` entende como subitem
-            # de uma lista com marcador.
-            return "  " * profundidade + "- " + texto, True
-        return texto, False
+            # O título numerado ("1 OBJETO") leva o número, e entra na conta:
+            # as cláusulas "1.1", "2.1" de baixo dependem dele (lente crítica
+            # da etapa 6).
+            if item and formato == "numero" and rotulo:
+                texto = rotulo + " " + texto
+            return "#" * nivel + " " + texto.replace("\n", " "), False
+        if item is None:
+            return texto, False
+        profundidade = item[1]
+        if formato == "nenhum":
+            # A lista sem marca nenhuma (formato "nenhum" no Word): o texto
+            # sai como parágrafo comum, porque não há o que mostrar na frente.
+            return texto.replace("\n", " "), False
+        # Quatro espaços por nível: o subitem de um item numerado ("1. ", e até
+        # "10. ") só é visto pelo .md como subitem com o recuo da largura do
+        # número de cima; com dois, ele virava uma lista solta (lente crítica
+        # da etapa 6).
+        recuo = "    " * profundidade
+        texto = texto.replace("\n", " ")
+        if formato == "marcador" or not rotulo:
+            return recuo + "- " + texto, True
+        # "1." e "1)" são lista numerada do próprio .md; "a)", "I." e "1.1"
+        # não são, e vão depois de um marcador - assim o .md continua vendo
+        # uma lista, e o número que o Word mostra aparece como está (RN-28).
+        if ROTULO_DO_MD.fullmatch(rotulo):
+            return recuo + rotulo + " " + texto, True
+        return recuo + "- " + rotulo + " " + texto, True
 
     # ------------------------------------------------------------- tabelas
 
@@ -472,6 +508,14 @@ class _Leitura:
             if nome == "p":
                 caixas = []
                 texto = self._texto_do_paragrafo(filho, caixas)
+                # O item numerado na célula leva o número na frente e entra na
+                # conta: a lista continua depois da tabela com o número certo
+                # (lente crítica da etapa 6).
+                item = _item_de_lista(filho, self.estilos)
+                if item:
+                    formato, rotulo = self.numeracao.rotulo(*item)
+                    if formato == "numero" and rotulo and texto.strip():
+                        texto = rotulo + " " + texto.strip()
                 # Uma quebra de linha dentro do parágrafo é outra linha da
                 # célula; a tabulação vira espaço. Na tabela, a barra vertical
                 # do texto sai como `\|`, senão ela partiria a coluna em duas.
@@ -631,8 +675,17 @@ def _estilos(raiz):
             base.get(f"{W}val") if base is not None else None,
             _nivel_de_topico(estilo.find(f"{W}pPr")),
             _oculto_escrito(estilo.find(f"{W}rPr")),
+            _marca_de_lista(estilo.find(f"{W}pPr")),
         )
     return estilos
+
+
+def _marca_de_lista(propriedades):
+    """(número da lista, nível) que as propriedades marcam, cada um ou None."""
+    marca = _marcacao(propriedades, "numPr")
+    if marca is None:
+        return None
+    return _valor(marca, "numId"), _valor(marca, "ilvl")
 
 
 def _oculto_escrito(propriedades):
@@ -652,7 +705,7 @@ def _estilo_oculto(codigo, estilos):
     for _ in range(10):
         if codigo not in estilos:
             return None
-        _, base, _, oculto = estilos[codigo]
+        _, base, _, oculto, _ = estilos[codigo]
         if oculto is not None:
             return oculto
         codigo = base
@@ -677,7 +730,7 @@ def _nivel_do_titulo(paragrafo, estilos):
     for _ in range(10):
         if codigo not in estilos:
             return 0
-        nome, base, nivel, _ = estilos[codigo]
+        nome, base, nivel, _, _ = estilos[codigo]
         if nome == TITULO:
             return 1
         if nome.startswith(PREFIXO_DE_TITULO):
@@ -700,6 +753,109 @@ def _nivel_de_topico(propriedades):
     if valor is not None and valor.isdigit() and int(valor) < NIVEL_MAXIMO:
         return int(valor) + 1
     return 0
+
+
+# ---------------------------------------------------------------- numeração
+
+# Os rótulos que o próprio .md entende como item de lista numerada.
+ROTULO_DO_MD = re.compile(r"\d+[.)]")
+
+# Até que nível o Word numera uma lista: de 0 a 8.
+NIVEIS_DA_LISTA = 9
+
+ROMANOS = ((1000, "M"), (900, "CM"), (500, "D"), (400, "CD"), (100, "C"),
+           (90, "XC"), (50, "L"), (40, "XL"), (10, "X"), (9, "IX"), (5, "V"),
+           (4, "IV"), (1, "I"))
+
+
+class _Numeracao:
+    """O número (ou a letra) que o Word mostra na frente de cada item (RN-28).
+
+    O Word não grava o número de cada item: grava a regra da lista (começa em
+    1, letra minúscula, "%1.%2") e conta na hora de mostrar. Esta conta é
+    refeita aqui, na ordem do documento. Listas que usam a mesma regra
+    continuam a contagem uma da outra, como no Word, a não ser que uma delas
+    mande recomeçar.
+    """
+
+    def __init__(self, raiz):
+        # Por regra de lista: o começo, o formato e o rótulo de cada nível.
+        self.regras = {}
+        # Por lista: a regra que ela usa, e de onde ela manda recomeçar.
+        self.listas = {}
+        for regra in (raiz.findall(f"{W}abstractNum") if raiz is not None else ()):
+            niveis = {}
+            for nivel in regra.findall(f"{W}lvl"):
+                niveis[_numero(nivel.get(f"{W}ilvl"))] = (
+                    _numero(_valor(nivel, "start"), 1),
+                    _valor(nivel, "numFmt") or "decimal",
+                    _valor(nivel, "lvlText") or "")
+            self.regras[regra.get(f"{W}abstractNumId")] = niveis
+        for lista in (raiz.findall(f"{W}num") if raiz is not None else ()):
+            recomecos = {}
+            for troca in lista.findall(f"{W}lvlOverride"):
+                inicio = _valor(troca, "startOverride")
+                if inicio is not None:
+                    recomecos[_numero(troca.get(f"{W}ilvl"))] = _numero(inicio, 1)
+            self.listas[lista.get(f"{W}numId")] = (
+                _valor(lista, "abstractNumId"), recomecos)
+        self.recomecar()
+
+    def recomecar(self):
+        self.contagens = {}
+        self.ja_usadas = set()
+
+    def rotulo(self, lista, nivel):
+        """("marcador", ""), ("nenhum", "") ou ("numero", "1.2") para o item."""
+        if lista not in self.listas:
+            return "marcador", ""
+        regra, recomecos = self.listas[lista]
+        niveis = self.regras.get(regra, {})
+        inicio, formato, modelo = niveis.get(nivel, (1, "decimal", f"%{nivel + 1}."))
+        if formato == "bullet":
+            return "marcador", ""
+        contagem = self.contagens.setdefault(regra, [None] * NIVEIS_DA_LISTA)
+        if lista not in self.ja_usadas:
+            self.ja_usadas.add(lista)
+            for nivel_que_recomeca, valor in recomecos.items():
+                if nivel_que_recomeca < NIVEIS_DA_LISTA:
+                    contagem[nivel_que_recomeca] = valor - 1
+        if nivel >= NIVEIS_DA_LISTA:
+            return "marcador", ""
+        atual = contagem[nivel]
+        contagem[nivel] = inicio if atual is None else atual + 1
+        # O item de um nível faz os níveis de baixo recomeçarem: depois do
+        # "2.", o primeiro subitem volta a ser "2.1".
+        for de_baixo in range(nivel + 1, NIVEIS_DA_LISTA):
+            contagem[de_baixo] = None
+        if formato == "none":
+            return "nenhum", ""
+        for k in range(NIVEIS_DA_LISTA):
+            marca = f"%{k + 1}"
+            if marca in modelo:
+                inicio_k, formato_k, _ = niveis.get(k, (1, "decimal", ""))
+                valor = contagem[k] if contagem[k] is not None else inicio_k
+                modelo = modelo.replace(marca, _escrever_numero(valor, formato_k))
+        return "numero", modelo
+
+
+def _escrever_numero(valor, formato):
+    """O número no formato da lista: 3, 03, c, C, iii ou III."""
+    if formato in ("lowerLetter", "upperLetter"):
+        # O Word repete a letra depois do "z": aa, bb, cc.
+        letra = chr(ord("a") + (valor - 1) % 26) * ((valor - 1) // 26 + 1)
+        return letra.upper() if formato == "upperLetter" else letra
+    if formato in ("lowerRoman", "upperRoman"):
+        romano, resto = "", valor
+        for valor_romano, letras in ROMANOS:
+            while resto >= valor_romano:
+                romano, resto = romano + letras, resto - valor_romano
+        return romano.lower() if formato == "lowerRoman" else romano
+    if formato == "decimalZero":
+        return f"{valor:02d}"
+    # Os outros formatos ("primeiro", "um", número por extenso) saem em número:
+    # o que importa ao assistente é a ordem, e não a grafia.
+    return str(valor)
 
 
 # ------------------------------------------------------------------ blocos
@@ -725,17 +881,28 @@ SEPARADOR_NA_CELULA = " / "
 LARGURA_MINIMA = 3
 
 
-def _profundidade_na_lista(paragrafo):
-    """O nível do item (0 é o primeiro), ou None quando não é item de lista.
+def _item_de_lista(paragrafo, estilos):
+    """(número da lista, nível) do item, ou None quando não é item de lista.
 
-    O Word marca o item com o número da lista a que ele pertence; o número 0
-    quer dizer "tirado da lista", e o parágrafo volta a ser texto comum.
+    O Word marca o item no próprio parágrafo ou no estilo dele - o estilo
+    "Lista numerada" põe a lista em todo parágrafo que o usa -, e o que está
+    no parágrafo vale sobre o do estilo. O número 0 quer dizer "tirado da
+    lista", e o parágrafo volta a ser texto comum.
     """
     propriedades = paragrafo.find(f"{W}pPr")
-    marca = propriedades.find(f"{W}numPr") if propriedades is not None else None
-    if marca is None or _valor(marca, "numId") in (None, "0"):
+    lista, nivel = _marca_de_lista(propriedades) or (None, None)
+    codigo = _valor(propriedades, "pStyle")
+    for _ in range(10):
+        if (lista is not None and nivel is not None) or codigo not in estilos:
+            break
+        _, base, _, _, do_estilo = estilos[codigo]
+        if do_estilo:
+            lista = lista if lista is not None else do_estilo[0]
+            nivel = nivel if nivel is not None else do_estilo[1]
+        codigo = base
+    if lista in (None, "0"):
         return None
-    return _numero(_valor(marca, "ilvl"))
+    return lista, _numero(nivel)
 
 
 def _juntar_blocos(blocos):

@@ -73,7 +73,7 @@ def test_lista_com_subitem_fica_colada_e_recuada(tmp_path):
     corpo = (_p("Antes.") + _p("um", item.format(0)) + _p("sub", item.format(1))
              + _p("dois", item.format(0)) + _p("Depois."))
     assert _texto(_word(tmp_path, corpo)) == (
-        "Antes.\n\n- um\n  - sub\n- dois\n\nDepois.")
+        "Antes.\n\n- um\n    - sub\n- dois\n\nDepois.")
 
 
 def test_paragrafo_vazio_nao_deixa_buraco(tmp_path):
@@ -238,7 +238,7 @@ def test_o_word_da_massa():
         "Vice-coordenador: Davi Hipotético, CPF 222.222.222-22.\n\n"
         "## Bolsistas\n\n"
         "- Ivo Fictício, CPF 333.333.333-33\n"
-        "  - bolsa de extensão, 12 parcelas\n"
+        "    - bolsa de extensão, 12 parcelas\n"
         "- Otávio Suposto, CPF 444.444.444-44\n\n"
         "| Bolsista                                     | CPF            | Valor       |\n"
         "| -------------------------------------------- | -------------- | ----------- |\n"
@@ -260,6 +260,24 @@ def test_o_word_da_massa():
         "Pagamento ao bolsista Ivo Fictício confirmado; conta do CPF 777.777.777-77.\n\n"
         "## Prestação de contas\n\n"
         "Saldo devolvido à conta do projeto.[^2]\n\n"
+        "## Encaminhamentos da coordenação\n\n"
+        "1. Enviar o relatório ao bolsista de CPF 333.333.333-33\n"
+        "    - a) com os anexos\n"
+        "    - b) assinado\n"
+        "2. Arquivar a cópia\n\n"
+        "Os prazos, numa lista que recomeça:\n\n"
+        "1. Prazo de 30 dias\n"
+        "2. Prazo de 60 dias\n\n"
+        "Quem assina:\n\n"
+        "- I. Diretoria\n"
+        "- II. Coordenação\n\n"
+        "As metas:\n\n"
+        "1. Metas\n"
+        "    - 1.1 Oficinas\n"
+        "    - 1.2 Relatório\n\n"
+        "As etapas, numeradas pelo estilo do Word:\n\n"
+        "1) Primeira etapa\n"
+        "2) Segunda etapa\n\n"
         "Florianópolis, 30 de setembro de 2026.\n\n"
         "Relatório de execução — documento de exemplo, inventado — Página 1 de 3\n\n"
         "[^1]: Conforme o plano de trabalho aprovado; bolsista substituto, CPF 666.666.666-66.\n"
@@ -748,6 +766,142 @@ def test_o_limite_vale_para_o_texto_e_nao_para_as_imagens(tmp_path):
                         f"<w:document {ESPACOS}><w:body>{_p('Texto.')}</w:body></w:document>")
         pacote.writestr("word/media/foto.png", bytes(arquivo_word.LIMITE_DO_TEXTO + 1))
     assert _texto(caminho) == "Texto."
+
+
+# ------------------------------------------- a lista numerada (etapa 6)
+
+def _numeracao(regras, listas):
+    """O numbering.xml: regras = {id: [(formato, rótulo, começo), ...]},
+    listas = {numId: (id da regra, recomeça em)}."""
+    partes = []
+    for regra, niveis in regras.items():
+        partes.append(f'<w:abstractNum w:abstractNumId="{regra}">' + "".join(
+            f'<w:lvl w:ilvl="{i}"><w:start w:val="{comeco}"/><w:numFmt w:val="{formato}"/>'
+            f'<w:lvlText w:val="{rotulo}"/></w:lvl>'
+            for i, (formato, rotulo, comeco) in enumerate(niveis)) + "</w:abstractNum>")
+    for lista, (regra, recomeca) in listas.items():
+        troca = (f'<w:lvlOverride w:ilvl="0"><w:startOverride w:val="{recomeca}"/></w:lvlOverride>'
+                 if recomeca else "")
+        partes.append(f'<w:num w:numId="{lista}"><w:abstractNumId w:val="{regra}"/>{troca}</w:num>')
+    return f"<w:numbering {ESPACOS}>{''.join(partes)}</w:numbering>"
+
+
+def _item(texto, lista, nivel=0):
+    return _p(texto, f'<w:numPr><w:ilvl w:val="{nivel}"/><w:numId w:val="{lista}"/></w:numPr>')
+
+
+def _com_numeracao(tmp_path, corpo, regras, listas, estilos=None):
+    pecas = {"word/numbering.xml": _numeracao(regras, listas)}
+    if estilos:
+        pecas["word/styles.xml"] = f"<w:styles {ESPACOS}>{estilos}</w:styles>"
+    return _texto(_word_com_pecas(tmp_path, corpo, pecas))
+
+
+def test_o_numero_e_a_letra_que_o_word_mostra(tmp_path):
+    regras = {"0": [("decimal", "%1.", 1), ("lowerLetter", "%2)", 1)]}
+    corpo = (_item("um", 1) + _item("sub a", 1, 1) + _item("sub b", 1, 1)
+             + _item("dois", 1) + _item("sub de novo", 1, 1))
+    assert _com_numeracao(tmp_path, corpo, regras, {1: ("0", None)}) == (
+        "1. um\n    - a) sub a\n    - b) sub b\n2. dois\n    - a) sub de novo")
+
+
+@pytest.mark.parametrize("formato, rotulo, comeco, esperado", [
+    ("upperRoman", "%1.", 1, ["- I. x", "- II. x", "- III. x", "- IV. x"]),
+    ("lowerRoman", "(%1)", 9, ["- (ix) x", "- (x) x", "- (xi) x", "- (xii) x"]),
+    ("upperLetter", "%1.", 25, ["- Y. x", "- Z. x", "- AA. x", "- BB. x"]),
+    ("decimalZero", "%1.", 8, ["08. x", "09. x", "10. x", "11. x"]),
+    ("ordinal", "%1)", 3, ["3) x", "4) x", "5) x", "6) x"]),
+])
+def test_os_formatos_de_numero(tmp_path, formato, rotulo, comeco, esperado):
+    corpo = "".join(_item("x", 1) for _ in range(4))
+    texto = _com_numeracao(tmp_path, corpo, {"0": [(formato, rotulo, comeco)]},
+                           {1: ("0", None)})
+    assert texto.splitlines() == esperado
+
+
+def test_numeracao_de_varios_niveis(tmp_path):
+    regras = {"0": [("decimal", "%1.", 1), ("decimal", "%1.%2", 1),
+                    ("decimal", "%1.%2.%3", 1)]}
+    corpo = (_item("a", 1) + _item("b", 1, 1) + _item("c", 1, 2) + _item("d", 1, 1)
+             + _item("e", 1))
+    assert _com_numeracao(tmp_path, corpo, regras, {1: ("0", None)}).splitlines() == [
+        "1. a", "    - 1.1 b", "        - 1.1.1 c", "    - 1.2 d", "2. e"]
+
+
+def test_listas_da_mesma_regra_continuam_a_menos_que_mandem_recomecar(tmp_path):
+    """Como no Word: a mesma regra de lista continua a contagem; a lista que
+    manda recomeçar volta ao começo."""
+    regras = {"0": [("decimal", "%1.", 1)]}
+    corpo = (_item("a", 1) + _item("b", 1) + _p("meio")
+             + _item("continua", 2) + _p("meio") + _item("recomeça", 3) + _item("e segue", 3))
+    texto = _com_numeracao(tmp_path, corpo, regras,
+                           {1: ("0", None), 2: ("0", None), 3: ("0", 1)})
+    assert texto == ("1. a\n2. b\n\nmeio\n\n3. continua\n\nmeio\n\n"
+                     "1. recomeça\n2. e segue")
+
+
+def test_a_lista_que_vem_do_estilo(tmp_path):
+    estilos = ('<w:style w:styleId="Num"><w:name w:val="List Number"/>'
+               '<w:pPr><w:numPr><w:numId w:val="1"/></w:numPr></w:pPr></w:style>'
+               '<w:style w:styleId="Num2"><w:name w:val="List Number 2"/>'
+               '<w:basedOn w:val="Num"/><w:pPr><w:numPr><w:ilvl w:val="1"/></w:numPr></w:pPr>'
+               "</w:style>")
+    regras = {"0": [("decimal", "%1)", 1), ("lowerLetter", "%2)", 1)]}
+    corpo = (_p("um", '<w:pStyle w:val="Num"/>') + _p("sub", '<w:pStyle w:val="Num2"/>')
+             + _p("tirado", '<w:pStyle w:val="Num"/><w:numPr><w:numId w:val="0"/></w:numPr>')
+             + _p("dois", '<w:pStyle w:val="Num"/>'))
+    assert _com_numeracao(tmp_path, corpo, regras, {1: ("0", None)}, estilos) == (
+        "1) um\n    - a) sub\n\ntirado\n\n2) dois")
+
+
+def test_titulo_numerado_leva_o_numero_e_as_clausulas_seguem(tmp_path):
+    """Regressão da lente crítica da etapa 6: o título numerado ("1 OBJETO")
+    perdia o número, e as cláusulas saíam "1.1" debaixo de todo título."""
+    estilos = ('<w:style w:styleId="T1"><w:name w:val="heading 1"/>'
+               '<w:pPr><w:numPr><w:numId w:val="1"/></w:numPr></w:pPr></w:style>')
+    regras = {"0": [("decimal", "%1", 1), ("decimal", "%1.%2", 1)]}
+    corpo = (_p("OBJETO", '<w:pStyle w:val="T1"/>') + _item("Primeira", 1, 1)
+             + _p("OBRIGAÇÕES", '<w:pStyle w:val="T1"/>') + _item("Segunda", 1, 1))
+    assert _com_numeracao(tmp_path, corpo, regras, {1: ("0", None)}, estilos) == (
+        "# 1 OBJETO\n\n    - 1.1 Primeira\n\n# 2 OBRIGAÇÕES\n\n    - 2.1 Segunda")
+
+
+def test_item_numerado_vazio_conta(tmp_path):
+    """Regressão da lente crítica da etapa 6: o Word mostra e conta o número
+    do item vazio, e o .md saía com um a menos dali em diante."""
+    regras = {"0": [("decimal", "%1.", 1)]}
+    vazio = '<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr></w:p>'
+    corpo = _item("a", 1) + vazio + _item("b", 1)
+    assert _com_numeracao(tmp_path, corpo, regras, {1: ("0", None)}) == "1. a\n3. b"
+
+
+def test_item_numerado_na_celula_leva_o_numero_e_conta(tmp_path):
+    """Regressão da lente crítica da etapa 6: na célula, o item ficava sem
+    número e a lista continuava depois da tabela com o número errado."""
+    regras = {"0": [("decimal", "%1.", 1)]}
+    corpo = (_item("a", 1) + _tbl([_tc(_item("b", 1)), _tc(_item("c", 1))])
+             + _item("d", 1))
+    texto = _com_numeracao(tmp_path, corpo, regras, {1: ("0", None)})
+    assert texto.splitlines()[2] == "| 2. b | 3. c |"
+    assert texto.endswith("4. d")
+
+
+def test_lista_sem_marca_e_marcador(tmp_path):
+    regras = {"0": [("none", "", 1)], "1": [("bullet", "•", 1)]}
+    corpo = _item("sem marca", 1) + _item("com bolinha", 2)
+    assert _com_numeracao(tmp_path, corpo, regras, {1: ("0", None), 2: ("1", None)}) == (
+        "sem marca\n\n- com bolinha")
+
+
+def test_quebra_de_linha_no_titulo_e_no_item_vira_espaco(tmp_path):
+    """Anotado na revisão 37: a linha de baixo deixava de ser parte do título."""
+    estilos = '<w:style w:styleId="T1"><w:name w:val="heading 1"/></w:style>'
+    quebra = "<w:r><w:t>Primeira</w:t><w:br/><w:t>segunda</w:t></w:r>"
+    corpo = (f'<w:p><w:pPr><w:pStyle w:val="T1"/></w:pPr>{quebra}</w:p>'
+             f'<w:p><w:pPr><w:numPr><w:numId w:val="1"/></w:numPr></w:pPr>{quebra}</w:p>'
+             f"<w:p>{quebra}</w:p>")
+    assert _texto(_word(tmp_path, corpo, estilos)) == (
+        "# Primeira segunda\n\n- Primeira segunda\n\nPrimeira\nsegunda")
 
 
 def test_o_endereco_de_um_link_nunca_vira_peca_lida(tmp_path):

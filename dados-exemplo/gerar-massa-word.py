@@ -74,6 +74,7 @@ ESTILOS = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:style w:type="paragraph" w:styleId="Ttulo2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/></w:style>
 <w:style w:type="paragraph" w:styleId="Destaque"><w:name w:val="Destaque da fundacao"/><w:basedOn w:val="Ttulo2"/></w:style>
 <w:style w:type="paragraph" w:styleId="PargrafodaLista"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/></w:style>
+<w:style w:type="paragraph" w:styleId="Listanumerada"><w:name w:val="List Number"/><w:basedOn w:val="Normal"/><w:pPr><w:numPr><w:numId w:val="6"/></w:numPr></w:pPr></w:style>
 </w:styles>"""
 
 # Uma lista com marcador, de dois níveis.
@@ -83,7 +84,27 @@ NUMERACAO = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:lvl w:ilvl="0"><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/></w:lvl>
 <w:lvl w:ilvl="1"><w:numFmt w:val="bullet"/><w:lvlText w:val="o"/></w:lvl>
 </w:abstractNum>
+<w:abstractNum w:abstractNumId="1">
+<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/></w:lvl>
+<w:lvl w:ilvl="1"><w:start w:val="1"/><w:numFmt w:val="lowerLetter"/><w:lvlText w:val="%2)"/></w:lvl>
+</w:abstractNum>
+<w:abstractNum w:abstractNumId="2">
+<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="upperRoman"/><w:lvlText w:val="%1."/></w:lvl>
+</w:abstractNum>
+<w:abstractNum w:abstractNumId="3">
+<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/></w:lvl>
+<w:lvl w:ilvl="1"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1.%2"/></w:lvl>
+</w:abstractNum>
+<w:abstractNum w:abstractNumId="4">
+<w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1)"/></w:lvl>
+</w:abstractNum>
 <w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>
+<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>
+<w:num w:numId="3"><w:abstractNumId w:val="1"/>
+<w:lvlOverride w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride></w:num>
+<w:num w:numId="4"><w:abstractNumId w:val="2"/></w:num>
+<w:num w:numId="5"><w:abstractNumId w:val="3"/></w:num>
+<w:num w:numId="6"><w:abstractNumId w:val="4"/></w:num>
 </w:numbering>"""
 
 
@@ -326,6 +347,28 @@ def corpo_do_documento():
         # Parágrafo vazio: o Word grava, e o .md não precisa de três linhas em
         # branco por causa dele.
         paragrafo(),
+        # Um título com quebra de linha (Shift+Enter no Word): sai numa linha só.
+        paragrafo("Encaminhamentos", "<w:r><w:br/></w:r>", "da coordenação", estilo="Ttulo2"),
+        # Listas numeradas: o número (ou a letra) que o Word mostra (RN-28).
+        paragrafo("Enviar o relatório ao bolsista de CPF 333.333.333-33", lista=2),
+        paragrafo("com os anexos", lista=2, nivel=1),
+        paragrafo("assinado", lista=2, nivel=1),
+        paragrafo("Arquivar a cópia", lista=2),
+        paragrafo("Os prazos, numa lista que recomeça:"),
+        # A mesma regra de lista, mandando recomeçar: volta ao 1.
+        paragrafo("Prazo de 30 dias", lista=3),
+        paragrafo("Prazo de 60 dias", lista=3),
+        paragrafo("Quem assina:"),
+        paragrafo("Diretoria", lista=4),
+        paragrafo("Coordenação", lista=4),
+        paragrafo("As metas:"),
+        paragrafo("Metas", lista=5),
+        paragrafo("Oficinas", lista=5, nivel=1),
+        paragrafo("Relatório", lista=5, nivel=1),
+        paragrafo("As etapas, numeradas pelo estilo do Word:"),
+        # A lista que vem do estilo "Lista numerada", sem marca no parágrafo.
+        paragrafo("Primeira etapa", estilo="Listanumerada"),
+        paragrafo("Segunda etapa", estilo="Listanumerada"),
         paragrafo("Florianópolis, 30 de setembro de 2026."),
         # A assinatura colada como imagem: não vai para o .md, a faixa a
         # conta, e a descrição escondida dela (com um CPF) também não vai.
@@ -425,7 +468,11 @@ def main():
     # do Word, e tem de dar a frase de "estragado" em vez de travar (RN-30).
     (PASTA / "19-nao-e-word.docx").write_bytes(
         "Este arquivo é texto comum, com o nome trocado para .docx.\n".encode("utf-8"))
-    print("Gerados os Words de 18, 19 e de 21 a 25")
+    # O mesmo Word de teste com o nome de documento com macros: ele fica de
+    # fora (RN-23), e a tela dá a frase de "outro tipo".
+    (PASTA / "26-documento-com-macro.docm").write_bytes(
+        (PASTA / "18-documento-do-word.docx").read_bytes())
+    print("Gerados os Words de 18, 19 e de 21 a 26")
 
 
 if __name__ == "__main__":

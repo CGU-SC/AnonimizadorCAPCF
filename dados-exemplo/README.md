@@ -80,7 +80,7 @@ que passa na conta sem ser de dígitos repetidos.
 
 ## Os documentos do Word, do Anonimizar
 
-Os arquivos `18`, `19` e de `21` a `25` são documentos do Word (`.docx`) inventados, da
+Os arquivos `18`, `19` e de `21` a `26` são documentos do Word (`.docx`) inventados, da
 décima emenda da spec 003 (funcionalidade 5). Saem de um terceiro script, que
 monta o `.docx` peça por peça com o que já vem no Python — nenhum documento de
 verdade serve de modelo. Para refazê-los, da raiz do projeto:
@@ -102,6 +102,7 @@ não leva para a revisão, como um comentário.
 | `22-word-protegido.docx` | **imitação**: o cabeçalho do formato antigo do Office e o nome da parte que o Word usa ao cifrar com senha, sem conteúdo nenhum | a frase de "protegido por senha". Não abre no Word; para ver um de verdade, proteja com senha um Word inventado no próprio Word |
 | `23-doc-antigo-renomeado.docx` | **imitação** de um `.doc` antigo com o nome trocado, do mesmo jeito | a frase do `.doc` antigo |
 | `24-word-vazio.docx` | um Word com um parágrafo vazio | a frase de "vazio" |
+| `26-documento-com-macro.docm` | o mesmo Word de teste, com o nome de documento com macros | a frase de "outro tipo": o `.docm` fica de fora (RN-23) |
 | `25-word-grande-demais.docx` | um Word de 53 KB que, descompactado, passa de 50 MB de texto (espaços em branco) | a frase de "grande demais", dada sem descompactar nada |
 
 ## Uma observação honesta sobre o `04`
