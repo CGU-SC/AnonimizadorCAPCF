@@ -73,6 +73,12 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
 - **Entrada**: PDF, às vezes com texto por dentro (gerado no sistema de
   processos), às vezes só imagem (impresso, ou anexo escaneado por terceiro).
   O programa detecta sozinho se há texto, e só roda o OCR quando não há.
+  E, desde a funcionalidade 5 (décima emenda da spec 003, 26/10/2026), o
+  documento do Word (`.docx`), no Anonimizar: vai o documento impresso
+  inteiro - cabeçalho, corpo, tabelas, listas, rodapé e notas, com as
+  alterações controladas aceitas -, e uma faixa na revisão diz o que ficou de
+  fora (comentários, texto oculto, imagens). O `.doc` antigo não entra, e o
+  programa não devolve o próprio Word mascarado: sai só o `.md`.
 - **Saída**: `.md`, com as tabelas preservadas como tabelas de texto — para a
   pessoa arrastar para dentro da conversa com o assistente.
 - **Máscara do CPF**: 3 primeiros dígitos → `XXX`, 2 últimos → `XX`, mantendo a
@@ -352,3 +358,10 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   os `.md` da massa como alterados, e o `git diff` não mostra nada. Confira com
   `git diff --stat`; vazio, devolva os arquivos com `git restore` e commite só o
   que mudou de verdade (etapa 5 da funcionalidade 6, 21/10/2026).
+- **Texto com barra invertida mandado pelo terminal do Bash chega trocado.**
+  Um script ou um trecho de código com `\r`, `\n` ou `\x89` escrito,
+  passado pelo Bash (num `<<'EOF'` ou num `python -c`), foi gravado com a
+  quebra de linha e o byte de verdade no lugar das letras - e o arquivo
+  Python não abriu mais. Resolve gravando o script num arquivo do projeto
+  pela ferramenta de escrever, sem passar pelo terminal, rodando e apagando
+  (etapa 5 da funcionalidade 5, 24/10/2026).

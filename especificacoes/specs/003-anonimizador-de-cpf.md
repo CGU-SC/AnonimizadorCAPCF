@@ -119,7 +119,7 @@ Word mascarado. A leitura usa só o que já vem no Python (o `zipfile` e o
 abre `.docx` na versão gratuita, e a python-docx não lê caixa de texto, nota nem
 alteração controlada (decisão de 23/10/2026). Levantamento em
 `mockups/requisitos/06-mapa-do-entendimento.html`. Pedida em 16/09/2026, na
-conferência da etapa 2 do Anonimizar.
+conferência da etapa 2 do Anonimizar. Construída de 23 a 26/10/2026, em seis etapas, e conferida na tela pela usuária em 26/10/2026.
 **Correções de texto na tela:** em 2026-09-16, o rótulo do tipo "passa na conta" encurtou de "forma CPF válido" para **"CPF válido"**, a pedido da usuária, e passou ao vermelho (seção Dados). Não muda regra nenhuma.
 **Correções de texto:** aprovadas em 2026-09-14 — quatro trechos que se
 contradiziam depois das emendas, achados na revisão dos rascunhos 04 a 07. Não
