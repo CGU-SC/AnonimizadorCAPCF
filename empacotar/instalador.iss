@@ -26,9 +26,10 @@ AppComments=O programa foi desenvolvido pela CGU no âmbito da consultoria reali
 VersionInfoVersion={#Versao}
 
 ; Instala só para quem está usando, na pasta de programas pessoal, sem pedir
-; administrador (plano de entrega, 23/09/2026). A funcionalidade 4 vai gravar
-; configuração ao lado do programa, e em Program Files cada gravação pediria
-; a confirmação do Windows. Mudar de lugar depois custaria uma volta em cada
+; administrador (plano de entrega, 23/09/2026). O programa grava ao lado de
+; si as escolhas de quem usa (o preferencias.ini, funcionalidade 8), e a
+; funcionalidade 4 vai gravar ali a configuração da IA local; em Program Files
+; cada gravação pediria a confirmação do Windows. Mudar de lugar depois custaria uma volta em cada
 ; máquina do núcleo.
 PrivilegesRequired=lowest
 DefaultDirName={autopf}\{#Nome}
@@ -53,7 +54,10 @@ Name: "portugues"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "atalho_na_area_de_trabalho"; Description: "Criar um atalho na área de trabalho"; Flags: unchecked
 
 [Files]
-Source: "..\builds\programa\{#Nome}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; A pasta montada entra inteira, menos as escolhas de quem usa: aberto ali
+; mesmo para testar, o programa cria o preferencias.ini dele, que iria dentro
+; do instalador e passaria por cima da escolha de quem atualiza (RN-41).
+Source: "..\builds\programa\{#Nome}\*"; DestDir: "{app}"; Excludes: "preferencias.ini,preferencias.ini.*.gravando"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; O instalador do Tesseract vai na pasta "instaladores", ao lado do programa: é
 ; lá que o botão "instalar agora" o procura (spec 002). Sem ele, o botão nasce
 ; apagado e a pessoa fica sem saída na primeira leitura.
@@ -65,6 +69,16 @@ Source: "..\instaladores\tesseract-ocr-w64-setup-*.exe"; DestDir: "{app}\instala
 ; o modelo em branco de empacotar\. Numa instalação por cima, o que a TI já
 ; preencheu fica como está.
 Source: "modelo.env"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist
+
+[UninstallDelete]
+; As escolhas lembradas de quem usa (o motor de cada módulo, o tamanho da
+; janela) moram ao lado do programa, no preferencias.ini, que o próprio
+; programa cria. O desinstalador só apaga o que o instalador pôs, então ele
+; precisa ser avisado: quem desinstala e instala de novo começa do padrão
+; (RN-41 da spec 002). O ".gravando" é o provisório de uma gravação cortada.
+; Atualizar mantém o arquivo: o instalador não o traz, e não o apaga.
+Type: files; Name: "{app}\preferencias.ini"
+Type: files; Name: "{app}\preferencias.ini.*.gravando"
 
 [Icons]
 Name: "{autoprograms}\{#Nome}"; Filename: "{app}\{#Executavel}"

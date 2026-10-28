@@ -159,3 +159,48 @@ def test_o_gitignore_cobre_o_arquivo_e_o_provisorio():
     linhas = (RAIZ / ".gitignore").read_text(encoding="utf-8").splitlines()
     assert "preferencias.ini" in linhas
     assert "preferencias.ini.*.gravando" in linhas
+
+
+# ------------------------------------------------- o instalador (etapa 5)
+
+
+def _secoes_do_instalador():
+    """As seções da receita do instalador, cada uma com as linhas que não são
+    comentário."""
+    receita = (RAIZ / "empacotar" / "instalador.iss").read_text(encoding="utf-8-sig")
+    secoes, atual = {}, None
+    for linha in receita.splitlines():
+        linha = linha.strip()
+        if not linha or linha.startswith(";"):
+            continue
+        if linha.startswith("[") and linha.endswith("]"):
+            atual = secoes.setdefault(linha[1:-1], [])
+        elif atual is not None:
+            atual.append(linha)
+    return secoes
+
+
+def test_desinstalar_apaga_o_arquivo_e_o_provisorio():
+    """RN-41: o desinstalador só apaga o que o instalador pôs, e o arquivo é o
+    programa quem cria - por isso ele precisa estar na lista de apagar."""
+    apagar = _secoes_do_instalador().get("UninstallDelete", [])
+    assert r'Type: files; Name: "{app}\preferencias.ini"' in apagar
+    assert r'Type: files; Name: "{app}\preferencias.ini.*.gravando"' in apagar
+
+
+def test_atualizar_mantem_o_arquivo():
+    """RN-41: instalar uma versão nova por cima não traz nem apaga o arquivo.
+
+    "Não traz" inclui a pasta do programa montada, que entra inteira: um
+    preferencias.ini deixado nela (o programa montado aberto ali mesmo, para
+    testar) iria dentro do instalador e passaria por cima da escolha de quem
+    atualiza (lente crítica da etapa 5)."""
+    secoes = _secoes_do_instalador()
+    assert not any("preferencias" in linha for linha in secoes.get("InstallDelete", []))
+    for linha in secoes["Files"]:
+        if "preferencias" in linha:
+            assert 'Excludes: "preferencias.ini,preferencias.ini.*.gravando"' in linha
+    pasta_inteira = [linha for linha in secoes["Files"] if "{#Nome}\\*" in linha]
+    assert pasta_inteira
+    for linha in pasta_inteira:
+        assert 'Excludes: "preferencias.ini,preferencias.ini.*.gravando"' in linha

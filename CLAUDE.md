@@ -100,9 +100,12 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
   escopo ainda) uma IA local, na própria máquina (LM Studio) ou num servidor
   dentro da rede da universidade. Na tela ela aparece apagada, como "IA local",
   com "Funcionalidade a ser implementada" embaixo. **Nunca** um serviço de
-  empresa externa — seria contradizer o motivo do programa existir. A escolha
-  vale até a pessoa trocar ou fechar o programa; lembrá-la entre um uso e outro
-  é a funcionalidade 8 do backlog.
+  empresa externa — seria contradizer o motivo do programa existir. Desde a
+  funcionalidade 8 (28/10/2026), a escolha de cada módulo é lembrada de um uso
+  para o outro, no `preferencias.ini`, e o motor lembrado que falta ao abrir
+  passa a ser lembrado como o outro (RN-36 a RN-41 da spec 002). A janela abre
+  maximizada no primeiro uso, e depois como foi fechada, sempre no meio da tela
+  (RN-4 a RN-8 da spec 001). Desinstalar apaga o arquivo; atualizar o mantém.
 - **Conferência humana**: parte fixa do processo quando o texto veio de OCR, e
   não etapa opcional. O dígito verificador do CPF confere o que foi lido; o
   que não fechar vira lista de suspeitos para a pessoa olhar, em vez de passar
@@ -115,9 +118,9 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
 - **Como chega em quem usa** (forma de entrega, decidida em 23/09/2026):
   **instalador** do Windows, instalado só para a pessoa, na pasta de programas
   dela (`%LOCALAPPDATA%\Programs\Anonimizador CAPCF`), **sem pedir
-  administrador** — a funcionalidade 4 vai gravar configuração ao lado do
-  programa, e em `Program Files` cada gravação pediria a confirmação do
-  Windows. O instalador leva o do Tesseract (na pasta `instaladores`) e cria
+  administrador** — o programa grava ao lado de si as escolhas de quem usa
+  (o `preferencias.ini`), e em `Program Files` cada gravação pediria a
+  confirmação do Windows. O instalador leva o do Tesseract (na pasta `instaladores`) e cria
   um `.env` em branco; a pasta que vai para o núcleo tem o instalador e os
   roteiros `Como instalar.html` e `Como usar.html`. O número da versão mora em
   `programa/versao.py`, e aparece no pé da faixa da esquerda e no instalador;

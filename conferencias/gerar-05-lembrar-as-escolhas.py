@@ -24,7 +24,7 @@ ETAPAS = [
     ("2", "O Anonimizar lembra o dele, à parte, e o motor que some passa a ser lembrado como o outro", "no programa"),
     ("3", "A janela: maximizada no primeiro uso, depois o tamanho e o maximizado lembrados", "no programa"),
     ("4", "Os caminhos tortos: arquivo estragado, pasta sem gravação, o .env intacto, nada do trabalho", "no programa"),
-    ("5", "O instalador (desinstalar apaga, atualizar mantém) e o roteiro da conferência", "a fazer"),
+    ("5", "O instalador (desinstalar apaga, atualizar mantém) e o roteiro da conferência", "no programa"),
 ]
 
 # O que os testes automáticos conferem, em português, com o arquivo de teste.
@@ -60,6 +60,7 @@ CONFERIDO = [
     ("Arquivo estragado ou apagado: os dois módulos no PaddleOCR e a janela maximizada, como no primeiro uso (RN-39)", "test_preferencias_caminhos_tortos.py"),
     ("Pasta protegida: marcar e fechar seguem sem erro nem aviso, e o .env fica intacto (RN-39)", "test_preferencias_caminhos_tortos.py"),
     ("O .gitignore cobre o arquivo e o provisório", "test_preferencias_caminhos_tortos.py"),
+    ("O instalador apaga o arquivo e o provisório ao desinstalar, e não o traz nem o apaga ao atualizar, nem quando ele foi esquecido na pasta montada (RN-41) — o teste lê a receita; compilá-la é à mão, e ela compilou sem erro em 28/10/2026", "test_preferencias_caminhos_tortos.py"),
     ("Arquivo salvo no Bloco de Notas em UTF-8, UTF-8 com BOM, Unicode ou ANSI é entendido (revisão 46)", "test_preferencias.py"),
     ("Antivírus segurando o arquivo por um instante: a gravação insiste e a escolha não se perde (revisão 46)", "test_preferencias.py"),
     ("Um bloco [DEFAULT] escrito à mão não vaza para os outros (revisão 46)", "test_preferencias.py"),
@@ -74,6 +75,73 @@ CONFERIDO = [
 # Os testes da funcionalidade, rodados para contar quantos passam.
 ARQUIVOS_DE_TESTE = ["programa/test_preferencias.py", "programa/test_janela_lembrada.py",
                      "programa/test_preferencias_caminhos_tortos.py"]
+
+
+# O que só a tela e a instalação de verdade mostram. Cada passo: o que fazer, o
+# que deve acontecer.
+ROTEIRO_NO_DESENVOLVIMENTO = [
+    ("Apague o <code>preferencias.ini</code> da raiz do projeto, se houver, e abra o programa pelo "
+     "<code>abrir\\abrir-dev.bat</code>.",
+     "A janela abre maximizada, ocupando a tela, com a barra de tarefas do Windows à vista."),
+    ("Saia do maximizado (o botão do meio, no canto de cima à direita).",
+     "A janela fica com 1000 × 640, no meio da tela."),
+    ("Arraste a borda até um tamanho bem diferente, leve a janela para um canto, feche e abra de novo.",
+     "Ela volta com o mesmo tamanho, mas no meio da tela — e não no canto."),
+    ("Maximize, feche e abra de novo. Depois, saia do maximizado.",
+     "Abre maximizada; saindo, volta ao tamanho do passo anterior."),
+    ("No Gerar OCR, marque o Tesseract. Feche e abra de novo. Depois, no Anonimizar, escolha o "
+     "<code>dados-exemplo\\02-imprimir-para-pdf.pdf</code> e vá até a tela de ler.",
+     "O Gerar OCR vem com o Tesseract marcado; o Anonimizar, com o PaddleOCR. Nada na tela diz que a escolha "
+     "veio lembrada."),
+    ("Ainda no Anonimizar, marque o Tesseract, sem ler. Feche e abra de novo, e volte à tela de ler.",
+     "O Anonimizar vem com o Tesseract marcado."),
+    ("Abra o <code>preferencias.ini</code> da raiz do projeto no Bloco de Notas.",
+     "Um cabeçalho explicando o arquivo, e três blocos: <code>[gerar_ocr]</code> e <code>[anonimizar]</code> "
+     "com o motor, e <code>[janela]</code> com largura, altura e maximizada. Nada de nome de documento ou "
+     "pasta."),
+    ("Feche e abra pelo <code>abrir\\abrir-sem-motor.bat</code>, que esconde o Tesseract. Depois feche e "
+     "abra pelo <code>abrir-dev.bat</code> de novo.",
+     "Pelo atalho sem motor, os dois módulos vêm com o PaddleOCR e a linha do Tesseract apagada, dizendo por "
+     "quê. De volta ao normal, o Tesseract aparece aceso, mas o PaddleOCR continua marcado (RN-37)."),
+]
+
+ROTEIRO_INSTALADO = [
+    ("Quando você voltar, eu monto um instalador de teste com outro nome, sem escrever por cima do da "
+     "entrega 0.1.0. Instale-o, abra, marque o Tesseract no Gerar OCR, mude o tamanho da janela e feche.",
+     "Abre maximizada no primeiro uso, como no desenvolvimento."),
+    ("Instale o mesmo instalador de novo, por cima, e abra.",
+     "O tamanho e o Tesseract continuam: atualizar mantém a escolha."),
+    ("Desinstale pelo Windows (Configurações › Aplicativos) e olhe a pasta "
+     "<code>%LOCALAPPDATA%\\Programs\\Anonimizador CAPCF</code>.",
+     "Não sobra o <code>preferencias.ini</code>."),
+    ("Instale de novo e abra.",
+     "Abre maximizada e com o PaddleOCR nos dois módulos: começou do padrão."),
+    ("Se você usar dois monitores: feche o programa no monitor que não é o principal e abra de novo.",
+     "Ele abre no monitor principal, no meio — veja a primeira anotação abaixo."),
+]
+
+# O que as revisões 43 a 47 acharam e não era defeito claro: fica para a
+# solicitante decidir.
+ANOTADO = [
+    ("Com dois monitores, a janela abre sempre no principal",
+     "e o tamanho lembrado é cortado para caber nele. Quem trabalha num monitor grande ligado a um notebook vê "
+     "o tamanho encolher toda vez. É consequência de não lembrar a posição (RN-6); lembrar o monitor seria uma "
+     "emenda. (Revisão 45.)"),
+    ("A troca de motor feita pelo programa também fica lembrada",
+     "como a RN-37 manda. Mas \"faltar\" inclui um sumiço passageiro — o Tesseract numa pasta de rede ainda não "
+     "ligada, ou sem o pacote de português —, e os atalhos de <code>abrir\\</code> que fingem um motor faltando: "
+     "um dia assim, e a escolha da pessoa passa ao outro motor de vez. Se preferir que a lembrança espere o motor "
+     "voltar, é uma emenda pequena na RN-37. (Revisões 43, 44 e 46.)"),
+    ("Desinstalar com o programa aberto deixa a lembrança voltar",
+     "o desinstalador apaga o <code>preferencias.ini</code>, e, quando a pessoa fecha a janela depois, o "
+     "programa grava o tamanho de novo, na pasta que sobrou. A instalação seguinte abre com esse tamanho, e não "
+     "maximizada. Fechar o programa antes de desinstalar evita; fazer o instalador recusar enquanto o programa "
+     "estiver aberto é uma mudança pequena, mas muda o que a pessoa vê ao instalar e desinstalar. (Revisão 47.)"),
+    ("Para a lente de manutenção",
+     "a lembrança do motor está ligada à peça da tela que mostra os motores, e o caminho do PDF monta a tela de "
+     "ler também no Gerar OCR, que não a mostra. Um terceiro motor (a IA local) ou um outro lugar que escolha "
+     "motor precisariam repetir a ligação. (Revisões 43 e 44.)"),
+]
 
 
 def e(texto):
@@ -99,6 +167,15 @@ def main():
     linhas_conferido = "".join(
         f"<tr><td>{e(o_que)}</td><td class='mono'>{e(onde)}</td></tr>" for o_que, onde in CONFERIDO)
 
+    def roteiro(passos, comeco=1):
+        # Os passos são escritos aqui mesmo, com marcação: vão sem escapar.
+        return "".join(
+            f"<tr><td>{n}</td><td>{fazer}</td><td>{esperar}</td></tr>"
+            for n, (fazer, esperar) in enumerate(passos, start=comeco))
+    linhas_dev = roteiro(ROTEIRO_NO_DESENVOLVIMENTO)
+    linhas_instalado = roteiro(ROTEIRO_INSTALADO, len(ROTEIRO_NO_DESENVOLVIMENTO) + 1)
+    itens_anotados = "".join(f"<li><strong>{titulo}</strong>: {texto}</li>" for titulo, texto in ANOTADO)
+
     pagina = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -119,6 +196,8 @@ def main():
          padding: 32px max(16px, calc((100vw - 1040px) / 2)); }}
   h1 {{ font-size: 28px; margin: 0 0 8px; }}
   h2 {{ font-size: 20px; margin: 40px 0 8px; }}
+  h3 {{ font-size: 16px; margin: 24px 0 8px; }}
+  .anotado li {{ margin-bottom: 8px; }}
   code {{ font-family: var(--fonte-mono); font-size: 13px; }}
   .subtitulo, .nota {{ color: var(--cor-texto-secundario); }}
   .nota {{ font-size: 13px; }}
@@ -146,7 +225,7 @@ def main():
 <h1>Conferência 05 — lembrar as escolhas</h1>
 <p class="subtitulo">Funcionalidade 8, emendas de 28/10/2026 das specs 002 e 001. Você pediu que o máximo fosse
 conferido por teste automático, porque ia viajar: esta página mostra o que os testes já conferem sozinhos e, no
-fim da construção, o pouco que só a tela mostra.</p>
+fim, o pouco que só a tela mostra, e o que ficou anotado para você decidir.</p>
 
 <div class="caixa">As escolhas ficam num arquivo <code>preferencias.ini</code>, ao lado do <code>.env</code>, na
 pasta da instalação. Nesta máquina de desenvolvimento ele mora na raiz do projeto, fora do histórico — e cada teste
@@ -171,6 +250,28 @@ a mostram por um instante, maximizada ou não, porque só o Windows responde a q
   <tr><th>O que é conferido</th><th>Onde</th></tr>
   {linhas_conferido}
 </table></div>
+
+<h2>O que fica para você conferir na tela</h2>
+<p class="nota">Só o que um teste não consegue ver: a janela no seu monitor, e o instalador instalando e desinstalando
+de verdade. Nada disto foi conferido ainda — as cinco etapas foram gravadas como "não conferido na tela", por
+escolha sua. A janela não recarrega o código sozinha: feche e abra a cada passo.</p>
+
+<h3>No desenvolvimento, nesta máquina</h3>
+<div class="rolar"><table>
+  <tr><th>Passo</th><th>O que fazer</th><th>O que deve acontecer</th></tr>
+  {linhas_dev}
+</table></div>
+
+<h3>Instalado</h3>
+<div class="rolar"><table>
+  <tr><th>Passo</th><th>O que fazer</th><th>O que deve acontecer</th></tr>
+  {linhas_instalado}
+</table></div>
+
+<h2>Anotado para você decidir</h2>
+<p class="nota">O que a lente crítica achou nas revisões 43 a 47 e não era defeito claro. Nada disto foi mudado:
+como combinado, eu anoto em vez de decidir por você.</p>
+<ul class="anotado">{itens_anotados}</ul>
 
 <p class="rodape">Página gerada em {DATA} pela skill-07-designer-de-telas, a pedido da
 skill-08-construtor-de-funcionalidades (<code>conferencias/gerar-05-lembrar-as-escolhas.py</code>).</p>
