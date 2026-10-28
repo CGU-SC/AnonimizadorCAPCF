@@ -63,7 +63,7 @@ class CaminhoDoPdf:
                  com_cartao=True, ao_abrir_conferencia=None,
                  tem_motor=None, ao_faltar_motor=None,
                  rotulo_de_outro="Escolher outro documento",
-                 motor_escolhido=None):
+                 motor_escolhido=None, lembrar_motor_como=None):
         self._pilha = pilha
         # O Gerar OCR mostra o cartão do que o programa descobriu antes de
         # tudo. O Anonimizar não: o PDF sem texto vai para a tela de ler, que
@@ -104,10 +104,14 @@ class CaminhoDoPdf:
             ao_ignorar=self._ignorar_o_texto_existente,
             ao_escolher_outro=self._escolher_outro,
         )
+        # A escolha da tela de ler só é lembrada por quem a mostra (o
+        # Anonimizar). O Gerar OCR monta esta tela sem usá-la, e lembrar por
+        # ela misturaria a escolha dele com a escondida (RN-36).
         self.tela_de_ler = _TelaDeLer(
             ao_ler=self.comecar_a_ler,
             ao_escolher_outro=self._escolher_outro,
             ao_voltar_a_decisao=self.decidir_sobre_o_texto_existente,
+            lembrar_motor_como=lembrar_motor_como,
         )
         self.tela_conferencia = TelaConferencia(
             ao_processar_outro=self._escolher_outro,
@@ -987,11 +991,12 @@ class _TelaDeLer(QWidget):
     Ela faz o papel do cartão do Gerar OCR para quem vai ler o PDF como imagem:
     diz o nome, as páginas e o que vai acontecer, e traz a escolha do motor logo
     acima do botão de ler - o único momento em que essa escolha serve para
-    alguma coisa. O PaddleOCR já vem marcado: quem não quer pensar só clica em
-    ler.
+    alguma coisa. Vem marcado o motor da última vez, e, para quem nunca
+    escolheu, o PaddleOCR: quem não quer pensar só clica em ler (RN-36).
     """
 
-    def __init__(self, ao_ler, ao_escolher_outro, ao_voltar_a_decisao):
+    def __init__(self, ao_ler, ao_escolher_outro, ao_voltar_a_decisao,
+                 lembrar_motor_como=None):
         super().__init__()
         self._ao_ler = ao_ler
         self._ao_escolher_outro = ao_escolher_outro
@@ -1009,7 +1014,7 @@ class _TelaDeLer(QWidget):
         layout.addWidget(self.legenda)
         layout.addSpacing(estilo.ESPACO_4)
 
-        self.escolha_do_motor = EscolhaDoMotor("LER COM")
+        self.escolha_do_motor = EscolhaDoMotor("LER COM", lembrar_como=lembrar_motor_como)
         layout.addWidget(self.escolha_do_motor)
         layout.addSpacing(estilo.ESPACO_4)
 

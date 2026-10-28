@@ -44,6 +44,10 @@ from telas_de_salvar import (
 )
 from telas_de_salvar_sem_cpf import TelaGravadoSemCpf, TelaSalvarSemCpf
 
+# O nome com que a escolha do motor deste módulo é lembrada de um uso para o
+# outro, à parte da do Gerar OCR (RN-36 da emenda de 28/10/2026 da spec 002).
+LEMBRAR_COMO = "anonimizar"
+
 EXTENSOES_DE_TEXTO = (".md", ".txt")
 # Só o `.docx`: o `.doc` antigo exigiria o Word instalado, e o `.docm` e o
 # `.dotx` ficaram de fora na décima emenda - quem tiver um deles salva como
@@ -155,6 +159,7 @@ class PainelAnonimizar(QWidget):
             tem_motor=self._conferir_o_motor,
             ao_faltar_motor=self.motor.mostrar_que_falta,
             rotulo_de_outro="Escolher outro arquivo",
+            lembrar_motor_como=LEMBRAR_COMO,
         )
         self.motor.ligar_escolha(self.pdf.tela_de_ler.escolha_do_motor)
         self.tela_erro = _TelaErro(ao_escolher_outro=self.voltar_para_escolher)

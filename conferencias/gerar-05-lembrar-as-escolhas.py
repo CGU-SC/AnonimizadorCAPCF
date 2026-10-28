@@ -21,7 +21,7 @@ DATA = "28/10/2026"
 # As cinco etapas da construção. A situação é mudada à mão a cada etapa fechada.
 ETAPAS = [
     ("1", "O Gerar OCR lembra o motor, num preferencias.ini gravado com segurança", "no programa"),
-    ("2", "O Anonimizar lembra o dele, à parte, e o motor que some passa a ser lembrado como o outro", "a fazer"),
+    ("2", "O Anonimizar lembra o dele, à parte, e o motor que some passa a ser lembrado como o outro", "no programa"),
     ("3", "A janela: maximizada no primeiro uso, depois o tamanho e o maximizado lembrados", "a fazer"),
     ("4", "Os caminhos tortos: arquivo estragado, pasta sem gravação, o .env intacto, nada do trabalho", "a fazer"),
     ("5", "O instalador (desinstalar apaga, atualizar mantém) e o roteiro da conferência", "a fazer"),
@@ -37,6 +37,14 @@ CONFERIDO = [
     ("Arquivo estragado, com lixo ou outra codificação: abre no padrão, sem erro, e é refeito (RN-39)", "test_preferencias.py"),
     ("Pasta que não aceita gravar: segue calado, sem travar (RN-39)", "test_preferencias.py"),
     ("Gravação cortada no meio deixa a escolha anterior inteira (RN-39)", "test_preferencias.py"),
+    ("Marcou o Tesseract no Anonimizar, sem ler nada, fechou e abriu: ele vem marcado, e o Gerar OCR fica como estava (RN-36)", "test_preferencias.py"),
+    ("Marcar no Anonimizar não muda o Gerar OCR, e só abrir os dois não grava nada (RN-36)", "test_preferencias.py"),
+    ("O Gerar OCR não lembra pela tela de ler que ele monta e não mostra", "test_preferencias.py"),
+    ("Tesseract lembrado que sumiu: abre com o PaddleOCR, a linha do Tesseract apagada, e o arquivo passa a dizer paddleocr — nos dois módulos (RN-37)", "test_preferencias.py"),
+    ("O Tesseract que volta não é remarcado sozinho, com o programa aberto ou na próxima vez — nos dois módulos (RN-37)", "test_preferencias.py"),
+    ("PaddleOCR lembrado que sumiu: a marca e a lembrança passam ao Tesseract (RN-37)", "test_preferencias.py"),
+    ("Faltando os dois motores, nada muda no que está lembrado (RN-37)", "test_preferencias.py"),
+    ("Pasta sem gravação: o Tesseract marcado lê até fechar, nos dois módulos (critério de aceite)", "test_preferencias.py"),
     ("Arquivo preso por outro programa não é reescrito, e as outras escolhas ficam (revisão 43)", "test_preferencias.py"),
     ("Arquivo salvo com BOM no Bloco de Notas, ou com \"Tesseract\" em maiúscula, é entendido (revisão 43)", "test_preferencias.py"),
     ("Duas janelas do programa não dividem o arquivo provisório (revisão 43)", "test_preferencias.py"),

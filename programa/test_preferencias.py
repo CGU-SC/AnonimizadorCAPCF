@@ -180,5 +180,149 @@ def test_motor_lembrado_que_nao_existe_vale_como_nada(maquina, preferencias_isol
 def test_marcar_no_gerar_ocr_nao_muda_o_anonimizar(maquina):
     """RN-36: uma escolha por módulo."""
     PainelOcr().escolha_do_motor.tesseract.setChecked(True)
-    anonimizar = PainelAnonimizar()
-    assert anonimizar.pdf.tela_de_ler.escolha_do_motor.marcado() == leitura.MOTOR_PADDLEOCR
+    assert _do_anonimizar(PainelAnonimizar()).marcado() == leitura.MOTOR_PADDLEOCR
+
+
+# ------------------------------------------------- o Anonimizar (etapa 2)
+
+def _do_anonimizar(painel):
+    return painel.pdf.tela_de_ler.escolha_do_motor
+
+
+def test_o_anonimizar_lembra_o_motor_sem_ler_documento(maquina, preferencias_isoladas):
+    """Critério de aceite: marcou o Tesseract no Anonimizar, sem ler nada,
+    fechou e abriu - ele vem marcado, e o Gerar OCR fica como estava."""
+    PainelOcr().escolha_do_motor.tesseract.setChecked(True)
+    _do_anonimizar(PainelAnonimizar()).tesseract.setChecked(True)
+    _do_anonimizar(PainelAnonimizar()).paddleocr.setChecked(True)
+    assert _lido(preferencias_isoladas) == {
+        "gerar_ocr": {"motor": "tesseract"}, "anonimizar": {"motor": "paddleocr"}}
+
+    _do_anonimizar(PainelAnonimizar()).tesseract.setChecked(True)
+    assert _do_anonimizar(PainelAnonimizar()).marcado() == leitura.MOTOR_TESSERACT
+    # O Gerar OCR ficou com o que estava: se o Anonimizar gravasse no bloco
+    # dele, ali estaria o último motor marcado no Anonimizar.
+    preferencias.gravar("gerar_ocr", "motor", "paddleocr")
+    _do_anonimizar(PainelAnonimizar()).paddleocr.setChecked(True)
+    _do_anonimizar(PainelAnonimizar()).tesseract.setChecked(True)
+    assert PainelOcr().escolha_do_motor.marcado() == leitura.MOTOR_PADDLEOCR
+
+
+def test_marcar_no_anonimizar_nao_muda_o_gerar_ocr(maquina, preferencias_isoladas):
+    _do_anonimizar(PainelAnonimizar()).tesseract.setChecked(True)
+    assert PainelOcr().escolha_do_motor.marcado() == leitura.MOTOR_PADDLEOCR
+    assert _lido(preferencias_isoladas) == {"anonimizar": {"motor": "tesseract"}}
+
+
+def test_o_gerar_ocr_nao_lembra_pela_tela_de_ler_que_nao_mostra(
+        maquina, preferencias_isoladas):
+    """O Gerar OCR monta a tela de ler do caminho do PDF sem usá-la: a escolha
+    escondida dela não pode gravar nada, nem ler o que é do Anonimizar."""
+    preferencias_isoladas.write_text("[anonimizar]\nmotor = tesseract\n", encoding="utf-8")
+    escondida = PainelOcr().pdf.tela_de_ler.escolha_do_motor
+    assert escondida.marcado() == leitura.MOTOR_PADDLEOCR
+    escondida.tesseract.setChecked(True)
+    escondida.paddleocr.setChecked(True)
+    assert _lido(preferencias_isoladas) == {"anonimizar": {"motor": "tesseract"}}
+
+
+def test_nenhum_dos_dois_grava_ao_abrir(maquina, preferencias_isoladas):
+    PainelOcr()
+    PainelAnonimizar()
+    assert not preferencias_isoladas.exists()
+
+
+# ------------------------------------- o motor lembrado que falta (RN-37)
+
+@pytest.fixture
+def sem_tesseract(monkeypatch):
+    """O PaddleOCR presente e o Tesseract sumido; liga e desliga no meio."""
+    class Estado:
+        tesseract = False
+    monkeypatch.setattr(motor_paddleocr, "presente", lambda: True)
+    monkeypatch.setattr(
+        motor_na_tela, "localizar_tesseract",
+        lambda: Path(r"C:\Qualquer\tesseract.exe") if Estado.tesseract else None)
+    monkeypatch.setattr(motor_na_tela, "ha_algum_tesseract", lambda: False)
+    monkeypatch.setattr(motor_na_tela, "localizar_instalador", lambda: None)
+    return Estado
+
+
+@pytest.mark.parametrize("modulo", ["gerar_ocr", "anonimizar"])
+def test_tesseract_lembrado_que_sumiu_passa_a_ser_o_paddleocr(
+        sem_tesseract, preferencias_isoladas, modulo):
+    """Critério de aceite da RN-37: abre com o PaddleOCR marcado e a linha do
+    Tesseract apagada, e o arquivo passa a dizer paddleocr para o módulo; o
+    outro módulo fica como estava."""
+    outro = "anonimizar" if modulo == "gerar_ocr" else "gerar_ocr"
+    preferencias_isoladas.write_text(
+        f"[{modulo}]\nmotor = tesseract\n[{outro}]\nmotor = tesseract\n",
+        encoding="utf-8")
+
+    painel = PainelOcr() if modulo == "gerar_ocr" else PainelAnonimizar()
+    escolha = (painel.escolha_do_motor if modulo == "gerar_ocr"
+               else _do_anonimizar(painel))
+    assert escolha.marcado() == leitura.MOTOR_PADDLEOCR
+    assert not escolha.tesseract.isEnabled()
+    assert _lido(preferencias_isoladas) == {
+        modulo: {"motor": "paddleocr"}, outro: {"motor": "tesseract"}}
+
+
+@pytest.mark.parametrize("modulo", ["gerar_ocr", "anonimizar"])
+def test_o_tesseract_que_volta_nao_e_remarcado_sozinho(
+        sem_tesseract, preferencias_isoladas, modulo):
+    """Critério de aceite da RN-37: quando o Tesseract volta, o módulo continua
+    com o PaddleOCR - com o programa aberto e na próxima vez que abrir."""
+    def escolha_de(painel):
+        return (painel.escolha_do_motor if modulo == "gerar_ocr"
+                else _do_anonimizar(painel))
+    novo = PainelOcr if modulo == "gerar_ocr" else PainelAnonimizar
+
+    preferencias_isoladas.write_text(f"[{modulo}]\nmotor = tesseract\n", encoding="utf-8")
+    painel = novo()
+    sem_tesseract.tesseract = True
+    painel.motor.conferir_de_novo()
+    assert escolha_de(painel).tesseract.isEnabled()
+    assert escolha_de(painel).marcado() == leitura.MOTOR_PADDLEOCR
+    assert escolha_de(novo()).marcado() == leitura.MOTOR_PADDLEOCR
+    assert _lido(preferencias_isoladas) == {modulo: {"motor": "paddleocr"}}
+
+
+def test_faltando_os_dois_nada_muda_no_que_esta_lembrado(monkeypatch, preferencias_isoladas):
+    """RN-37: sem motor nenhum, não há para onde a marca passar."""
+    monkeypatch.setattr(motor_paddleocr, "presente", lambda: False)
+    monkeypatch.setattr(motor_na_tela, "localizar_tesseract", lambda: None)
+    monkeypatch.setattr(motor_na_tela, "ha_algum_tesseract", lambda: False)
+    monkeypatch.setattr(motor_na_tela, "localizar_instalador", lambda: None)
+    preferencias_isoladas.write_text(
+        "[gerar_ocr]\nmotor = tesseract\n[anonimizar]\nmotor = tesseract\n",
+        encoding="utf-8")
+    antes = preferencias_isoladas.read_bytes()
+    PainelOcr()
+    PainelAnonimizar()
+    assert preferencias_isoladas.read_bytes() == antes
+
+
+def test_paddleocr_lembrado_que_sumiu_passa_a_ser_o_tesseract(monkeypatch, preferencias_isoladas):
+    """RN-37, o outro lado: lembrado o padrão e faltando os modelos, a marca
+    vai para o Tesseract e ele passa a ser o lembrado."""
+    monkeypatch.setattr(motor_paddleocr, "presente", lambda: False)
+    monkeypatch.setattr(motor_na_tela, "localizar_tesseract",
+                        lambda: Path(r"C:\Qualquer\tesseract.exe"))
+    monkeypatch.setattr(motor_na_tela, "localizar_instalador", lambda: None)
+    preferencias_isoladas.write_text("[anonimizar]\nmotor = paddleocr\n", encoding="utf-8")
+    assert _do_anonimizar(PainelAnonimizar()).marcado() == leitura.MOTOR_TESSERACT
+    assert _lido(preferencias_isoladas) == {"anonimizar": {"motor": "tesseract"}}
+
+
+def test_pasta_sem_gravacao_le_com_o_tesseract_ate_fechar(maquina, tmp_path, monkeypatch):
+    """Critério de aceite: a pasta não aceita gravar, a pessoa marca o
+    Tesseract, e é ele que lê até fechar - sem aviso."""
+    sem_pasta = tmp_path / "pasta-que-nao-existe" / "preferencias.ini"
+    monkeypatch.setattr(preferencias, "caminho", lambda: sem_pasta)
+    for painel, escolha in ((p := PainelOcr(), p.escolha_do_motor),
+                            (a := PainelAnonimizar(), _do_anonimizar(a))):
+        escolha.tesseract.setChecked(True)
+        assert escolha.marcado() == leitura.MOTOR_TESSERACT
+        assert painel.motor.aviso.isHidden()
+    assert not sem_pasta.exists()
