@@ -2,6 +2,13 @@
 # O .env.example (com só os nomes das variáveis) fica de fora desta lista de propósito.
 .env
 
+# O pacote de skills e o mapa dele: ficam nesta máquina, para o agente
+# trabalhar, e não vão para o histórico. Estavam desde o commit fundador e
+# foram tirados do histórico inteiro em 28/10/2026, a pedido da solicitante.
+# A cerca do agente (.claude/settings.json) é do projeto, e continua.
+.claude/skills/
+.claude/mapa-das-skills.html
+
 # Documentos de exemplo com CPF real — nunca podem entrar no histórico,
 # mesmo que a pasta volte a existir depois.
 Exemplos/
