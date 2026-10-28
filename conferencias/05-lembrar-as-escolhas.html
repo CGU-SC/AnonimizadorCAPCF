@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 05 — lembrar as escolhas</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47;
+    --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto);
+         font-family: var(--fonte-texto); font-size: 15px; line-height: 1.55;
+         padding: 32px max(16px, calc((100vw - 1040px) / 2)); }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 40px 0 8px; }
+  code { font-family: var(--fonte-mono); font-size: 13px; }
+  .subtitulo, .nota { color: var(--cor-texto-secundario); }
+  .nota { font-size: 13px; }
+  .selos { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .selo { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+           border-radius: 12px; padding: 2px 12px; font-size: 13px; }
+  .selo.bom { border-color: var(--cor-sucesso); color: var(--cor-sucesso); }
+  .selo.ruim { border-color: var(--cor-erro-texto); color: var(--cor-erro-texto); }
+  .caixa { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+            border-left: 4px solid var(--cor-destaque); border-radius: 6px;
+            padding: 16px 24px; margin: 16px 0; }
+  .rolar { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; font-size: 13px; }
+  .mono { font-family: var(--fonte-mono); white-space: nowrap; }
+  .feito { color: var(--cor-sucesso); font-weight: 600; }
+  .falta { color: var(--cor-texto-secundario); }
+  .rodape { margin-top: 40px; border-top: 1px solid var(--cor-borda); padding-top: 16px;
+             font-size: 13px; color: var(--cor-texto-secundario); }
+</style>
+</head>
+<body>
+
+<h1>Conferência 05 — lembrar as escolhas</h1>
+<p class="subtitulo">Funcionalidade 8, emendas de 28/10/2026 das specs 002 e 001. Você pediu que o máximo fosse
+conferido por teste automático, porque ia viajar: esta página mostra o que os testes já conferem sozinhos e, no
+fim da construção, o pouco que só a tela mostra.</p>
+
+<div class="caixa">As escolhas ficam num arquivo <code>preferencias.ini</code>, ao lado do <code>.env</code>, na
+pasta da instalação. Nesta máquina de desenvolvimento ele mora na raiz do projeto, fora do histórico — e cada teste
+usa um arquivo só dele, numa pasta provisória, para nunca misturar teste com uso de verdade.</div>
+
+<h2>Onde a construção está</h2>
+<div class="rolar"><table>
+  <tr><th>Etapa</th><th>O que ela põe no programa</th><th>Situação</th></tr>
+  <tr><td>1</td><td>O Gerar OCR lembra o motor, num preferencias.ini gravado com segurança</td><td class='feito'>no programa</td></tr><tr><td>2</td><td>O Anonimizar lembra o dele, à parte, e o motor que some passa a ser lembrado como o outro</td><td class='falta'>a fazer</td></tr><tr><td>3</td><td>A janela: maximizada no primeiro uso, depois o tamanho e o maximizado lembrados</td><td class='falta'>a fazer</td></tr><tr><td>4</td><td>Os caminhos tortos: arquivo estragado, pasta sem gravação, o .env intacto, nada do trabalho</td><td class='falta'>a fazer</td></tr><tr><td>5</td><td>O instalador (desinstalar apaga, atualizar mantém) e o roteiro da conferência</td><td class='falta'>a fazer</td></tr>
+</table></div>
+
+<h2>O que os testes automáticos conferem</h2>
+<div class="selos">
+  <span class="selo bom">17 testes da funcionalidade passando</span>
+  <span class="selo bom">0 falhando</span>
+</div>
+<p class="nota">Contados agora, rodando <code>programa/test_preferencias.py</code>. Em cada teste, "fechar e abrir o
+programa" é montar o painel de novo: o que estava só na memória vai embora, e só o que foi gravado volta.</p>
+<div class="rolar"><table>
+  <tr><th>O que é conferido</th><th>Onde</th></tr>
+  <tr><td>Marcou o Tesseract no Gerar OCR, fechou e abriu: ele vem marcado (RN-36)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Quem nunca escolheu abre com o PaddleOCR, e só abrir não grava nada (RN-36)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Voltar ao padrão é marcar o PaddleOCR (fora de escopo: não há botão)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Marcar no Gerar OCR não muda o Anonimizar (RN-36)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Um motor lembrado que não existe vale como nada lembrado</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Arquivo estragado, com lixo ou outra codificação: abre no padrão, sem erro, e é refeito (RN-39)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Pasta que não aceita gravar: segue calado, sem travar (RN-39)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Gravação cortada no meio deixa a escolha anterior inteira (RN-39)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Arquivo preso por outro programa não é reescrito, e as outras escolhas ficam (revisão 43)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Arquivo salvo com BOM no Bloco de Notas, ou com &quot;Tesseract&quot; em maiúscula, é entendido (revisão 43)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Duas janelas do programa não dividem o arquivo provisório (revisão 43)</td><td class='mono'>test_preferencias.py</td></tr><tr><td>Nenhum teste toca o preferencias.ini desta máquina (premissa dos testes isolados)</td><td class='mono'>test_preferencias.py</td></tr>
+</table></div>
+
+<p class="rodape">Página gerada em 28/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-08-construtor-de-funcionalidades (<code>conferencias/gerar-05-lembrar-as-escolhas.py</code>).</p>
+</body>
+</html>

@@ -9,6 +9,12 @@
 .claude/skills/
 .claude/mapa-das-skills.html
 
+# As escolhas lembradas de quem usa o programa nesta máquina (o motor de cada
+# módulo, o tamanho da janela - funcionalidade 8). São do uso, e não do
+# projeto; o ".gravando" é o arquivo provisório de quando a gravação é cortada.
+preferencias.ini
+preferencias.ini.*.gravando
+
 # Documentos de exemplo com CPF real — nunca podem entrar no histórico,
 # mesmo que a pasta volte a existir depois.
 Exemplos/

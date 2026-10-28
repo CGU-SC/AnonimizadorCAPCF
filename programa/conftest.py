@@ -30,6 +30,21 @@ def aplicacao():
 
 
 @pytest.fixture(autouse=True)
+def preferencias_isoladas(tmp_path, monkeypatch):
+    """Cada teste lembra as escolhas num arquivo só dele, numa pasta provisória.
+
+    Sem isto, um teste que marca o Tesseract deixaria o seguinte começando com
+    o Tesseract - e gravaria no `preferencias.ini` da raiz do projeto, o desta
+    máquina, misturando teste com uso de verdade (emenda de 28/10/2026 da spec
+    002, premissa dos testes isolados).
+    """
+    import preferencias
+    arquivo = tmp_path / "preferencias-do-teste.ini"
+    monkeypatch.setattr(preferencias, "caminho", lambda: arquivo)
+    return arquivo
+
+
+@pytest.fixture(autouse=True)
 def limpar_as_telas(aplicacao):
     """Desmonta as telas criadas por cada teste, antes do teste seguinte."""
     yield

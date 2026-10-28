@@ -44,6 +44,10 @@ from telas_de_salvar import (
 )
 from motor_na_tela import ControleDoMotor
 
+# O nome com que a escolha do motor deste módulo é lembrada de um uso para o
+# outro, à parte da do Anonimizar (RN-36 da emenda de 28/10/2026).
+LEMBRAR_COMO = "gerar_ocr"
+
 
 class PainelOcr(QWidget):
     def __init__(self, ao_seguir_para_anonimizar=None):
@@ -74,7 +78,8 @@ class PainelOcr(QWidget):
         )
         self.aviso_do_motor = self.motor.aviso
         self.tela_sem_motor = self.motor.tela_sem_motor
-        self.escolha_do_motor = EscolhaDoMotor("MOTOR DE LEITURA")
+        self.escolha_do_motor = EscolhaDoMotor("MOTOR DE LEITURA",
+                                               lembrar_como=LEMBRAR_COMO)
         self.motor.ligar_escolha(self.escolha_do_motor)
         self.tela_escolher = self._montar_tela_escolher()
         # Do PDF escolhido ao texto conferido, quem conduz é a peça comum aos

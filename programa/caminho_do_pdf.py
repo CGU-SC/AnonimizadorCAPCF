@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 import estilo
+import preferencias
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
 from leitura import MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
@@ -866,11 +867,12 @@ class EscolhaDoMotor(QWidget):
     Os dois módulos mostram esta mesma escolha - o Gerar OCR na tela de escolher
     o documento, o Anonimizar na hora de ler as imagens (terceira emenda da spec
     003) -, e ela é montada num lugar só para as duas não divergirem. Cada
-    módulo tem a sua, e ela vale até a pessoa trocar ou fechar o programa: nada
-    é guardado (RN-26).
+    módulo tem a sua (RN-26), e, desde a emenda de 28/10/2026, cada uma é
+    lembrada de um uso para o outro, com o nome que o módulo passa em
+    `lembrar_como` (RN-36).
     """
 
-    def __init__(self, rotulo):
+    def __init__(self, rotulo, lembrar_como=None):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -913,6 +915,24 @@ class EscolhaDoMotor(QWidget):
                      self.saidas_do_tesseract, self.ia_local,
                      _linha_de_explicacao("Funcionalidade a ser implementada")):
             layout.addWidget(peca)
+
+        # A escolha lembrada da última vez vem marcada, como se a pessoa tivesse
+        # acabado de marcar: a tela não diz nada a mais (RN-36). Sem lembrança,
+        # fica o PaddleOCR, o padrão (RN-25).
+        self._lembrar_como = lembrar_como
+        if lembrar_como and preferencias.ler(lembrar_como, "motor") == MOTOR_TESSERACT:
+            self.tesseract.setChecked(True)
+        # Ligado só depois de pôr a lembrança, e valendo para qualquer troca de
+        # marca - a da pessoa e a do programa, quando o motor lembrado falta e a
+        # marca passa ao outro (RN-37): as duas são lembradas na hora.
+        if lembrar_como:
+            self.paddleocr.toggled.connect(self._lembrar)
+            self.tesseract.toggled.connect(self._lembrar)
+
+    def _lembrar(self, marcado):
+        # Cada troca acende um botão e apaga o outro; só o que acendeu grava.
+        if marcado:
+            preferencias.gravar(self._lembrar_como, "motor", self.marcado())
 
     def receber_saidas_do_tesseract(self, saidas):
         """Põe embaixo da linha do Tesseract as mesmas saídas do aviso do alto."""
