@@ -22,7 +22,7 @@ DATA = "28/10/2026"
 ETAPAS = [
     ("1", "O Gerar OCR lembra o motor, num preferencias.ini gravado com segurança", "no programa"),
     ("2", "O Anonimizar lembra o dele, à parte, e o motor que some passa a ser lembrado como o outro", "no programa"),
-    ("3", "A janela: maximizada no primeiro uso, depois o tamanho e o maximizado lembrados", "a fazer"),
+    ("3", "A janela: maximizada no primeiro uso, depois o tamanho e o maximizado lembrados", "no programa"),
     ("4", "Os caminhos tortos: arquivo estragado, pasta sem gravação, o .env intacto, nada do trabalho", "a fazer"),
     ("5", "O instalador (desinstalar apaga, atualizar mantém) e o roteiro da conferência", "a fazer"),
 ]
@@ -45,11 +45,24 @@ CONFERIDO = [
     ("PaddleOCR lembrado que sumiu: a marca e a lembrança passam ao Tesseract (RN-37)", "test_preferencias.py"),
     ("Faltando os dois motores, nada muda no que está lembrado (RN-37)", "test_preferencias.py"),
     ("Pasta sem gravação: o Tesseract marcado lê até fechar, nos dois módulos (critério de aceite)", "test_preferencias.py"),
+    ("Sem nada lembrado, a janela abre maximizada, e sai do maximizado para 1000 x 640 no meio da tela (RN-4, RN-8)", "test_janela_lembrada.py"),
+    ("Fechou com 1200 x 800, abre com 1200 x 800, no meio da tela — com a janela de verdade (RN-5, RN-6)", "test_janela_lembrada.py"),
+    ("Fechou maximizada, abre maximizada; saindo do maximizado, volta ao tamanho de antes — com a janela de verdade (RN-5)", "test_janela_lembrada.py"),
+    ("Maximizada, minimizada pela barra de tarefas e fechada de lá: continua lembrada como maximizada (minimizada pelo próprio Windows)", "test_janela_lembrada.py"),
+    ("Tamanho maior que a tela encolhe e cabe, com a barra de título; menor que 900 x 560 vira 900 x 560 (RN-7)", "test_janela_lembrada.py"),
+    ("Em cinco telas (Full HD, barra de tarefas em cima, segundo monitor à direita e à esquerda, notebook) e quatro tamanhos: no meio, e nunca fora (RN-6, RN-7)", "test_janela_lembrada.py"),
+    ("Numa tela menor que o mínimo, a barra de título fica à vista", "test_janela_lembrada.py"),
+    ("Tamanho que não dá para ler, ou absurdo escrito à mão: primeiro uso, ou encolhe — nunca derruba o programa (RN-4, RN-39)", "test_janela_lembrada.py"),
+    ("Abrir não grava; fechar que para na pergunta de descartar não grava; a janela grava no bloco dela, numa gravação só, sem mexer nos motores", "test_janela_lembrada.py"),
     ("Arquivo preso por outro programa não é reescrito, e as outras escolhas ficam (revisão 43)", "test_preferencias.py"),
     ("Arquivo salvo com BOM no Bloco de Notas, ou com \"Tesseract\" em maiúscula, é entendido (revisão 43)", "test_preferencias.py"),
     ("Duas janelas do programa não dividem o arquivo provisório (revisão 43)", "test_preferencias.py"),
     ("Nenhum teste toca o preferencias.ini desta máquina (premissa dos testes isolados)", "test_preferencias.py"),
 ]
+
+
+# Os testes da funcionalidade, rodados para contar quantos passam.
+ARQUIVOS_DE_TESTE = ["programa/test_preferencias.py", "programa/test_janela_lembrada.py"]
 
 
 def e(texto):
@@ -59,7 +72,7 @@ def e(texto):
 def testes_que_passam():
     """Roda os testes da funcionalidade e devolve quantos passaram."""
     saida = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "programa/test_preferencias.py"],
+        [sys.executable, "-m", "pytest", "-q", *ARQUIVOS_DE_TESTE],
         cwd=RAIZ, capture_output=True, text=True).stdout
     achado = re.search(r"(\d+) passed", saida)
     falhas = re.search(r"(\d+) failed", saida)
@@ -139,8 +152,10 @@ usa um arquivo só dele, numa pasta provisória, para nunca misturar teste com u
   <span class="selo {'bom' if not falharam else 'ruim'}">{passaram} testes da funcionalidade passando</span>
   <span class="selo {'bom' if not falharam else 'ruim'}">{falharam} falhando</span>
 </div>
-<p class="nota">Contados agora, rodando <code>programa/test_preferencias.py</code>. Em cada teste, "fechar e abrir o
-programa" é montar o painel de novo: o que estava só na memória vai embora, e só o que foi gravado volta.</p>
+<p class="nota">Contados agora, rodando <code>programa/test_preferencias.py</code> e
+<code>programa/test_janela_lembrada.py</code>. Em cada teste, "fechar e abrir o programa" é montar o painel ou a
+janela de novo: o que estava só na memória vai embora, e só o que foi gravado volta. Os testes da janela de verdade
+a mostram por um instante, maximizada ou não, porque só o Windows responde a que tamanho ela volta.</p>
 <div class="rolar"><table>
   <tr><th>O que é conferido</th><th>Onde</th></tr>
   {linhas_conferido}

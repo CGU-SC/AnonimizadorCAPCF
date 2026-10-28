@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 45 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+<h1>Revisão 45 — antes e depois</h1>
+<p class="subtitulo">28/10/2026 — a etapa 3 da funcionalidade 8 (a janela maximizada no primeiro uso, e depois o tamanho lembrado) pela lente crítica, antes do commit</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Quebra, perda de dado, resultado errado em silêncio, vazamento de recurso. Antes da varredura, um teste da própria
+  etapa já tinha pegado um defeito: num monitor à esquerda do principal, a janela do tamanho da tela saía 1 pixel para
+  fora. A varredura mecânica levantou 8 suspeitas: uma derrubava o programa, uma quebrava os testes em tela menor, uma
+  foi derrubada com o próprio Windows, e três eram de simplificar — feitas, porque tiravam um caso especial. Duas ficam
+  anotadas.
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">8</div><div class="contagem-label">suspeitas da varredura</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">5</div><div class="contagem-label">consertadas (com o pixel, 6)</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">1</div><div class="contagem-label">derrubada, com teste que prova</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">2</div><div class="contagem-label">anotadas</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/main.py — o tamanho absurdo escrito à mão</div>
+  <div class="explicacao"><strong>Um número grande demais no arquivo impedia o programa de abrir.</strong> Quem
+  escrevesse <code>largura = 99999999999</code> no <code>preferencias.ini</code> via o programa morrer ao abrir — o
+  contrário da RN-39, "lembrar nunca atrapalha usar". Agora a conta é feita em número comum, e o tamanho só encolhe
+  para caber na tela.</div>
+  <div class="lado-a-lado">
+    <div class="lado"><div class="lado-titulo antes">Antes</div><div class="lado-corpo">O programa não abre.</div></div>
+    <div class="lado"><div class="lado-titulo depois">Depois</div><div class="lado-corpo">Abre com a janela do
+    tamanho da tela.</div></div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/main.py — o meio da tela, sem caso especial</div>
+  <div class="explicacao"><strong>Num monitor à esquerda do principal, a janela saía 1 pixel para fora da
+  tela.</strong> A conta de meio do Qt arredonda para o lado errado quando a posição é negativa. O primeiro conserto
+  prendia a janela pelos quatro lados; a varredura sugeriu fazer a conta do meio direto, e o caso especial sumiu.</div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/preferencias.py — o bloco da janela lido de uma vez</div>
+  <div class="explicacao"><strong>Largura, altura e maximizada eram lidas uma a uma</strong>, cada uma abrindo o
+  arquivo de novo. Um antivírus segurando o arquivo entre uma e outra deixava a largura lida e a altura não, e a
+  janela abria como no primeiro uso. Agora o bloco é lido numa leitura só (e a gravação já era numa só).</div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/test_janela_lembrada.py — os testes em qualquer monitor</div>
+  <div class="explicacao"><strong>Os testes que abrem a janela de verdade esperavam uma tela grande.</strong> Num
+  notebook, ou com o Windows em 150%, a janela de 1200 × 800 encolhe para caber, e o teste falharia — e com ele a
+  geração da entrega, que roda os testes. Agora o tamanho esperado é calculado para a tela da máquina. E as janelas
+  que os testes abrem são fechadas no fim de cada um.</div>
+</div>
+
+<h2>Derrubada, com teste</h2>
+<ul class="fora-lista">
+  <li><strong>"Maximizada, minimizada pela barra de tarefas e fechada de lá, ela seria lembrada como não
+  maximizada."</strong> Medido com o próprio Windows minimizando a janela: o Qt guarda o maximizado durante a
+  minimização, e a lembrança sai certa. Ficou um teste que minimiza pelo Windows e confere.</li>
+</ul>
+
+<h2>O que mudou no projeto</h2>
+<ul class="fora-lista"><li>Nenhum arquivo criado, apagado ou movido pela revisão.</li></ul>
+
+<h2>Anotado</h2>
+<ul class="fora-lista">
+  <li><strong>Com dois monitores, a janela abre sempre no principal</strong>, e o tamanho é cortado para caber
+  nele. Quem trabalha num monitor grande ligado a um notebook (o notebook como principal) vê o tamanho lembrado
+  encolher toda vez. É consequência da RN-6 (a posição não é lembrada) e é onde o Windows abre um programa novo; se
+  incomodar, lembrar o monitor é uma emenda.</li>
+  <li><strong>Sem efeito</strong>: a janela grava ao fechar mesmo quando o tamanho não mudou. É uma gravação pequena,
+  uma vez por uso.</li>
+</ul>
+
+<p class="rodape">Página gerada em 28/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-09-revisor-de-codigo.</p>
+</body>
+</html>

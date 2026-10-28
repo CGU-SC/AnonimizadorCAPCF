@@ -1,7 +1,7 @@
 # Ponto de entrada do Anonimizador CAPCF: abre a janela do programa.
 import sys
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QRect, QSize, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -23,11 +23,84 @@ from estilo import (
     LARGURA_MENU,
     TEXTO_PEQUENO,
 )
+import preferencias
 from painel_anonimizar import PainelAnonimizar
 from painel_ocr import PainelOcr
 from versao import VERSAO
 
 NOME_PROGRAMA = "Anonimizador CAPCF"
+
+# O bloco do preferencias.ini em que a janela lembra como foi fechada (emenda
+# de 28/10/2026 da spec 001).
+LEMBRAR_COMO = "janela"
+MAXIMIZADA = "sim"
+NAO_MAXIMIZADA = "não"
+
+# Cresceu de 900x520 para caber a tela de conferência, que é dividida em duas
+# metades: com 900 de largura cada metade fica com uns 330, e o texto ao lado
+# da página do documento vira uma coluna estreita demais para comparar linha
+# por linha. 1000x640 é o tamanho em que o rascunho aprovado dela foi
+# desenhado, e é o da janela fora do maximizado de quem não tem tamanho
+# lembrado (RN-8).
+TAMANHO_NORMAL = QSize(1000, 640)
+# Abaixo disto a conferência deixa de servir, então a janela não encolhe.
+TAMANHO_MINIMO = QSize(900, 560)
+
+
+def como_abrir(lembrado, area, moldura):
+    """Onde a janela abre fora do maximizado, e se abre maximizada.
+
+    `lembrado` é o bloco da janela no preferencias.ini (largura, altura e
+    maximizada, em texto, ou None onde nada foi lembrado); `area` é a parte da
+    tela que a janela pode ocupar, sem a barra de tarefas; `moldura` é a barra
+    de título e as bordas que o Windows põe em volta. Devolve o retângulo de
+    dentro da moldura - o que o Qt chama de geometria da janela.
+    """
+    tamanho = _tamanho_lembrado(lembrado)
+    if tamanho is None:
+        # Primeiro uso, ou lembrança que não dá para ler (RN-4).
+        tamanho = (TAMANHO_NORMAL.width(), TAMANHO_NORMAL.height())
+        maximizada = True
+    else:
+        maximizada = lembrado.get("maximizada") == MAXIMIZADA
+
+    # O tamanho lembrado é o de dentro; quem precisa caber na tela é a janela
+    # com a moldura (RN-7). Sem descontar a barra de título, a janela do
+    # tamanho da tela saía com o pé atrás da barra de tarefas. A conta é feita
+    # em número comum, e não no tamanho do Qt, que não aceita número grande:
+    # um tamanho absurdo escrito à mão no arquivo derrubava o programa ao
+    # abrir, e agora só encolhe para caber (lente crítica da etapa 3).
+    cabe_largura = area.width() - moldura.left() - moldura.right()
+    cabe_altura = area.height() - moldura.top() - moldura.bottom()
+    largura = max(TAMANHO_MINIMO.width(), min(tamanho[0], cabe_largura))
+    altura = max(TAMANHO_MINIMO.height(), min(tamanho[1], cabe_altura))
+
+    # Sempre no meio da tela, e nunca a posição lembrada: quem fechou num
+    # segundo monitor que não está mais ligado abriria a janela fora da vista
+    # (RN-6). Numa tela menor que o mínimo, onde ela não cabe de jeito nenhum,
+    # vale o canto de cima à esquerda: ela passa pela direita e por baixo, e a
+    # barra de título, por onde é arrastada, fica sempre à vista.
+    largura_por_fora = largura + moldura.left() + moldura.right()
+    altura_por_fora = altura + moldura.top() + moldura.bottom()
+    esquerda = area.left() + max(0, (area.width() - largura_por_fora) // 2)
+    topo = area.top() + max(0, (area.height() - altura_por_fora) // 2)
+    por_dentro = QRect(esquerda + moldura.left(), topo + moldura.top(), largura, altura)
+    return por_dentro, maximizada
+
+
+def _tamanho_lembrado(lembrado):
+    """A largura e a altura lembradas, ou None se não há um tamanho que dê
+    para usar."""
+    if not lembrado:
+        return None
+    try:
+        largura = int(lembrado.get("largura"))
+        altura = int(lembrado.get("altura"))
+    except (TypeError, ValueError):
+        return None
+    if largura <= 0 or altura <= 0:
+        return None
+    return largura, altura
 
 
 class MenuLateral(QWidget):
@@ -137,14 +210,7 @@ class JanelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(NOME_PROGRAMA)
-        # Cresceu de 900x520 para caber a tela de conferência, que é dividida em
-        # duas metades: com 900 de largura cada metade fica com uns 330, e o
-        # texto ao lado da página do documento vira uma coluna estreita demais
-        # para comparar linha por linha. 1000x640 é o tamanho em que o rascunho
-        # aprovado dela foi desenhado.
-        self.resize(1000, 640)
-        # Abaixo disto a conferência deixa de servir, então a janela não encolhe.
-        self.setMinimumSize(900, 560)
+        self.setMinimumSize(TAMANHO_MINIMO)
 
         raiz = QWidget()
         raiz_layout = QHBoxLayout(raiz)
@@ -172,6 +238,43 @@ class JanelaPrincipal(QMainWindow):
         )
 
         self.setCentralWidget(raiz)
+        self._preparar_para_abrir()
+
+    def _preparar_para_abrir(self):
+        """Dá à janela o tamanho e o lugar de abrir (emenda de 28/10/2026 da
+        spec 001). Quem a mostra é o `abrir`."""
+        # Criar a janela do Windows agora, antes de ela aparecer, é o que faz o
+        # Qt já saber o tamanho da barra de título - e só com ele a janela do
+        # tamanho da tela cabe inteira.
+        self.winId()
+        # A tela é a principal: a posição não é lembrada (RN-6), e é nela que o
+        # Windows abre um programa novo.
+        retangulo, self.abre_maximizada = como_abrir(
+            preferencias.ler_bloco(LEMBRAR_COMO), self.screen().availableGeometry(),
+            self.windowHandle().frameMargins())
+        # O retângulo vale também quando ela abre maximizada: é o tamanho a que
+        # ela volta quando a pessoa sai do maximizado.
+        self.setGeometry(retangulo)
+
+    def abrir(self):
+        """Mostra a janela como ela foi fechada da última vez."""
+        if self.abre_maximizada:
+            self.showMaximized()
+        else:
+            self.show()
+
+    def _lembrar_como_foi_fechada(self):
+        """Grava o tamanho e se estava maximizada (RN-5)."""
+        maximizada = bool(self.windowState() & Qt.WindowMaximized)
+        # Maximizada (ou minimizada na barra de tarefas), o tamanho de agora não
+        # é o dela: o que vale lembrar é o de quando ela sai do maximizado.
+        fora_do_normal = self.windowState() & (Qt.WindowMaximized | Qt.WindowMinimized)
+        tamanho = self.normalGeometry().size() if fora_do_normal else self.size()
+        preferencias.gravar_juntos(LEMBRAR_COMO, {
+            "largura": tamanho.width(),
+            "altura": tamanho.height(),
+            "maximizada": MAXIMIZADA if maximizada else NAO_MAXIMIZADA,
+        })
 
     def closeEvent(self, evento):
         """Antes de fechar, pergunta o que fecharia trabalho não salvo e para o
@@ -201,6 +304,9 @@ class JanelaPrincipal(QMainWindow):
         # que este fechar existe para evitar (revisão da etapa 7).
         self.painel_ocr.encerrar()
         self.painel_anonimizar.encerrar()
+        # Só aqui, depois da pergunta de descartar: a janela que ficou de pé
+        # porque a pessoa voltou para salvar ainda não fechou.
+        self._lembrar_como_foi_fechada()
         super().closeEvent(evento)
 
     def _seguir_para_anonimizar(self, caminho, paginas):
@@ -267,7 +373,7 @@ class JanelaPrincipal(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     janela = JanelaPrincipal()
-    janela.show()
+    janela.abrir()
     sys.exit(app.exec())
 
 

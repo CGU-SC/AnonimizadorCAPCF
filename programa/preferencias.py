@@ -42,12 +42,32 @@ def ler(secao, chave):
     escrever "Tesseract" é entendido, em vez de ignorado calado (lente crítica
     da etapa 1).
     """
-    valor = (_conteudo() or _vazio()).get(secao, chave, fallback=None)
-    return valor.strip().lower() if valor is not None else None
+    return ler_bloco(secao).get(chave)
+
+
+def ler_bloco(secao):
+    """Tudo o que está lembrado num bloco, de uma leitura só do arquivo.
+
+    De uma vez porque os valores andam juntos: lidos um a um, um antivírus
+    segurando o arquivo entre uma leitura e outra deixava a largura da janela
+    lida e a altura não (lente crítica da etapa 3).
+    """
+    conteudo = _conteudo() or _vazio()
+    if not conteudo.has_section(secao):
+        return {}
+    return {chave: valor.strip().lower() for chave, valor in conteudo[secao].items()}
 
 
 def gravar(secao, chave, valor):
-    """Lembra o valor para a próxima vez. Não dando para gravar, segue calado.
+    """Lembra o valor para a próxima vez. Não dando para gravar, segue calado."""
+    gravar_juntos(secao, {chave: valor})
+
+
+def gravar_juntos(secao, valores):
+    """Lembra vários valores de um bloco numa gravação só.
+
+    Juntos porque andam juntos: a largura da janela gravada sem a altura,
+    numa gravação cortada no meio, lembraria um tamanho que nunca existiu.
 
     O arquivo é escrito primeiro com outro nome, e só no fim toma o lugar do de
     verdade: se a máquina desligar no meio, o que já estava lembrado continua
@@ -61,7 +81,8 @@ def gravar(secao, chave, valor):
         return
     if not conteudo.has_section(secao):
         conteudo.add_section(secao)
-    conteudo.set(secao, chave, str(valor))
+    for chave, valor in valores.items():
+        conteudo.set(secao, chave, str(valor))
     destino = caminho()
     # Um nome provisório por programa aberto: com duas janelas do programa
     # gravando juntas, uma não escreve no provisório da outra (lente crítica
