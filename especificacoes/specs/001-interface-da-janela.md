@@ -2,6 +2,12 @@
 
 **Status:** implementada
 **Data:** 2026-09-04
+**Emendada em:** 2026-10-28 (aprovada no mesmo dia) — a janela abre maximizada no
+primeiro uso e depois lembra o tamanho e se estava maximizada (funcionalidade 8
+do backlog, pedido da usuária no levantamento). Está na seção "Emenda de
+28/10/2026", no fim; o fora de escopo e o último critério trazem a remissão. O
+motor lembrado, da mesma funcionalidade, está na emenda de mesma data da spec
+002.
 
 ## Objetivo
 Dar ao programa uma janela própria, com a estrutura onde os dois módulos futuros
@@ -25,6 +31,8 @@ rodar, e um painel principal que muda de acordo com a escolha.
 - O funcionamento real de "Anonimizar" — spec própria, item 3 do backlog.
 - Qualquer processamento de documento.
 - Redimensionar janela, temas, atalhos de teclado — nada disso foi pedido.
+  *(Emendado em 28/10/2026: o tamanho da janela passa a ser lembrado — veja a
+  emenda, no fim. A posição dela continua não lembrada.)*
 - Ícone próprio da janela — decidido em 04/09/2026, ao fechar a funcionalidade:
   depende de alguém escolher ou desenhar a imagem, o que é decisão de
   identidade visual e não de código. Até lá a janela usa o ícone padrão.
@@ -85,7 +93,58 @@ campo, nenhuma gravação, nenhuma leitura de arquivo.
   então nenhum item fica marcado no menu e o painel volta a mostrar a mensagem
   de boas-vindas.
 - Dado que a pessoa fecha a janela e abre o programa de novo, então a janela
-  volta ao estado inicial, com nada selecionado.
+  volta ao estado inicial, com nada selecionado. *(Desde a emenda de
+  28/10/2026, o menu volta assim, e a janela volta com o tamanho lembrado.)*
 
 ## Questões em aberto
 Nenhuma.
+
+## Emenda de 28/10/2026 — a janela maximizada e o tamanho lembrado
+
+Funcionalidade 8 do backlog. Levantamento em
+`mockups/requisitos/07-mapa-do-entendimento.html` (R-2 e R-7).
+
+### Escopo
+
+- No primeiro uso, a janela abre maximizada, ocupando a tela.
+- Depois, ela abre como a pessoa a deixou ao fechar: maximizada, ou com o
+  tamanho que tinha.
+
+### Fora de escopo
+
+- A posição da janela: ela abre sempre no meio da tela.
+- Lembrar qual item do menu estava marcado: o menu abre sempre sem nada
+  marcado (RN-3).
+
+### Regras de negócio
+
+- RN-4: **no primeiro uso, a janela abre maximizada.** "Primeiro uso" é não
+  haver tamanho lembrado que dê para ler (o arquivo do motor lembrado, o
+  `preferencias.ini` da spec 002, RN-38 e RN-39, sumiu, está estragado ou nunca
+  existiu).
+- RN-5: **ao fechar, a janela lembra o tamanho e se estava maximizada.** Fechou
+  maximizada, abre maximizada — e, saindo do maximizado, volta ao tamanho que
+  tinha antes de ser maximizada. Fechou com 1200 × 800, abre com 1200 × 800.
+- RN-6: **a posição não é lembrada: a janela abre no meio da tela.** Assim ela
+  nunca abre fora da tela, o que aconteceria com quem fechou num segundo monitor
+  que não está mais ligado.
+- RN-7: **o tamanho lembrado sempre cabe.** Maior que a tela de agora (o monitor
+  mudou), ele encolhe para caber; menor que o mínimo de 900 × 560, ele vira o
+  mínimo.
+- RN-8: o tamanho de antes desta emenda, 1000 × 640, continua sendo o tamanho da
+  janela "normal" de quem saiu do maximizado sem ter tamanho lembrado.
+
+### Critérios de aceite
+
+- Dado que não há `preferencias.ini`, quando o programa abre, então a janela vem
+  maximizada.
+- Dado que a pessoa saiu do maximizado, deixou a janela com 1200 × 800 e fechou,
+  quando ela abre de novo, então a janela vem com 1200 × 800, no meio da tela.
+- Dado que a pessoa fechou com a janela maximizada, quando ela abre de novo,
+  então a janela vem maximizada; e, saindo do maximizado, fica com o tamanho de
+  antes de maximizar.
+- Dado um tamanho lembrado maior que a tela de agora, quando o programa abre,
+  então a janela cabe inteira na tela. Dado um tamanho lembrado menor que
+  900 × 560, então ela abre com 900 × 560.
+- Dado qualquer tamanho lembrado, então a janela abre no meio da tela, e nunca
+  fora dela.

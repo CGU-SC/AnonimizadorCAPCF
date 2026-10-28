@@ -23,6 +23,13 @@ inteira na seção "Emenda de 18/10/2026", no fim; os trechos de antes que ela
 muda trazem a remissão a ela. Veio da medição da conferência 02: com a mesma
 massa, o Tesseract deixaria 42 de 60 CPFs saírem sem máscara, porque pula tabela
 com grade, e os modelos do PaddleOCR deixariam de 1 a 5.
+**Emendada em:** 2026-10-28 (aprovada no mesmo dia) — o motor marcado passa a ser lembrado
+de um uso para o outro, um por módulo (funcionalidade 8 do backlog). Está
+inteira na seção "Emenda de 28/10/2026", no fim; ela emenda a RN-22 e a RN-26,
+que trazem a remissão. A RN-22 foi feita para o programa não lembrar o
+**trabalho** (documento, texto lido, pasta), e isso continua proibido; a escolha
+da pessoa é outra categoria, e passa a ser lembrada. Levantamento em
+`mockups/requisitos/07-mapa-do-entendimento.html`.
 
 ## Objetivo
 
@@ -327,7 +334,11 @@ usado quando a IA local entrar, em spec própria.
 - RN-22: nada é guardado entre um uso e outro — nem histórico, nem preferência
   de motor, nem última pasta usada. *(A emenda de 18/10/2026 não mexe nesta
   regra: o PaddleOCR vir marcado é o padrão escrito no programa, e não uma
-  preferência guardada — RN-26.)*
+  preferência guardada — RN-26.)* *(Emendada em 28/10/2026: a **preferência de
+  motor** passa a ser lembrada, um por módulo — RN-36. Todo o resto continua
+  proibido: nada do **trabalho** é guardado — documento, texto lido, pasta
+  usada, histórico, achados, nem o tamanho de letra e de página da
+  conferência — RN-40.)*
 - RN-23: a página do documento, na conferência, tem controles de **−** e **+**,
   indo de 50% a 400%, mais um botão que volta ao tamanho que cabe na largura. O
   tamanho escolhido **vale para as páginas seguintes** enquanto o mesmo
@@ -539,7 +550,7 @@ mesmas páginas, o Tesseract pulou tabelas com grade inteiras, mesmo limpas.
 
 | Informação | De onde vem | Observação |
 | --- | --- | --- |
-| motor escolhido | a pessoa | PaddleOCR ou Tesseract. Padrão: PaddleOCR. Vive na memória até ela trocar ou fechar o programa; cada módulo tem o seu (RN-26) |
+| motor escolhido | a pessoa | PaddleOCR ou Tesseract. Padrão: PaddleOCR. Vive na memória até ela trocar ou fechar o programa; cada módulo tem o seu (RN-26). *Desde a emenda de 28/10/2026, lembrado de um uso para o outro, no `preferencias.ini` (RN-36 a RN-39)* |
 | motor que leu | derivado | vai para a linha da conferência que diz de onde o texto veio (RN-32) |
 | orientação conferida? | derivado | não, quando o PaddleOCR leu sem o Tesseract na máquina; decide o aviso da conferência (RN-28) |
 | PaddleOCR presente? | conferência dos arquivos na pasta do programa | os modelos e o motor estão no lugar e carregam (RN-29) |
@@ -572,6 +583,9 @@ janela mínima de 900 px — sai no rascunho de tela, aprovado antes do código.
 - RN-26: **o motor marcado é o que lê.** A escolha vale até a pessoa trocar ou
   fechar o programa, e cada módulo tem a sua. Nada disso é guardado: o PaddleOCR
   vir marcado é o padrão escrito no programa, e a RN-22 continua inteira.
+  *(Emendada em 28/10/2026: a escolha de cada módulo passa a ser lembrada de um
+  uso para o outro — RN-36. O PaddleOCR continua sendo o padrão de quem nunca
+  escolheu.)*
 - RN-27: o PaddleOCR são os modelos PP-OCRv6 **pequenos**, rodados pelo RapidOCR
   (versão 3.10.0) com o onnxruntime (versão 1.31.0), dentro da pasta do
   programa. O programa confere que os arquivos dos modelos estão no lugar
@@ -665,3 +679,158 @@ janela mínima de 900 px — sai no rascunho de tela, aprovado antes do código.
 Nenhuma. O desenho exato da escolha sai no rascunho de tela, com aprovação
 própria; o tamanho real do instalador é medido na primeira etapa da construção e
 conferido contra a RN-35.
+
+## Emenda de 28/10/2026 — o motor lembrado de um uso para o outro
+
+Funcionalidade 8 do backlog. Levantamento detalhado em
+`mockups/requisitos/07-mapa-do-entendimento.html`. A janela que abre maximizada
+e lembra o tamanho está na emenda de mesma data da spec 001; a RN-19 da spec 003
+traz a remissão a esta.
+
+### Objetivo da emenda
+
+Quem prefere o Tesseract (ou qualquer motor que não o padrão) não precisa
+marcá-lo de novo a cada vez que abre o programa: a escolha de cada módulo fica
+lembrada de um uso para o outro.
+
+### Escopo da emenda
+
+- O motor marcado em cada módulo — o Gerar OCR e o Anonimizar, cada um o seu — é
+  lembrado de um uso para o outro.
+- A escolha passa a valer para a próxima vez na hora em que a pessoa marca.
+- O que é lembrado mora num arquivo próprio do programa, o `preferencias.ini`, na
+  pasta da instalação, ao lado do `.env`.
+
+### Fora de escopo da emenda
+
+- **Lembrar qualquer coisa do trabalho**: documento, texto lido, pasta usada,
+  histórico, achados, e o tamanho de letra e de página da conferência
+  (RN-23 e RN-24, que continuam valendo só enquanto o programa está aberto).
+- **Um aviso na tela** de que a escolha veio lembrada, e **um botão de voltar ao
+  padrão**: voltar ao padrão é marcar o PaddleOCR.
+- **A configuração da IA local**: entra com a funcionalidade 4, no mesmo
+  arquivo, com a senha dela no `.env`.
+- **Escolha compartilhada** entre pessoas ou entre máquinas.
+- **Escrever no `.env`**: ele continua sendo da TI, e o programa só o lê.
+
+### Premissas da emenda
+
+Inferências do mapa 07 que a usuária leu e não derrubou:
+
+- premissa: a instalação é de uma pessoa só, na pasta de programas dela, e o que
+  o programa lembra é dela; ninguém do núcleo herda a escolha de outra pessoa.
+- premissa: nada do trabalho é lembrado (RN-40).
+- premissa: o tamanho de letra e de página da conferência continua não lembrado.
+- premissa: o que não dá para ler volta ao padrão, e o que não dá para gravar
+  vale até fechar, os dois sem aviso: perder a lembrança não estraga nenhum
+  documento (RN-39).
+- premissa: a escolha desta máquina de desenvolvimento fica fora do histórico, e
+  os testes usam uma escolha própria, isolada.
+- premissa: a IA local entra depois, no mesmo arquivo, com a senha no `.env`.
+- premissa: desinstalar leva a escolha junto; atualizar a versão a mantém
+  (RN-41).
+
+### Fluxos da emenda
+
+**Normal — a escolha lembrada.**
+
+1. A pessoa abre o Gerar OCR e marca o Tesseract.
+2. Ela lê um documento, ou não lê nada, e fecha o programa.
+3. Na próxima vez, o Gerar OCR abre com o Tesseract marcado. O Anonimizar, em
+   que ela não mexeu, continua com o PaddleOCR.
+
+**Caminho torto — o motor lembrado sumiu.** A TI desinstalou o Tesseract. Ao
+abrir, a linha dele aparece apagada, dizendo por quê, e o PaddleOCR vem marcado
+(RN-29 e RN-30): a troca aparece na tela. A partir daí o lembrado é o PaddleOCR;
+quando o Tesseract voltar, a pessoa o marca de novo, se quiser (RN-37).
+
+**Caminho torto — o arquivo não serve.** O `preferencias.ini` sumiu, foi apagado
+ou está estragado: o programa abre com o PaddleOCR marcado nos dois módulos, como
+no primeiro uso, sem erro e sem aviso. A próxima escolha grava um arquivo novo,
+certo.
+
+**Caminho torto — não dá para gravar.** A pasta ficou protegida: a escolha vale
+até fechar o programa, como era antes desta emenda, sem aviso.
+
+### Dados da emenda
+
+O `preferencias.ini` é um arquivo de texto simples, que abre no Bloco de Notas,
+com um bloco por módulo (e o bloco da janela, da spec 001). Dentro dele, só o
+nome do motor de cada módulo: `paddleocr` ou `tesseract`. Nada de documento,
+texto, pasta ou data.
+
+| Informação | De onde vem | Observação |
+| --- | --- | --- |
+| motor lembrado do Gerar OCR | a pessoa, ao marcar | `paddleocr` ou `tesseract`; sem ele, o padrão |
+| motor lembrado do Anonimizar | a pessoa, ao marcar | idem, independente do outro |
+
+### Estados da interface da emenda
+
+Nenhum estado novo: a escolha do motor tem o mesmo desenho, e o lembrado aparece
+marcado como se a pessoa tivesse acabado de marcar. Por isso a emenda não tem
+rascunho de tela.
+
+### Regras de negócio da emenda
+
+- RN-36: **o motor marcado é lembrado de um uso para o outro, um por módulo.** A
+  escolha de cada módulo passa a valer para a próxima vez na hora em que a
+  pessoa marca, leia ela um documento ou não. Quem nunca escolheu, ou não tem
+  lembrança que dê para ler, abre com o PaddleOCR marcado (RN-25).
+- RN-37: **o motor lembrado que falta ao abrir passa a ser lembrado como o
+  outro.** A marca passa ao motor que funciona, com a troca à vista na tela
+  (RN-29 e RN-30), e essa troca conta como uma escolha nova: fica lembrado o
+  motor que passou a estar marcado. Faltando os dois, nada muda no que está
+  lembrado.
+- RN-38: **o que é lembrado mora no `preferencias.ini`, na pasta da
+  instalação**, ao lado do `.env` (na pasta de programas da pessoa, gravável sem
+  administrador). Nesta máquina de desenvolvimento, a pasta da instalação é a
+  raiz do projeto, e o arquivo fica fora do histórico. O `.env` continua sendo
+  só da TI, e o programa só o lê.
+- RN-39: **lembrar nunca atrapalha usar.** Arquivo ausente, ilegível ou
+  estragado vale como "nada lembrado", sem erro e sem aviso; gravação que falha
+  deixa a escolha valendo até fechar, também sem aviso. A gravação é feita num
+  arquivo provisório, trocado pelo de verdade só no fim: a máquina desligando no
+  meio deixa a escolha anterior inteira.
+- RN-40: **nada do trabalho é lembrado.** O `preferencias.ini` guarda só a
+  escolha da pessoa; documento, texto lido, pasta usada, histórico, achados e o
+  tamanho de letra e de página da conferência continuam proibidos de ficar
+  guardados (RN-22).
+- RN-41: **desinstalar apaga o `preferencias.ini`; atualizar o mantém.** Quem
+  desinstala e instala de novo começa do padrão.
+
+### Critérios de aceite da emenda
+
+- Dado que a pessoa marca o Tesseract no Gerar OCR e fecha o programa, quando ela
+  abre de novo, então o Gerar OCR vem com o Tesseract marcado, e o Anonimizar com
+  o PaddleOCR.
+- Dado que a pessoa marca o Tesseract no Anonimizar, sem ler documento nenhum, e
+  fecha o programa, quando ela abre de novo, então o Anonimizar vem com o
+  Tesseract marcado, e o Gerar OCR com o que estava.
+- Dado que não há `preferencias.ini`, quando o programa abre, então os dois
+  módulos vêm com o PaddleOCR marcado.
+- Dado um `preferencias.ini` com conteúdo que não é de preferências (lixo, ou um
+  motor que não existe), quando o programa abre, então os dois vêm com o
+  PaddleOCR marcado, sem erro; e a próxima escolha grava um arquivo certo.
+- Dado que o lembrado do Gerar OCR é o Tesseract e o Tesseract falta nesta
+  máquina, quando o programa abre, então o Gerar OCR vem com o PaddleOCR marcado
+  e a linha do Tesseract apagada, e o `preferencias.ini` passa a dizer
+  `paddleocr` para o Gerar OCR; e quando o Tesseract volta, o Gerar OCR continua
+  com o PaddleOCR.
+- Dado que a pasta da instalação não aceita gravação, quando a pessoa marca o
+  Tesseract, então o programa continua funcionando e lê com o Tesseract até
+  fechar, sem aviso.
+- Dado o `.env` com comentários da TI, quando a pessoa marca motores e fecha o
+  programa, então o `.env` continua idêntico, byte a byte.
+- Dado o `preferencias.ini` depois de um uso com documentos lidos, então ele tem
+  só os motores (e a janela, da spec 001) — nenhum nome de documento, pasta,
+  texto ou data.
+- Dados os testes automáticos, então nenhum deles lê ou grava o
+  `preferencias.ini` da raiz do projeto, e o `.gitignore` o cobre.
+- Dado o instalador, então desinstalar o programa apaga o `preferencias.ini`, e
+  instalar uma versão nova por cima o mantém.
+- Dados todos os critérios das seções anteriores, então eles continuam passando,
+  com a ressalva das RN-22 e RN-26 emendadas.
+
+### Questões em aberto da emenda
+
+Nenhuma.

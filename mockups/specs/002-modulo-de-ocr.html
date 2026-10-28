@@ -191,7 +191,7 @@
 <body>
 
 <h1>Spec ilustrada 002 — Módulo de OCR</h1>
-<p class="subtitulo">O combinado do item 2 do backlog, desenhado — 09/09/2026 · situação: aprovada · <a href="#emenda-paddleocr" style="color:#7fb1e8">emenda de 18/10/2026 (PaddleOCR) aprovada</a></p>
+<p class="subtitulo">O combinado do item 2 do backlog, desenhado — 09/09/2026 · situação: aprovada · <a href="#emenda-paddleocr" style="color:#7fb1e8">emenda de 18/10/2026 (PaddleOCR) aprovada</a> · <a href="#emenda-lembrar" style="color:#7fb1e8">emenda de 28/10/2026 (o motor lembrado) aprovada</a></p>
 
 <div class="objetivo">
   <strong>Objetivo.</strong> Transformar um PDF da CAPCF em texto conferido por uma
@@ -575,6 +575,56 @@
   <div class="cartao regra novo"><span class="chave">RN-35</span><br>O instalador pode chegar a cerca de 250 MB. Passando disso, a decisão volta para a solicitante.</div>
 </div>
 
+<h2 id="emenda-lembrar">Emenda de 28/10/2026 — o motor lembrado de um uso para o outro</h2>
+<div class="emenda">
+  <strong>Aprovada em 28/10/2026.</strong> Funcionalidade 8 do backlog. Quem prefere o Tesseract não
+  precisa marcá-lo de novo a cada vez que abre o programa: a escolha de cada módulo fica lembrada, num arquivo
+  próprio do programa, o <code>preferencias.ini</code>, ao lado do <code>.env</code>. Nada do trabalho é
+  lembrado. A janela que abre maximizada e lembra o tamanho está na spec 001.
+</div>
+
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Normal — a escolha lembrada</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">Marca o Tesseract no Gerar OCR.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Lê um documento, ou não lê nada, e fecha o programa.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">Na próxima vez, o Gerar OCR abre com o Tesseract marcado; o Anonimizar, em que ela não mexeu, com o PaddleOCR.</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Tortos</div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>O motor lembrado sumiu:</strong> a linha dele aparece apagada e o outro vem marcado, com a troca à vista. O outro passa a ser o lembrado.</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>O arquivo sumiu ou está estragado:</strong> abre com o PaddleOCR nos dois módulos, sem erro e sem aviso.</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Não dá para gravar:</strong> a escolha vale até fechar, como antes, sem aviso.</div></div>
+  </div>
+</div>
+
+<div class="duas-colunas" style="margin-top:24px">
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-entra">Lembrado</div>
+    <div class="corpo-peso"><ul>
+      <li>O motor marcado no Gerar OCR</li>
+      <li>O motor marcado no Anonimizar, à parte</li>
+      <li>(da spec 001) o tamanho da janela e se estava maximizada</li>
+    </ul></div>
+  </div>
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-nao-entra">Nunca lembrado</div>
+    <div class="corpo-peso"><ul>
+      <li>Documento, texto lido, pasta usada, histórico, achados</li>
+      <li>O tamanho de letra e de página da conferência</li>
+      <li>A posição da janela</li>
+      <li>Nada é escrito no <code>.env</code>: ele continua só da TI</li>
+    </ul></div>
+  </div>
+</div>
+
+<div class="cartoes" style="margin-top:24px">
+  <div class="cartao regra novo"><span class="chave">RN-36</span><br>O motor marcado é lembrado, um por módulo, na hora em que a pessoa marca. Quem nunca escolheu abre com o PaddleOCR.</div>
+  <div class="cartao regra novo"><span class="chave">RN-37</span><br>O motor lembrado que falta ao abrir passa a ser lembrado como o outro — a troca aparece na tela.</div>
+  <div class="cartao regra novo"><span class="chave">RN-38 e RN-39</span><br>Mora no <code>preferencias.ini</code>, na pasta da instalação. Lembrar nunca atrapalha usar: o que não dá para ler ou gravar segue sem aviso.</div>
+  <div class="cartao regra novo"><span class="chave">RN-40 e RN-41</span><br>Nada do trabalho é lembrado. Desinstalar apaga a escolha; atualizar a mantém.</div>
+</div>
+
 <h2>Questões em aberto</h2>
 <div class="objetivo" style="border-left-color: var(--cor-sucesso)">
   <strong>Nenhuma.</strong> Todas as decisões que faltavam foram fechadas na conversa
@@ -585,7 +635,7 @@
 
 <div class="rodape">
   Gerada pela skill-07-designer-de-telas, a pedido da skill-05-redator-de-funcionalidade ·
-  espelha <code>especificacoes/specs/002-modulo-de-ocr.md</code> · regenerada em 18/10/2026, com a emenda do PaddleOCR (funcionalidade 7)
+  espelha <code>especificacoes/specs/002-modulo-de-ocr.md</code> · regenerada em 18/10/2026, com a emenda do PaddleOCR (funcionalidade 7), e em 28/10/2026, com a do motor lembrado (funcionalidade 8)
 </div>
 
 </body>

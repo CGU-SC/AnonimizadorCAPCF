@@ -716,6 +716,10 @@ aprovação própria, antes da construção.
 - RN-19: **Um arquivo por vez, e nada guardado entre um uso e outro**, nem
   histórico, nem pasta lembrada. Sair da revisão com trabalho não salvo pergunta
   antes de descartar.
+  *(Emendada em 28/10/2026: o motor marcado no Anonimizar passa a ser lembrado
+  de um uso para o outro - spec 002, emenda de 28/10/2026, RN-36. Nada do
+  trabalho é guardado: documento, texto, pasta, histórico continuam
+  proibidos - RN-40 da spec 002.)*
 - RN-20: **Nenhum código deste módulo fala com a internet** nem com serviço
   nenhum fora da máquina.
 - RN-21: **O `.txt` e o `.md` são lidos com os acentos certos** nos dois jeitos
