@@ -23,7 +23,7 @@ ETAPAS = [
     ("1", "O Gerar OCR lembra o motor, num preferencias.ini gravado com segurança", "no programa"),
     ("2", "O Anonimizar lembra o dele, à parte, e o motor que some passa a ser lembrado como o outro", "no programa"),
     ("3", "A janela: maximizada no primeiro uso, depois o tamanho e o maximizado lembrados", "no programa"),
-    ("4", "Os caminhos tortos: arquivo estragado, pasta sem gravação, o .env intacto, nada do trabalho", "a fazer"),
+    ("4", "Os caminhos tortos: arquivo estragado, pasta sem gravação, o .env intacto, nada do trabalho", "no programa"),
     ("5", "O instalador (desinstalar apaga, atualizar mantém) e o roteiro da conferência", "a fazer"),
 ]
 
@@ -54,6 +54,16 @@ CONFERIDO = [
     ("Numa tela menor que o mínimo, a barra de título fica à vista", "test_janela_lembrada.py"),
     ("Tamanho que não dá para ler, ou absurdo escrito à mão: primeiro uso, ou encolhe — nunca derruba o programa (RN-4, RN-39)", "test_janela_lembrada.py"),
     ("Abrir não grava; fechar que para na pergunta de descartar não grava; a janela grava no bloco dela, numa gravação só, sem mexer nos motores", "test_janela_lembrada.py"),
+    ("O .env da TI, com acentos, aspas e a quebra de linha do Windows, fica idêntico byte a byte depois de marcar e fechar duas vezes", "test_preferencias_caminhos_tortos.py"),
+    ("O preferencias.ini mora ao lado do .env, na pasta da instalação, e nada mais aparece nela (RN-38)", "test_preferencias_caminhos_tortos.py"),
+    ("Um uso inteiro — PDF conferido, seguido para o Anonimizar e salvo — e o arquivo tem só os motores e a janela: nenhum nome, pasta, texto, CPF ou data (RN-40)", "test_preferencias_caminhos_tortos.py"),
+    ("Arquivo estragado ou apagado: os dois módulos no PaddleOCR e a janela maximizada, como no primeiro uso (RN-39)", "test_preferencias_caminhos_tortos.py"),
+    ("Pasta protegida: marcar e fechar seguem sem erro nem aviso, e o .env fica intacto (RN-39)", "test_preferencias_caminhos_tortos.py"),
+    ("O .gitignore cobre o arquivo e o provisório", "test_preferencias_caminhos_tortos.py"),
+    ("Arquivo salvo no Bloco de Notas em UTF-8, UTF-8 com BOM, Unicode ou ANSI é entendido (revisão 46)", "test_preferencias.py"),
+    ("Antivírus segurando o arquivo por um instante: a gravação insiste e a escolha não se perde (revisão 46)", "test_preferencias.py"),
+    ("Um bloco [DEFAULT] escrito à mão não vaza para os outros (revisão 46)", "test_preferencias.py"),
+    ("Minimizada pelo Windows a partir do tamanho normal e fechada: lembra o tamanho, e não o do ícone (revisão 46)", "test_janela_lembrada.py"),
     ("Arquivo preso por outro programa não é reescrito, e as outras escolhas ficam (revisão 43)", "test_preferencias.py"),
     ("Arquivo salvo com BOM no Bloco de Notas, ou com \"Tesseract\" em maiúscula, é entendido (revisão 43)", "test_preferencias.py"),
     ("Duas janelas do programa não dividem o arquivo provisório (revisão 43)", "test_preferencias.py"),
@@ -62,7 +72,8 @@ CONFERIDO = [
 
 
 # Os testes da funcionalidade, rodados para contar quantos passam.
-ARQUIVOS_DE_TESTE = ["programa/test_preferencias.py", "programa/test_janela_lembrada.py"]
+ARQUIVOS_DE_TESTE = ["programa/test_preferencias.py", "programa/test_janela_lembrada.py",
+                     "programa/test_preferencias_caminhos_tortos.py"]
 
 
 def e(texto):
@@ -152,8 +163,8 @@ usa um arquivo só dele, numa pasta provisória, para nunca misturar teste com u
   <span class="selo {'bom' if not falharam else 'ruim'}">{passaram} testes da funcionalidade passando</span>
   <span class="selo {'bom' if not falharam else 'ruim'}">{falharam} falhando</span>
 </div>
-<p class="nota">Contados agora, rodando <code>programa/test_preferencias.py</code> e
-<code>programa/test_janela_lembrada.py</code>. Em cada teste, "fechar e abrir o programa" é montar o painel ou a
+<p class="nota">Contados agora, rodando <code>programa/test_preferencias.py</code>,
+<code>programa/test_janela_lembrada.py</code> e <code>programa/test_preferencias_caminhos_tortos.py</code>. Em cada teste, "fechar e abrir o programa" é montar o painel ou a
 janela de novo: o que estava só na memória vai embora, e só o que foi gravado volta. Os testes da janela de verdade
 a mostram por um instante, maximizada ou não, porque só o Windows responde a que tamanho ela volta.</p>
 <div class="rolar"><table>

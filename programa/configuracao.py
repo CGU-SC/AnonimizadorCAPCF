@@ -64,7 +64,15 @@ def _texto_do_env(arquivo):
         conteudo = arquivo.read_bytes()
     except OSError:
         return None
+    return texto_de_bloco_de_notas(conteudo)
 
+
+def texto_de_bloco_de_notas(conteudo):
+    """O texto de um arquivo salvo no Bloco de Notas, em qualquer dos três
+    formatos que ele oferece, ou None se não for nenhum deles.
+
+    Serve também ao `preferencias.ini`, que a pessoa pode abrir e salvar à mão.
+    """
     if conteudo.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
         formatos = ["utf-16"]
     else:

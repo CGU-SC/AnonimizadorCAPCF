@@ -112,15 +112,16 @@ def test_leitura_presa_por_outro_programa_nao_apaga_as_outras_escolhas(
     outras. Agora ela desiste, e as outras continuam."""
     preferencias.gravar("anonimizar", "motor", "tesseract")
     antes = preferencias_isoladas.read_bytes()
-    texto_de_verdade = Path.read_text
+    ler_de_verdade = Path.read_bytes
+    preso = [True]
 
-    def preso(caminho, *a, **k):
-        if caminho == preferencias_isoladas:
+    def lendo(caminho, *a, **k):
+        if preso[0] and caminho == preferencias_isoladas:
             raise PermissionError("preso pelo antivírus")
-        return texto_de_verdade(caminho, *a, **k)
-    monkeypatch.setattr(Path, "read_text", preso)
+        return ler_de_verdade(caminho, *a, **k)
+    monkeypatch.setattr(Path, "read_bytes", lendo)
     preferencias.gravar("gerar_ocr", "motor", "tesseract")
-    monkeypatch.undo()
+    preso[0] = False
 
     assert preferencias_isoladas.read_bytes() == antes
 
@@ -131,6 +132,42 @@ def test_arquivo_salvo_com_bom_e_editado_a_mao_e_entendido(preferencias_isoladas
     preferencias_isoladas.write_bytes(
         "\ufeff[gerar_ocr]\nmotor =  Tesseract \n".encode("utf-8"))
     assert preferencias.ler("gerar_ocr", "motor") == "tesseract"
+
+
+@pytest.mark.parametrize("formato", ["utf-8", "utf-8-sig", "utf-16", "cp1252"])
+def test_arquivo_salvo_no_bloco_de_notas_em_qualquer_formato_e_entendido(
+        preferencias_isoladas, formato):
+    """Regressão da lente crítica da etapa 4: salvo em "ANSI" ou "Unicode", o
+    "não" da janela fazia o arquivo inteiro valer como estragado."""
+    preferencias_isoladas.write_bytes(
+        "[gerar_ocr]\nmotor = tesseract\n[janela]\nmaximizada = não\n".encode(formato))
+    assert preferencias.ler("gerar_ocr", "motor") == "tesseract"
+    assert preferencias.ler("janela", "maximizada") == "não"
+    preferencias.gravar("anonimizar", "motor", "tesseract")
+    assert preferencias.ler("gerar_ocr", "motor") == "tesseract"
+
+
+def test_bloco_default_escrito_a_mao_nao_vaza_para_os_outros(preferencias_isoladas):
+    """Regressão da lente crítica da etapa 4."""
+    preferencias_isoladas.write_text("[DEFAULT]\nmotor = tesseract\n", encoding="utf-8")
+    assert preferencias.ler("gerar_ocr", "motor") is None
+    assert preferencias.ler_bloco("janela") == {}
+
+
+def test_troca_recusada_por_um_instante_insiste_e_grava(preferencias_isoladas, monkeypatch):
+    """Regressão da lente crítica da etapa 4: o antivírus segura o arquivo por
+    um instante, e a troca é recusada; a escolha não se perde por isso."""
+    recusas = [PermissionError("antivírus"), PermissionError("antivírus")]
+    trocar_de_verdade = os.replace
+
+    def troca(*a):
+        if recusas:
+            raise recusas.pop()
+        return trocar_de_verdade(*a)
+    monkeypatch.setattr(os, "replace", troca)
+    preferencias.gravar("gerar_ocr", "motor", "tesseract")
+    assert preferencias.ler("gerar_ocr", "motor") == "tesseract"
+    assert not list(preferencias_isoladas.parent.glob("*.gravando"))
 
 
 def test_duas_janelas_nao_dividem_o_arquivo_provisorio(preferencias_isoladas, monkeypatch):

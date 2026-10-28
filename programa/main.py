@@ -265,11 +265,13 @@ class JanelaPrincipal(QMainWindow):
 
     def _lembrar_como_foi_fechada(self):
         """Grava o tamanho e se estava maximizada (RN-5)."""
-        maximizada = bool(self.windowState() & Qt.WindowMaximized)
-        # Maximizada (ou minimizada na barra de tarefas), o tamanho de agora não
-        # é o dela: o que vale lembrar é o de quando ela sai do maximizado.
-        fora_do_normal = self.windowState() & (Qt.WindowMaximized | Qt.WindowMinimized)
-        tamanho = self.normalGeometry().size() if fora_do_normal else self.size()
+        # Maximizada, o tamanho de agora é o da tela: o que vale lembrar é o de
+        # quando ela sai do maximizado, que é o que o "normal" guarda. Medido
+        # com o próprio Windows minimizando a janela: minimizada, ela continua
+        # dizendo se estava maximizada e o tamanho de antes (lentes críticas das
+        # etapas 3 e 4).
+        maximizada = self.isMaximized()
+        tamanho = self.normalGeometry().size()
         preferencias.gravar_juntos(LEMBRAR_COMO, {
             "largura": tamanho.width(),
             "altura": tamanho.height(),

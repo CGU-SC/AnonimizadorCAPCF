@@ -16,6 +16,7 @@ sem erro e sem aviso.
 """
 import configparser
 import os
+import time
 
 import configuracao
 
@@ -36,12 +37,7 @@ def caminho():
 
 
 def ler(secao, chave):
-    """O valor lembrado, ou None quando não há nada lembrado que dê para ler.
-
-    Vem em minúsculas e sem espaços em volta: quem editar o arquivo à mão e
-    escrever "Tesseract" é entendido, em vez de ignorado calado (lente crítica
-    da etapa 1).
-    """
+    """O valor lembrado, ou None quando não há nada lembrado que dê para ler."""
     return ler_bloco(secao).get(chave)
 
 
@@ -51,6 +47,10 @@ def ler_bloco(secao):
     De uma vez porque os valores andam juntos: lidos um a um, um antivírus
     segurando o arquivo entre uma leitura e outra deixava a largura da janela
     lida e a altura não (lente crítica da etapa 3).
+
+    Vem em minúsculas e sem espaços em volta: quem editar o arquivo à mão e
+    escrever "Tesseract" é entendido, em vez de ignorado calado (lente crítica
+    da etapa 1).
     """
     conteudo = _conteudo() or _vazio()
     if not conteudo.has_section(secao):
@@ -97,7 +97,7 @@ def gravar_juntos(secao, valores):
             # deixava o arquivo vazio (lente crítica da etapa 1).
             arquivo.flush()
             os.fsync(arquivo.fileno())
-        os.replace(provisorio, destino)
+        _trocar_com_paciencia(provisorio, destino)
     except OSError:
         # A pasta não aceitou: a escolha vale até fechar o programa, como era
         # antes de existir a lembrança. Perder a lembrança não estraga nada.
@@ -105,6 +105,24 @@ def gravar_juntos(secao, valores):
             provisorio.unlink(missing_ok=True)
         except OSError:
             pass
+
+
+def _trocar_com_paciencia(provisorio, destino):
+    """Põe o provisório no lugar do arquivo de verdade.
+
+    O antivírus do Windows abre o arquivo por um instante para examiná-lo, e
+    nesse instante a troca é recusada. Sem insistir, a escolha da pessoa se
+    perdia calada, por um acaso (lente crítica da etapa 4). Cinco tentativas
+    num quarto de segundo cobrem esse instante sem a janela parecer travada.
+    """
+    for tentativa in range(5):
+        try:
+            os.replace(provisorio, destino)
+            return
+        except PermissionError:
+            if tentativa == 4:
+                raise
+            time.sleep(0.05)
 
 
 def _conteudo():
@@ -117,16 +135,19 @@ def _conteudo():
     por outro programa -, e aí a gravação não pode passar por cima dele.
     """
     try:
-        # "utf-8-sig" aceita também o arquivo salvo no Bloco de Notas como
-        # "UTF-8 com BOM", que começa com uma marca invisível (lente crítica da
-        # etapa 1).
-        texto = caminho().read_text(encoding="utf-8-sig")
+        bruto = caminho().read_bytes()
     except FileNotFoundError:
-        return _vazio()
-    except UnicodeDecodeError:
         return _vazio()
     except OSError:
         return None
+    # Quem abrir o arquivo no Bloco de Notas pode salvá-lo como "UTF-8 com
+    # BOM", "Unicode" ou "ANSI"; os três são entendidos, como no .env. Antes,
+    # um "não" salvo em ANSI fazia o arquivo inteiro valer como estragado, e a
+    # gravação seguinte apagava as outras escolhas (lentes críticas das etapas
+    # 1 e 4).
+    texto = configuracao.texto_de_bloco_de_notas(bruto)
+    if texto is None:
+        return _vazio()
     conteudo = _vazio()
     try:
         conteudo.read_string(texto)
@@ -136,4 +157,9 @@ def _conteudo():
 
 
 def _vazio():
-    return configparser.ConfigParser(interpolation=None)
+    # Um bloco [DEFAULT] escrito à mão valeria, no configparser, para todos os
+    # blocos: o motor dele apareceria lembrado nos dois módulos e na janela.
+    # Com outro nome para o bloco comum, [DEFAULT] é um bloco como os outros, e
+    # ninguém o lê (lente crítica da etapa 4).
+    return configparser.ConfigParser(interpolation=None,
+                                     default_section="sem bloco comum")

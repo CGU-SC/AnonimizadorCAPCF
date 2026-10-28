@@ -257,6 +257,26 @@ def test_maximizada_minimizada_pela_barra_de_tarefas_e_fechada_continua_maximiza
         "largura": str(largura), "altura": str(altura), "maximizada": "sim"}
 
 
+def test_minimizada_do_tamanho_normal_e_fechada_lembra_o_tamanho(preferencias_isoladas):
+    """Suspeita da lente crítica da etapa 4, derrubada: minimizada pelo
+    Windows a partir do tamanho normal, ela lembra esse tamanho, e não o do
+    ícone na barra de tarefas."""
+    janela = JanelaPrincipal()
+    largura, altura = _esperado(janela, 1200, 800)
+    janela.show()
+    janela.resize(largura, altura)
+    QApplication.processEvents()
+    MINIMIZAR = 6   # SW_MINIMIZE, o pedido do Windows de minimizar
+    ctypes.windll.user32.ShowWindow(int(janela.winId()), MINIMIZAR)
+    for _ in range(20):
+        QApplication.processEvents()
+        time.sleep(0.02)
+    assert janela.isMinimized()
+    janela.close()
+    assert _janela_lembrada(preferencias_isoladas) == {
+        "largura": str(largura), "altura": str(altura), "maximizada": "não"}
+
+
 def test_fechar_que_para_na_pergunta_de_descartar_nao_grava(
         preferencias_isoladas, monkeypatch):
     """A janela que ficou de pé porque a pessoa voltou para salvar não fechou:
