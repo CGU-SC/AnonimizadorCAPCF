@@ -200,6 +200,22 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   **Antes de cada entrega, refazer os dois roteiros** — e, se esquecer, o
   gerador lembra: ele para quando algum roteiro não cita a versão do
   `programa/versao.py`.
+  **Na próxima entrega**, os roteiros ganham a funcionalidade 8 (decidido em
+  29/10/2026): o `como-usar.html` diz que o motor de cada módulo e o tamanho
+  da janela são lembrados de um uso para o outro, e o `como-instalar.html`
+  pede para **fechar o programa antes de desinstalar** - desinstalado com ele
+  aberto, ao fechar ele grava o tamanho da janela de novo, na pasta que sobrou,
+  e a instalação seguinte não abre maximizada. Fazer o instalador recusar com
+  o programa aberto foi oferecido e recusado: muda o que a pessoa vê ao
+  instalar, por um efeito pequeno e raro.
+
+- **A funcionalidade 4 (IA local) começa reorganizando a lembrança do motor**
+  (decidido em 29/10/2026, revisões 43 e 44). Hoje ela está ligada à peça da
+  tela que mostra os motores (`EscolhaDoMotor`, em `programa/caminho_do_pdf.py`,
+  pelo `lembrar_como`), e o caminho do PDF monta a tela de ler também no Gerar
+  OCR, que não a mostra - por isso só o Anonimizar liga a lembrança dela. A IA
+  local é o terceiro motor: quem a construir separa primeiro a lembrança da
+  tela, antes de pôr o motor novo, em vez de repetir a ligação.
 
 - **Quando o backlog terminar, organizar a documentação num índice só**
   (pedido da solicitante em 22/10/2026, que achou a documentação "muito

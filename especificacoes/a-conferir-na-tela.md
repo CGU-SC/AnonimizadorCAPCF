@@ -8,15 +8,13 @@ Este arquivo existe porque uma etapa foi construída num dia em que a pessoa nã
 estava na frente da máquina (21/09/2026, pelo controle remoto). Conferido um
 item, ele sai daqui.
 
-## A funcionalidade 8 — lembrar as escolhas
+## Nada esperando conferência
 
-Construída inteira em 28/10/2026, com a solicitante em viagem: ela pediu o
-máximo em teste automático, e as cinco etapas foram gravadas como "não
-conferido na tela". O roteiro do que só a tela e o instalador de verdade
-mostram está na `conferencias/05-lembrar-as-escolhas.html`, com o que ficou
-anotado para decidir. Para a parte instalada, o agente monta antes um
-instalador de teste, com outro nome (ver "Gerar instalador para testar" no
-`CLAUDE.md`).
+A funcionalidade 8 — lembrar as escolhas — foi construída em 28/10/2026 com a
+solicitante em viagem, e conferida por ela na volta, em 29/10/2026, **passo a
+passo**: os 13 passos do roteiro da `conferencias/05-lembrar-as-escolhas.html`,
+a parte instalada com um instalador de teste de outro nome. Todos como
+esperado, e ela saiu daqui.
 
 ## Conferido antes
 

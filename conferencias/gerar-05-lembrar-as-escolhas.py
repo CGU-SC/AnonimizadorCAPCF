@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-DATA = "28/10/2026"
+DATA = "29/10/2026"
 
 # As cinco etapas da construção. A situação é mudada à mão a cada etapa fechada.
 ETAPAS = [
@@ -143,6 +143,19 @@ ANOTADO = [
      "motor precisariam repetir a ligação. (Revisões 43 e 44.)"),
 ]
 
+# O que a solicitante decidiu sobre cada anotação, na volta da viagem, na mesma
+# ordem da lista acima.
+DECIDIDO = [
+    "fica como está: a RN-6 garante que a janela nunca abre fora da vista, e no núcleo cada pessoa tem uma "
+    "máquina. Se alguém reclamar, vira emenda.",
+    "fica como está: a troca aparece na tela, com a linha do motor apagada dizendo por quê, e no núcleo o "
+    "Tesseract mora na máquina, e não numa pasta de rede.",
+    "fica como está: o efeito é só a janela abrir com o tamanho antigo, e não maximizada. Na próxima entrega, "
+    "o roteiro \"Como instalar\" pede para fechar o programa antes de desinstalar (anotado no CLAUDE.md).",
+    "fica para o começo da funcionalidade 4, a da IA local, que é quem traz o terceiro motor (anotado no "
+    "CLAUDE.md, em \"Decidido antes de esquecer\").",
+]
+
 
 def e(texto):
     return html.escape(texto)
@@ -174,7 +187,9 @@ def main():
             for n, (fazer, esperar) in enumerate(passos, start=comeco))
     linhas_dev = roteiro(ROTEIRO_NO_DESENVOLVIMENTO)
     linhas_instalado = roteiro(ROTEIRO_INSTALADO, len(ROTEIRO_NO_DESENVOLVIMENTO) + 1)
-    itens_anotados = "".join(f"<li><strong>{titulo}</strong>: {texto}</li>" for titulo, texto in ANOTADO)
+    itens_anotados = "".join(
+        f"<li><strong>{titulo}</strong>: {texto}<br><span class='decidido'>Decidido em {DATA}: {decisao}</span></li>"
+        for (titulo, texto), decisao in zip(ANOTADO, DECIDIDO, strict=True))
 
     pagina = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -198,6 +213,7 @@ def main():
   h2 {{ font-size: 20px; margin: 40px 0 8px; }}
   h3 {{ font-size: 16px; margin: 24px 0 8px; }}
   .anotado li {{ margin-bottom: 8px; }}
+  .decidido {{ color: var(--cor-sucesso); }}
   code {{ font-family: var(--fonte-mono); font-size: 13px; }}
   .subtitulo, .nota {{ color: var(--cor-texto-secundario); }}
   .nota {{ font-size: 13px; }}
@@ -224,8 +240,13 @@ def main():
 
 <h1>Conferência 05 — lembrar as escolhas</h1>
 <p class="subtitulo">Funcionalidade 8, emendas de 28/10/2026 das specs 002 e 001. Você pediu que o máximo fosse
-conferido por teste automático, porque ia viajar: esta página mostra o que os testes já conferem sozinhos e, no
-fim, o pouco que só a tela mostra, e o que ficou anotado para você decidir.</p>
+conferido por teste automático, porque ia viajar: esta página mostra o que os testes conferem sozinhos, o pouco que
+só a tela mostra — conferido por você, passo a passo, na volta —, e o que você decidiu sobre o que ficou anotado.</p>
+
+<div class="selos">
+  <span class="selo bom">Conferida na tela em {DATA}: os 13 passos como esperado</span>
+  <span class="selo bom">Funcionalidade construída</span>
+</div>
 
 <div class="caixa">As escolhas ficam num arquivo <code>preferencias.ini</code>, ao lado do <code>.env</code>, na
 pasta da instalação. Nesta máquina de desenvolvimento ele mora na raiz do projeto, fora do histórico — e cada teste
@@ -251,10 +272,11 @@ a mostram por um instante, maximizada ou não, porque só o Windows responde a q
   {linhas_conferido}
 </table></div>
 
-<h2>O que fica para você conferir na tela</h2>
+<h2>O que só a tela mostra — conferido em {DATA}</h2>
 <p class="nota">Só o que um teste não consegue ver: a janela no seu monitor, e o instalador instalando e desinstalando
-de verdade. Nada disto foi conferido ainda — as cinco etapas foram gravadas como "não conferido na tela", por
-escolha sua. A janela não recarrega o código sozinha: feche e abra a cada passo.</p>
+de verdade. As cinco etapas foram gravadas como "não conferido na tela", por escolha sua, enquanto você viajava. Na
+volta, você conferiu passo a passo — a parte instalada com um instalador de teste, de outro nome, montado com o código
+da branch —, e os 13 passos saíram como esperado.</p>
 
 <h3>No desenvolvimento, nesta máquina</h3>
 <div class="rolar"><table>
@@ -268,9 +290,9 @@ escolha sua. A janela não recarrega o código sozinha: feche e abra a cada pass
   {linhas_instalado}
 </table></div>
 
-<h2>Anotado para você decidir</h2>
-<p class="nota">O que a lente crítica achou nas revisões 43 a 47 e não era defeito claro. Nada disto foi mudado:
-como combinado, eu anoto em vez de decidir por você.</p>
+<h2>Anotado, e o que você decidiu</h2>
+<p class="nota">O que a lente crítica achou nas revisões 43 a 47 e não era defeito claro. Como combinado, ficou
+anotado em vez de decidido por mim; na volta, você decidiu as quatro, uma por vez, e nenhuma mudou o programa.</p>
 <ul class="anotado">{itens_anotados}</ul>
 
 <p class="rodape">Página gerada em {DATA} pela skill-07-designer-de-telas, a pedido da
