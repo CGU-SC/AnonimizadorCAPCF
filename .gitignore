@@ -5,6 +5,10 @@
 # O pacote de skills e o mapa dele: ficam nesta máquina, para o agente
 # trabalhar, e não vão para o histórico. Estavam desde o commit fundador e
 # foram tirados do histórico inteiro em 28/10/2026, a pedido da solicitante.
+# São material cedido a ela num curso, com o pedido de NÃO DISTRIBUIR: nunca
+# commitar, publicar em página ou mandar para fora o conteúdo deles. O
+# repositório é público, e o PR #1 ainda os mostrava em 29/10/2026 - pedido
+# de limpeza aberto no suporte do GitHub.
 # A cerca do agente (.claude/settings.json) é do projeto, e continua.
 .claude/skills/
 .claude/mapa-das-skills.html
