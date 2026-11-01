@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rascunho 11 — Revisar com IA</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --cor-erro-texto: #f08a86;
+    --cor-ia: #b39ddb;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #15181d;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.5;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 900px; }
+  h2 { font-size: var(--texto-grande); margin: var(--espaco-5) 0 var(--espaco-2) 0; }
+  .explica { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: 0 0 var(--espaco-3) 0; max-width: 900px; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  .quadro-titulo { font-size: var(--texto-pequeno); text-transform: uppercase; letter-spacing: 0.05em; color: var(--cor-texto-secundario); font-weight: 700; margin: var(--espaco-4) 0 var(--espaco-2) 0; }
+
+  .janela { width: 900px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); display: flex; overflow: hidden; }
+  .menu { width: 220px; background: var(--cor-fundo-elevado); border-right: 1px solid var(--cor-borda); padding: var(--espaco-3) var(--espaco-2); flex-shrink: 0; display: flex; flex-direction: column; gap: var(--espaco-1); }
+  .menu .nome { font-weight: 700; padding: 0 var(--espaco-2) var(--espaco-2); }
+  .item-menu { padding: 8px 12px; border-radius: var(--raio); color: var(--cor-texto-secundario); }
+  .item-menu.ativo { background: var(--cor-destaque); color: #fff; font-weight: 600; }
+  .estica { flex: 1; }
+  .painel { flex: 1; padding: var(--espaco-3); display: flex; flex-direction: column; gap: var(--espaco-2); min-width: 0; }
+  .selos { display: flex; gap: var(--espaco-1); flex-wrap: wrap; font-size: 12px; }
+  .selo { border: 1px solid var(--cor-borda); border-radius: 10px; padding: 1px 8px; color: var(--cor-texto-secundario); }
+  .selo.valido { color: var(--cor-erro-texto); border-color: var(--cor-erro-texto); }
+  .selo.suspeito { color: var(--cor-alerta); border-color: var(--cor-alerta); }
+  .selo.ia { color: var(--cor-ia); border-color: var(--cor-ia); box-shadow: 0 0 0 3px rgba(240,138,134,0.2); }
+  .corpo { display: flex; gap: var(--espaco-2); min-height: 0; }
+  .texto { flex: 1; min-width: 0; background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-2); font-family: var(--fonte-mono); font-size: 11px; line-height: 1.8; white-space: pre-wrap; color: var(--cor-texto); }
+  .m-valido { color: var(--cor-erro-texto); text-decoration: underline; text-underline-offset: 3px; }
+  .m-suspeito { color: var(--cor-alerta); text-decoration: underline wavy; text-underline-offset: 3px; }
+  /* traço-ponto: reto, ondulado, tracejado e pontilhado já têm dono, e quem não
+     distingue bem as cores precisa do traço para diferenciar os tipos */
+  .m-ia { color: var(--cor-ia); padding-bottom: 2px; background-image: repeating-linear-gradient(90deg, var(--cor-ia) 0 6px, transparent 6px 9px, var(--cor-ia) 9px 11px, transparent 11px 14px); background-size: 100% 1.5px; background-repeat: no-repeat; background-position: 0 100%; }
+  .m-trecho { background-color: rgba(179,157,219,0.14); padding-bottom: 2px; background-image: repeating-linear-gradient(90deg, var(--cor-ia) 0 6px, transparent 6px 9px, var(--cor-ia) 9px 11px, transparent 11px 14px); background-size: 100% 1.5px; background-repeat: no-repeat; background-position: 0 100%; }
+
+  .lista { width: 330px; flex-shrink: 0; display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .lista-titulo { font-size: var(--texto-pequeno); font-weight: 700; color: var(--cor-texto-secundario); letter-spacing: 1px; }
+  .secao { font-size: var(--texto-pequeno); font-weight: 600; margin-top: var(--espaco-1); }
+  .secao.ia { color: var(--cor-ia); }
+  .item { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 3px solid var(--cor-erro-texto); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); display: flex; flex-direction: column; gap: var(--espaco-1); }
+  .item.suspeito { border-left-color: var(--cor-alerta); }
+  .item.ia { border-left-color: var(--cor-ia); }
+  .etiquetas { display: flex; gap: var(--espaco-1); flex-wrap: wrap; }
+  .etq { font-size: 11px; font-weight: 600; border: 1px solid currentColor; border-radius: 8px; padding: 0 6px; }
+  .etq.vermelha { color: var(--cor-erro-texto); }
+  .etq.amarela { color: var(--cor-alerta); }
+  .etq.ia { color: var(--cor-ia); }
+  .etq.comentario { white-space: normal; font-weight: 400; }
+  .num { font-family: var(--fonte-mono); }
+  .ctx { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .motivo { font-size: var(--texto-pequeno); }
+  .origem { font-size: 11px; color: var(--cor-ia); }
+  .botao-peq { align-self: flex-start; font-size: 12px; border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 2px 10px; }
+
+  .faixa-ia { display: flex; align-items: center; gap: var(--espaco-2); flex-wrap: wrap; font-size: var(--texto-pequeno); background: rgba(179,157,219,0.09); border-left: 3px solid var(--cor-ia); border-radius: var(--raio); padding: 6px var(--espaco-2); }
+  .faixa-ia .estica { flex: 1; }
+  .faixa-parcial { background: rgba(217,164,65,0.10); border-left-color: var(--cor-alerta); }
+  .barra { width: 90px; height: 6px; background: var(--cor-borda); border-radius: 3px; overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 40%; background: var(--cor-ia); }
+  .limite { font-size: 11px; color: var(--cor-texto-secundario); }
+  .rodape-rev { display: flex; align-items: flex-start; gap: var(--espaco-2); flex-wrap: wrap; }
+  .botao { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 5px 12px; font-size: var(--texto-pequeno); }
+  .botao.principal { background: var(--cor-destaque); border-color: var(--cor-destaque); color: #fff; }
+  .botao.apagado { color: var(--cor-texto-secundario); opacity: 0.55; }
+  .coluna-botao { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .coluna-botao .frase { font-size: 11px; color: var(--cor-texto-secundario); }
+
+  .dialogo { width: 568px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-4); display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .caixa { background: rgba(217,164,65,0.10); border-left: 4px solid var(--cor-alerta); border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); }
+  .caixa .tt { font-weight: 600; margin-bottom: 4px; }
+  .caixa .e { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .acoes { display: flex; gap: var(--espaco-3); justify-content: center; }
+  .botao.escolhido { background: var(--cor-destaque); border-color: var(--cor-destaque); color: #fff; outline: 2px solid #8fb6de; outline-offset: 2px; }
+
+  .motores { width: 568px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); display: flex; flex-direction: column; gap: 2px; }
+  .rotulo-sec { font-size: var(--texto-pequeno); font-weight: 700; letter-spacing: 1px; color: var(--cor-texto-secundario); margin-bottom: var(--espaco-1); }
+  .motor { display: flex; gap: var(--espaco-2); align-items: baseline; margin-top: var(--espaco-1); }
+  .motor.apagado { color: var(--cor-texto-secundario); }
+  .frase-motor { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); margin-left: 22px; }
+  .quadros { display: flex; gap: var(--espaco-4); flex-wrap: wrap; align-items: flex-start; }
+
+  .chave { display: flex; gap: var(--espaco-4); flex-wrap: wrap; font-family: var(--fonte-mono); font-size: var(--texto-pequeno); background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); width: 900px; }
+  .notas { max-width: 900px; margin-top: var(--espaco-4); background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); }
+  .notas li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 900px; }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 11 — Revisar com IA</h1>
+<p class="subtitulo">Spec 004 · 31/10/2026 · <strong>aprovado em 31/10/2026</strong> · parte do vigente da revisão, que é o do
+programa de hoje: só muda o que está aqui. Nomes e números são inventados. Os que passam na conta são de dígitos repetidos
+(RN-22 da spec 003).</p>
+
+<h2>1 · A cor nova, e o traço dela</h2>
+<p class="explica">O que veio da IA precisa se distinguir dos tipos que já existem, sem amarelo, vermelho, azul nem verde. A
+proposta é um <strong>lilás</strong>, <code>#b39ddb</code> (contraste de 6,7:1 sobre o fundo e 5,9:1 sobre o fundo elevado,
+acima do mínimo de 4,5:1). O traço também é próprio, para quem não distingue bem as cores: o <strong>traço-ponto</strong>. Se
+você aprovar, ele entra no sistema de design.</p>
+<div class="chave">
+  <span class="m-valido">reto: CPF válido</span>
+  <span class="m-suspeito">ondulado: suspeito</span>
+  <span style="color:var(--cor-sucesso);text-decoration:underline dashed;text-underline-offset:3px">tracejado: liberado</span>
+  <span style="color:#4f86bf;text-decoration:underline dotted;text-underline-offset:3px">pontilhado: à mão</span>
+  <span class="m-ia">traço-ponto: da IA</span>
+</div>
+
+<h2>2 · A revisão, em cada estado</h2>
+
+<div class="quadro-titulo">Vazio: IA nunca ligada</div>
+<p class="explica">A revisão é a de hoje. Muda só a frase embaixo do botão, que passa a dizer onde ligar.</p>
+<div class="janela">
+  <div class="menu"><div class="nome">Anonimizador CAPCF</div><div class="item-menu">Gerar OCR</div><div class="item-menu ativo">Anonimizar</div><div class="estica"></div><div class="item-menu">Configurações de IA</div></div>
+  <div class="painel">
+    <div class="selos"><span class="selo">3 números encontrados</span><span class="selo valido">2 CPFs válidos</span><span class="selo suspeito">1 suspeito</span></div>
+    <div class="rodape-rev">
+      <span class="botao principal">Salvar</span>
+      <div class="coluna-botao"><span class="botao apagado">Revisar com IA</span><span class="frase">Ligue em Configurações de IA, no fim do menu</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Pronta: a pessoa escolheu "ao clicar no botão"</div>
+<div class="janela">
+  <div class="menu"><div class="nome">Anonimizador CAPCF</div><div class="item-menu">Gerar OCR</div><div class="item-menu ativo">Anonimizar</div><div class="estica"></div><div class="item-menu">Configurações de IA</div></div>
+  <div class="painel">
+    <div class="selos"><span class="selo">3 números encontrados</span><span class="selo valido">2 CPFs válidos</span><span class="selo suspeito">1 suspeito</span></div>
+    <div class="rodape-rev">
+      <span class="botao principal">Salvar</span>
+      <div class="coluna-botao"><span class="botao">Revisar com IA</span><span class="frase">Vai para o LM Studio, nesta máquina</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Carregando: a IA está revisando, e a pessoa já trabalha</div>
+<div class="janela">
+  <div class="menu"><div class="nome">Anonimizador CAPCF</div><div class="item-menu">Gerar OCR</div><div class="item-menu ativo">Anonimizar</div><div class="estica"></div><div class="item-menu">Configurações de IA</div></div>
+  <div class="painel">
+    <div class="selos"><span class="selo">3 números encontrados</span><span class="selo valido">2 CPFs válidos</span><span class="selo suspeito">1 suspeito</span></div>
+    <div class="faixa-ia"><span class="barra"><i></i></span>A IA está revisando: página 12 de 30. Você já pode trabalhar.<span class="estica"></span><span class="botao">Cancelar</span></div>
+    <div class="rodape-rev"><span class="botao principal">Salvar</span></div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Com dados: a IA terminou</div>
+<p class="explica">Na lista, a seção da IA fica abaixo dos suspeitos e acima dos CPFs válidos. O limite da revisora aparece numa
+linha fina, sempre que a IA tiver rodado. O selo lilás, clicado, faz a navegação percorrer só o que veio da IA, como os
+outros selos.</p>
+<div class="janela">
+  <div class="menu"><div class="nome">Anonimizador CAPCF</div><div class="item-menu">Gerar OCR</div><div class="item-menu ativo">Anonimizar</div><div class="estica"></div><div class="item-menu">Configurações de IA</div></div>
+  <div class="painel">
+    <div class="selos"><span class="selo">4 números encontrados</span><span class="selo valido">2 CPFs válidos</span><span class="selo suspeito">1 suspeito</span><span class="selo ia">2 da IA</span></div>
+    <div class="limite">A IA leu só o texto, sem comparar com a página original: um dígito lido errado num número que parece normal pode passar. Ela não dispensa a sua leitura.</div>
+    <div class="corpo">
+<div class="texto">Relação de bolsistas
+
+Ana Suposta Lima
+CPF <span class="m-valido">XXX.111.111-XX</span>
+
+Termo de outorga nº
+<span class="m-suspeito">XXX.456.789-XX</span>
+
+Inscrição do bolsista:
+<span class="m-ia">XXX3-3333-3XX</span>
+
+<span class="m-trecho">Va1or tota1 do c0ntrat0</span>:
+R$ 18.000,00</div>
+      <div class="lista">
+        <div class="lista-titulo">O QUE O PROGRAMA ACHOU</div>
+        <div class="secao">Suspeitos — olhe estes 1</div>
+        <div class="item suspeito">
+          <div class="etiquetas"><span class="etq amarela">falha na conta</span></div>
+          <div class="num">123.456.789-10</div>
+          <div class="ctx">…Termo de outorga nº</div>
+          <div class="etiquetas"><span class="etq ia comentario">IA: parece o número de um termo, e não um CPF</span></div>
+          <span class="botao-peq">Desfazer</span>
+        </div>
+        <div class="secao ia">A IA pediu para olhar 2</div>
+        <div class="item ia">
+          <div class="etiquetas"><span class="etq vermelha">CPF válido</span><span class="etq ia">número novo</span></div>
+          <div class="num">3333-3333-333</div>
+          <div class="motivo">"Inscrição do bolsista" costuma ser um CPF, e aqui está em grupos estranhos.</div>
+          <div class="origem">IA · LM Studio · modelo-exemplo-texto-8b</div>
+          <span class="botao-peq">Desfazer…</span>
+        </div>
+        <div class="item ia">
+          <div class="etiquetas"><span class="etq ia">texto estragado</span></div>
+          <div class="ctx">Va1or tota1 do c0ntrat0</div>
+          <div class="motivo">Há números no lugar de letras: a leitura desta parte parece frágil.</div>
+          <div class="origem">IA · LM Studio · modelo-exemplo-texto-8b</div>
+          <span class="botao-peq">Ir para o trecho</span>
+        </div>
+        <div class="secao">CPF válido 2</div>
+        <div class="item"><div class="etiquetas"><span class="etq vermelha">CPF válido</span></div><div class="num">111.111.111-11</div><div class="ctx">…Ana Suposta Lima</div><span class="botao-peq">Desfazer…</span></div>
+      </div>
+    </div>
+    <div class="rodape-rev"><span class="botao principal">Salvar</span><span class="botao">Revisar de novo com IA</span></div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Com dados: a IA terminou e não apontou nada</div>
+<div class="janela">
+  <div class="menu"><div class="nome">Anonimizador CAPCF</div><div class="item-menu">Gerar OCR</div><div class="item-menu ativo">Anonimizar</div><div class="estica"></div><div class="item-menu">Configurações de IA</div></div>
+  <div class="painel">
+    <div class="faixa-ia">A IA terminou e não apontou nada a mais. Isso não dispensa a sua leitura.</div>
+    <div class="rodape-rev"><span class="botao principal">Salvar</span><span class="botao">Revisar de novo com IA</span></div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Erro: a IA parou no meio</div>
+<p class="explica">Amarela, porque nada foi perdido. A linha fica fixa até a pessoa retomar ou sair, e o que já chegou continua
+na lista. Em <code>.docx</code>, <code>.md</code> e <code>.txt</code>, ela fala em "parte 3 de 5", no lugar da página.</p>
+<div class="janela">
+  <div class="menu"><div class="nome">Anonimizador CAPCF</div><div class="item-menu">Gerar OCR</div><div class="item-menu ativo">Anonimizar</div><div class="estica"></div><div class="item-menu">Configurações de IA</div></div>
+  <div class="painel">
+    <div class="selos"><span class="selo">4 números encontrados</span><span class="selo valido">2 CPFs válidos</span><span class="selo suspeito">1 suspeito</span><span class="selo ia">2 da IA</span></div>
+    <div class="faixa-ia faixa-parcial"><div><strong>A IA revisou até a página 12 de 30. O resto não teve segundo par de olhos.</strong><br>O LM Studio parou de responder. Veja se ele continua aberto.</div><span class="estica"></span><span class="botao">Tentar de novo</span></div>
+    <div class="rodape-rev"><span class="botao principal">Salvar</span></div>
+  </div>
+</div>
+
+<h2>3 · Salvar com a IA rodando</h2>
+<div class="dialogo">
+  <div class="caixa">
+    <div class="tt">A IA ainda está revisando</div>
+    <div class="e">Ela foi até a página 12 de 30. Salvando agora, o resto do documento fica sem o segundo par de olhos.</div>
+  </div>
+  <div class="acoes"><span class="botao">Salvar mesmo assim</span><span class="botao escolhido">Voltar à revisão</span></div>
+</div>
+
+<h2>4 · "IA local" na escolha do motor</h2>
+<p class="explica">Vale para o Gerar OCR e o Anonimizar, e a frase embaixo é a única coisa que muda em cada estado. A frase de hoje,
+"Funcionalidade a ser implementada", sai.</p>
+<div class="quadros">
+  <div>
+    <div class="quadro-titulo">Chave desligada</div>
+    <div class="motores">
+      <div class="rotulo-sec">LER COM</div>
+      <div class="motor">◉ PaddleOCR (nesta máquina)</div>
+      <div class="motor">○ Tesseract (nesta máquina)</div>
+      <div class="motor apagado">○ IA local</div>
+      <div class="frase-motor">Ligue em Configurações de IA, em "Habilitar IA".</div>
+    </div>
+  </div>
+  <div>
+    <div class="quadro-titulo">Chave ligada, sem modelo</div>
+    <div class="motores">
+      <div class="rotulo-sec">LER COM</div>
+      <div class="motor">◉ PaddleOCR (nesta máquina)</div>
+      <div class="motor">○ Tesseract (nesta máquina)</div>
+      <div class="motor apagado">○ IA local</div>
+      <div class="frase-motor">Escolha o modelo do motor em Configurações de IA.</div>
+    </div>
+  </div>
+  <div>
+    <div class="quadro-titulo">Chave ligada, com modelo</div>
+    <div class="motores">
+      <div class="rotulo-sec">LER COM</div>
+      <div class="motor">◉ PaddleOCR (nesta máquina)</div>
+      <div class="motor">○ Tesseract (nesta máquina)</div>
+      <div class="motor">○ IA local (LM Studio)</div>
+      <div class="frase-motor">Lê pior que os outros dois, e a página vai com os CPFs inteiros. Tempo: depende do modelo.</div>
+    </div>
+  </div>
+  <div>
+    <div class="quadro-titulo">A IA era a marcada, e a chave desligou</div>
+    <div class="motores">
+      <div class="rotulo-sec">LER COM</div>
+      <div class="motor">◉ PaddleOCR (nesta máquina)</div>
+      <div class="motor">○ Tesseract (nesta máquina)</div>
+      <div class="motor apagado">○ IA local</div>
+      <div class="frase-motor">A marca passou ao PaddleOCR porque a IA foi desligada.</div>
+    </div>
+  </div>
+</div>
+
+<div class="notas">
+  <strong>O que não muda</strong>
+  <ul>
+    <li>O texto da revisão, a navegação, a dupla conferência e o aviso de antes de gravar: o número novo da IA segue as mesmas regras, e aparece no aviso se for liberado passando na conta.</li>
+    <li>O arquivo <code>.md</code>: nenhum motivo, etiqueta ou origem da IA entra nele.</li>
+    <li>O número da IA conta no selo dela. Ele não entra na contagem de CPFs válidos nem na de suspeitos, porque quem o achou foi outra origem.</li>
+  </ul>
+</div>
+
+<p class="rodape">Rascunho gerado em 31/10/2026 pela skill-07-designer-de-telas, a partir da spec 004. Parte do programa de
+hoje (<code>programa/tela_revisao.py</code>, <code>programa/lista_de_achados.py</code> e
+<code>programa/caminho_do_pdf.py</code>) e do sistema de design.</p>
+</body>
+</html>

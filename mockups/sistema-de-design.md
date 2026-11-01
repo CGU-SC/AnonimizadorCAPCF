@@ -32,6 +32,7 @@ papel.
 | `--cor-alerta` | `#d9a441` | CPF **suspeito** — dígito verificador não bateu, indo para conferência humana. Traço ondulado. Entre 14 e 16/09/2026 marcou também o "forma CPF válido", que voltou ao vermelho |
 | `--cor-erro` | `#d9534f` | falha (arquivo inválido, OCR não rodou), a faixa da caixa da dupla conferência de um número com forma CPF válido — o momento de risco — e, desde 16/09/2026, o **"forma CPF válido"** na revisão, com traço reto |
 | `--cor-erro-texto` | `#f08a86` | letra em vermelho sobre o fundo escuro (contraste 6,6:1) — é este vermelho que marca o "forma CPF válido" no texto da revisão e o selo dele. O `#d9534f` tem 4:1 sobre o fundo e 3,6:1 sobre o fundo elevado, abaixo do mínimo de 4,5:1 para letra pequena |
+| `--cor-ia` | `#b39ddb` | o que **veio da IA** na revisão: a seção "A IA pediu para olhar", o selo, a etiqueta e o número ou trecho no texto, com **traço-ponto**. Lilás porque amarelo, vermelho, azul e verde já têm dono, e traço-ponto porque reto, ondulado, tracejado e pontilhado também. Aprovado em 31/10/2026 (spec 004, rascunho 11 do Anonimizar) |
 
 **Mudou em 18/09/2026** (conferência da etapa 5 do Anonimizar, sétima emenda da
 spec 003): a máscara do CPF passa de `***.456.789-**` para **`XXX.456.789-XX`**,

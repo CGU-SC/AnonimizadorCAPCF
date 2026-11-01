@@ -8,6 +8,9 @@ do backlog, pedido da usuária no levantamento). Está na seção "Emenda de
 28/10/2026", no fim; o fora de escopo e o último critério trazem a remissão. O
 motor lembrado, da mesma funcionalidade, está na emenda de mesma data da spec
 002.
+**Emendada em:** 2026-10-31, pela spec 004 (aprovada no mesmo dia) — o menu ganha
+"Configurações de IA", no fim da faixa, que troca o menu inteiro por um submenu
+(RN-1 a RN-3 da spec 004). Dentro do submenu, a RN-2 daqui vale igual.
 
 ## Objetivo
 Dar ao programa uma janela própria, com a estrutura onde os dois módulos futuros

@@ -721,7 +721,9 @@ aprovação própria, antes da construção.
   trabalho é guardado: documento, texto, pasta, histórico continuam
   proibidos - RN-40 da spec 002.)*
 - RN-20: **Nenhum código deste módulo fala com a internet** nem com serviço
-  nenhum fora da máquina.
+  nenhum fora da máquina. *(Emendada em 31/10/2026, pela spec 004: a exceção é o
+  único arquivo que fala com a rede, usado só com a IA ligada, RN-43 e RN-44 de
+  lá.)*
 - RN-21: **O `.txt` e o `.md` são lidos com os acentos certos** nos dois jeitos
   como o Bloco de Notas do Windows grava texto (o padrão de hoje, e o antigo, de
   quando o Bloco de Notas gravava no padrão do Windows em português). Arquivo

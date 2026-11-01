@@ -96,16 +96,23 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
   tabela, a coluna é compensada; na revisão, leva a etiqueta "sem o zero da
   frente".
 - **Motor de OCR**: três na escolha, desde a emenda de 18/10/2026 da spec 002 —
-  o PaddleOCR, primeiro e já marcado; o Tesseract, como alternativa; e (fora do
-  escopo ainda) uma IA local, na própria máquina (LM Studio) ou num servidor
-  dentro da rede da universidade. Na tela ela aparece apagada, como "IA local",
-  com "Funcionalidade a ser implementada" embaixo. **Nunca** um serviço de
-  empresa externa — seria contradizer o motivo do programa existir. Desde a
+  o PaddleOCR, primeiro e já marcado; o Tesseract, como alternativa; e uma IA
+  local, na própria máquina (LM Studio) ou num servidor dentro da rede da
+  universidade. Na tela ela aparece apagada, como "IA local", com "Funcionalidade
+  a ser implementada" embaixo, até a spec 004 ficar pronta; depois, acende com
+  uma chave, com ressalva. **Nunca** um serviço de empresa externa — seria
+  contradizer o motivo do programa existir. Desde a
   funcionalidade 8 (28/10/2026), a escolha de cada módulo é lembrada de um uso
   para o outro, no `preferencias.ini`, e o motor lembrado que falta ao abrir
   passa a ser lembrado como o outro (RN-36 a RN-41 da spec 002). A janela abre
   maximizada no primeiro uso, e depois como foi fechada, sempre no meio da tela
   (RN-4 a RN-8 da spec 001). Desinstalar apaga o arquivo; atualizar o mantém.
+- **Revisão por IA** (spec 004, aprovada em 31/10/2026, em construção): vem
+  desligada; só no Anonimizar; vê só o texto, com os CPFs inteiros; aponta, e quem
+  mascara é o programa. O token do servidor é digitado por quem usa e guardado no
+  `.env` - a única linha que o programa grava nele, porque a TI não dá conta de
+  configurar máquina por máquina. Baixar, carregar modelo e ligar o servidor ficam
+  no próprio LM Studio: um motor próprio com download foi avaliado e recusado.
 - **Conferência humana**: parte fixa do processo quando o texto veio de OCR, e
   não etapa opcional. O dígito verificador do CPF confere o que foi lido; o
   que não fechar vira lista de suspeitos para a pessoa olhar, em vez de passar
@@ -153,7 +160,12 @@ Duas específicas deste projeto:
   recuperável por quem copiar o texto.
 - **Nenhum caminho de código aponta para um serviço de OCR ou LLM fora da
   UFSC.** É a razão de existir do programa: documento com CPF não pode sair da
-  universidade para ser processado.
+  universidade para ser processado. Desde a spec 004 (aprovada em 31/10/2026, em
+  construção), o programa continua sem nenhum endereço de fora escrito nele, mas
+  o endereço do servidor de IA é digitado por quem usa e não é bloqueado: o que
+  não for reconhecido como de dentro abre um aviso de risco (o endereço de cada
+  instituição varia). O teste prova o aviso, e não um bloqueio. Só um arquivo do
+  programa fala com a rede, só com a IA ligada, e ele não baixa nada.
 
 ## Convenções
 

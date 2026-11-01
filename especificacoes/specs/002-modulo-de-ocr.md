@@ -30,6 +30,10 @@ que trazem a remissão. A RN-22 foi feita para o programa não lembrar o
 **trabalho** (documento, texto lido, pasta), e isso continua proibido; a escolha
 da pessoa é outra categoria, e passa a ser lembrada. Levantamento em
 `mockups/requisitos/07-mapa-do-entendimento.html`.
+**Emendada em:** 2026-10-31, pela spec 004 (aprovada no mesmo dia) — a "IA local"
+passa a acender com a chave, e o `.env` ganha a linha do token, a única que o
+programa grava. As RN-20, RN-21 e RN-25 e o fora de escopo da emenda de 28/10/2026
+trazem a remissão.
 
 ## Objetivo
 
@@ -328,9 +332,13 @@ usado quando a IA local entrar, em spec própria.
 - RN-20: o programa **nunca baixa nem instala nada sozinho** e nunca manda
   documento para lugar nenhum. O botão "instalar agora" abre um instalador que
   já está na máquina, e a confirmação do Windows é clicada por uma pessoa.
+  *(Emendada em 31/10/2026, pela spec 004: "nunca manda documento para lugar
+  nenhum" passa a valer com a IA desligada. "Nunca baixa nem instala nada" fica
+  inteira.)*
 - RN-21: o item "IA local da UFSC" aparece na escolha de motor, apagado, com a
   explicação de que depende de servidor que a TI ainda vai montar. Não há, neste
-  módulo, nenhum código que converse com motor remoto.
+  módulo, nenhum código que converse com motor remoto. *(Emendada em 31/10/2026:
+  o item passa a acender com a chave, nas regras RN-38 a RN-42 da spec 004.)*
 - RN-22: nada é guardado entre um uso e outro — nem histórico, nem preferência
   de motor, nem última pasta usada. *(A emenda de 18/10/2026 não mexe nesta
   regra: o PaddleOCR vir marcado é o padrão escrito no programa, e não uma
@@ -579,7 +587,8 @@ janela mínima de 900 px — sai no rascunho de tela, aprovado antes do código.
 
 - RN-25: a escolha do motor tem três itens, nesta ordem: **"PaddleOCR (nesta
   máquina)"**, "Tesseract (nesta máquina)" e "IA local" (apagada, RN-21). Ao
-  abrir o programa, o PaddleOCR vem marcado.
+  abrir o programa, o PaddleOCR vem marcado. *(Emendada em 31/10/2026: "IA local"
+  acende com a chave, RN-38 da spec 004.)*
 - RN-26: **o motor marcado é o que lê.** A escolha vale até a pessoa trocar ou
   fechar o programa, e cada módulo tem a sua. Nada disso é guardado: o PaddleOCR
   vir marcado é o padrão escrito no programa, e a RN-22 continua inteira.
@@ -712,6 +721,9 @@ lembrada de um uso para o outro.
   arquivo, com a senha dela no `.env`.
 - **Escolha compartilhada** entre pessoas ou entre máquinas.
 - **Escrever no `.env`**: ele continua sendo da TI, e o programa só o lê.
+  *(Emendado em 31/10/2026: a exceção é a linha do token, RN-11 da spec 004. O
+  critério byte a byte desta emenda continua valendo para as escolhas de motor e
+  de janela.)*
 
 ### Premissas da emenda
 
