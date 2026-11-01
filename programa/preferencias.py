@@ -52,10 +52,17 @@ def ler_bloco(secao):
     escrever "Tesseract" é entendido, em vez de ignorado calado (lente crítica
     da etapa 1).
     """
+    return {chave: valor.lower() for chave, valor in ler_bloco_exato(secao).items()}
+
+
+def ler_bloco_exato(secao):
+    """O mesmo bloco, sem mudar as maiúsculas: nome de modelo e endereço de
+    servidor distinguem maiúscula de minúscula, e em minúsculas deixariam de
+    achar o que a pessoa escolheu."""
     conteudo = _conteudo() or _vazio()
     if not conteudo.has_section(secao):
         return {}
-    return {chave: valor.strip().lower() for chave, valor in conteudo[secao].items()}
+    return {chave: valor.strip() for chave, valor in conteudo[secao].items()}
 
 
 def gravar(secao, chave, valor):

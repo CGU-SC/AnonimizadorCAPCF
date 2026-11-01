@@ -500,6 +500,11 @@ def test_o_anonimizar_inteiro_nao_fala_com_a_internet():
                  "arquivo_word"):
         assert peca in arquivos, peca
     for nome in arquivos:
+        # A única exceção, de olhos abertos: é o arquivo que fala com a IA, usado só
+        # com ela ligada (RN-44 da spec 004). Ele tem teste próprio, em
+        # test_rede_da_ia.py, e nenhum outro arquivo pode ter sinal de rede.
+        if nome == "rede_da_ia":
+            continue
         codigo = (PROGRAMA / f"{nome}.py").read_text(encoding="utf-8").lower()
         # Os endereços do formato do Word são os "sobrenomes" das marcações
         # dentro do .docx (o das palavras, o das ligações entre as peças),

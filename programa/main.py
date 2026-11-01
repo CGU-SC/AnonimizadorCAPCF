@@ -352,6 +352,7 @@ class JanelaPrincipal(QMainWindow):
         # que este fechar existe para evitar (revisão da etapa 7).
         self.painel_ocr.encerrar()
         self.painel_anonimizar.encerrar()
+        self.painel_ia.encerrar()
         # Só aqui, depois da pergunta de descartar: a janela que ficou de pé
         # porque a pessoa voltou para salvar ainda não fechou.
         self._lembrar_como_foi_fechada()

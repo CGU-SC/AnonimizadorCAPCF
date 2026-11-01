@@ -9,6 +9,8 @@ A causa é tela criada dentro de um teste e deixada para trás. Ela continua viv
 até o Python fechar, e aí é desmontada depois de o Qt já ter sido desligado.
 Desmontar cada uma no fim do teste que a criou resolve.
 """
+from pathlib import Path
+
 import pytest
 from PySide6.QtWidgets import QApplication
 
@@ -42,6 +44,22 @@ def preferencias_isoladas(tmp_path, monkeypatch):
     arquivo = tmp_path / "preferencias-do-teste.ini"
     monkeypatch.setattr(preferencias, "caminho", lambda: arquivo)
     return arquivo
+
+
+@pytest.fixture(autouse=True)
+def env_isolado(tmp_path, monkeypatch):
+    """O `.env` da raiz do projeto é o desta máquina, e o token vai para ele: teste
+    nenhum pode lê-lo nem gravá-lo (RN-45 da spec 004). Quem aponta outra pasta,
+    como os testes do motor, continua valendo."""
+    import configuracao
+    da_raiz = Path(__file__).resolve().parent.parent / ".env"
+    caminho_de_verdade = configuracao.caminho_do_env
+
+    def caminho():
+        caminho_pedido = caminho_de_verdade()
+        return tmp_path / ".env" if caminho_pedido == da_raiz else caminho_pedido
+
+    monkeypatch.setattr(configuracao, "caminho_do_env", caminho)
 
 
 @pytest.fixture(autouse=True)
