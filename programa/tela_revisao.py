@@ -34,9 +34,13 @@ from typing import NamedTuple
 import cpf
 import estilo
 import tipos_na_tela
+import avisos_da_ia
+import config_ia
+import revisao_ia
 from dupla_conferencia import liberar_mesmo_assim
 from linha_que_desce import LinhaQueDesce
 from lista_de_achados import ListaDeAchados, contexto
+from revisao_por_ia_na_tela import RevisaoPorIa
 
 AVISO_SEM_CPF = "Nenhum CPF encontrado neste texto"
 
@@ -66,6 +70,16 @@ def frase_do_que_ficou_de_fora(word):
 
 
 @dataclass(frozen=True)
+class TrechoDaIa:
+    """Um trecho que a IA achou frágil. Só é apontado: o texto não muda (RN-30)."""
+    inicio: int
+    fim: int
+    citacao: str
+    motivo: str
+    origem: str
+
+
+@dataclass(frozen=True)
 class Liberado:
     """Um número que passa na conta e vai inteiro para o arquivo (regra RN-11).
 
@@ -89,6 +103,7 @@ VALIDOS = "validos"
 SUSPEITOS = "suspeitos"
 LIBERADOS = "liberados"
 A_MAO = "a_mao"
+DA_IA = "da_ia"
 # O nome e a cor de cada grupo saem do `tipos_na_tela`, e não são escritos aqui:
 # o nome de um tipo já mudou duas vezes em quatro dias, e com ele escrito em
 # cada tela a lista e o aviso de antes de gravar podiam divergir.
@@ -103,12 +118,18 @@ class Grupo(NamedTuple):
 
 
 GRUPOS = {
+    # O número da IA conta só no grupo dela: ele não entra entre os CPFs válidos nem
+    # entre os suspeitos, porque quem o achou foi outra origem (rascunho 11).
     VALIDOS: Grupo(
-        lambda o: o.tipo == cpf.PASSA_NA_CONTA and o.situacao == cpf.MASCARADO,
+        lambda o: (o.tipo == cpf.PASSA_NA_CONTA and o.situacao == cpf.MASCARADO
+                   and not o.da_ia),
         _VALIDO.nome, _VALIDO.plural),
     SUSPEITOS: Grupo(
-        lambda o: o.suspeito and o.situacao == cpf.MASCARADO,
+        lambda o: o.suspeito and o.situacao == cpf.MASCARADO and not o.da_ia,
         tipos_na_tela.SUSPEITO.nome, tipos_na_tela.SUSPEITO.plural),
+    DA_IA: Grupo(
+        lambda o: o.da_ia and o.situacao == cpf.MASCARADO,
+        tipos_na_tela.DA_IA.nome, tipos_na_tela.DA_IA.plural),
     A_MAO: Grupo(
         lambda o: o.tipo == cpf.MASCARADO_A_MAO and o.situacao == cpf.MASCARADO,
         _A_MAO.nome, _A_MAO.plural),
@@ -138,6 +159,10 @@ class TelaRevisao(QWidget):
     def __init__(self, ao_anonimizar_outro, ao_salvar=None):
         super().__init__()
         self._ocorrencias = []
+        self._trechos = []
+        self._ao_salvar = ao_salvar
+        # A IA fica aqui, e não no painel: é a revisão que ela olha.
+        self.ia = RevisaoPorIa(self, self.receber_apontamentos)
         self._texto = ""
         # O texto como está na tela, e onde cada posição do documento foi parar
         # nele. Os dois são refeitos a cada desenho: o CPF sem o zero da frente
@@ -177,6 +202,8 @@ class TelaRevisao(QWidget):
         self.aviso_sem_cpf = self._montar_aviso_sem_cpf()
         layout.addWidget(self.aviso_sem_cpf)
         layout.addSpacing(estilo.ESPACO_2)
+        layout.addWidget(self.ia.limite)
+        layout.addWidget(self.ia.faixa)
 
         chave, acoes = self._montar_chave_de_cores()
         layout.addLayout(chave)
@@ -243,7 +270,7 @@ class TelaRevisao(QWidget):
             # e ele chegaria no lugar do primeiro parâmetro de quem for chamado.
             # Foi o que aconteceu aqui: o argumento caía no caminho de destino e
             # a tela de salvar morria calada, sem nada acontecer no clique.
-            self.botao_salvar.clicked.connect(lambda _=False: ao_salvar())
+            self.botao_salvar.clicked.connect(lambda _=False: self.salvar())
         rodape.addWidget(self.botao_salvar)
         botao_outro = QPushButton("Anonimizar outro documento")
         botao_outro.setCursor(Qt.PointingHandCursor)
@@ -264,26 +291,16 @@ class TelaRevisao(QWidget):
     # ------------------------------------------------------------- montagem
 
     def _montar_revisao_por_ia(self):
-        """O lugar da revisão das máscaras por IA local, a funcionalidade 4.
+        """O botão da revisão por IA, sempre com a linha embaixo.
 
-        Ela aparece apagada de propósito, e sempre com a linha embaixo - o
-        mesmo padrão da IA local na escolha do motor de leitura. Botão apagado
-        sozinho faz a pessoa clicar, nada acontecer, e concluir que o programa
-        quebrou.
+        Apagado sozinho, faria a pessoa clicar, nada acontecer, e concluir que o
+        programa quebrou: a linha diz onde ligar (rascunho 11). É também por ela que
+        quem nunca ligou a IA descobre que ela existe.
         """
         coluna = QVBoxLayout()
         coluna.setSpacing(estilo.ESPACO_1)
-        self.botao_revisar_com_ia = QPushButton("Revisar máscaras com IA local")
-        self.botao_revisar_com_ia.setEnabled(False)
-        self.botao_revisar_com_ia.setStyleSheet(estilo.estilo_botao(principal=False))
-        # Sem quebra automática de linha: a frase é curta, e a quebra do Qt
-        # reservaria a altura de uma linha só, cortando o resto.
-        self.explicacao_revisar_com_ia = QLabel("Funcionalidade a ser implementada")
-        self.explicacao_revisar_com_ia.setAlignment(Qt.AlignHCenter)
-        self.explicacao_revisar_com_ia.setStyleSheet(
-            f"font-size: {estilo.TEXTO_PEQUENO}px;"
-            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
-        )
+        self.botao_revisar_com_ia = self.ia.botao
+        self.explicacao_revisar_com_ia = self.ia.explicacao
         coluna.addWidget(self.botao_revisar_com_ia)
         coluna.addWidget(self.explicacao_revisar_com_ia)
         return coluna
@@ -308,6 +325,7 @@ class TelaRevisao(QWidget):
         # Verde a pedido da usuária (17/09/2026): marca uma decisão da pessoa.
         self.selo_liberados = _Selo(cor=tipos_na_tela.LIBERADO.cor,
                                     ao_clicar=lambda: self.filtrar(LIBERADOS))
+        self.selo_da_ia = _Selo(cor=estilo.COR_IA, ao_clicar=lambda: self.filtrar(DA_IA))
 
         # O título tem a linha dele, e os selos vão para a de baixo, descendo
         # mais uma quando não cabem. Na mesma linha, com os cinco acesos, título
@@ -320,6 +338,7 @@ class TelaRevisao(QWidget):
         selos.addWidget(self.selo_encontrados)
         selos.addWidget(self.selo_validos)
         selos.addWidget(self.selo_suspeitos)
+        selos.addWidget(self.selo_da_ia)
         selos.addWidget(self.selo_a_mao)
         selos.addWidget(self.selo_liberados)
         cabecalho.addLayout(selos)
@@ -335,9 +354,13 @@ class TelaRevisao(QWidget):
             cor=tipos_na_tela.SUSPEITO.cor)
         self.chave_a_mao = _amostra_da_chave(
             _A_MAO.nome, ondulado=False, cor=_A_MAO.cor, pontilhado=True)
+        self.chave_ia = _amostra_da_chave(
+            "da IA", ondulado=False, cor=estilo.COR_IA, traco_ponto=True)
+        self.chave_ia.setVisible(False)
         linha.addWidget(self.chave_valido)
         linha.addWidget(self.chave_suspeito)
         linha.addWidget(self.chave_a_mao)
+        linha.addWidget(self.chave_ia)
         linha.addStretch()
 
         # O botão e a navegação moram numa linha própria, abaixo da chave. Numa
@@ -513,10 +536,12 @@ class TelaRevisao(QWidget):
 
     # ------------------------------------------------------------------ uso
 
-    def mostrar(self, nome_da_origem, texto, ocorrencias, word=None):
+    def mostrar(self, nome_da_origem, texto, ocorrencias, word=None, paginas=None):
         """Abre a revisão do texto. `word` é o que ficou de fora do documento
-        do Word, para a faixa; nos outros tipos de arquivo, não há faixa."""
+        do Word, para a faixa; nos outros tipos de arquivo, não há faixa.
+        `paginas` são as páginas do PDF, para dizer até onde a IA chegou."""
         self._ocorrencias = list(ocorrencias)
+        self._trechos = []
         self._mostrar_faixa_do_word(word)
         # O texto de origem fica guardado porque a tela é redesenhada a cada
         # máscara desfeita ou refeita - e ela se redesenha a partir do original,
@@ -534,6 +559,7 @@ class TelaRevisao(QWidget):
             "mascara e se desfaz a máscara."
         )
         self._desenhar()
+        self.ia.novo_documento(texto, paginas)
 
     def ir_para(self, ocorrencia):
         """Leva o texto até o número e marca o item dele na lista."""
@@ -639,12 +665,15 @@ class TelaRevisao(QWidget):
         self.ir_para(destino)
 
     def _em_ordem(self):
-        """Os números que a navegação percorre agora, na ordem do texto."""
-        numeros = sorted(self._ocorrencias, key=lambda o: o.inicio)
+        """Os números que a navegação percorre agora, na ordem do texto. Os trechos da
+        IA entram também: a posição "N de M" bate com o que a lista mostra."""
+        numeros = sorted(self._ocorrencias + self._trechos, key=lambda o: o.inicio)
         if self._filtro is None:
             return numeros
         pertence = GRUPOS[self._filtro].pertence
-        return [o for o in numeros if pertence(o)]
+        return [o for o in numeros
+                if (self._filtro == DA_IA and isinstance(o, TrechoDaIa))
+                or (isinstance(o, cpf.Ocorrencia) and pertence(o))]
 
     def _atualizar_navegacao(self):
         # Um grupo que ficou vazio - o último liberado foi mascarado de novo -
@@ -653,13 +682,13 @@ class TelaRevisao(QWidget):
             self._filtro = None
         for grupo, selo in ((None, self.selo_encontrados), (VALIDOS, self.selo_validos),
                             (SUSPEITOS, self.selo_suspeitos), (A_MAO, self.selo_a_mao),
-                            (LIBERADOS, self.selo_liberados)):
+                            (DA_IA, self.selo_da_ia), (LIBERADOS, self.selo_liberados)):
             selo.acender(self._filtro is not None and grupo == self._filtro)
 
         # Sem nenhum número, a navegação não tem para onde ir - e botão que não
         # leva a lugar nenhum é lido como defeito.
         for peca in (self.botao_anterior, self.posicao, self.botao_proximo):
-            peca.setVisible(bool(self._ocorrencias))
+            peca.setVisible(bool(self._ocorrencias or self._trechos))
 
         numeros = self._em_ordem()
         indice = next((i for i, o in enumerate(numeros) if o is self._atual), None)
@@ -738,9 +767,108 @@ class TelaRevisao(QWidget):
         self._desenhar()
         self.ir_para(ocorrencia)
 
+    def receber_apontamentos(self, apontamentos, pedaco):
+        """O que a IA apontou num pedaço. Quem mexe no texto é o programa (RN-28)."""
+        origem = _origem_do_destino()
+        novos = False
+        for apontamento in apontamentos:
+            if apontamento.tipo == revisao_ia.NUMERO:
+                novos |= self._apontar_numero(apontamento, pedaco, origem)
+            else:
+                novos |= self._apontar_trecho(apontamento, pedaco, origem)
+        if novos:
+            self._redesenhar_no_lugar()
+
+    def _apontar_numero(self, apontamento, pedaco, origem):
+        achou = False
+        for inicio, fim in _onde_aparece(self._texto, apontamento.citacao, 0, len(self._texto)):
+            # Colado a outro dígito, é pedaço de um número maior, e não esse número.
+            if ((inicio and self._texto[inicio - 1].isdigit())
+                    or (fim < len(self._texto) and self._texto[fim].isdigit())):
+                continue
+            ja_listados = [o for o in self._ocorrencias
+                           if o.inicio < fim and inicio < o.fim]
+            if ja_listados:
+                # Comentário, e nada mais: nem a seção, nem a contagem, nem a máscara
+                # mudam, e o que a pessoa já liberou continua liberado (RN-31).
+                for ocorrencia in ja_listados:
+                    if ocorrencia.comentario != apontamento.motivo and apontamento.motivo:
+                        ocorrencia.comentario = apontamento.motivo
+                        achou = True
+                continue
+            ocorrencia = cpf.mascarar_apontado(self._texto, inicio, fim, origem,
+                                               apontamento.motivo)
+            if ocorrencia is not None:
+                self._ocorrencias.append(ocorrencia)
+                self._ocorrencias.sort(key=lambda o: o.inicio)
+                achou = True
+        # Sem como mascarar, ele continua apontado: curto demais para ser um CPF, mas a
+        # IA achou que vale olhar (RN-30).
+        return achou or self._apontar_trecho(apontamento, pedaco, origem)
+
+    def _apontar_trecho(self, apontamento, pedaco, origem):
+        for inicio, fim in _onde_aparece(self._texto, apontamento.citacao,
+                                         pedaco.inicio, pedaco.fim):
+            if any(t.inicio == inicio and t.fim == fim for t in self._trechos):
+                return False
+            # Em cima de um número já na lista, o trecho só repetiria o que ele mostra.
+            if any(o.inicio <= inicio and fim <= o.fim for o in self._ocorrencias):
+                return False
+            self._trechos.append(TrechoDaIa(inicio, fim, apontamento.citacao,
+                                            apontamento.motivo, origem))
+            return True
+        # Não está no texto: modelo às vezes inventa, e não há onde apontar (RN-32).
+        return False
+
+    def _redesenhar_no_lugar(self):
+        """Redesenha sem tirar a pessoa de onde ela está.
+
+        A IA responde enquanto a pessoa trabalha (RN-36). Sem isto, cada pedaço que
+        chega mandaria o texto para o começo e apagaria o trecho que ela estava
+        marcando com o mouse.
+        """
+        barra_do_texto = self.texto.verticalScrollBar().value()
+        barra_da_lista = self.lista.verticalScrollBar().value()
+        cursor = self.texto.textCursor()
+        marcado = None
+        if cursor.hasSelection():
+            marcado = (self._no_documento(cursor.selectionStart()),
+                       self._no_documento(cursor.selectionEnd()))
+        botao_aceso = self.botao_mascarar.isEnabled()
+        self._desenhar()
+        if marcado is not None:
+            cursor = self.texto.textCursor()
+            cursor.setPosition(self._no_qt(marcado[0]))
+            cursor.setPosition(self._no_qt(marcado[1]), QTextCursor.KeepAnchor)
+            self._selecionando = True
+            self.texto.setTextCursor(cursor)
+            self._selecionando = False
+        self.botao_mascarar.setEnabled(botao_aceso)
+        if self._atual is not None:
+            self.lista.marcar(self._atual)
+        self.lista._layout.activate()
+        self.texto.verticalScrollBar().setValue(barra_do_texto)
+        self.lista.verticalScrollBar().setValue(barra_da_lista)
+
+    def salvar(self):
+        """Com a IA ainda rodando, pergunta antes de salvar (RN-34)."""
+        if self.ia.rodando():
+            if not avisos_da_ia.exibir(
+                    "A IA ainda está revisando",
+                    ["Salvando agora, o resto do documento fica sem o segundo par de olhos."],
+                    "Salvar mesmo assim", "Voltar à revisão", pai=self):
+                return
+            self.ia.cancelar()
+        self._ao_salvar()
+
+    def showEvent(self, evento):
+        # A IA pode ter sido ligada ou desligada nas Configurações de IA.
+        self.ia.atualizar()
+        super().showEvent(evento)
+
     def _desenhar(self):
         self._escrever(self._texto)
-        self.lista.mostrar(self._texto, self._ocorrencias)
+        self.lista.mostrar(self._texto, self._ocorrencias, self._trechos)
         self._atualizar_contagem()
         self._atualizar_navegacao()
 
@@ -798,7 +926,7 @@ class TelaRevisao(QWidget):
         # mascarados, e, com tudo liberado, separava por tipo uma lista vazia e
         # quebrava, sem a tela de salvar abrir (revisão da etapa 7 da
         # funcionalidade 6, 22/10/2026; estava assim desde 18/09/2026).
-        mascarados = contas[VALIDOS] + contas[SUSPEITOS] + contas[A_MAO]
+        mascarados = contas[VALIDOS] + contas[SUSPEITOS] + contas[DA_IA] + contas[A_MAO]
         if not mascarados:
             return "Nenhum número foi mascarado neste texto."
         quantos = (f"{mascarados} números mascarados" if mascarados != 1
@@ -806,7 +934,7 @@ class TelaRevisao(QWidget):
         if not por_tipo:
             return f"{quantos}."
         partes = []
-        for grupo in (VALIDOS, SUSPEITOS, A_MAO):
+        for grupo in (VALIDOS, SUSPEITOS, DA_IA, A_MAO):
             if contas[grupo]:
                 do_grupo = GRUPOS[grupo]
                 partes.append(f"{contas[grupo]} "
@@ -826,7 +954,7 @@ class TelaRevisao(QWidget):
         documento não se perde - ele continua no arquivo de origem, que o
         programa nunca altera.
         """
-        return bool(self._ocorrencias)
+        return bool(self._ocorrencias or self._trechos)
 
     def resumo_do_que_se_perde(self):
         """O que some se a revisão for descartada, contado por tipo.
@@ -836,7 +964,7 @@ class TelaRevisao(QWidget):
         - um número liberado, um trecho mascarado à mão - é.
         """
         contas = quantos_em_cada_grupo(self._ocorrencias)
-        mascarados = contas[VALIDOS] + contas[SUSPEITOS] + contas[A_MAO]
+        mascarados = contas[VALIDOS] + contas[SUSPEITOS] + contas[DA_IA] + contas[A_MAO]
         frase = (f"{mascarados} números mascarados" if mascarados != 1
                  else "1 número mascarado")
         dela = []
@@ -854,7 +982,9 @@ class TelaRevisao(QWidget):
         return sorted(self._ocorrencias, key=lambda o: o.inicio)
 
     def esquecer(self):
+        self.ia.esquecer()
         self._ocorrencias = []
+        self._trechos = []
         self._texto = ""
         self._mostrado = ""
         self._na_saida = [0]
@@ -920,6 +1050,11 @@ class TelaRevisao(QWidget):
             cursor.setPosition(self._no_qt(ocorrencia.inicio))
             cursor.setPosition(self._no_qt(ocorrencia.fim), QTextCursor.KeepAnchor)
             cursor.setCharFormat(_formato_de_liberado())
+        for trecho in self._trechos:
+            cursor.setPosition(self._no_qt(trecho.inicio))
+            cursor.setPosition(self._no_qt(trecho.fim), QTextCursor.KeepAnchor)
+            # Por cima, sem apagar: um número dentro do trecho continua com o traço dele.
+            cursor.mergeCharFormat(_formato_de_trecho())
         # O cursor volta ao começo para a tela abrir no alto do documento.
         self.texto.moveCursor(QTextCursor.Start)
 
@@ -932,6 +1067,10 @@ class TelaRevisao(QWidget):
         suspeitos = [o for o in self._ocorrencias if GRUPOS[SUSPEITOS].pertence(o)]
         a_mao = [o for o in self._ocorrencias if GRUPOS[A_MAO].pertence(o)]
         liberados = [o for o in self._ocorrencias if GRUPOS[LIBERADOS].pertence(o)]
+        da_ia = sum(1 for o in self._ocorrencias if GRUPOS[DA_IA].pertence(o)) + len(self._trechos)
+        self.selo_da_ia.setText(f"{da_ia} da IA")
+        self.selo_da_ia.setVisible(bool(da_ia))
+        self.chave_ia.setVisible(bool(da_ia))
 
         tem_cpf = bool(self._ocorrencias)
         self.aviso_sem_cpf.setVisible(not tem_cpf)
@@ -967,6 +1106,39 @@ class TelaRevisao(QWidget):
         # O selo só existe quando houve o que liberar: aviso que aparece sem
         # motivo ensina a não olhar para ele.
         self.selo_liberados.setVisible(bool(liberados))
+
+
+def _origem_do_destino():
+    """De onde veio o apontamento: a IA, o destino e o modelo (RN-29)."""
+    destino = config_ia.destino_ligado()
+    if destino is None:
+        return "IA"
+    return (f"IA · {config_ia.NOME_NA_TELA[destino]} · "
+            f"{config_ia.modelo_da_revisora(destino)}")
+
+
+def _onde_aparece(texto, citacao, inicio, fim):
+    """Toda vez que a citação aparece, exatamente como a IA a copiou."""
+    posicao = texto.find(citacao, inicio, fim)
+    while posicao != -1:
+        yield posicao, posicao + len(citacao)
+        posicao = texto.find(citacao, posicao + len(citacao), fim)
+
+
+def _formato_de_trecho():
+    """O fundo lilás e o traço-ponto do trecho que a IA achou frágil.
+
+    Traço próprio porque reto, ondulado, tracejado e pontilhado já têm dono, e o traço
+    é o que separa os tipos para quem não distingue bem as cores.
+    """
+    formato = QTextCharFormat()
+    cor = QColor(estilo.COR_IA)
+    fundo = QColor(estilo.COR_IA)
+    fundo.setAlpha(36)
+    formato.setBackground(fundo)
+    formato.setUnderlineColor(cor)
+    formato.setUnderlineStyle(QTextCharFormat.DashDotLine)
+    return formato
 
 
 def _juntar(partes):
@@ -1031,7 +1203,10 @@ def _formato(ocorrencia):
     o mais perigoso, que precisa saltar aos olhos.
     """
     formato = QTextCharFormat()
-    if ocorrencia.tipo == cpf.MASCARADO_A_MAO:
+    if ocorrencia.da_ia:
+        cor = QColor(estilo.COR_IA)
+        traco = QTextCharFormat.DashDotLine
+    elif ocorrencia.tipo == cpf.MASCARADO_A_MAO:
         # Traço próprio para o que a pessoa mascarou: azul e duplo, como o
         # rascunho aprovado mostra. Ele não é achado do programa, e misturá-lo
         # com o vermelho do "CPF válido" faria a contagem do alto mentir.
@@ -1082,7 +1257,7 @@ class _Selo(QLabel):
         super().mousePressEvent(evento)
 
 
-def _amostra_da_chave(nome, ondulado, cor, pontilhado=False):
+def _amostra_da_chave(nome, ondulado, cor, pontilhado=False, traco_ponto=False):
     """Um pedacinho "XXX" com o traço do tipo, e o nome dele ao lado.
 
     É um pedaço de texto, e não um rótulo comum, porque o traço ondulado só
@@ -1102,7 +1277,9 @@ def _amostra_da_chave(nome, ondulado, cor, pontilhado=False):
     marcado = QTextCharFormat()
     marcado.setForeground(QColor(cor))
     marcado.setUnderlineColor(QColor(cor))
-    if pontilhado:
+    if traco_ponto:
+        traco = QTextCharFormat.DashDotLine
+    elif pontilhado:
         traco = QTextCharFormat.DotLine
     elif ondulado:
         traco = QTextCharFormat.WaveUnderline

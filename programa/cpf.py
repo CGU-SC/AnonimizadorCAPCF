@@ -136,6 +136,17 @@ class Ocorrencia:
     # Quantos zeros da frente o CPF tinha perdido: 1 com 10 dígitos, 2 com 9.
     # Zero em todo o resto.
     sem_zero: int = 0
+    # Quem apontou e por quê, quando foi a IA que achou o número (spec 004). A máscara
+    # é a de sempre, feita aqui: a IA nunca escreve o texto (RN-28).
+    origem: str | None = None
+    motivo_da_origem: str | None = None
+    # O que a IA disse sobre um número que já estava na lista: nunca muda a seção, a
+    # contagem nem a máscara dele (RN-31).
+    comentario: str | None = None
+
+    @property
+    def da_ia(self):
+        return self.origem is not None
 
     @property
     def suspeito(self):
@@ -247,6 +258,35 @@ def mascarar_a_mao(texto, inicio, fim):
         tipo=MASCARADO_A_MAO,
         passa_na_conta=False,
     )
+
+
+# Menos que isto não dá um CPF, nem estragado: é um ano, um valor, um número de
+# página. O número curto apontado pela IA fica só apontado, sem máscara (RN-30).
+MINIMO_DE_DIGITOS_DO_APONTADO = 8
+
+
+def mascarar_apontado(texto, inicio, fim, origem, motivo):
+    """A máscara de um número que a IA apontou e o programa não tinha achado (RN-30).
+
+    A mesma máscara do trecho marcado à mão, feita aqui, e não pela IA. O tipo diz se
+    ele passa na conta: é o que pede a dupla conferência para soltá-lo, como em
+    qualquer número (RN-10). Devolve None quando não dá para mascarar, e ele fica só
+    apontado.
+    """
+    trecho = texto[inicio:fim]
+    if not any(letra.isdigit() for letra in trecho):
+        return None
+    posicoes = _posicoes_do_trecho(trecho)
+    if len(posicoes) < MINIMO_DE_DIGITOS_DO_APONTADO:
+        return None
+    ocorrencia = mascarar_a_mao(texto, inicio, fim)
+    digitos = "".join(LETRA_PARECIDA_COM_DIGITO.get(trecho[i], trecho[i]) for i in posicoes)
+    fecha = passa_na_conta(digitos)
+    ocorrencia.tipo = PASSA_NA_CONTA if fecha else FALHA_NA_CONTA
+    ocorrencia.passa_na_conta = fecha
+    ocorrencia.origem = origem
+    ocorrencia.motivo_da_origem = motivo
+    return ocorrencia
 
 
 def aplicar(texto, ocorrencias):

@@ -510,7 +510,8 @@ class PainelAnonimizar(QWidget):
         self._conferindo = False
         # As páginas viram um texto só, separadas por linha em branco - o mesmo
         # arranjo com que elas vão para o arquivo (RN-12).
-        self._abrir_revisao(arquivo_md.montar_conteudo(self.pdf.texto_conferido()))
+        paginas = self.pdf.texto_conferido()
+        self._abrir_revisao(arquivo_md.montar_conteudo(paginas), paginas=paginas)
 
     def receber_texto_conferido(self, caminho, paginas):
         """O texto conferido no Gerar OCR chega para ser revisado (RN-16).
@@ -536,9 +537,9 @@ class PainelAnonimizar(QWidget):
         # O texto veio de um PDF: a quebra de linha do arquivo gravado é a
         # simples, e não tem de onde ser herdada.
         self._quebra_da_origem = arquivo_texto.QUEBRA_SIMPLES
-        self._abrir_revisao(arquivo_md.montar_conteudo(paginas))
+        self._abrir_revisao(arquivo_md.montar_conteudo(paginas), paginas=paginas)
 
-    def _abrir_revisao(self, texto, word=None):
+    def _abrir_revisao(self, texto, word=None, paginas=None):
         """O único jeito de abrir a revisão, venha o texto de onde vier.
 
         Os três caminhos terminam aqui - o arquivo de texto, o PDF lido neste
@@ -546,7 +547,7 @@ class PainelAnonimizar(QWidget):
         abrir a revisão nunca entre em dois deles e esqueça o terceiro.
         """
         self.tela_revisao.mostrar(self._origem.name, texto, cpf.procurar(texto),
-                                  word)
+                                  word, paginas)
         self.telas.setCurrentWidget(self.tela_revisao)
 
     def encerrar(self):
@@ -556,6 +557,7 @@ class PainelAnonimizar(QWidget):
         programa, e o Windows mostra a caixa de "parou de funcionar".
         """
         self.pdf.abandonar_leitura()
+        self.tela_revisao.ia.encerrar()
 
     def _comecou_a_conferencia(self):
         self._conferindo = True

@@ -79,6 +79,13 @@ Source: "modelo.env"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexi
 ; Atualizar mantém o arquivo: o instalador não o traz, e não o apaga.
 Type: files; Name: "{app}\preferencias.ini"
 Type: files; Name: "{app}\preferencias.ini.*.gravando"
+; O .env pode ter o token do servidor de IA, e quem desinstala não deixa senha para
+; trás (RN-14 da spec 004). Vai inteiro, e não só a linha: instalando de novo, a pasta
+; do Tesseract, se a TI a tiver escrito, precisa ser escrita outra vez. Atualizar não
+; passa aqui, e o .env fica como está. O ".gravando" é o provisório de uma gravação
+; cortada, que pode ter o token dentro.
+Type: files; Name: "{app}\.env"
+Type: files; Name: "{app}\.env.*.gravando"
 
 [Icons]
 Name: "{autoprograms}\{#Nome}"; Filename: "{app}\{#Executavel}"

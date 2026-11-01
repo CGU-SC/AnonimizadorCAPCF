@@ -63,6 +63,9 @@ class Frase(QLabel):
                  forte=False):
         super().__init__()
         self._largura = largura
+        # Texto puro: o motivo vem da IA, e um "<b>" escrito por ela não pode mudar a
+        # tela (RN-28).
+        self.setTextFormat(Qt.PlainText)
         self.setWordWrap(True)
         self.setFixedWidth(largura)
         tamanho = estilo.TEXTO_PEQUENO if pequeno else estilo.TEXTO_BASE

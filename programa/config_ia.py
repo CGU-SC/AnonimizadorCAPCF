@@ -47,6 +47,15 @@ def guardar_do_destino(nome, **valores):
     preferencias.gravar_juntos(_BLOCO_DO_DESTINO[nome], valores)
 
 
+def base_do_destino(nome):
+    """O começo do endereço de um destino. Quem sabe escrevê-lo é o arquivo da rede,
+    carregado só aqui, na hora de usar."""
+    import rede_da_ia
+    if nome == LM_STUDIO:
+        return rede_da_ia.base_do_lm_studio(porta_do_lm_studio())
+    return rede_da_ia.base_do_endereco(endereco_do_servidor())
+
+
 def porta_do_lm_studio():
     try:
         porta = int(do_destino(LM_STUDIO).get("porta", PORTA_PADRAO))

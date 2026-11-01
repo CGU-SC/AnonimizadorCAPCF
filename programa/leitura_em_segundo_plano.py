@@ -11,6 +11,7 @@ acontecendo.
 """
 from PySide6.QtCore import QThread, Signal
 
+import motor_ia
 from leitura import (
     MOTOR_TESSERACT,
     LeituraCancelada,
@@ -42,6 +43,9 @@ class LeituraEmSegundoPlano(QThread):
         máximo uma página - cerca de um segundo e meio.
         """
         self._pediram_para_cancelar = True
+        # A IA é a exceção: um modelo pode levar minutos numa página, e esperar por
+        # isso seria a janela parada. Aí a espera é cortada, sem mexer em nada.
+        motor_ia.cancelar()
 
     def run(self):
         try:

@@ -4,9 +4,10 @@ Este arquivo não sabe que existe uma janela: ele avisa o andamento e pergunta
 se foi cancelado através de duas funções que quem chama entrega. É isso que
 permite testar a leitura sem abrir o programa.
 
-Nada aqui sai da máquina. Os dois motores leem na própria máquina - o
-Tesseract, instalado no Windows; o PaddleOCR, dentro do programa -, e o
-documento não viaja para lugar nenhum.
+Nada aqui sai da máquina. O Tesseract e o PaddleOCR leem na própria máquina - o
+Tesseract, instalado no Windows; o PaddleOCR, dentro do programa. Só a IA local,
+com a chave ligada, manda a página para o destino configurado, e isso mora no
+`motor_ia.py`, e não aqui (spec 004).
 """
 import io
 
@@ -14,18 +15,20 @@ import pymupdf
 import pytesseract
 from PIL import Image
 
+import motor_ia
 import motor_paddleocr
 from disposicao import montar
 from motor import localizar_tesseract, tem_o_detector
 
-# Os motores que a escolha da tela oferece (emenda de 18/10/2026 da spec 002).
-# A IA local, quando for construída, entra aqui como mais um nome, com a sua
-# própria maneira de preparar e de ler uma página.
+# Os motores que a escolha da tela oferece (emenda de 18/10/2026 da spec 002, e
+# spec 004).
 MOTOR_PADDLEOCR = "paddleocr"
 MOTOR_TESSERACT = "tesseract"
+MOTOR_IA = "ia_local"
 NOME_NA_TELA = {
     MOTOR_PADDLEOCR: "PaddleOCR",
     MOTOR_TESSERACT: "Tesseract",
+    MOTOR_IA: "IA local",
 }
 
 # 300 pontos por polegada é a densidade que o Tesseract recomenda para texto
@@ -52,6 +55,10 @@ SEGUNDOS_POR_PAGINA = {
 
 def tempo_estimado(paginas, motor):
     """Uma frase curta com quanto a leitura deve levar com este motor."""
+    if motor == MOTOR_IA:
+        # Depende do modelo e da máquina, e um número aqui seria inventado (premissa
+        # da spec 004).
+        return "um tempo que depende do modelo"
     segundos = round(paginas * SEGUNDOS_POR_PAGINA[motor])
     if segundos < 60:
         return f"uns {segundos} segundos"
@@ -160,6 +167,21 @@ def _ler_pagina_endireitada_com_paddleocr(pagina):
     return motor_paddleocr.ler(_endireitar(_desenhar(pagina)), virar_linhas=False)
 
 
+def _preparar_ia():
+    try:
+        motor_ia.preparar()
+    except motor_ia.IaIndisponivel as problema:
+        raise MotorNaoEncontrado(str(problema)) from problema
+
+
+def _ler_pagina_com_ia(pagina):
+    return motor_ia.ler(_desenhar(pagina))
+
+
+def _ler_pagina_endireitada_com_ia(pagina):
+    return motor_ia.ler(_endireitar(_desenhar(pagina)))
+
+
 def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
                   motor=MOTOR_TESSERACT):
     """Lê o documento inteiro e devolve o texto de cada página, em ordem.
@@ -173,7 +195,16 @@ def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
     Tesseract é o padrão aqui, e não na tela, para quem chama sem dizer o motor
     continuar recebendo a leitura de sempre.
     """
-    if motor == MOTOR_PADDLEOCR:
+    if motor == MOTOR_IA:
+        _preparar_ia()
+        # O detector do Tesseract endireita a página também para a IA, como faz para
+        # o PaddleOCR (RN-28 da spec 002).
+        if orientacao_conferida(motor):
+            preparar_motor()
+            ler_pagina = _ler_pagina_endireitada_com_ia
+        else:
+            ler_pagina = _ler_pagina_com_ia
+    elif motor == MOTOR_PADDLEOCR:
         if orientacao_conferida(motor):
             _preparar_paddleocr(virar_linhas=False)
             # O detector é do Tesseract: ele precisa saber onde o Tesseract mora.
@@ -201,6 +232,8 @@ def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
                 paginas.append(ler_pagina(documento[indice]))
             except LeituraCancelada:
                 raise
+            except motor_ia.LeituraInterrompida as parada:
+                raise LeituraCancelada(numero) from parada
             except Exception as problema:
                 raise LeituraFalhou(
                     numero,

@@ -32,9 +32,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+import avisos_da_ia
+import config_ia
 import estilo
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
-from leitura import MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
+from leitura import MOTOR_IA, MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
+from pecas_da_ia import Frase
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
 from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
 from tela_decisao import TelaDecisao
@@ -236,6 +239,11 @@ class CaminhoDoPdf:
             # Chega aqui quem mandou ignorar o texto que já estava no documento,
             # ou quem viu o motor sumir com o programa aberto.
             self._ao_faltar_motor(ficha)
+            return
+        # Antes de a página sair: sem confirmar o endereço, a pessoa fica onde estava,
+        # e nada é enviado (RN-20 da spec 004).
+        if (self._motor_escolhido() == MOTOR_IA
+                and not avisos_da_ia.pode_usar_o_destino(self.tela_lendo)):
             return
         self.tela_lendo.comecar(ficha)
         self._mostrar(self.tela_lendo)
@@ -863,6 +871,10 @@ def _resumo(frase, tempo):
     return linha
 
 
+FRASE_DA_IA_ACESA = ("Lê pior que os outros dois, e a página vai com os CPFs inteiros. "
+                     "Tempo: depende do modelo.")
+
+
 class EscolhaDoMotor(QWidget):
     """A escolha do motor de leitura: o PaddleOCR, marcado; o Tesseract; e a IA
     local, apagada (RN-25 da emenda de 18/10/2026).
@@ -904,33 +916,65 @@ class EscolhaDoMotor(QWidget):
         self._lugar_das_saidas.setContentsMargins(22, 0, 0, 0)
         self._lugar_das_saidas.setSpacing(estilo.ESPACO_1)
 
-        # A IA local aparece e não funciona de propósito: ainda não foi
-        # construída. "Local" porque ela poderá rodar na própria máquina da
-        # pessoa, e não só num servidor da UFSC (backlog, 23/09/2026). Nenhuma
-        # linha do programa conversa com motor de fora da máquina - e ele nunca
-        # será de empresa de fora da UFSC.
+        # "Local" porque ela roda na própria máquina da pessoa ou num servidor
+        # interno. Fica apagada até a chave ser ligada, com a frase embaixo dizendo
+        # onde (RN-38 da spec 004): apagada sozinha, pareceria quebrada.
         self.ia_local = QRadioButton("IA local")
         self.ia_local.setEnabled(False)
         self.ia_local.setStyleSheet(estilo_do_radio(apagado=True))
+        self.frase_da_ia = Frase()
+        # A marca que saiu da IA fica dita até a pessoa marcar outra coisa.
+        self._frase_da_troca = ""
 
         for peca in (self.paddleocr, self.resumo_paddleocr, self.falta_paddleocr,
                      self.tesseract, self.resumo_tesseract, self.falta_tesseract,
-                     self.saidas_do_tesseract, self.ia_local,
-                     _linha_de_explicacao("Funcionalidade a ser implementada")):
+                     self.saidas_do_tesseract, self.ia_local, self.frase_da_ia):
             layout.addWidget(peca)
 
         # A escolha lembrada da última vez vem marcada, como se a pessoa tivesse
         # acabado de marcar: a tela não diz nada a mais (RN-36). Sem lembrança,
         # fica o PaddleOCR, o padrão (RN-25).
         self._lembranca = lembranca
-        if lembranca and lembranca.motor() == MOTOR_TESSERACT:
+        lembrado = lembranca.motor() if lembranca else None
+        if lembrado == MOTOR_TESSERACT:
             self.tesseract.setChecked(True)
+        elif lembrado == MOTOR_IA:
+            self.ia_local.setChecked(True)
         # Ligado só depois de pôr a lembrança, e valendo para qualquer troca de
         # marca - a da pessoa e a do programa, quando o motor lembrado falta e a
         # marca passa ao outro (RN-37): as duas são lembradas na hora.
         if lembranca:
             self.paddleocr.toggled.connect(self._lembrar)
             self.tesseract.toggled.connect(self._lembrar)
+            self.ia_local.toggled.connect(self._lembrar)
+        self.atualizar_ia()
+
+    def atualizar_ia(self):
+        """Acerta a linha da IA conforme as Configurações de IA de agora (RN-38).
+
+        Sem a chave, a marca passa a outro motor, e a troca aparece: o programa
+        nunca troca de motor calado (RN-29 da spec 002). A troca vale como escolha
+        nova, e é lembrada, como a do motor que falta (RN-37 da spec 002).
+        """
+        ativa = config_ia.motor_ativo()
+        self.ia_local.setEnabled(ativa)
+        self.ia_local.setStyleSheet(estilo_do_radio(apagado=not ativa))
+        destino = config_ia.destino_ligado()
+        self.ia_local.setText(f"IA local ({config_ia.NOME_NA_TELA[destino]})" if ativa else "IA local")
+        if ativa:
+            self._frase_da_troca = ""
+            frase = FRASE_DA_IA_ACESA
+        elif self.ia_local.isChecked():
+            self.paddleocr.setChecked(True)
+            self._frase_da_troca = "A marca passou a outro motor porque a IA foi desligada."
+            frase = self._frase_da_troca
+        elif self._frase_da_troca:
+            frase = self._frase_da_troca
+        elif config_ia.motor_ligado():
+            frase = "Escolha o modelo do motor em Configurações de IA."
+        else:
+            frase = 'Ligue em Configurações de IA, em "Habilitar IA".'
+        self.frase_da_ia.setText(frase)
 
     def _lembrar(self, marcado):
         # Cada troca acende um botão e apaga o outro; só o que acendeu grava.
@@ -952,6 +996,7 @@ class EscolhaDoMotor(QWidget):
         a marca passa para o outro - e a troca aparece na tela, com a linha
         apagada explicando: o programa nunca troca de motor calado (RN-29).
         """
+        self.atualizar_ia()
         self._mostrar_motor(self.paddleocr, self.resumo_paddleocr,
                             self.falta_paddleocr, paddleocr_presente,
                             FALTA_PADDLEOCR)
@@ -979,6 +1024,8 @@ class EscolhaDoMotor(QWidget):
 
     def marcado(self):
         """O motor que vai ler o próximo documento: o marcado é o que lê."""
+        if self.ia_local.isChecked():
+            return MOTOR_IA
         if self.tesseract.isChecked():
             return MOTOR_TESSERACT
         return MOTOR_PADDLEOCR

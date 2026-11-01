@@ -23,6 +23,9 @@ COR_ERRO = "#d9534f"
 # abaixo do mínimo de leitura para letra pequena. Este tem 6,6:1. É ele que
 # marca o "forma CPF válido" na revisão.
 COR_ERRO_TEXTO = "#f08a86"
+# O que veio da IA na revisão (spec 004). Lilás porque amarelo, vermelho, azul e verde
+# já têm dono. Contraste de 6,7:1 sobre o fundo e 5,9:1 sobre o fundo elevado.
+COR_IA = "#b39ddb"
 
 FONTE_MONO = '"Cascadia Mono", "Consolas", monospace'
 

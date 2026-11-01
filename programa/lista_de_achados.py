@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 import cpf
 import estilo
 import tipos_na_tela
+from pecas_da_ia import Frase
 
 LARGURA = 330
 
@@ -69,17 +70,20 @@ class ListaDeAchados(QScrollArea):
         self._layout.setSpacing(estilo.ESPACO_2)
         self.setWidget(self._dentro)
 
-    def mostrar(self, texto, ocorrencias):
+    def mostrar(self, texto, ocorrencias, trechos=()):
         """Monta a lista inteira de novo, na ordem das seções."""
         self._limpar()
         self._itens = {}
 
-        suspeitos = [o for o in ocorrencias if o.suspeito]
-        validos = [o for o in ocorrencias if o.tipo == cpf.PASSA_NA_CONTA]
-        a_mao = [o for o in ocorrencias if o.tipo == cpf.MASCARADO_A_MAO]
+        # O número da IA fica só na seção dela, e cada número aparece uma vez só.
+        da_ia = [o for o in ocorrencias if o.da_ia]
+        do_programa = [o for o in ocorrencias if not o.da_ia]
+        suspeitos = [o for o in do_programa if o.suspeito]
+        validos = [o for o in do_programa if o.tipo == cpf.PASSA_NA_CONTA]
+        a_mao = [o for o in do_programa if o.tipo == cpf.MASCARADO_A_MAO]
 
         self._layout.addWidget(_titulo_da_lista("O que o programa achou"))
-        if not ocorrencias:
+        if not ocorrencias and not trechos:
             self._layout.addWidget(_nada_para_olhar())
         # O número do título conta o que continua mascarado, igual ao selo do
         # alto; o item liberado continua listado no mesmo lugar, para ser
@@ -88,6 +92,7 @@ class ListaDeAchados(QScrollArea):
         self._montar_secao(
             f"{tipos_na_tela.SUSPEITO.plural.capitalize()} — olhe estes "
             f"{_ainda_mascarados(suspeitos)}", suspeitos, texto)
+        self._montar_secao_da_ia(da_ia, trechos, texto)
         self._montar_secao(
             f"{tipos_na_tela.POR_TIPO[cpf.PASSA_NA_CONTA].nome} "
             f"{_ainda_mascarados(validos)}", validos, texto)
@@ -142,6 +147,24 @@ class ListaDeAchados(QScrollArea):
                 ao_mascarar_de_novo=self._ao_mascarar_de_novo,
             )
             self._itens[id(ocorrencia)] = item
+            self._layout.addWidget(item)
+
+    def _montar_secao_da_ia(self, numeros, trechos, texto):
+        """Abaixo dos suspeitos e acima dos CPFs válidos (rascunho 11)."""
+        if not numeros and not trechos:
+            return
+        self._layout.addSpacing(estilo.ESPACO_2)
+        self._layout.addWidget(_titulo_de_secao(
+            f"{tipos_na_tela.TITULO_DA_SECAO_DA_IA} "
+            f"{_ainda_mascarados(numeros) + len(trechos)}", cor=estilo.COR_IA))
+        for item_da_ia in sorted(list(numeros) + list(trechos), key=lambda i: i.inicio):
+            if isinstance(item_da_ia, cpf.Ocorrencia):
+                item = _Item(item_da_ia, texto, ao_clicar=self._ao_ir_para,
+                             ao_liberar=self._ao_liberar,
+                             ao_mascarar_de_novo=self._ao_mascarar_de_novo)
+            else:
+                item = _ItemDeTrecho(item_da_ia, ao_clicar=self._ao_ir_para)
+            self._itens[id(item_da_ia)] = item
             self._layout.addWidget(item)
 
     def _limpar(self):
@@ -216,6 +239,12 @@ class _Item(QFrame):
             "border: none; background: transparent;"
         )
         layout.addWidget(ao_redor)
+        if ocorrencia.da_ia:
+            if ocorrencia.motivo_da_origem:
+                layout.addWidget(_frase_do_item(ocorrencia.motivo_da_origem, estilo.COR_TEXTO))
+            layout.addWidget(_frase_do_item(ocorrencia.origem, estilo.COR_IA))
+        if ocorrencia.comentario:
+            layout.addWidget(_frase_do_item(f"IA: {ocorrencia.comentario}", estilo.COR_IA))
 
         self.botao = QPushButton(_nome_do_botao(ocorrencia))
         self.botao.setCursor(Qt.PointingHandCursor)
@@ -256,6 +285,64 @@ class _Item(QFrame):
         super().mousePressEvent(evento)
 
 
+class _ItemDeTrecho(QFrame):
+    """Um trecho que a IA achou frágil: só é apontado, e o texto não muda (RN-30)."""
+
+    def __init__(self, trecho, ao_clicar):
+        super().__init__()
+        self._trecho = trecho
+        self._ao_clicar = ao_clicar
+        self.setObjectName("item")
+        self.setCursor(Qt.PointingHandCursor)
+        self.marcar(False)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(estilo.ESPACO_3, estilo.ESPACO_2,
+                                  estilo.ESPACO_3, estilo.ESPACO_2)
+        layout.setSpacing(estilo.ESPACO_1)
+        etiquetas = QHBoxLayout()
+        etiquetas.addWidget(_etiqueta(tipos_na_tela.TEXTO_ESTRAGADO, estilo.COR_IA))
+        etiquetas.addStretch()
+        layout.addLayout(etiquetas)
+        layout.addWidget(_frase_do_item(" ".join(trecho.citacao.split()),
+                                        estilo.COR_TEXTO_SECUNDARIO))
+        if trecho.motivo:
+            layout.addWidget(_frase_do_item(trecho.motivo, estilo.COR_TEXTO))
+        layout.addWidget(_frase_do_item(trecho.origem, estilo.COR_IA))
+        self.botao = QPushButton("Ir para o trecho")
+        self.botao.setCursor(Qt.PointingHandCursor)
+        self.botao.setStyleSheet(estilo.estilo_botao(principal=False, pequeno=True))
+        self.botao.clicked.connect(lambda: ao_clicar(trecho))
+        linha = QHBoxLayout()
+        linha.addWidget(self.botao)
+        linha.addStretch()
+        layout.addLayout(linha)
+
+    def marcar(self, marcado):
+        self.marcado = marcado
+        borda = estilo.COR_DESTAQUE if marcado else estilo.COR_BORDA
+        fundo = "rgba(59, 110, 165, 46)" if marcado else estilo.COR_FUNDO_ELEVADO
+        self.setStyleSheet(
+            f"""
+            QFrame#item {{
+                background-color: {fundo};
+                border: 1px solid {borda};
+                border-left: 3px solid {estilo.COR_IA};
+                border-radius: {estilo.RAIO}px;
+            }}
+            """
+        )
+
+    def mousePressEvent(self, evento):
+        self._ao_clicar(self._trecho)
+        super().mousePressEvent(evento)
+
+
+def _frase_do_item(texto, cor):
+    # O motivo vem da IA e pode ser comprido: com a largura do item, ele desce de linha
+    # em vez de empurrar a lista para o lado ("O que já nos mordeu").
+    return Frase(texto, largura=LARGURA_UTIL_DO_ITEM, cor=cor)
+
+
 def _ainda_mascarados(ocorrencias):
     return sum(1 for o in ocorrencias if o.situacao == cpf.MASCARADO)
 
@@ -277,6 +364,8 @@ def _etiquetas(ocorrencia):
         etiquetas.append((tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.cor))
         return etiquetas
     etiquetas = [(_nome_do_tipo(ocorrencia), _cor_do_tipo(ocorrencia))]
+    if ocorrencia.da_ia:
+        etiquetas.append((tipos_na_tela.NUMERO_NOVO, estilo.COR_IA))
     if ocorrencia.sem_zero:
         sem_zero = tipos_na_tela.SEM_ZERO[ocorrencia.sem_zero]
         etiquetas.append((sem_zero.nome, sem_zero.cor))
@@ -309,6 +398,8 @@ def _cor_do_tipo(ocorrencia):
 def _cor_da_barra(ocorrencia):
     if ocorrencia.situacao == cpf.LIBERADO:
         return estilo.COR_BORDA
+    if ocorrencia.da_ia:
+        return estilo.COR_IA
     return _cor_do_tipo(ocorrencia)
 
 
@@ -346,11 +437,11 @@ def _titulo_da_lista(texto):
     return rotulo
 
 
-def _titulo_de_secao(texto):
+def _titulo_de_secao(texto, cor=estilo.COR_TEXTO):
     rotulo = QLabel(texto)
     rotulo.setStyleSheet(
         f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 600;"
-        f"color: {estilo.COR_TEXTO};"
+        f"color: {cor};"
     )
     return rotulo
 
