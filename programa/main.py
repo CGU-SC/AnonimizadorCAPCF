@@ -25,6 +25,7 @@ from estilo import (
 )
 import preferencias
 from painel_anonimizar import PainelAnonimizar
+from painel_ia import HABILITAR, LM_STUDIO, SERVIDOR, PainelIa
 from painel_ocr import PainelOcr
 from versao import VERSAO
 
@@ -135,11 +136,49 @@ class MenuLateral(QWidget):
         )
         layout.addWidget(nome)
 
+        # O submenu da IA toma o lugar do menu inteiro (RN-2 da spec 004); o nome
+        # do programa e a versão ficam parados, fora da troca.
+        self.paginas = QStackedWidget()
+        self.paginas.setStyleSheet("background: transparent;")
+        self.pagina_principal = QWidget()
+        principal = QVBoxLayout(self.pagina_principal)
+        principal.setContentsMargins(0, 0, 0, 0)
+        principal.setSpacing(4)
         self.botao_ocr = self._criar_item_menu("Gerar OCR")
         self.botao_anonimizar = self._criar_item_menu("Anonimizar")
-        layout.addWidget(self.botao_ocr)
-        layout.addWidget(self.botao_anonimizar)
-        layout.addStretch()
+        # Depois do espaço vazio, longe dos módulos: quem só lê documento não
+        # tropeça nele (RN-1 da spec 004).
+        self.botao_config_ia = self._criar_item_menu("Configurações de IA")
+        principal.addWidget(self.botao_ocr)
+        principal.addWidget(self.botao_anonimizar)
+        principal.addStretch()
+        principal.addWidget(self.botao_config_ia)
+
+        self.pagina_ia = QWidget()
+        submenu = QVBoxLayout(self.pagina_ia)
+        submenu.setContentsMargins(0, 0, 0, 0)
+        submenu.setSpacing(4)
+        self.botao_voltar_ia = self._criar_item_menu("‹ Voltar")
+        titulo_ia = QLabel("Configurações de IA")
+        titulo_ia.setStyleSheet(
+            f"color: {COR_TEXTO}; font-weight: 600; padding: 4px 20px 8px 20px;"
+            "background: transparent;"
+        )
+        self.botao_lm_studio = self._criar_item_menu("LM Studio")
+        self.botao_servidor_ia = self._criar_item_menu("Servidor de IA Interno")
+        self.botao_habilitar_ia = self._criar_item_menu("Habilitar IA")
+        submenu.addWidget(self.botao_voltar_ia)
+        submenu.addWidget(titulo_ia)
+        self.itens_do_submenu = (self.botao_lm_studio, self.botao_servidor_ia,
+                                 self.botao_habilitar_ia)
+        for item in self.itens_do_submenu:
+            item.setCheckable(True)
+            submenu.addWidget(item)
+        submenu.addStretch()
+
+        self.paginas.addWidget(self.pagina_principal)
+        self.paginas.addWidget(self.pagina_ia)
+        layout.addWidget(self.paginas, stretch=1)
 
         # No pé da faixa, discreta: é para quem precisa responder "qual versão
         # você está usando?" ao relatar um defeito, e não para o uso do dia.
@@ -236,6 +275,13 @@ class JanelaPrincipal(QMainWindow):
         self._ligar_item_ao_painel(
             self.menu.botao_anonimizar, self.painel_anonimizar
         )
+        self.painel_ia = PainelIa()
+        self.painel.addWidget(self.painel_ia)
+        self.menu.botao_config_ia.clicked.connect(self._abrir_configuracoes_de_ia)
+        self.menu.botao_voltar_ia.clicked.connect(self._fechar_configuracoes_de_ia)
+        for item, nome in zip(self.menu.itens_do_submenu,
+                              (LM_STUDIO, SERVIDOR, HABILITAR)):
+            item.clicked.connect(lambda _=False, i=item, n=nome: self._mostrar_tela_de_ia(i, n))
 
         self.setCentralWidget(raiz)
         self._preparar_para_abrir()
@@ -321,7 +367,37 @@ class JanelaPrincipal(QMainWindow):
         self._ir_para_o_anonimizar()
         self.painel_anonimizar.receber_texto_conferido(caminho, paginas)
 
+    def _abrir_configuracoes_de_ia(self):
+        """O menu vira o submenu - perguntando antes, se isso descartaria uma
+        revisão (RN-2 da spec 004)."""
+        if (self.painel.currentWidget() is self.painel_anonimizar
+                and self.painel_anonimizar.perguntar_antes_de_descartar(
+                    self._entrar_nas_configuracoes_de_ia)):
+            self._ir_para_o_anonimizar()
+            return
+        self._entrar_nas_configuracoes_de_ia()
+
+    def _entrar_nas_configuracoes_de_ia(self):
+        for item in self.itens_do_menu:
+            item.setChecked(False)
+        self.menu.paginas.setCurrentWidget(self.menu.pagina_ia)
+        self._mostrar_tela_de_ia(self.menu.botao_lm_studio, LM_STUDIO)
+        self.painel.setCurrentWidget(self.painel_ia)
+
+    def _mostrar_tela_de_ia(self, item_clicado, nome):
+        # Só um item marcado por vez, como no menu de sempre (RN-3 da spec 004);
+        # clicar no já marcado não desmarca: aqui não há tela de boas-vindas.
+        for item in self.menu.itens_do_submenu:
+            item.setChecked(item is item_clicado)
+        self.painel_ia.mostrar(nome)
+
+    def _fechar_configuracoes_de_ia(self):
+        """Volta ao menu de sempre, sem desligar nem mudar nada (RN-3)."""
+        self.menu.paginas.setCurrentWidget(self.menu.pagina_principal)
+        self.painel.setCurrentWidget(self.painel_vazio)
+
     def _ir_para_o_anonimizar(self):
+        self.menu.paginas.setCurrentWidget(self.menu.pagina_principal)
         for item in self.itens_do_menu:
             item.setChecked(item is self.menu.botao_anonimizar)
         self.painel.setCurrentWidget(self.painel_anonimizar)

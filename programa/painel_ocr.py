@@ -42,6 +42,7 @@ from telas_de_salvar import (
     TelaSobrescrever,
     resumo_do_documento,
 )
+from lembranca_do_motor import LembrancaDoMotor
 from motor_na_tela import ControleDoMotor
 
 # O nome com que a escolha do motor deste módulo é lembrada de um uso para o
@@ -78,8 +79,8 @@ class PainelOcr(QWidget):
         )
         self.aviso_do_motor = self.motor.aviso
         self.tela_sem_motor = self.motor.tela_sem_motor
-        self.escolha_do_motor = EscolhaDoMotor("MOTOR DE LEITURA",
-                                               lembrar_como=LEMBRAR_COMO)
+        self.escolha_do_motor = EscolhaDoMotor(
+            "MOTOR DE LEITURA", lembranca=LembrancaDoMotor(LEMBRAR_COMO))
         self.motor.ligar_escolha(self.escolha_do_motor)
         self.tela_escolher = self._montar_tela_escolher()
         # Do PDF escolhido ao texto conferido, quem conduz é a peça comum aos

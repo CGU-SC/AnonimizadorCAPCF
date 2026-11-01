@@ -33,7 +33,6 @@ from PySide6.QtWidgets import (
 )
 
 import estilo
-import preferencias
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
 from leitura import MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
@@ -63,7 +62,7 @@ class CaminhoDoPdf:
                  com_cartao=True, ao_abrir_conferencia=None,
                  tem_motor=None, ao_faltar_motor=None,
                  rotulo_de_outro="Escolher outro documento",
-                 motor_escolhido=None, lembrar_motor_como=None):
+                 motor_escolhido=None, lembranca_do_motor=None):
         self._pilha = pilha
         # O Gerar OCR mostra o cartão do que o programa descobriu antes de
         # tudo. O Anonimizar não: o PDF sem texto vai para a tela de ler, que
@@ -111,7 +110,7 @@ class CaminhoDoPdf:
             ao_ler=self.comecar_a_ler,
             ao_escolher_outro=self._escolher_outro,
             ao_voltar_a_decisao=self.decidir_sobre_o_texto_existente,
-            lembrar_motor_como=lembrar_motor_como,
+            lembranca_do_motor=lembranca_do_motor,
         )
         self.tela_conferencia = TelaConferencia(
             ao_processar_outro=self._escolher_outro,
@@ -872,11 +871,11 @@ class EscolhaDoMotor(QWidget):
     o documento, o Anonimizar na hora de ler as imagens (terceira emenda da spec
     003) -, e ela é montada num lugar só para as duas não divergirem. Cada
     módulo tem a sua (RN-26), e, desde a emenda de 28/10/2026, cada uma é
-    lembrada de um uso para o outro, com o nome que o módulo passa em
-    `lembrar_como` (RN-36).
+    lembrada de um uso para o outro, pela `lembranca` que o módulo passa
+    (RN-36).
     """
 
-    def __init__(self, rotulo, lembrar_como=None):
+    def __init__(self, rotulo, lembranca=None):
         super().__init__()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -923,20 +922,20 @@ class EscolhaDoMotor(QWidget):
         # A escolha lembrada da última vez vem marcada, como se a pessoa tivesse
         # acabado de marcar: a tela não diz nada a mais (RN-36). Sem lembrança,
         # fica o PaddleOCR, o padrão (RN-25).
-        self._lembrar_como = lembrar_como
-        if lembrar_como and preferencias.ler(lembrar_como, "motor") == MOTOR_TESSERACT:
+        self._lembranca = lembranca
+        if lembranca and lembranca.motor() == MOTOR_TESSERACT:
             self.tesseract.setChecked(True)
         # Ligado só depois de pôr a lembrança, e valendo para qualquer troca de
         # marca - a da pessoa e a do programa, quando o motor lembrado falta e a
         # marca passa ao outro (RN-37): as duas são lembradas na hora.
-        if lembrar_como:
+        if lembranca:
             self.paddleocr.toggled.connect(self._lembrar)
             self.tesseract.toggled.connect(self._lembrar)
 
     def _lembrar(self, marcado):
         # Cada troca acende um botão e apaga o outro; só o que acendeu grava.
         if marcado:
-            preferencias.gravar(self._lembrar_como, "motor", self.marcado())
+            self._lembranca.lembrar(self.marcado())
 
     def receber_saidas_do_tesseract(self, saidas):
         """Põe embaixo da linha do Tesseract as mesmas saídas do aviso do alto."""
@@ -996,7 +995,7 @@ class _TelaDeLer(QWidget):
     """
 
     def __init__(self, ao_ler, ao_escolher_outro, ao_voltar_a_decisao,
-                 lembrar_motor_como=None):
+                 lembranca_do_motor=None):
         super().__init__()
         self._ao_ler = ao_ler
         self._ao_escolher_outro = ao_escolher_outro
@@ -1014,7 +1013,7 @@ class _TelaDeLer(QWidget):
         layout.addWidget(self.legenda)
         layout.addSpacing(estilo.ESPACO_4)
 
-        self.escolha_do_motor = EscolhaDoMotor("LER COM", lembrar_como=lembrar_motor_como)
+        self.escolha_do_motor = EscolhaDoMotor("LER COM", lembranca=lembranca_do_motor)
         layout.addWidget(self.escolha_do_motor)
         layout.addSpacing(estilo.ESPACO_4)
 

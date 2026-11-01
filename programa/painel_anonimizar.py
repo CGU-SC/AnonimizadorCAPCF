@@ -34,6 +34,7 @@ import arquivo_word
 import cpf
 import estilo
 from caminho_do_pdf import CaminhoDoPdf, FaixaDoTopo
+from lembranca_do_motor import LembrancaDoMotor
 from motor_na_tela import ControleDoMotor
 from arquivo_texto import ArquivoNaoServe, ler, quebra_de_linha
 from tela_revisao import TelaRevisao
@@ -159,7 +160,7 @@ class PainelAnonimizar(QWidget):
             tem_motor=self._conferir_o_motor,
             ao_faltar_motor=self.motor.mostrar_que_falta,
             rotulo_de_outro="Escolher outro arquivo",
-            lembrar_motor_como=LEMBRAR_COMO,
+            lembranca_do_motor=LembrancaDoMotor(LEMBRAR_COMO),
         )
         self.motor.ligar_escolha(self.pdf.tela_de_ler.escolha_do_motor)
         self.tela_erro = _TelaErro(ao_escolher_outro=self.voltar_para_escolher)
