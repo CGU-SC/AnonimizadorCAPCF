@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
     QPushButton,
+    QRadioButton,
     QScrollArea,
     QStackedWidget,
     QVBoxLayout,
@@ -41,6 +42,15 @@ RESPONDENDO = "Respondendo agora. Isso diz que o modelo respondeu, e não como e
 ESCOLHA_UM_MODELO = "Respondendo agora. Escolha um modelo."
 NENHUM_MODELO = ("O destino respondeu, mas não tem nenhum modelo para oferecer. "
                  "Instale um modelo e ligue este switch de novo.")
+# A data é parte da frase: modelo local melhora, e o programa não tem como saber
+# disso. Escrita como avaliação de quem fez o programa, porque o que está medido é o
+# Tesseract contra o PaddleOCR (conferência 02).
+RESSALVA_DO_MOTOR = (
+    "Ressalva, de 31/10/2026. Até a criação deste programa, os modelos de IA locais "
+    "eram muito inferiores ao PaddleOCR e ao Tesseract na leitura. O uso indicado da IA "
+    "é como revisora. Como motor, a IA recebe a imagem da página com os CPFs inteiros, "
+    "e o texto do documento passa a ser o que ela escrever."
+)
 TESTANDO = "Testando a conexão... O teste manda uma frase inventada, sem nada do documento."
 
 
@@ -48,6 +58,16 @@ def _rede():
     """Só aqui o arquivo da rede é carregado, e só quando há o que fazer com ele."""
     import rede_da_ia
     return rede_da_ia
+
+
+def _recuado(peca, recuo):
+    fora = QWidget()
+    linha = QHBoxLayout(fora)
+    linha.setContentsMargins(recuo, 0, 0, 0)
+    linha.setSpacing(0)
+    linha.addWidget(peca)
+    linha.addStretch()
+    return fora
 
 
 def _rolavel(tela):
@@ -578,6 +598,106 @@ class _TelaServidor(_TelaDoDestino):
         self._ao_mudar()
 
 
+class _TelaHabilitar(_TelaBasica):
+    """Os três switches (RN-24, RN-25, RN-38 e RN-39 da spec 004)."""
+
+    RECUO = 44
+
+    def __init__(self, ao_mudar, ao_ligar_o_motor):
+        super().__init__("Habilitar IA", "")
+        self._ao_mudar = ao_mudar
+        self._ao_ligar_o_motor = ao_ligar_o_motor
+
+        self.geral = Interruptor()
+        self.geral.clicked.connect(self._geral_clicado)
+        self.corpo.addWidget(linha_do_switch(self.geral, "Habilitar IA"))
+        self.configure_primeiro = Faixa("info")
+        self.configure_primeiro.mostrar(
+            "Configure primeiro o LM Studio ou o Servidor de IA Interno, nos itens "
+            "ao lado.")
+        self.corpo.addWidget(self.configure_primeiro)
+        self.foi_desligada = Faixa("alerta")
+        self.foi_desligada.mostrar(
+            "A IA foi desligada porque nenhum destino está habilitado. Ao religar um "
+            "destino e este switch, tudo volta como estava.")
+        self.corpo.addWidget(self.foi_desligada)
+
+        self.revisora = Interruptor()
+        self.revisora.clicked.connect(self._revisora_clicada)
+        self.corpo.addWidget(linha_do_switch(self.revisora, "IA revisora", self.RECUO))
+        self.sobre_a_revisora = Frase(
+            "Um segundo par de olhos na revisão do Anonimizar. Ela lê só o texto, e não "
+            "compara com a página original.", largura=LARGURA_DO_CONTEUDO - 2 * self.RECUO)
+        self.corpo.addWidget(_recuado(self.sobre_a_revisora, 2 * self.RECUO))
+        self.corpo.addWidget(_recuado(rotulo_de_campo("A revisão por IA começa"), 2 * self.RECUO))
+        self.inicio_clique = QRadioButton('ao clicar no botão "Revisar com IA"')
+        self.inicio_abrir = QRadioButton("sozinha, ao abrir a revisão")
+        for botao, inicio in ((self.inicio_clique, config_ia.INICIO_NO_CLIQUE),
+                              (self.inicio_abrir, config_ia.INICIO_AO_ABRIR)):
+            botao.setStyleSheet(f"color: {estilo.COR_TEXTO}; font-size: {estilo.TEXTO_PEQUENO}px;")
+            botao.clicked.connect(lambda _=False, i=inicio: config_ia.escolher_inicio(i))
+            self.corpo.addWidget(_recuado(botao, 2 * self.RECUO))
+
+        self.motor = Interruptor()
+        self.motor.clicked.connect(self._motor_clicado)
+        self.corpo.addWidget(linha_do_switch(self.motor, "IA como motor de leitura", self.RECUO))
+        self.ressalva = Faixa("alerta", largura=LARGURA_DO_CONTEUDO - 2 * self.RECUO)
+        self.ressalva.mostrar(RESSALVA_DO_MOTOR)
+        self.corpo.addWidget(_recuado(self.ressalva, 2 * self.RECUO))
+        self.falta_modelo = Frase(largura=LARGURA_DO_CONTEUDO - 2 * self.RECUO,
+                                  cor=estilo.COR_ALERTA)
+        self.corpo.addWidget(_recuado(self.falta_modelo, 2 * self.RECUO))
+        self.corpo.addStretch()
+        self.atualizar()
+
+    def atualizar(self):
+        pode = config_ia.destino_configurado()
+        ligada = config_ia.geral_ligada() and pode
+        destino = config_ia.destino_ligado()
+        self.legenda.setText(
+            f"Destino em uso: {config_ia.NOME_NA_TELA[destino]}, "
+            f"{config_ia.modelo_da_revisora(destino)}" if pode else "")
+        self.geral.setEnabled(pode)
+        self.geral.setChecked(ligada)
+        desligada_pelo_destino = config_ia.desligada_pelo_destino()
+        self.configure_primeiro.setVisible(not pode and not desligada_pelo_destino)
+        self.foi_desligada.setVisible(desligada_pelo_destino and not ligada)
+        self.revisora.setEnabled(ligada)
+        self.revisora.setChecked(ligada and config_ia.revisora_marcada())
+        for botao in (self.inicio_clique, self.inicio_abrir):
+            botao.setEnabled(self.revisora.isChecked())
+        marcado = (self.inicio_abrir if config_ia.inicio_da_revisao() == config_ia.INICIO_AO_ABRIR
+                   else self.inicio_clique)
+        marcado.setChecked(True)
+        self.motor.setEnabled(ligada)
+        self.motor.setChecked(ligada and config_ia.motor_marcado())
+        sem_modelo = config_ia.motor_ligado() and not config_ia.modelo_do_motor(destino)
+        self.falta_modelo.setText(
+            f"Escolha o modelo do motor na tela do {config_ia.NOME_NA_TELA[destino]}."
+            if sem_modelo else "")
+
+    def showEvent(self, evento):
+        self.atualizar()
+        super().showEvent(evento)
+
+    def _geral_clicado(self, ligada):
+        if ligada:
+            config_ia.ligar_geral()
+        else:
+            config_ia.desligar_geral()
+        self._ao_mudar()
+
+    def _revisora_clicada(self, ligada):
+        config_ia.marcar_revisora(ligada)
+        self._ao_mudar()
+
+    def _motor_clicado(self, ligado):
+        config_ia.marcar_motor(ligado)
+        self._ao_mudar()
+        if ligado:
+            self._ao_ligar_o_motor()
+
+
 class PainelIa(QWidget):
     def __init__(self):
         super().__init__()
@@ -589,10 +709,7 @@ class PainelIa(QWidget):
 
         self.tela_lm_studio = _TelaLmStudio(self._mudou)
         self.tela_servidor = _TelaServidor(self._mudou)
-        self.tela_habilitar = _TelaBasica(
-            "Habilitar IA",
-            "Configure primeiro o LM Studio ou o Servidor de IA Interno, nos "
-            "itens ao lado.")
+        self.tela_habilitar = _TelaHabilitar(self._mudou, self._testar_o_motor)
         self._areas = {}
         for nome, tela in ((LM_STUDIO, self.tela_lm_studio),
                            (SERVIDOR, self.tela_servidor),
@@ -606,6 +723,14 @@ class PainelIa(QWidget):
         e o "Habilitar IA" depende dos dois."""
         self.tela_lm_studio.atualizar()
         self.tela_servidor.atualizar()
+        self.tela_habilitar.atualizar()
+
+    def _testar_o_motor(self):
+        """Ligada a chave com um modelo já guardado, ele é testado com a imagem."""
+        destino = config_ia.destino_ligado()
+        if destino:
+            tela = self.tela_lm_studio if destino == LM_STUDIO else self.tela_servidor
+            tela._testar_o_motor_escolhido()
 
     def mostrar(self, nome):
         self.telas.setCurrentWidget(self._areas[nome])

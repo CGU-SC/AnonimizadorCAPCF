@@ -116,6 +116,11 @@ def ligar_geral():
         _gravar_geral(geral=_SIM, revisora=_SIM, motor=_NAO)
 
 
+def desligada_pelo_destino():
+    """Quem desligou a IA foi o destino, e a tela precisa dizer isso?"""
+    return _geral().get("guardado_pelo_destino") == _SIM and not geral_ligada()
+
+
 def desligar_geral():
     _gravar_geral(geral=_NAO, guardado_pelo_destino=_NAO)
 
