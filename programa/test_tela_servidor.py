@@ -1,7 +1,5 @@
 """O servidor interno, o token e o aviso de endereço (etapa 4 da spec 004)."""
 import codecs
-import sys
-from pathlib import Path
 
 import pytest
 from PySide6.QtCore import Qt
@@ -15,8 +13,6 @@ import rede_da_ia
 import trabalho_da_ia
 from painel_ia import PainelIa
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "abrir"))
-from servidor_de_ia_de_mentira import ServidorDeMentira  # noqa: E402
 from test_tela_lm_studio import _na_hora
 
 TOKEN = "token-inventado-para-teste"
@@ -45,13 +41,6 @@ def perguntas(monkeypatch):
 
     monkeypatch.setattr(avisos_da_ia, "exibir", exibir)
     return Perguntas
-
-
-@pytest.fixture
-def servidor():
-    servidor = ServidorDeMentira()
-    yield servidor
-    servidor.parar()
 
 
 def _tela():

@@ -55,9 +55,10 @@ Name: "atalho_na_area_de_trabalho"; Description: "Criar um atalho na área de tr
 
 [Files]
 ; A pasta montada entra inteira, menos as escolhas de quem usa: aberto ali
-; mesmo para testar, o programa cria o preferencias.ini dele, que iria dentro
+; mesmo para testar, o programa cria o preferencias.ini dele, e o .env, com o token
+; de quem testou, que iriam dentro
 ; do instalador e passaria por cima da escolha de quem atualiza (RN-41).
-Source: "..\builds\programa\{#Nome}\*"; DestDir: "{app}"; Excludes: "preferencias.ini,preferencias.ini.*.gravando"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\builds\programa\{#Nome}\*"; DestDir: "{app}"; Excludes: "preferencias.ini,preferencias.ini.*.gravando,.env,.env.*.gravando"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; O instalador do Tesseract vai na pasta "instaladores", ao lado do programa: é
 ; lá que o botão "instalar agora" o procura (spec 002). Sem ele, o botão nasce
 ; apagado e a pessoa fica sem saída na primeira leitura.

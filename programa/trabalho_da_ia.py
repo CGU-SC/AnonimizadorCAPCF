@@ -26,7 +26,10 @@ class _Tarefa(QThread):
         try:
             resultado = self._funcao()
         except Exception as problema:
-            self.falhou.emit(frase_da_falha(problema))
+            # Cancelar ao fechar o programa não é falha do destino: tratado como falha,
+            # o teste cortado desligaria a IA para a próxima abertura.
+            if not getattr(problema, "e_cancelamento", False):
+                self.falhou.emit(frase_da_falha(problema))
         else:
             self.pronto.emit(resultado)
 

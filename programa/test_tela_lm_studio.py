@@ -1,7 +1,4 @@
 """A tela do LM Studio, contra o servidor de mentira (etapa 3 da spec 004)."""
-import sys
-from pathlib import Path
-
 import pytest
 
 import config_ia
@@ -9,8 +6,6 @@ import preferencias
 import trabalho_da_ia
 from painel_ia import ESCOLHA_UM_MODELO, RESPONDENDO, PainelIa
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "abrir"))
-from servidor_de_ia_de_mentira import ServidorDeMentira  # noqa: E402
 
 
 RODAR_DE_VERDADE = trabalho_da_ia.rodar
@@ -32,11 +27,9 @@ def sem_trabalho_ao_lado(monkeypatch):
 
 
 @pytest.fixture
-def servidor():
-    servidor = ServidorDeMentira()
+def servidor(servidor):
     config_ia.guardar_do_destino(config_ia.LM_STUDIO, porta=servidor.porta)
-    yield servidor
-    servidor.parar()
+    return servidor
 
 
 def _tela():
@@ -76,7 +69,6 @@ def test_com_o_lm_studio_fechado_o_switch_volta_e_diz_o_que_fazer(servidor):
     config_ia.guardar_do_destino(config_ia.LM_STUDIO, modelo_revisora="modelo-guardado")
     porta = servidor.porta
     servidor.parar()
-    servidor._servidor = _Parado()
     tela = _tela()
     tela.interruptor.click()
     assert not tela.interruptor.isChecked()
@@ -86,14 +78,6 @@ def test_com_o_lm_studio_fechado_o_switch_volta_e_diz_o_que_fazer(servidor):
     # As escolhas ficam guardadas.
     assert config_ia.modelo_da_revisora(config_ia.LM_STUDIO) == "modelo-guardado"
     assert config_ia.porta_do_lm_studio() == porta
-
-
-class _Parado:
-    def shutdown(self):
-        pass
-
-    def server_close(self):
-        pass
 
 
 def test_modelo_que_nao_responde_desliga_e_explica(servidor):

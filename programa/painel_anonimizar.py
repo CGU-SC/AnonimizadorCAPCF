@@ -480,6 +480,14 @@ class PainelAnonimizar(QWidget):
         self._conferir_o_motor()
         super().showEvent(evento)
 
+    def hideEvent(self, evento):
+        # Saindo para outro item do menu, sem nada a perder, a pergunta de descartar
+        # não aparece, e a IA seguiria mandando o texto com ninguém olhando (RN-34 da
+        # spec 004). Minimizar a janela é o Windows escondendo: aí ela continua.
+        if not evento.spontaneous():
+            self.tela_revisao.ia.cancelar()
+        super().hideEvent(evento)
+
     def _conferir_o_motor(self):
         """Procura o motor, acerta o aviso e a lista do que dá, e diz se achou."""
         achou = self.motor.conferir()

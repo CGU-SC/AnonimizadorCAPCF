@@ -9,10 +9,16 @@ A causa é tela criada dentro de um teste e deixada para trás. Ela continua viv
 até o Python fechar, e aí é desmontada depois de o Qt já ter sido desligado.
 Desmontar cada uma no fim do teste que a criou resolve.
 """
+import sys
 from pathlib import Path
 
 import pytest
 from PySide6.QtWidgets import QApplication
+
+# O servidor de mentira mora em abrir/, e não em programa/: ele não faz parte do
+# programa, e o instalador não o leva.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "abrir"))
+from servidor_de_ia_de_mentira import ServidorDeMentira  # noqa: E402
 
 # Guardada aqui fora de propósito: o Qt precisa continuar de pé até o fim da
 # lista de testes, e uma variável dentro de função seria recolhida antes disso.
@@ -60,6 +66,34 @@ def env_isolado(tmp_path, monkeypatch):
         return tmp_path / ".env" if caminho_pedido == da_raiz else caminho_pedido
 
     monkeypatch.setattr(configuracao, "caminho_do_env", caminho)
+
+
+@pytest.fixture(autouse=True)
+def caixa_sem_resposta_falha(monkeypatch):
+    """Uma caixa de aviso esperando resposta travaria a lista inteira, sem nada dizer.
+    Assim, o teste que esqueceu de responder falha na hora, e diz qual caixa foi."""
+    import avisos_da_ia
+
+    def sem_resposta(titulo, *_, **__):
+        raise AssertionError(f"caixa aberta sem resposta no teste: {titulo}")
+
+    monkeypatch.setattr(avisos_da_ia, "exibir", sem_resposta)
+
+
+@pytest.fixture
+def servidor():
+    """Um servidor de IA de mentira, numa porta livre desta máquina (RN-45 da spec 004)."""
+    servidor = ServidorDeMentira()
+    yield servidor
+    servidor.parar()
+
+
+@pytest.fixture
+def outro_servidor():
+    """Um segundo, para os testes de troca de destino."""
+    servidor = ServidorDeMentira()
+    yield servidor
+    servidor.parar()
 
 
 @pytest.fixture(autouse=True)

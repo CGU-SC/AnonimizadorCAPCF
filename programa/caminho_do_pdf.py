@@ -925,6 +925,8 @@ class EscolhaDoMotor(QWidget):
         self.frase_da_ia = Frase()
         # A marca que saiu da IA fica dita até a pessoa marcar outra coisa.
         self._frase_da_troca = ""
+        for botao in (self.paddleocr, self.tesseract):
+            botao.clicked.connect(self._pessoa_marcou)
 
         for peca in (self.paddleocr, self.resumo_paddleocr, self.falta_paddleocr,
                      self.tesseract, self.resumo_tesseract, self.falta_tesseract,
@@ -971,10 +973,16 @@ class EscolhaDoMotor(QWidget):
         elif self._frase_da_troca:
             frase = self._frase_da_troca
         elif config_ia.motor_ligado():
-            frase = "Escolha o modelo do motor em Configurações de IA."
+            frase = ("O modelo do motor não passou no teste: veja em Configurações de IA."
+                     if config_ia.modelo_do_motor(destino)
+                     else "Escolha o modelo do motor em Configurações de IA.")
         else:
             frase = 'Ligue em Configurações de IA, em "Habilitar IA".'
         self.frase_da_ia.setText(frase)
+
+    def _pessoa_marcou(self):
+        self._frase_da_troca = ""
+        self.atualizar_ia()
 
     def _lembrar(self, marcado):
         # Cada troca acende um botão e apaga o outro; só o que acendeu grava.

@@ -35,7 +35,7 @@ def apontar(texto):
                       "grupos estranhos."})
     for achado in re.finditer(r"Termo de outorga nº\s*(\S+)", texto):
         apontamentos.append({
-            "tipo": "numero", "citacao": achado.group(1),
+            "tipo": "numero", "citacao": achado.group(1), "parece_cpf": False,
             "motivo": "Parece o número de um termo, e não um CPF."})
     for achado in re.finditer(r"\b[A-Za-z]+[0-9][A-Za-z0-9]*\b.{0,30}", texto):
         trecho = achado.group(0).strip()
@@ -142,6 +142,7 @@ class ServidorDeMentira:
 
     def __init__(self, porta=0):
         self.comportamento = Comportamento()
+        self._parado = False
         self._servidor = ThreadingHTTPServer(
             ("127.0.0.1", porta), _criar_tratador(self.comportamento))
         self._servidor.daemon_threads = True
@@ -150,6 +151,11 @@ class ServidorDeMentira:
         threading.Thread(target=self._servidor.serve_forever, daemon=True).start()
 
     def parar(self):
+        """Pode ser chamado duas vezes: um teste que derruba o servidor no meio e o fim
+        do teste, que sempre derruba."""
+        if self._parado:
+            return
+        self._parado = True
         self._servidor.shutdown()
         self._servidor.server_close()
 

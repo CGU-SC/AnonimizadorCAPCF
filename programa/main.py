@@ -148,7 +148,9 @@ class MenuLateral(QWidget):
         self.botao_anonimizar = self._criar_item_menu("Anonimizar")
         # Depois do espaço vazio, longe dos módulos: quem só lê documento não
         # tropeça nele (RN-1 da spec 004).
-        self.botao_config_ia = self._criar_item_menu("Configurações de IA")
+        # A engrenagem é o sinal de "aqui se configura", e separa este item dos dois
+        # módulos de cima (pedido na conferência da funcionalidade 4, 31/10/2026).
+        self.botao_config_ia = self._criar_item_menu("⚙  Configurações de IA")
         principal.addWidget(self.botao_ocr)
         principal.addWidget(self.botao_anonimizar)
         principal.addStretch()

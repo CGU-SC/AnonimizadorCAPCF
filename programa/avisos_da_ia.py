@@ -114,6 +114,15 @@ def confirmar_endereco(endereco, avaliacao, pai=None):
     return confirmou
 
 
+def manter_o_token_no_endereco_novo(pai=None):
+    """O token é daquele servidor: no endereço novo, ele só vai se a pessoa disser."""
+    return exibir(
+        "O token salvo é do endereço anterior",
+        ["Mantido, ele será enviado a este endereço novo. Se o endereço estiver errado "
+         "ou for de outro servidor, apague: a TI informa o token certo."],
+        "Manter o token", "Apagar o token", pai=pai)
+
+
 def lembrar_confirmado(endereco):
     global _endereco_confirmado
     _endereco_confirmado = endereco
@@ -132,6 +141,13 @@ def pode_usar_o_destino(pai=None):
     """
     if config_ia.destino_ligado() != config_ia.SERVIDOR:
         return True
+    return pode_usar_o_servidor(pai)
+
+
+def pode_usar_o_servidor(pai=None, perguntando=True):
+    """O mesmo, para quem vai falar com o servidor mesmo sem ele estar ligado: ligar o
+    switch e testar também mandam o token (lente crítica). `perguntando=False` é para
+    o que acontece sem a pessoa pedir, como abrir a tela: nada de janela do nada."""
     import rede_da_ia
     endereco = config_ia.endereco_do_servidor()
     avaliacao = rede_da_ia.avaliar_endereco(endereco, config_ia.enderecos_locais())
@@ -139,4 +155,4 @@ def pode_usar_o_destino(pai=None):
         return False
     if avaliacao.reconhecido or _endereco_confirmado == endereco:
         return True
-    return confirmar_endereco(endereco, avaliacao, pai)
+    return perguntando and confirmar_endereco(endereco, avaliacao, pai)

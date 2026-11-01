@@ -51,6 +51,7 @@ RESSALVA_DO_MOTOR = (
     "é como revisora. Como motor, a IA recebe a imagem da página com os CPFs inteiros, "
     "e o texto do documento passa a ser o que ela escrever."
 )
+ENDERECO_NAO_CONFIRMADO = "O endereço não foi confirmado, e nada foi enviado."
 TESTANDO = "Testando a conexão... O teste manda uma frase inventada, sem nada do documento."
 
 
@@ -133,12 +134,21 @@ class _TelaDoDestino(_TelaBasica):
     def __init__(self, titulo, legenda, ao_mudar):
         super().__init__(titulo, legenda)
         self._ao_mudar = ao_mudar
-        self._cancelador = None
-        # None: ainda não perguntou. O destino que não sabe listar pede o nome digitado.
+        # Todos os pedidos abertos: guardando só o último, um pedido anterior não
+        # seria cortado ao fechar, e a janela fecharia com ele rodando (lente crítica).
+        self._canceladores = []
+        # O destino que estava ligado antes de este ser testado, para voltar a ele se
+        # o teste falhar: a falha não pode deixar a pessoa sem nenhum dos dois.
+        self._destino_de_antes = None
+        self.ao_motor_falhar = lambda frase: None
+        # Quantos pedidos estão abertos. Enquanto houver um, nada do que ele usou pode
+        # mudar: a resposta antiga religaria o destino, com o endereço já trocado.
+        self._pedidos_abertos = 0
+        # Já perguntou ao destino quais modelos ele tem? Ao abrir o programa, não: a
+        # pergunta só vai quando a pessoa abre a tela. E o destino que respondeu que não
+        # sabe listar pede o nome digitado.
         self._lista_conhecida = False
         self._sem_lista = False
-        # Ligando por cima do outro destino: ele só desliga depois do teste, para a
-        # falha não deixar a pessoa sem nenhum dos dois.
         self.interruptor = Interruptor()
         self.interruptor.clicked.connect(self._switch_clicado)
         self.corpo.addWidget(linha_do_switch(self.interruptor, self.rotulo_do_switch))
@@ -184,6 +194,15 @@ class _TelaDoDestino(_TelaBasica):
     def pode_ligar(self):
         return True
 
+    def pode_falar(self, perguntando=True):
+        """Pode mandar um pedido a este destino? Quem tem aviso de endereço diz aqui."""
+        return True
+
+    def _novo_cancelador(self):
+        cancelador = _rede().Cancelador()
+        self._canceladores.append(cancelador)
+        return cancelador
+
     def _token(self):
         return config_ia.token_do_destino(self.nome)
 
@@ -194,8 +213,9 @@ class _TelaDoDestino(_TelaBasica):
         """Põe a tela de acordo com o que está guardado."""
         ligado = self.esta_ligado()
         self.interruptor.setChecked(ligado)
-        self.interruptor.setEnabled(self.pode_ligar())
-        self.situacao.setText(self._frase_da_situacao() if ligado else "")
+        self.interruptor.setEnabled(self.pode_ligar() and not self._pedidos_abertos)
+        if not self._pedidos_abertos:
+            self.situacao.setText(self._frase_da_situacao() if ligado else "")
         self._mostrar_modelos(ligado)
 
     def _frase_da_situacao(self):
@@ -218,14 +238,21 @@ class _TelaDoDestino(_TelaBasica):
             self.campo_revisora.setText(config_ia.modelo_da_revisora(self.nome))
             self.campo_motor.setText(config_ia.modelo_do_motor(self.nome))
 
+    def _campos_do_destino(self):
+        """O que muda para onde o pedido vai: fica travado enquanto ele está aberto."""
+        return ()
+
     def _ocupado(self, ocupado):
+        self._pedidos_abertos += 1 if ocupado else -1
+        livre = not self._pedidos_abertos
         for peca in (self.interruptor, self.seletor_revisora, self.seletor_motor,
-                     self.campo_revisora, self.campo_motor, self.botao_testar):
-            peca.setEnabled(not ocupado)
+                     self.campo_revisora, self.campo_motor, self.botao_testar,
+                     *self._campos_do_destino()):
+            peca.setEnabled(livre)
         if ocupado:
             self.situacao.setText(TESTANDO)
             self.faixa_erro.setVisible(False)
-        else:
+        elif livre:
             self.interruptor.setEnabled(self.pode_ligar())
 
     # ---------------------------------------------------------- ligar e desligar
@@ -247,9 +274,11 @@ class _TelaDoDestino(_TelaBasica):
         self._listar_e_testar()
 
     def _listar_e_testar(self):
+        if not self.pode_falar():
+            self.interruptor.setChecked(self.esta_ligado())
+            return
         self._ocupado(True)
-        self._cancelador = _rede().Cancelador()
-        base, token, cancelador = self.base(), self._token(), self._cancelador
+        base, token, cancelador = self.base(), self._token(), self._novo_cancelador()
         trabalho_da_ia.rodar(
             self, lambda: _rede().listar_modelos(base, token, cancelador),
             self._chegou_a_lista, self._falhou_ao_ligar)
@@ -259,6 +288,8 @@ class _TelaDoDestino(_TelaBasica):
 
     def _chegou_a_lista(self, modelos):
         self._ocupado(False)
+        antes = config_ia.destino_ligado()
+        self._destino_de_antes = antes if antes != self.nome else None
         config_ia.ligar_destino(self.nome)
         if modelos == []:
             self._desligar_com_falha(NENHUM_MODELO)
@@ -289,7 +320,14 @@ class _TelaDoDestino(_TelaBasica):
             indice = seletor.findData(guardado) if guardado else 0
             seletor.setCurrentIndex(max(indice, 0))
 
+    def _modelo_do_motor_sumiu(self):
+        """O modelo guardado saiu do destino: o teste antigo não vale mais."""
+        guardado = config_ia.modelo_do_motor(self.nome)
+        if guardado and self.seletor_motor.count() and self.seletor_motor.findData(guardado) < 0:
+            config_ia.marcar_motor_testado(self.nome, False)
+
     def _testar_o_que_esta_escolhido(self):
+        self._modelo_do_motor_sumiu()
         modelo = config_ia.modelo_da_revisora(self.nome)
         if not modelo:
             config_ia.marcar_testado(self.nome, False)
@@ -305,15 +343,24 @@ class _TelaDoDestino(_TelaBasica):
         self._testar_modelo(modelo)
 
     def _testar_modelo(self, modelo):
+        # Enquanto não responde, não conta como configurado: um "testado" que sobrou de
+        # outra vez deixaria a revisora ativa durante o teste (lente crítica).
+        config_ia.marcar_testado(self.nome, False)
+        # O teste manda o token: sem o endereço confirmado, ele não sai (RN-49).
+        if not self.pode_falar():
+            self.atualizar()
+            self._ao_mudar()
+            self.faixa_erro.mostrar(ENDERECO_NAO_CONFIRMADO)
+            return
         self._ocupado(True)
-        self._cancelador = _rede().Cancelador()
-        base, token, cancelador = self.base(), self._token(), self._cancelador
+        base, token, cancelador = self.base(), self._token(), self._novo_cancelador()
         trabalho_da_ia.rodar(
             self, lambda: _rede().testar_modelo(base, token, modelo, cancelador=cancelador),
             self._modelo_respondeu, self._falhou_ao_ligar)
 
     def _modelo_respondeu(self, _resultado):
         self._ocupado(False)
+        self._destino_de_antes = None
         config_ia.marcar_testado(self.nome, True)
         self.atualizar()
         self._ao_mudar()
@@ -327,7 +374,11 @@ class _TelaDoDestino(_TelaBasica):
         """O switch volta para desligado, com o que fazer, e as escolhas ficam (RN-6)."""
         config_ia.marcar_testado(self.nome, False)
         if self.esta_ligado():
-            config_ia.desligar_destino()
+            if self._destino_de_antes:
+                config_ia.ligar_destino(self._destino_de_antes)
+            else:
+                config_ia.desligar_destino()
+        self._destino_de_antes = None
         self.atualizar()
         self._ao_mudar()
         self.faixa_erro.mostrar(frase)
@@ -371,9 +422,19 @@ class _TelaDoDestino(_TelaBasica):
         if not modelo or not config_ia.motor_marcado():
             self._ao_mudar()
             return
+        # Enquanto não responde, não vale: um "testado" que sobrou de outra vez deixaria a
+        # IA ler de verdade, com os CPFs inteiros, durante o teste.
+        config_ia.marcar_motor_testado(self.nome, False)
+        # Ligar a chave do motor chega aqui sem ter passado por nenhuma outra tela, e
+        # este teste também manda o token (revisão de segurança, RN-49).
+        if not self.pode_falar():
+            self.atualizar()
+            self._ao_mudar()
+            self.faixa_erro.mostrar(ENDERECO_NAO_CONFIRMADO)
+            self.ao_motor_falhar(ENDERECO_NAO_CONFIRMADO)
+            return
         self._ocupado(True)
-        self._cancelador = _rede().Cancelador()
-        base, token, cancelador = self.base(), self._token(), self._cancelador
+        base, token, cancelador = self.base(), self._token(), self._novo_cancelador()
         imagem = _rede().imagem_de_teste()
         trabalho_da_ia.rodar(
             self,
@@ -392,7 +453,10 @@ class _TelaDoDestino(_TelaBasica):
         config_ia.marcar_motor_testado(self.nome, False)
         self.atualizar()
         self._ao_mudar()
-        self.faixa_erro.mostrar(f"O modelo do motor não leu a imagem de teste. {frase}")
+        mensagem = f"O modelo do motor não leu a imagem de teste. {frase}"
+        self.faixa_erro.mostrar(mensagem)
+        # Quem ligou a chave está na outra tela, e não veria esta faixa (lente crítica).
+        self.ao_motor_falhar(mensagem)
 
     def showEvent(self, evento):
         """Abrindo a tela com o destino já ligado, busca a lista de modelos.
@@ -403,15 +467,26 @@ class _TelaDoDestino(_TelaBasica):
         """
         super().showEvent(evento)
         if self.esta_ligado() and not self._lista_conhecida:
+            # Sem perguntar: quem só abriu a tela não pediu nada, e sem o endereço
+            # confirmado nesta abertura o token não sai (RN-21).
+            if not self.pode_falar(perguntando=False):
+                self.situacao.setText('Clique em "Testar de novo" para conferir.')
+                return
             self._lista_conhecida = True
-            base, token = self.base(), self._token()
-            trabalho_da_ia.rodar(self, lambda: _rede().listar_modelos(base, token),
+            base, token, cancelador = self.base(), self._token(), self._novo_cancelador()
+            trabalho_da_ia.rodar(self, lambda: _rede().listar_modelos(base, token, cancelador),
                                  self._lista_ao_abrir, self._sem_lista_ao_abrir)
 
     def _lista_ao_abrir(self, modelos):
         self._sem_lista = modelos is None
         self._encher_seletores(modelos or [])
+        guardado = config_ia.modelo_da_revisora(self.nome)
+        # A tela diria "Respondendo agora", e cada revisão falharia sem explicar.
+        if guardado and self.seletor_revisora.count() and self.seletor_revisora.findData(guardado) < 0:
+            config_ia.marcar_testado(self.nome, False)
+        self._modelo_do_motor_sumiu()
         self.atualizar()
+        self._ao_mudar()
 
     def _sem_lista_ao_abrir(self, frase):
         self._lista_conhecida = False
@@ -420,8 +495,8 @@ class _TelaDoDestino(_TelaBasica):
     def encerrar(self):
         """Corta o teste em andamento antes de o programa fechar: sem isso, a janela
         esperaria a resposta do modelo para fechar."""
-        if self._cancelador is not None:
-            self._cancelador.cancelar()
+        for cancelador in self._canceladores:
+            cancelador.cancelar()
         trabalho_da_ia.esperar_terminar(self)
 
 
@@ -452,8 +527,9 @@ class _TelaLmStudio(_TelaDoDestino):
         if texto.isdigit() and 0 < int(texto) < 65536:
             if int(texto) != config_ia.porta_do_lm_studio():
                 config_ia.guardar_do_destino(LM_STUDIO, porta=int(texto))
-                # Com a porta nova, o teste que passou não vale mais.
+                # Com a porta nova, os testes que passaram não valem mais.
                 config_ia.marcar_testado(LM_STUDIO, False)
+                config_ia.marcar_motor_testado(LM_STUDIO, False)
                 if self.esta_ligado():
                     config_ia.desligar_destino()
                 self.atualizar()
@@ -463,6 +539,9 @@ class _TelaLmStudio(_TelaDoDestino):
 
     def base(self):
         return _rede().base_do_lm_studio(config_ia.porta_do_lm_studio())
+
+    def _campos_do_destino(self):
+        return (self.campo_porta,)
 
     def atualizar(self):
         super().atualizar()
@@ -522,8 +601,15 @@ class _TelaServidor(_TelaDoDestino):
     def base(self):
         return _rede().base_do_endereco(config_ia.endereco_do_servidor())
 
+    def _campos_do_destino(self):
+        return (self.campo_endereco, self.campo_token, self.botao_salvar,
+                self.botao_substituir, self.botao_apagar)
+
     def pode_ligar(self):
         return bool(config_ia.endereco_do_servidor())
+
+    def pode_falar(self, perguntando=True):
+        return avisos_da_ia.pode_usar_o_servidor(self, perguntando)
 
     def atualizar(self):
         super().atualizar()
@@ -567,6 +653,17 @@ class _TelaServidor(_TelaDoDestino):
             self.faixa_erro.mostrar(
                 "Não foi possível guardar o token: a pasta do programa não aceitou. "
                 "Nada foi salvo.")
+            return
+        anterior = config_ia.endereco_do_servidor()
+        if (mudou_o_endereco and anterior and not token and config_ia.token_salvo()
+                and not avisos_da_ia.manter_o_token_no_endereco_novo(self)
+                and not config_ia.apagar_token()):
+            # A pessoa recusou mandar o token para lá, e ele continua no arquivo: salvar
+            # o endereço mandaria o token justamente para onde ela disse que não
+            # (revisão de segurança, RN-50).
+            self.campo_endereco.setText(anterior)
+            self.faixa_erro.mostrar("Não foi possível apagar o token: a pasta do programa "
+                                    "não aceitou. O endereço novo não foi salvo.")
             return
         self.campo_token.clear()
         self._trocando_token = False
@@ -676,6 +773,9 @@ class _TelaHabilitar(_TelaBasica):
             f"Escolha o modelo do motor na tela do {config_ia.NOME_NA_TELA[destino]}."
             if sem_modelo else "")
 
+    def mostrar_falha_do_motor(self, frase):
+        self.falta_modelo.setText(frase)
+
     def showEvent(self, evento):
         self.atualizar()
         super().showEvent(evento)
@@ -710,6 +810,8 @@ class PainelIa(QWidget):
         self.tela_lm_studio = _TelaLmStudio(self._mudou)
         self.tela_servidor = _TelaServidor(self._mudou)
         self.tela_habilitar = _TelaHabilitar(self._mudou, self._testar_o_motor)
+        self.tela_lm_studio.ao_motor_falhar = self.tela_habilitar.mostrar_falha_do_motor
+        self.tela_servidor.ao_motor_falhar = self.tela_habilitar.mostrar_falha_do_motor
         self._areas = {}
         for nome, tela in ((LM_STUDIO, self.tela_lm_studio),
                            (SERVIDOR, self.tela_servidor),

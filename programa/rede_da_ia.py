@@ -51,6 +51,7 @@ CERTIFICADO_RECUSADO = ("O certificado de segurança deste endereço não foi "
                         "aceito. Veja com a TI.")
 MODELO_FORA = "O modelo escolhido não respondeu. Veja se ele está carregado."
 RESPOSTA_ESTRANHA = "O destino respondeu de um jeito que o programa não entende."
+RESPOSTA_CORTADA = "A resposta do modelo foi cortada no meio, antes de terminar."
 
 
 class FalhaDaIa(Exception):
@@ -64,7 +65,9 @@ class FalhaDaIa(Exception):
 
 
 class PedidoCancelado(Exception):
-    """A pessoa cancelou, ou o programa está fechando."""
+    """A pessoa cancelou, ou o programa está fechando. Não é falha do destino."""
+
+    e_cancelamento = True
 
 
 class _NaoEncontrado(FalhaDaIa):
@@ -164,6 +167,10 @@ def conversar(base, token, modelo, mensagens, segundos, cancelador=None):
         raise FalhaDaIa(RESPOSTA_ESTRANHA) from problema
     if not isinstance(texto, str):
         raise FalhaDaIa(RESPOSTA_ESTRANHA)
+    # Cortada, ela parece uma resposta inteira: o resto da página, com os CPFs que
+    # houver nele, sumiria sem nada acusar.
+    if resposta["choices"][0].get("finish_reason") == "length":
+        raise FalhaDaIa(RESPOSTA_CORTADA)
     return texto
 
 

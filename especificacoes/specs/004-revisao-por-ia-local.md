@@ -1,6 +1,6 @@
 # Spec 004 — Revisão por IA local
 
-**Status:** aprovada
+**Status:** aprovada; construída, à espera da conferência na tela
 **Data:** 2026-10-31
 **Aprovada em:** 2026-10-31
 **Levantamento:** `mockups/requisitos/08-mapa-do-entendimento.html`, começado em
@@ -280,8 +280,10 @@ branco.
 - RN-17: passam sem aviso: a própria máquina; os nomes terminados em `.ufsc.br`; o
   que for número interno ou der em número interno, perguntado à rede; e o que
   estiver em `IA_ENDERECOS_LOCAIS`, exato ou por terminação.
-- RN-18: **número interno não prova que é a UFSC.** Isso fica escrito no aviso e na
-  tela do servidor, porque na rede de casa ele também aparece.
+- RN-18: **número interno não prova que é a UFSC.** Isso fica escrito na tela do
+  servidor, porque na rede de casa ele também aparece. *(Corrigida em 31/10/2026: dizia
+  também "no aviso", que só abre para endereço não reconhecido, e ali a frase não faria
+  sentido.)*
 - RN-19: os demais abrem o aviso de risco: o endereço digitado pode ser externo, e
   há risco em enviar dados pessoais, como CPF, para servidores externos. O botão já
   escolhido é o que não envia, de modo que Enter ou Esc não confirmam nada.
@@ -314,7 +316,9 @@ branco.
   tem esse poder.
 - RN-29: cada apontamento diz de onde veio, com a IA, o destino e o modelo, e o
   motivo dela. Ele aparece na seção **"A IA pediu para olhar"**, abaixo dos
-  suspeitos e com cor própria, separada dos tipos de CPF (`programa/cpf.py`).
+  suspeitos e com cor própria, separada dos tipos de CPF (`programa/cpf.py`). *(Corrigida
+  em 31/10/2026: o comentário num número já listado diz só "IA: ...", como no rascunho
+  aprovado. O destino e o modelo aparecem nos itens da seção.)*
 - RN-30: **número apontado que o programa não tinha achado entra mascarado**, pela
   regra da máscara à mão (RN-9 da spec 003), e a pessoa solta se não for CPF. Soltar
   segue a RN-10 da spec 003: o que passa na conta pede a dupla conferência. Ao
@@ -327,9 +331,10 @@ branco.
   repete o que já está na lista.
 - RN-33: os apontamentos valem só na revisão aberta, e nada deles entra no `.md`
   (RN-12 da spec 003).
-- RN-34: salvar com a IA rodando pergunta antes. Sair da revisão, ou fechar o
-  programa, para a IA antes, sem o programa estourar (`CLAUDE.md`, sobre o trabalho
-  ao lado da janela).
+- RN-34: salvar com a IA rodando pergunta antes. Sair da revisão, para outro item do
+  menu ou outro documento, ou fechar o programa, para a IA antes, sem o programa
+  estourar (`CLAUDE.md`, sobre o trabalho ao lado da janela). Minimizar a janela não
+  para. Voltando à revisão, a faixa diz o que faltou, e dá para retomar.
 - RN-35: os pedidos vão por um caminho em que cada um vale sozinho, sem pedir ao
   destino que guarde a conversa.
 
@@ -524,6 +529,40 @@ funcionalidade estiver construída.
 - **Spec 003, RN-20:** "nenhum código deste módulo fala com a internet" passa a ter a
   exceção da RN-44 daqui, só com a IA ligada.
 - **Backlog, item 4:** reescrito na aprovação desta spec.
+
+## Acréscimos da lente crítica (31/10/2026)
+
+Vieram da revisão da construção, antes da conferência na tela. Nenhum muda o que foi
+combinado: fecham buracos que deixariam dígito à vista ou o token sair sem aviso.
+
+- RN-46: **número apontado com mais de 14 dígitos não vira máscara**, e fica só
+  apontado. A máscara esconde as pontas do que recebe, e uma citação com dois números
+  deixaria o miolo à vista, com a lista dizendo "mascarado".
+- RN-47: **citação que vai além de um número já listado** comenta o número e aponta o
+  resto dela, para um segundo número ali não passar sem ninguém ver.
+- RN-48: **a IA diz se o número parece CPF.** Dito claramente que não, ele fica só
+  apontado, sem máscara: um CEP não vira máscara por causa da opinião de que não é
+  CPF. Sem resposta clara, vale como se parecesse.
+- RN-49: **ligar e testar também passam pelo aviso de endereço**, porque mandam o
+  token. Abrir a tela não pergunta nem envia nada sem o endereço reconhecido ou já
+  confirmado.
+- RN-50: **endereço novo com token salvo pergunta** se o token fica ou sai, porque ele
+  é daquele servidor. O botão já escolhido é o que apaga.
+- RN-51: **o teste que falha ao trocar de destino devolve o destino de antes.** A falha
+  não deixa a pessoa sem nenhum dos dois.
+- RN-52: **a leitura pela IA fixa o destino e o modelo ao começar.** Trocar o destino
+  no meio não manda as páginas seguintes para outro lugar.
+- RN-53: **resposta cortada pelo limite do modelo é falha**, e não página pela metade.
+  O raciocínio que alguns modelos escrevem antes da resposta não entra no texto.
+
+## Acréscimos da revisão de segurança (31/10/2026)
+
+- RN-54: **todo pedido que leva o token confere o endereço antes**, inclusive o teste do
+  motor, ao ligar a chave em "Habilitar IA", e o teste ao trocar de modelo.
+- RN-55: **não dando para apagar o token ao trocar de endereço, o endereço novo não é
+  salvo**, e a tela diz por quê.
+- RN-56: **a citação da IA é procurada sem ligar para a diferença de espaços.** Um número
+  de verdade não é descartado como inventado por um espaço a mais.
 
 ## Questões em aberto
 

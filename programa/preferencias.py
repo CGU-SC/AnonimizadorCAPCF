@@ -16,7 +16,6 @@ sem erro e sem aviso.
 """
 import configparser
 import os
-import time
 
 import configuracao
 
@@ -104,7 +103,7 @@ def gravar_juntos(secao, valores):
             # deixava o arquivo vazio (lente crítica da etapa 1).
             arquivo.flush()
             os.fsync(arquivo.fileno())
-        _trocar_com_paciencia(provisorio, destino)
+        configuracao.trocar_com_paciencia(provisorio, destino)
     except OSError:
         # A pasta não aceitou: a escolha vale até fechar o programa, como era
         # antes de existir a lembrança. Perder a lembrança não estraga nada.
@@ -112,24 +111,6 @@ def gravar_juntos(secao, valores):
             provisorio.unlink(missing_ok=True)
         except OSError:
             pass
-
-
-def _trocar_com_paciencia(provisorio, destino):
-    """Põe o provisório no lugar do arquivo de verdade.
-
-    O antivírus do Windows abre o arquivo por um instante para examiná-lo, e
-    nesse instante a troca é recusada. Sem insistir, a escolha da pessoa se
-    perdia calada, por um acaso (lente crítica da etapa 4). Cinco tentativas
-    num quarto de segundo cobrem esse instante sem a janela parecer travada.
-    """
-    for tentativa in range(5):
-        try:
-            os.replace(provisorio, destino)
-            return
-        except PermissionError:
-            if tentativa == 4:
-                raise
-            time.sleep(0.05)
 
 
 def _conteudo():

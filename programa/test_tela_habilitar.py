@@ -1,15 +1,10 @@
 """Os três switches da tela "Habilitar IA" (etapa 5, RN-24 da spec 004)."""
-import sys
-from pathlib import Path
-
 import pytest
 
 import config_ia
 import trabalho_da_ia
 from painel_ia import PainelIa
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "abrir"))
-from servidor_de_ia_de_mentira import ServidorDeMentira  # noqa: E402
 from test_tela_lm_studio import _na_hora
 
 
@@ -19,11 +14,9 @@ def sem_trabalho_ao_lado(monkeypatch):
 
 
 @pytest.fixture
-def servidor():
-    servidor = ServidorDeMentira()
+def servidor(servidor):
     config_ia.guardar_do_destino(config_ia.LM_STUDIO, porta=servidor.porta)
-    yield servidor
-    servidor.parar()
+    return servidor
 
 
 def _configurado():

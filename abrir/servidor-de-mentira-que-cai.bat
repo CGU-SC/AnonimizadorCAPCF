@@ -1,5 +1,5 @@
 @echo off
-title Servidor de IA de mentira - cai no segundo pedido
+title Servidor de IA de mentira - que cai no meio
 echo.
 echo   O mesmo servidor de mentira, que responde o teste de ligar e cai no terceiro
 echo   pedido, com uma demora de 2 segundos: serve para ver a revisao parar no meio,

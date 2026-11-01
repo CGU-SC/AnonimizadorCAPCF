@@ -199,8 +199,8 @@ def test_atualizar_mantem_o_arquivo():
     assert not any("preferencias" in linha for linha in secoes.get("InstallDelete", []))
     for linha in secoes["Files"]:
         if "preferencias" in linha:
-            assert 'Excludes: "preferencias.ini,preferencias.ini.*.gravando"' in linha
+            assert 'Excludes: "preferencias.ini,preferencias.ini.*.gravando' in linha
     pasta_inteira = [linha for linha in secoes["Files"] if "{#Nome}\\*" in linha]
     assert pasta_inteira
     for linha in pasta_inteira:
-        assert 'Excludes: "preferencias.ini,preferencias.ini.*.gravando"' in linha
+        assert 'Excludes: "preferencias.ini,preferencias.ini.*.gravando' in linha

@@ -1,6 +1,4 @@
 """A IA como motor de leitura, e o instalador (etapa 8, RN-38 a RN-42 da spec 004)."""
-import shutil
-import sys
 from pathlib import Path
 
 import pytest
@@ -21,19 +19,10 @@ from painel_ocr import PainelOcr
 from test_escolha_do_motor import leitura_de_mentira  # noqa: F401
 
 RAIZ = Path(__file__).parent.parent
-sys.path.insert(0, str(RAIZ / "abrir"))
-from servidor_de_ia_de_mentira import ServidorDeMentira  # noqa: E402
 
 MASSA = RAIZ / "dados-exemplo"
 ESCANEADO = next(MASSA.glob("*escanead*.pdf"), None)
 MODELO = "modelo-exemplo-visao-13b"
-
-
-@pytest.fixture
-def servidor():
-    servidor = ServidorDeMentira()
-    yield servidor
-    servidor.parar()
 
 
 def _motor_ativo(servidor=None, porta=None):
@@ -139,9 +128,8 @@ def test_o_tempo_nao_inventa_numero():
 
 def test_a_imagem_vai_reduzida_e_o_texto_volta(servidor):
     _motor_ativo(servidor)
-    motor_ia.preparar()
     grande = Image.new("RGB", (2480, 3508), "white")
-    texto = motor_ia.ler(grande)
+    texto = motor_ia.preparar().ler(grande)
     assert "Texto lido pela IA" in texto
     corpo = servidor.comportamento.corpo_cru[0]
     assert '"model": "modelo-exemplo-visao-13b"' in corpo
@@ -181,7 +169,10 @@ def test_falha_numa_pagina_vira_a_falha_de_leitura_de_sempre(servidor, pdf):
     with pytest.raises(leitura.LeituraFalhou) as falha:
         leitura.ler_documento(pdf, motor=MOTOR_IA)
     assert falha.value.pagina == 2
-    assert "erro" not in str(falha.value)
+    # A frase conhecida vai para a tela, e o que o destino respondeu, não.
+    assert "erro 500" in str(falha.value)
+    assert "caiu" not in str(falha.value)
+    assert "Nada foi gravado" in str(falha.value)
 
 
 def test_sem_a_chave_a_leitura_vira_motor_nao_encontrado(pdf):
@@ -195,10 +186,11 @@ def test_cancelar_de_verdade_corta_a_pagina(servidor, pdf):
     _motor_ativo(servidor)
     servidor.comportamento.demora = 6
     resultado = []
+    cancelador = motor_ia.novo_cancelador()
 
     def ler():
         try:
-            leitura.ler_documento(pdf, motor=MOTOR_IA)
+            leitura.ler_documento(pdf, motor=MOTOR_IA, cancelador_ia=cancelador)
         except leitura.LeituraCancelada as parada:
             resultado.append(parada.pagina)
 
@@ -206,7 +198,7 @@ def test_cancelar_de_verdade_corta_a_pagina(servidor, pdf):
     comeco = time.monotonic()
     linha.start()
     time.sleep(1)
-    motor_ia.cancelar()
+    cancelador.cancelar()
     linha.join(3)
     assert resultado == [1]
     assert time.monotonic() - comeco < 4
@@ -240,6 +232,29 @@ def test_endereco_nao_confirmado_nao_le_e_fica_onde_estava(leitura_de_mentira, t
     painel.pdf.comecar_a_ler(ficha)
     assert leitura_de_mentira.motores == []
     assert painel.telas.currentWidget() is tela_antes
+
+
+def test_duas_leituras_nao_se_misturam(servidor, outro_servidor):
+    """Cada módulo pode ter a sua leitura rodando, e cada uma fica com o seu destino."""
+    _motor_ativo(servidor)
+    primeira = motor_ia.preparar()
+    config_ia.guardar_do_destino(config_ia.SERVIDOR, endereco=outro_servidor.base,
+                                 modelo_revisora="m", modelo_motor=MODELO)
+    config_ia.marcar_testado(config_ia.SERVIDOR, True)
+    config_ia.marcar_motor_testado(config_ia.SERVIDOR, True)
+    config_ia.ligar_destino(config_ia.SERVIDOR)
+    segunda = motor_ia.preparar()
+    primeira.ler(Image.new("RGB", (50, 50), "white"))
+    assert len(servidor.comportamento.corpo_cru) == 1
+    assert outro_servidor.comportamento.corpo_cru == []
+    segunda.ler(Image.new("RGB", (50, 50), "white"))
+    assert len(outro_servidor.comportamento.corpo_cru) == 1
+
+
+def test_o_instalador_nunca_leva_o_env_de_quem_montou():
+    iss = (RAIZ / "empacotar" / "instalador.iss").read_text(encoding="utf-8")
+    linha = next(l for l in iss.splitlines() if "builds" in l and "Excludes" in l)
+    assert ".env,.env.*.gravando" in linha
 
 
 def test_a_conferencia_diz_quem_leu():
@@ -279,4 +294,3 @@ def test_desinstalar_leva_o_token_e_atualizar_nao():
 def test_o_instalador_nao_leva_o_servidor_de_mentira():
     spec = (RAIZ / "empacotar" / "anonimizador.spec").read_text(encoding="utf-8")
     assert "mentira" not in spec
-    assert shutil.which is not None

@@ -7,6 +7,7 @@ um valor de dentro dele.
 import codecs
 import os
 import sys
+import time
 from pathlib import Path
 
 
@@ -83,7 +84,7 @@ def gravar_no_env(nome, valor):
             saida.write(novo)
             saida.flush()
             os.fsync(saida.fileno())
-        os.replace(provisorio, arquivo)
+        trocar_com_paciencia(provisorio, arquivo)
     except OSError:
         try:
             provisorio.unlink(missing_ok=True)
@@ -91,6 +92,24 @@ def gravar_no_env(nome, valor):
             pass
         return False
     return True
+
+
+def trocar_com_paciencia(provisorio, destino):
+    """Põe o provisório no lugar do arquivo de verdade.
+
+    O antivírus do Windows abre o arquivo por um instante para examiná-lo, e nesse
+    instante a troca é recusada. Sem insistir, a escolha ou o token da pessoa se
+    perdiam por um acaso (lente crítica da etapa 4 da funcionalidade 8). Cinco
+    tentativas num quarto de segundo cobrem esse instante sem a janela parecer travada.
+    """
+    for tentativa in range(5):
+        try:
+            os.replace(provisorio, destino)
+            return
+        except PermissionError:
+            if tentativa == 4:
+                raise
+            time.sleep(0.05)
 
 
 def _formato_do_env(conteudo):

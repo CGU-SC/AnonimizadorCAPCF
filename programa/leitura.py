@@ -167,23 +167,15 @@ def _ler_pagina_endireitada_com_paddleocr(pagina):
     return motor_paddleocr.ler(_endireitar(_desenhar(pagina)), virar_linhas=False)
 
 
-def _preparar_ia():
+def _preparar_ia(cancelador):
     try:
-        motor_ia.preparar()
+        return motor_ia.preparar(cancelador)
     except motor_ia.IaIndisponivel as problema:
         raise MotorNaoEncontrado(str(problema)) from problema
 
 
-def _ler_pagina_com_ia(pagina):
-    return motor_ia.ler(_desenhar(pagina))
-
-
-def _ler_pagina_endireitada_com_ia(pagina):
-    return motor_ia.ler(_endireitar(_desenhar(pagina)))
-
-
 def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
-                  motor=MOTOR_TESSERACT):
+                  motor=MOTOR_TESSERACT, cancelador_ia=None):
     """Lê o documento inteiro e devolve o texto de cada página, em ordem.
 
     ao_avancar(pagina, total) é chamado antes de cada página, para a tela poder
@@ -196,14 +188,14 @@ def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
     continuar recebendo a leitura de sempre.
     """
     if motor == MOTOR_IA:
-        _preparar_ia()
+        leitura_da_ia = _preparar_ia(cancelador_ia)
         # O detector do Tesseract endireita a página também para a IA, como faz para
         # o PaddleOCR (RN-28 da spec 002).
         if orientacao_conferida(motor):
             preparar_motor()
-            ler_pagina = _ler_pagina_endireitada_com_ia
+            ler_pagina = lambda pagina: leitura_da_ia.ler(_endireitar(_desenhar(pagina)))
         else:
-            ler_pagina = _ler_pagina_com_ia
+            ler_pagina = lambda pagina: leitura_da_ia.ler(_desenhar(pagina))
     elif motor == MOTOR_PADDLEOCR:
         if orientacao_conferida(motor):
             _preparar_paddleocr(virar_linhas=False)
@@ -235,10 +227,13 @@ def ler_documento(caminho, ao_avancar=None, foi_cancelado=None,
             except motor_ia.LeituraInterrompida as parada:
                 raise LeituraCancelada(numero) from parada
             except Exception as problema:
+                # A IA diz o que houve: token recusado ou modelo fora do ar não se
+                # resolvem tentando de novo, e a pessoa precisa saber disso.
+                motivo = (str(problema) if getattr(problema, "para_a_tela", False)
+                          else "Alguma coisa deu errado ao ler esta página.")
                 raise LeituraFalhou(
                     numero,
-                    "Alguma coisa deu errado ao ler esta página. Nada foi "
-                    "gravado, e o documento original não foi tocado.",
+                    f"{motivo} Nada foi gravado, e o documento original não foi tocado.",
                 ) from problema
     finally:
         documento.close()

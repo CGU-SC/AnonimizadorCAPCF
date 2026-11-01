@@ -1,8 +1,4 @@
 """Quando a IA falha no meio (etapa 7, RN-34, RN-36 e RN-37 da spec 004)."""
-from pathlib import Path
-
-import pytest
-
 import arquivo_md
 import avisos_da_ia
 import config_ia
@@ -89,24 +85,13 @@ def test_pagina_partida_com_o_segundo_pedaco_por_fazer_nao_conta_como_revisada()
 
 def test_destino_que_some_nao_trava_e_a_revisao_segue(servidor):
     tela = _tela()
-    base_certa = servidor.porta
     servidor.parar()
-    servidor._servidor = _Parado()
     tela.ia.comecar()
     assert not tela.ia.rodando()
     assert "não respondeu" in tela.ia.frase.text()
     # A revisão continua de pé: salvar, navegar e liberar seguem funcionando.
     assert tela.texto_para_o_arquivo().count("XXX") >= 1
     tela.andar(1)
-    assert base_certa
-
-
-class _Parado:
-    def shutdown(self):
-        pass
-
-    def server_close(self):
-        pass
 
 
 def _esperar(condicao, milissegundos=8000):
@@ -213,15 +198,13 @@ def test_a_massa_da_ia_e_inventada():
     for achado in cpf.procurar(DOCUMENTO):
         digitos = "".join(c for c in achado.original if c.isdigit())
         assert not achado.passa_na_conta or len(set(digitos)) == 1, achado.original
-    assert Path(__file__).exists()
 
 
-@pytest.mark.parametrize("sobra", [None])
-def test_novo_documento_zera_o_retomar(servidor, sobra):
+def test_novo_documento_zera_o_retomar(servidor):
     servidor.comportamento.cair_no_pedido = 2
     tela = _tela(TEXTO, CINCO_PAGINAS)
     tela.ia.comecar()
     tela.mostrar("outro.md", "Outro texto.\n", [])
     assert tela.ia.faixa.isHidden()
-    assert tela.ia._retomar_de is sobra
+    assert tela.ia._retomar_de is None
     assert config_ia.revisora_ativa()

@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QFrame,
     QProgressBar,
     QPushButton,
-    QVBoxLayout,
     QLabel,
 )
 
@@ -100,6 +99,11 @@ class RevisaoPorIa(QObject):
         self.rodou = False
         # De onde a próxima tentativa continua; 0 é começar do começo.
         self._retomar_de = None
+        # Pediram para parar: o que ainda chegar é ignorado. Sem isto, uma resposta já a
+        # caminho mudaria o arquivo depois de a pessoa ver o resumo no salvar.
+        self._parando = False
+        # O próximo pedaço que ainda não foi aplicado: é dali que o "Tentar de novo" segue.
+        self._proximo = 0
 
         self.botao = QPushButton("Revisar com IA")
         self.botao.setCursor(Qt.PointingHandCursor)
@@ -212,6 +216,10 @@ class RevisaoPorIa(QObject):
             self._texto, self._pedacos, a_partir_de, config_ia.base_do_destino(destino),
             config_ia.token_do_destino(destino), config_ia.modelo_da_revisora(destino))
         self._trabalho = trabalho
+        self._parando = False
+        self._proximo = a_partir_de
+        if a_partir_de == 0:
+            self._apontou = False
         self.rodou = True
         self.limite.setVisible(True)
         self.atualizar()
@@ -220,12 +228,16 @@ class RevisaoPorIa(QObject):
         trabalho.terminou.connect(lambda: self._terminou(trabalho))
         trabalho.falhou.connect(lambda indice, frase: self._falhou(trabalho, indice, frase))
         trabalho.cancelou.connect(lambda indice: self._cancelou(trabalho, indice))
+        # Ligado antes de começar: ligado depois, o aviso de término podia já ter passado,
+        # e o trabalho ficava guardado, com o documento inteiro, até fechar o programa.
+        trabalho.finished.connect(lambda: self._soltar(trabalho))
         self.barra.setMaximum(len(self._pedacos))
         self._avancou(trabalho, a_partir_de)
         trabalho.start()
 
     def cancelar(self):
         if self._trabalho is not None:
+            self._parando = True
             self._trabalho.cancelar()
 
     def parar(self):
@@ -234,9 +246,7 @@ class RevisaoPorIa(QObject):
         trabalho, self._trabalho = self._trabalho, None
         if trabalho is not None:
             trabalho.cancelar()
-            # Guardado até terminar: destruído rodando, ele derrubaria o programa.
-            self._antigos.append(trabalho)
-            trabalho.finished.connect(lambda: self._antigos.remove(trabalho))
+            self._guardar_ate_terminar(trabalho)
 
     def encerrar(self):
         self.parar()
@@ -249,19 +259,28 @@ class RevisaoPorIa(QObject):
         return trabalho is self._trabalho
 
     def _avancou(self, trabalho, indice):
-        if self._e_o_de_agora(trabalho):
+        if self._e_o_de_agora(trabalho) and not self._parando:
             self.barra.setValue(indice)
             onde = revisao_ia.onde_esta(self._pedacos, indice)
             self._mostrar_faixa(f"A IA está revisando: {onde}. Você já pode trabalhar.",
                                 andando=True)
 
     def _chegou(self, trabalho, indice, apontamentos):
-        if self._e_o_de_agora(trabalho) and apontamentos:
+        if not self._e_o_de_agora(trabalho) or self._parando:
+            return
+        self._proximo = indice + 1
+        # Só o que entrou de fato conta: se tudo foi descartado, a faixa precisa dizer
+        # que a IA terminou sem nada a mais, e não sumir sem explicação.
+        if apontamentos and self._ao_apontar(apontamentos, self._pedacos[indice]):
             self._apontou = True
-            self._ao_apontar(apontamentos, self._pedacos[indice])
 
     def _terminou(self, trabalho):
         if not self._e_o_de_agora(trabalho):
+            return
+        # Cancelou no instante em que a última resposta chegava: ela foi descartada, e
+        # dizer "terminou sem nada a mais" seria um falso tudo certo.
+        if self._parando and self._proximo < len(self._pedacos):
+            self._cancelou(trabalho, self._proximo)
             return
         self._acabou(None)
         if self._apontou:
@@ -272,6 +291,9 @@ class RevisaoPorIa(QObject):
     def _falhou(self, trabalho, indice, frase):
         if not self._e_o_de_agora(trabalho):
             return
+        if self._parando:
+            self._cancelou(trabalho, self._proximo)
+            return
         self._acabou(indice)
         faltou = revisao_ia.o_que_faltou(self._pedacos, indice)
         self._mostrar_faixa(f"{faltou} {frase}", andando=False, pode_tentar=True, alerta=True)
@@ -279,18 +301,26 @@ class RevisaoPorIa(QObject):
     def _cancelou(self, trabalho, indice):
         if not self._e_o_de_agora(trabalho):
             return
-        self._acabou(indice)
-        faltou = revisao_ia.o_que_faltou(self._pedacos, indice)
+        self._acabou(self._proximo)
+        faltou = revisao_ia.o_que_faltou(self._pedacos, self._proximo)
         self._mostrar_faixa(f"{faltou} Você cancelou.", andando=False, pode_tentar=True,
                             alerta=True)
 
     def _acabou(self, retomar_de):
-        self._antigos.append(self._trabalho)
-        trabalho = self._trabalho
-        trabalho.finished.connect(lambda: trabalho in self._antigos and self._antigos.remove(trabalho))
+        self._guardar_ate_terminar(self._trabalho)
         self._trabalho = None
         self._retomar_de = retomar_de
         self.atualizar()
+
+    def _guardar_ate_terminar(self, trabalho):
+        """O aviso de que acabou chega um instante antes de a linha paralela terminar de
+        fato, e destruí-la nesse instante derrubaria o programa."""
+        if not trabalho.isFinished():
+            self._antigos.append(trabalho)
+
+    def _soltar(self, trabalho):
+        if trabalho in self._antigos:
+            self._antigos.remove(trabalho)
 
     def _mostrar_faixa(self, frase, andando, pode_tentar=False, alerta=False):
         cor = estilo.COR_ALERTA if alerta else estilo.COR_IA

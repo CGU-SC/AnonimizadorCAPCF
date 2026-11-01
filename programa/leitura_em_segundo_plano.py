@@ -13,6 +13,7 @@ from PySide6.QtCore import QThread, Signal
 
 import motor_ia
 from leitura import (
+    MOTOR_IA,
     MOTOR_TESSERACT,
     LeituraCancelada,
     LeituraFalhou,
@@ -33,6 +34,9 @@ class LeituraEmSegundoPlano(QThread):
         self._caminho = caminho
         self._motor = motor
         self._pediram_para_cancelar = False
+        # A IA é a exceção à espera de uma página: um modelo pode levar minutos nela, e
+        # esperar por isso seria a janela parada. Aí a espera é cortada, sem mexer em nada.
+        self._cancelador_ia = motor_ia.novo_cancelador() if motor == MOTOR_IA else None
 
     def cancelar(self):
         """Marca o pedido; quem para de fato é a leitura, na página seguinte.
@@ -43,9 +47,8 @@ class LeituraEmSegundoPlano(QThread):
         máximo uma página - cerca de um segundo e meio.
         """
         self._pediram_para_cancelar = True
-        # A IA é a exceção: um modelo pode levar minutos numa página, e esperar por
-        # isso seria a janela parada. Aí a espera é cortada, sem mexer em nada.
-        motor_ia.cancelar()
+        if self._cancelador_ia is not None:
+            self._cancelador_ia.cancelar()
 
     def run(self):
         try:
@@ -54,6 +57,7 @@ class LeituraEmSegundoPlano(QThread):
                 ao_avancar=self.avancou.emit,
                 foi_cancelado=lambda: self._pediram_para_cancelar,
                 motor=self._motor,
+                **({"cancelador_ia": self._cancelador_ia} if self._cancelador_ia else {}),
             )
         except LeituraCancelada as parada:
             self.cancelou.emit(parada.pagina)

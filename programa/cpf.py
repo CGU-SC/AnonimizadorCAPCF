@@ -263,6 +263,10 @@ def mascarar_a_mao(texto, inicio, fim):
 # Menos que isto não dá um CPF, nem estragado: é um ano, um valor, um número de
 # página. O número curto apontado pela IA fica só apontado, sem máscara (RN-30).
 MINIMO_DE_DIGITOS_DO_APONTADO = 8
+# Mais que isto não é um número, são dois: a máscara esconde só as pontas do que
+# recebe, e os dígitos do meio ficariam à vista com a lista dizendo "mascarado". Um
+# CPF tem 11, e sobra folga para o que a leitura estragou.
+MAXIMO_DE_DIGITOS_DO_APONTADO = 14
 
 
 def mascarar_apontado(texto, inicio, fim, origem, motivo):
@@ -277,7 +281,7 @@ def mascarar_apontado(texto, inicio, fim, origem, motivo):
     if not any(letra.isdigit() for letra in trecho):
         return None
     posicoes = _posicoes_do_trecho(trecho)
-    if len(posicoes) < MINIMO_DE_DIGITOS_DO_APONTADO:
+    if not MINIMO_DE_DIGITOS_DO_APONTADO <= len(posicoes) <= MAXIMO_DE_DIGITOS_DO_APONTADO:
         return None
     ocorrencia = mascarar_a_mao(texto, inicio, fim)
     digitos = "".join(LETRA_PARECIDA_COM_DIGITO.get(trecho[i], trecho[i]) for i in posicoes)

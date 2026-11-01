@@ -12,17 +12,8 @@ import pytest
 import rede_da_ia
 
 PROGRAMA = Path(__file__).parent
-sys.path.insert(0, str(PROGRAMA.parent / "abrir"))
-from servidor_de_ia_de_mentira import ServidorDeMentira  # noqa: E402
 
 SINAIS_DE_REDE = ("http", "socket", "urllib", "requests", "ftplib")
-
-
-@pytest.fixture
-def servidor():
-    servidor = ServidorDeMentira()
-    yield servidor
-    servidor.parar()
 
 
 def test_so_um_arquivo_do_programa_tem_sinal_de_rede():
@@ -65,6 +56,60 @@ def test_com_a_ia_desligada_o_arquivo_da_rede_nem_e_carregado():
     assert "False" in resultado.stdout.split()[0], resultado.stdout + resultado.stderr
 
 
+_ROTEIRO_DO_CAMINHO_INTEIRO = """
+import socket, sys, tempfile
+from pathlib import Path
+import configuracao
+pasta = Path(tempfile.mkdtemp())
+configuracao.pasta_do_programa = lambda: pasta
+conexoes = []
+socket.socket.connect = lambda self, *a: conexoes.append(a)
+socket.getaddrinfo = lambda *a, **k: conexoes.append(a) or []
+from PySide6.QtWidgets import QApplication
+app = QApplication([])
+import main
+janela = main.JanelaPrincipal()
+janela.show()
+janela.menu.botao_anonimizar.click()
+painel = janela.painel_anonimizar
+painel.receber_arquivo(Path(sys.argv[1]))
+painel.abrir_o_salvar()
+painel.gravar(pasta / "saida.md")
+assert (pasta / "saida.md").exists()
+janela.menu.botao_ocr.click()
+janela.close()
+print("CARREGOU" if "rede_da_ia" in sys.modules else "NAO_CARREGOU", len(conexoes))
+"""
+
+
+def test_com_a_ia_desligada_o_caminho_inteiro_nao_abre_conexao():
+    """RN-43: do arquivo ao .md gravado, e não só ao abrir o programa."""
+    documento = PROGRAMA.parent / "dados-exemplo" / "30-revisao-por-ia.md"
+    resultado = subprocess.run(
+        [sys.executable, "-c", _ROTEIRO_DO_CAMINHO_INTEIRO, str(documento)],
+        cwd=PROGRAMA, capture_output=True, text=True, timeout=120)
+    assert resultado.stdout.split()[-2:] == ["NAO_CARREGOU", "0"], (
+        resultado.stdout + resultado.stderr)
+
+
+def test_com_a_ia_ligada_abrir_o_programa_nao_abre_conexao(monkeypatch):
+    """RN-8: a primeira conexão só vem quando a pessoa pede."""
+    import config_ia
+    from main import JanelaPrincipal
+    config_ia.guardar_do_destino(config_ia.LM_STUDIO, modelo_revisora="m", modelo_motor="m")
+    config_ia.marcar_testado(config_ia.LM_STUDIO, True)
+    config_ia.marcar_motor_testado(config_ia.LM_STUDIO, True)
+    config_ia.ligar_destino(config_ia.LM_STUDIO)
+    config_ia.ligar_geral()
+    conexoes = []
+    monkeypatch.setattr(rede_da_ia.socket.socket, "connect",
+                        lambda self, *a: conexoes.append(a))
+    janela = JanelaPrincipal()
+    janela.show()
+    janela.close()
+    assert conexoes == []
+
+
 def test_lista_os_modelos_e_diz_quais_leem_imagem(servidor):
     modelos = rede_da_ia.listar_modelos(servidor.base)
     assert [m.nome for m in modelos] == ["modelo-exemplo-texto-8b", "modelo-exemplo-visao-13b"]
@@ -93,15 +138,6 @@ def test_destino_fora_do_ar_da_falha_com_frase_pronta(servidor):
     with pytest.raises(rede_da_ia.FalhaDaIa) as falha:
         rede_da_ia.listar_modelos(base)
     assert str(falha.value) == rede_da_ia.NAO_RESPONDEU
-    servidor._servidor = _Parado()
-
-
-class _Parado:
-    def shutdown(self):
-        pass
-
-    def server_close(self):
-        pass
 
 
 def test_redirecionamento_nao_e_seguido(servidor):

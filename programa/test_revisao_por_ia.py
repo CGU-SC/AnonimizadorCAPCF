@@ -4,7 +4,6 @@ Os números que fecham a conta são de dígitos repetidos (RN-22 da spec 003), e
 o resto é inventado.
 """
 import json
-import sys
 from pathlib import Path
 
 import pytest
@@ -14,7 +13,6 @@ import avisos_da_ia
 import config_ia
 import cpf
 import revisao_ia
-import revisao_por_ia_na_tela
 from painel_anonimizar import PainelAnonimizar
 from revisao_por_ia_na_tela import (
     LIGUE_NO_MENU,
@@ -24,8 +22,6 @@ from revisao_por_ia_na_tela import (
 )
 from tela_revisao import DA_IA, TelaRevisao, TrechoDaIa, quantos_em_cada_grupo
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "abrir"))
-from servidor_de_ia_de_mentira import ServidorDeMentira  # noqa: E402
 
 # "3333-3333-333" tem 11 dígitos repetidos e passa na conta, mas em grupos que o
 # programa não reconhece: é o caso de o contexto denunciar um CPF.
@@ -45,15 +41,13 @@ START_DE_VERDADE = RevisaoEmSegundoPlano.start
 
 
 @pytest.fixture
-def servidor():
-    servidor = ServidorDeMentira()
+def servidor(servidor):
     config_ia.guardar_do_destino(config_ia.LM_STUDIO, porta=servidor.porta,
                                  modelo_revisora=MODELO)
     config_ia.marcar_testado(config_ia.LM_STUDIO, True)
     config_ia.ligar_destino(config_ia.LM_STUDIO)
     config_ia.ligar_geral()
-    yield servidor
-    servidor.parar()
+    return servidor
 
 
 @pytest.fixture(autouse=True)
@@ -491,3 +485,41 @@ def test_o_painel_abre_a_revisao_com_as_paginas_do_pdf(servidor):
     painel.receber_texto_conferido("documento.pdf", ["Página um", "Página dois"])
     assert [p.pagina for p in painel.tela_revisao.ia._pedacos] == [1, 2]
     painel.tela_revisao.ia.parar()
+
+
+def test_sair_para_outro_item_do_menu_para_a_ia(servidor, monkeypatch, tmp_path):
+    """RN-34: sem nada a perder não há pergunta, e a IA pararia de ser vista."""
+    from main import JanelaPrincipal
+    from test_falhas_da_ia import _esperar
+    monkeypatch.setattr(RevisaoEmSegundoPlano, "start", START_DE_VERDADE)
+    servidor.comportamento.demora = 3
+    janela = JanelaPrincipal()
+    janela.show()
+    janela.menu.botao_anonimizar.click()
+    painel = janela.painel_anonimizar
+    arquivo = tmp_path / "documento.md"
+    arquivo.write_text("Texto sem nada para perder.\n", encoding="utf-8")
+    painel.receber_arquivo(arquivo)
+    ia = painel.tela_revisao.ia
+    ia.comecar()
+    assert ia.rodando()
+    janela.menu.botao_ocr.click()
+    _esperar(lambda: not ia.rodando(), 2000)
+    assert not ia.rodando()
+    assert "Você cancelou" in ia.frase.text()
+    assert not ia.botao_tentar.isHidden()
+    janela.close()
+    ia.encerrar()
+
+
+def test_destino_mudo_sai_da_espera_no_tempo_limite(servidor, monkeypatch):
+    from test_falhas_da_ia import _esperar
+    monkeypatch.setattr(RevisaoEmSegundoPlano, "start", START_DE_VERDADE)
+    monkeypatch.setattr("revisao_por_ia_na_tela.SEGUNDOS_POR_PEDACO", 1)
+    servidor.comportamento.demora = 4
+    tela = _tela()
+    tela.ia.comecar()
+    _esperar(lambda: not tela.ia.rodando(), 3000)
+    assert not tela.ia.rodando()
+    assert "demorou demais" in tela.ia.frase.text()
+    tela.ia.encerrar()

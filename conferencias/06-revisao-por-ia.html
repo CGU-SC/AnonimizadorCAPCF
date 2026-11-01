@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 06 — revisão por IA</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5; --cor-alerta: #d9a441; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 980px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--cor-borda); }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--cor-borda); }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  ol { padding-left: 24px; }
+  li { margin-bottom: 8px; }
+  .ve { color: var(--cor-texto-secundario); display: block; font-size: 14px; }
+  .aviso { border: 1px solid var(--cor-alerta); background: rgba(217,164,65,.10); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Conferência 06 — revisão por IA local</h1>
+<p class="subtitulo">Funcionalidade 4, 31/10/2026. As 8 etapas estão construídas, e a conferência ficou toda para o fim, a pedido da solicitante. Tudo abaixo foi testado por programa. Nada foi visto na tela ainda.</p>
+
+<div class="aviso"><strong>O que os testes automáticos não provam:</strong> a aparência das telas, o comportamento com um modelo de verdade e o instalador. Nenhum teste falou com um LM Studio de verdade: todos usam um servidor de mentira nesta máquina.</div>
+
+<h2>O que ficou pronto</h2>
+<table>
+  <tr><th>Etapa</th><th>O que faz</th><th>Testado por programa</th></tr>
+  <tr><td>1</td><td>A lembrança do motor saiu de dentro da tela</td><td>Cada módulo continua com a sua escolha</td></tr>
+  <tr><td>2</td><td>"Configurações de IA" no fim do menu, com o submenu</td><td>Troca do menu, voltar, pergunta de descartar</td></tr>
+  <tr><td>3</td><td>O LM Studio: conexão, lista de modelos, teste</td><td>Fechado, sem modelo, porta estranha, único arquivo com rede</td></tr>
+  <tr><td>4</td><td>O servidor interno, o token e o aviso de endereço</td><td>Token nos três formatos do Bloco de Notas, byte a byte; Enter e Esc não confirmam; troca de destino</td></tr>
+  <tr><td>5</td><td>"Habilitar IA", com os três switches e a ressalva</td><td>Regras de ligar, posições guardadas, valor escrito à mão</td></tr>
+  <tr><td>6</td><td>A IA revisa, e os apontamentos aparecem</td><td>Número novo mascarado, comentário, trecho, resposta hostil, <code>.md</code> sem marca da IA</td></tr>
+  <tr><td>7</td><td>Quando a IA falha</td><td>Cair no meio, retomar só o resto, cancelar, salvar e fechar com ela rodando</td></tr>
+  <tr><td>8</td><td>A IA como motor, e o instalador</td><td>Acende com a chave, lê, falha, cancela. Do instalador, só a receita foi conferida</td></tr>
+</table>
+
+<div class="aviso"><strong>Onde a conferência parou:</strong> a solicitante conferiu os passos 1 a 5 em 31/10/2026, e pediu a engrenagem no item "Configurações de IA", que já foi colocada e ainda não foi vista. Falta conferir do passo 6 em diante.</div>
+
+<h2>Roteiro: com o servidor de mentira, sem precisar de modelo</h2>
+<p>Feche o LM Studio, se estiver aberto. Dois cliques em <code>abrir\servidor-de-ia-de-mentira.bat</code>, deixe a janela aberta, e depois dois cliques em <code>abrir\abrir-dev.bat</code>. A janela do programa não recarrega sozinha: a cada mudança, feche e abra.</p>
+<ol>
+  <li><strong>Antes de ligar a IA.</strong> Abra <code>dados-exemplo\30-revisao-por-ia.md</code> no Anonimizar.<span class="ve">Você deve ver: a revisão de sempre, e "Revisar com IA" apagado, com "Ligue em Configurações de IA, no fim do menu" embaixo. Salve ou descarte para sair.</span></li>
+  <li><strong>O menu.</strong> Clique em "Configurações de IA".<span class="ve">Você deve ver: o menu inteiro trocado pelo submenu, com "‹ Voltar", e a tela do LM Studio. Compare com o rascunho <code>mockups\ia\01-configuracoes-de-ia.html</code>.</span></li>
+  <li><strong>Ligar o LM Studio.</strong> Ligue o switch e escolha <code>modelo-exemplo-texto-8b</code>.<span class="ve">Você deve ver: "Testando" por um instante, depois "Respondendo agora".</span></li>
+  <li><strong>Torto: o LM Studio fechado.</strong> Feche a janela do servidor de mentira, clique em "Testar de novo", e depois abra o atalho do servidor de novo.<span class="ve">Você deve ver: o switch voltar a desligado, com o que fazer. Religando, o modelo volta sozinho.</span></li>
+  <li><strong>Habilitar.</strong> Em "Habilitar IA", ligue o switch geral.<span class="ve">Você deve ver: "IA revisora" ligada, "IA como motor de leitura" desligada, "ao clicar no botão" marcado, e a ressalva com a data.</span></li>
+  <li><strong>Revisar.</strong> Volte, abra o mesmo documento no Anonimizar e clique em "Revisar com IA".<span class="ve">Você deve ver: a seção lilás "A IA pediu para olhar" abaixo dos suspeitos, com <code>3333-3333-333</code> mascarado e "Va1or tota1..." apontado; o suspeito do termo com o comentário da IA; e o selo "2 da IA". Compare com <code>mockups\anonimizar\11-revisar-com-ia.html</code>.</span></li>
+  <li><strong>Soltar.</strong> Clique em "Desfazer…" no número da IA.<span class="ve">Você deve ver: a dupla conferência de sempre, porque ele passa na conta.</span></li>
+  <li><strong>O arquivo.</strong> Salve e abra o <code>.md</code>.<span class="ve">Você deve ver: as máscaras, e nenhum motivo, etiqueta ou nome de modelo.</span></li>
+  <li><strong>Ao abrir.</strong> Em "Habilitar IA", marque "sozinha, ao abrir a revisão", e abra o documento de novo.<span class="ve">Você deve ver: os apontamentos chegando sem clique.</span></li>
+  <li><strong>Torto: a IA caindo no meio.</strong> Feche o servidor, abra <code>abrir\servidor-de-mentira-que-cai.bat</code>, e abra no Anonimizar um PDF com várias páginas de <code>dados-exemplo</code>.<span class="ve">Você deve ver: a faixa amarela dizendo até que página a IA foi. "Tentar de novo" retoma daí. Durante a revisão, a tela não trava, e "Cancelar" corta na hora. Salvar nesse meio-tempo pergunta antes.</span></li>
+  <li><strong>Torto: sair no meio.</strong> Com a IA revisando um documento sem nenhum número, clique em "Gerar OCR" e volte ao Anonimizar.<span class="ve">Você deve ver: a faixa dizendo que você cancelou e até onde a IA foi, com "Tentar de novo".</span></li>
+  <li><strong>Torto: fechar no meio.</strong> Com a IA revisando, feche o programa.<span class="ve">Você deve ver: ele fechar limpo, sem a caixa de "parou de funcionar".</span></li>
+  <li><strong>Torto: só trechos.</strong> Num documento sem nenhum CPF, com um trecho apontado pela IA, tente sair da revisão.<span class="ve">Você deve ver: a pergunta de descartar falando de "1 trecho apontado pela IA", e não de "0 números".</span></li>
+  <li><strong>O servidor interno.</strong> Na tela dele, escreva <code>http://127.0.0.1:1234</code> e um token inventado, e salve.<span class="ve">Você deve ver: nenhum aviso, "token salvo" no lugar do campo, e a frase "É esta máquina". Ligue o switch: vem o aviso de que o LM Studio será desligado.</span></li>
+  <li><strong>Torto: o endereço de fora.</strong> Troque o endereço para <code>http://ia.instituicao.exemplo:8998</code> e salve.<span class="ve">Você deve ver: a caixa vermelha, com "Não enviar" já escolhido e a frase da cifra. Enter não confirma. Confirmando, vem a pergunta sobre o token. Esta caixa do token não estava no rascunho: veja se ela serve.</span></li>
+  <li><strong>O motor.</strong> Volte ao LM Studio, ligue a chave do motor e escolha <code>modelo-exemplo-visao-13b</code>.<span class="ve">Você deve ver: "IA local (LM Studio)" acesa na escolha do motor, nos dois módulos, com a frase da ressalva. Lendo um PDF escaneado, o texto é "Texto lido pela IA de mentira", e a conferência é a de sempre.</span></li>
+  <li><strong>Torto: desligar com a IA marcada.</strong> Com a "IA local" marcada, desligue o destino.<span class="ve">Você deve ver: "Habilitar IA" desligado, com o motivo, e a marca da leitura passada a outro motor, com a frase dizendo isso. Religando o destino e o switch geral, os switches voltam como estavam.</span></li>
+</ol>
+
+<h2>Roteiro: com um modelo de verdade</h2>
+<p>Abra o LM Studio, carregue um modelo e ligue o servidor local. Isso responde às verificações que a spec deixou para a construção, e eu não consegui fazer sozinha:</p>
+<ol>
+  <li>Ligue o switch do LM Studio: a lista traz os seus modelos, com os que estão carregados?</li>
+  <li>Escolha um modelo que <strong>não</strong> está carregado: o que acontece?</li>
+  <li>Revise um documento: os apontamentos fazem sentido? Quanto tempo leva?</li>
+  <li>Depois, olhe no LM Studio se o texto do documento ficou em algum histórico.</li>
+</ol>
+
+<h2>O que continua sem conferir</h2>
+<ul>
+  <li><strong>O instalador:</strong> só a receita foi conferida por teste. Desinstalar apaga o <code>.env</code> inteiro, com o token e a pasta do Tesseract, se a TI a tiver escrito. Isso entra no teste da entrega.</li>
+  <li><strong>O servidor de verdade da TI:</strong> ninguém falou com ele. E só a TI pode dizer se ele guarda o texto recebido.</li>
+  <li><strong>O tamanho dos pedaços e o tempo limite:</strong> são 6 mil letras e 5 minutos por pedaço, estimados, e não medidos.</li>
+</ul>
+<p class="rodape">Gerada em 31/10/2026 pela skill-07-designer-de-telas, a pedido da skill-08-construtor-de-funcionalidades.</p>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 48 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 48 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre a funcionalidade 4 inteira, em 31/10/2026, com a varredura do <code>/code-review</code> antes.
+Foi feita uma vez, sobre o conjunto, e não etapa por etapa, porque a conferência na tela ficou toda para o fim, a pedido da solicitante.
+As dez suspeitas foram confirmadas no código e corrigidas, cada uma com teste. Nada aqui foi visto na tela ainda.</p>
+
+<h2>O que podia deixar um CPF à vista</h2>
+<div class="achado"><h3>1. Citação longa virava uma máscara só</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A IA citava dois números de uma vez. Só as pontas eram escondidas, os dígitos do meio iam para o arquivo, e a lista dizia "mascarado".</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Acima de 14 dígitos não há máscara: o trecho fica apontado, e a pessoa decide.</div></div></div>
+<div class="achado"><h3>2. Citação que ia além de um número listado</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>O número listado ganhava o comentário, e o outro número da citação passava sem marca.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O resto da citação fica apontado na seção da IA.</div></div></div>
+<div class="achado"><h3>3. O motor trocava de destino no meio da leitura</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Trocando o destino nas configurações, as páginas seguintes, com os CPFs inteiros, iam para o outro lugar sem passar pelo aviso de endereço.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O destino e o modelo ficam fixos do começo ao fim da leitura.</div></div></div>
+<div class="achado"><h3>4. Resposta cortada parecia uma página inteira</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Com a resposta cortada pelo limite do modelo, o resto da página sumia sem aviso. E o raciocínio do modelo entrava no texto.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Resposta cortada é falha, com a tela de sempre. O raciocínio sai antes de o texto chegar à conferência.</div></div></div>
+
+<h2>O token e o endereço</h2>
+<div class="achado"><h3>5. O token saía sem o aviso</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Listar e testar mandavam o token sem conferir o endereço, e abrir a tela já bastava. Um endereço digitado errado recebia o token no primeiro teste.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Ligar e testar passam pelo aviso, e abrir a tela não envia nada sem endereço reconhecido ou já confirmado. Endereço novo pergunta se o token fica, com "Apagar o token" já escolhido.</div></div></div>
+
+<h2>O que desligava a IA ou escondia o motivo</h2>
+<div class="achado"><h3>6. O teste que falhava deixava sem nenhum destino</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Quem trocava do LM Studio para o servidor e via o teste falhar ficava sem os dois, e com a IA desligada.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A falha devolve o destino de antes, com tudo ligado como estava. Durante o teste, o novo não conta como configurado.</div></div></div>
+<div class="achado"><h3>7. Fechar no meio de um teste desligava a IA</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>O corte do teste ao fechar contava como falha, e a IA amanhecia desligada. Alguns pedidos nem eram cortados, e a janela podia fechar com eles rodando.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Cancelar não é falha, e todo pedido aberto é cortado ao fechar.</div></div></div>
+<div class="achado"><h3>8. A falha do motor aparecia numa tela escondida</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Ligando a chave com um modelo que não lê imagem, nada mudava na tela, e a escolha do motor pedia para escolher um modelo que já estava escolhido.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A falha aparece na tela "Habilitar IA", e a escolha do motor diz que o modelo não passou no teste.</div></div></div>
+
+<h2>O que a IA dizia, e o programa fazia o contrário</h2>
+<div class="achado"><h3>9. "Isto não é CPF" virava máscara</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A instrução pedia para apontar o que claramente não é CPF, e o programa mascarava mesmo assim: um CEP saía estragado no arquivo.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A IA diz se parece CPF. Dito que não, ele fica só apontado. Sem resposta clara, vale a máscara, porque soltar custa um clique.</div></div></div>
+
+<h2>O antivírus</h2>
+<div class="achado"><h3>10. O token não tinha a paciência do preferencias.ini</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>O antivírus segurando o <code>.env</code> por um instante fazia a tela dizer que a pasta não aceitou.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Os dois arquivos usam a mesma peça, que insiste por um quarto de segundo.</div></div></div>
+
+<h2>Regras novas, por causa disso</h2>
+<p>As RN-46 a RN-53 entraram na spec 004. Uma delas tem efeito novo na tela: a pergunta sobre o token ao trocar de endereço, que não estava no rascunho aprovado (RN-50). Ela usa a mesma caixa dos outros avisos.</p>
+
+<h2>Lentes que ficaram de fora</h2>
+<ul>
+  <li><strong>Critérios de aceite:</strong> percorreria a spec 004 item a item. Fica para depois da conferência na tela.</li>
+  <li><strong>Conferir na tela:</strong> é a conferência 06, com você.</li>
+  <li><strong>Segredo e dado real:</strong> confirmaria que nenhum token, endereço de fora ou dado real entrou no que vai para o histórico.</li>
+  <li><strong>Manutenção:</strong> olharia o <code>tela_revisao.py</code>, que cresceu, e as peças repetidas entre as telas de destino.</li>
+  <li><strong>Clareza:</strong> olharia os comentários e os nomes do código novo.</li>
+</ul>
+<p class="rodape">Gerada em 31/10/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

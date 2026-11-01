@@ -220,14 +220,17 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   e a instalação seguinte não abre maximizada. Fazer o instalador recusar com
   o programa aberto foi oferecido e recusado: muda o que a pessoa vê ao
   instalar, por um efeito pequeno e raro.
+  Os roteiros ganham também a funcionalidade 4: onde ligar a IA, o que abrir no LM
+  Studio antes, e que desinstalar apaga o `.env` inteiro, com o token e a pasta do
+  Tesseract, se a TI a tiver escrito (decidido em 31/10/2026). A TI precisa responder
+  se o servidor guarda o texto recebido: ele vai com os CPFs inteiros.
 
-- **A funcionalidade 4 (IA local) começa reorganizando a lembrança do motor**
-  (decidido em 29/10/2026, revisões 43 e 44). Hoje ela está ligada à peça da
-  tela que mostra os motores (`EscolhaDoMotor`, em `programa/caminho_do_pdf.py`,
-  pelo `lembrar_como`), e o caminho do PDF monta a tela de ler também no Gerar
-  OCR, que não a mostra - por isso só o Anonimizar liga a lembrança dela. A IA
-  local é o terceiro motor: quem a construir separa primeiro a lembrança da
-  tela, antes de pôr o motor novo, em vez de repetir a ligação.
+- **Um pedaço com resposta ruim trava a revisão por IA no meio** (decidido em
+  31/10/2026): "Tentar de novo" manda o mesmo pedaço, e o modelo tende a falhar igual,
+  deixando o resto do documento sem revisão. A tela diz isso, então não passa calado.
+  Um botão "Pular esta parte e seguir" foi oferecido e fica para depois do teste com um
+  modelo de verdade, porque ainda não se sabe com que frequência isso acontece. Quem
+  fizer esse teste decide com a solicitante.
 
 - **Quando o backlog terminar, organizar a documentação num índice só**
   (pedido da solicitante em 22/10/2026, que achou a documentação "muito
@@ -240,6 +243,19 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   versão). Não é para agora: entra depois da última funcionalidade do backlog.
 
 ## O que já nos mordeu
+
+- **`monkeypatch.undo()` num teste desfaz tudo, inclusive o isolamento do
+  `conftest.py`.** O teste passou a gravar no `preferencias.ini` de verdade desta
+  máquina, sem nada acusar além de falhar por outro motivo (etapa 3 da funcionalidade
+  4, 31/10/2026). Para desfazer uma troca só, ponha de volta o valor guardado com outro
+  `monkeypatch.setattr`.
+- **No Windows, fechar a conexão não acorda quem espera a resposta.** `shutdown` e
+  `close` de outra linha não interrompem o `recv`: cancelar levava o tempo todo que o
+  servidor levasse. Por isso o `programa/rede_da_ia.py` faz o pedido numa linha à parte,
+  e quem pediu vai embora ao cancelar (etapa 3 da funcionalidade 4, 31/10/2026).
+- **`lms ls` acorda o serviço do LM Studio.** Um comando que parece só de leitura sobe
+  o serviço, e pode ficar sem voltar. O programa fala com o LM Studio só pela porta do
+  servidor local, e não usa esse comando (levantamento da funcionalidade 4, 31/10/2026).
 
 - Instalar programa em `Program Files` (como o Tesseract) exige confirmação do
   Windows que só aparece numa sessão com tela — comando rodado por controle
@@ -260,7 +276,10 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   instalação sem os modelos do PaddleOCR (RN-29), e `abrir-sem-nenhum-motor.bat`
   esconde os dois - o único caso do aviso no alto e da tela cheia. O
   `abrir\simular-instalacao.bat` faz o que estava escondido "aparecer" com o
-  programa aberto.
+  programa aberto. Para ver a IA sem um modelo, `abrir\servidor-de-ia-de-mentira.bat`
+  sobe um servidor de mentira na porta do LM Studio, e
+  `abrir\servidor-de-mentira-que-cai.bat` faz a revisão parar no meio; os dois com o
+  documento `dados-exemplo\30-revisao-por-ia.md`.
   Instalado sem o português, o Tesseract não serve — toda leitura falharia —,
   e o programa o trata como motor faltando. No dia da entrega, o instalador do
   Tesseract vai na pasta `instaladores`, ao lado do `.exe` — sem ele, o botão
