@@ -166,6 +166,11 @@ Duas específicas deste projeto:
   não for reconhecido como de dentro abre um aviso de risco (o endereço de cada
   instituição varia). O teste prova o aviso, e não um bloqueio. Só um arquivo do
   programa fala com a rede, só com a IA ligada, e ele não baixa nada.
+  Em exemplo e teste, use um nome inventado (`ia.instituicao.exemplo`). A exceção, decidida
+  em 01/11/2026, é o `8.8.8.8` em `programa/test_rede_da_ia.py` e
+  `programa/test_tela_servidor.py`: ninguém se conecta a ele, e provar que o programa
+  classifica um número público pede um número público de verdade, porque os reservados para
+  exemplos contam como rede interna no Python.
 
 ## Convenções
 
@@ -253,6 +258,16 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   `close` de outra linha não interrompem o `recv`: cancelar levava o tempo todo que o
   servidor levasse. Por isso o `programa/rede_da_ia.py` faz o pedido numa linha à parte,
   e quem pediu vai embora ao cancelar (etapa 3 da funcionalidade 4, 31/10/2026).
+- **Modelo que pensa antes de responder parece travado.** O `gemma-4-12b-qat` escrevia
+  milhares de palavras de raciocínio antes da resposta: quase 3 minutos num pedaço, até
+  esgotar a memória e responder vazio, sem nada na tela. Pedir para pensar menos não
+  adiantou, e `reasoning_effort: none` resolveu: 4 segundos. Outros valores e outros
+  modelos podem se comportar diferente (conferência da funcionalidade 4, 01/11/2026).
+- **Radio do Qt sem o estilo próprio some, e em caixas separadas não é exclusivo.** Só com
+  cor e fonte, o radio marcado ficava sem bolinha no tema escuro. E o Qt só faz um desmarcar
+  o outro entre vizinhos da mesma caixa: cada um no próprio recuo, os dois ficavam marcados,
+  e o último clique não era o que a tela parecia dizer. Use `estilo_do_radio` e um
+  `QButtonGroup` (`programa/painel_ia.py`, conferência da funcionalidade 4, 01/11/2026).
 - **`lms ls` acorda o serviço do LM Studio.** Um comando que parece só de leitura sobe
   o serviço, e pode ficar sem voltar. O programa fala com o LM Studio só pela porta do
   servidor local, e não usa esse comando (levantamento da funcionalidade 4, 31/10/2026).

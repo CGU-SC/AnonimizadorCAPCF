@@ -720,6 +720,10 @@ aprovação própria, antes da construção.
   de um uso para o outro - spec 002, emenda de 28/10/2026, RN-36. Nada do
   trabalho é guardado: documento, texto, pasta, histórico continuam
   proibidos - RN-40 da spec 002.)*
+- *(Acréscimo de 01/11/2026 à RN-2, na conferência da funcionalidade 4: número de 9 dígitos
+  sem pontuação, no fim da linha, com um título numerado na de baixo ("12. Equipe do
+  Projeto"), não é "quase CPF" quando não fecha a conta. O que fecha continua mascarado, e
+  o que vem logo depois da palavra CPF também, porque aí é um CPF mal lido.)*
 - RN-20: **Nenhum código deste módulo fala com a internet** nem com serviço
   nenhum fora da máquina. *(Emendada em 31/10/2026, pela spec 004: a exceção é o
   único arquivo que fala com a rede, usado só com a IA ligada, RN-43 e RN-44 de

@@ -441,10 +441,11 @@ branco.
 - Dado um número novo de 11 dígitos apontado, então ele aparece na seção "A IA pediu
   para olhar", mascarado, com o motivo e a origem, e pode ser solto; passando na
   conta, soltar pede a dupla conferência.
-- Dado um número apontado com menos de 8 dígitos, ou um trecho estragado, então ele é
-  apontado, e o texto não muda.
-- Dado um comentário sobre um número já listado, inclusive liberado, então ele ganha a
-  etiqueta, e a seção, a contagem e a máscara não mudam.
+- Dado um número apontado com menos de 8 dígitos, ou um trecho sem número, então nada
+  aparece, e o texto não muda.
+- Dada a IA discordando de um número listado, então ele ganha o comentário, e a seção, a
+  contagem e a máscara não mudam. Concordando, nada aparece; num suspeito, ganha a
+  etiqueta "IA: parece CPF".
 - Dado um trecho citado que não está no texto, então nada aparece.
 - Dada uma resposta que tente soltar uma máscara ou reescrever o texto, então nada
   disso acontece.
@@ -563,6 +564,61 @@ combinado: fecham buracos que deixariam dígito à vista ou o token sair sem avi
   salvo**, e a tela diz por quê.
 - RN-56: **a citação da IA é procurada sem ligar para a diferença de espaços.** Um número
   de verdade não é descartado como inventado por um espaço a mais.
+
+## Acréscimo da conferência na tela (01/11/2026)
+
+- RN-57: **a IA aponta só números.** O apontamento de "texto estragado" foi tirado a
+  pedido da solicitante, testando com documentos de verdade: vinha muito alarme falso, em
+  frases que estavam certas. Isso muda o objetivo de 23/09/2026, que incluía o texto
+  estragado, e vale sobre as RN-29, RN-30, RN-37 e os critérios que falam de trecho.
+  Número que a IA diz não parecer CPF e número curto demais não aparecem. Sobra só o
+  possível CPF que o programa não sabe mascarar sozinho, como "número para olhar". Os
+  rascunhos desenhados antes desta data continuam mostrando o trecho: são o registro do
+  que foi aprovado na época, e o que vale é esta regra.
+
+- RN-58: **a etiqueta verde "Online"** aparece ao lado do switch do destino quando ele
+  respondeu nesta abertura, e não por causa de um teste guardado de outro dia.
+- RN-59: **o endereço do LM Studio é colado inteiro**, como ele o mostra, e não só a
+  porta. Vem com o de costume nesta máquina. Substitui a RN-5: endereço que não se
+  reconhece abre o mesmo aviso de risco do servidor.
+- RN-60: **a IA é chamada sem pensar antes de responder** (`reasoning_effort: none`).
+  Medido em 01/11/2026 com um modelo de verdade: de quase 3 minutos por pedaço, sem
+  terminar, para 4 segundos. Quem não conhece o pedido recebe sem ele.
+- RN-61: **a faixa mostra há quanto tempo o pedaço está indo**, e quanto falta depois do
+  primeiro, para a tela parada não parecer travada.
+- RN-62: **a instrução pede o número perto de nome ou e-mail**, e manda não apontar os
+  outros números do documento. Sobre o que não parece CPF, a IA só opina nos números que o
+  programa já marcou naquele pedaço, que vão listados no pedido: pedir isso de todo número
+  a fazia citar dezenas por página, e era esse o tempo que a página levava. Mais máscara
+  em telefone é o custo aceito.
+- RN-63: **a IA só comenta um número da lista quando discorda dela.** Pedido da
+  solicitante, ao ver "IA: identificado como CPF" em cima de "CPF válido": se concorda, nada
+  aparece. Aparece quando ela diz que não parece CPF num número mascarado, ou que parece CPF
+  num número liberado. Sem resposta clara, vale como se parecesse (RN-48), e num mascarado
+  isso é concordar. Por isso o liberado não vai na lista da RN-62: a IA o olha como qualquer
+  outro número. Vale sobre a RN-31 e o critério do comentário, nos quais "comentário" passa
+  a ser só o de quem discorda; o resto deles continua.
+- RN-64: **testar a conexão não depende do switch.** O botão "Testar conexão" fica sempre à
+  vista, nas duas telas de destino, e vale para o endereço escrito no campo. Desligado, ele
+  só diz se o destino responde: não liga nada e não mexe no destino em uso. Ligado, um teste
+  que falha desliga, como antes (RN-6). Quem não abre conexão ou não responde a tempo ganha
+  a etiqueta vermelha **"Servidor não encontrado"**, tanto no botão quanto ao ligar o switch.
+  Token recusado, certificado ou outro erro do servidor não ganham essa etiqueta, porque ele
+  foi encontrado: a faixa diz o motivo. O "Online" passa a aparecer com o switch desligado,
+  depois de um teste que passou; a RN-58 segue valendo: só o que respondeu nesta abertura.
+- RN-65: **"nesta máquina" só aparece quando é verdade.** Com o endereço do LM Studio em
+  outro computador, a tela dele diz que o texto viaja até lá, com os CPFs inteiros, e a
+  revisão diz "em outra máquina", com o endereço no balão. Estar na lista de endereços
+  locais não conta como esta máquina: ela diz em quem a instalação confia.
+- RN-66: **a IA opina sobre os suspeitos.** Decidido com a solicitante, olhando números que
+  falham na conta e vêm depois de um nome e da palavra CPF. O suspeito que ela confirma
+  ganha a etiqueta "IA: parece CPF", sem frase, e desfazer passa a pedir a dupla
+  conferência. Ele continua na seção dos suspeitos e na contagem deles, porque a conta não
+  fechou e o que a IA dá é opinião. É a exceção da RN-63, que segue valendo para o resto:
+  num suspeito a concordância responde a uma dúvida; num CPF válido, não acrescenta nada. Sem
+  resposta clara, vale como se parecesse (RN-48): o erro custa um clique a mais. Não vale
+  para o número que a própria IA apontou, que já tem o motivo dela, e nada disso entra no
+  `.md`.
 
 ## Questões em aberto
 
