@@ -286,7 +286,7 @@ class _Item(QFrame):
 
 
 class _ItemDeTrecho(QFrame):
-    """Um trecho que a IA achou frágil: só é apontado, e o texto não muda (RN-30)."""
+    """Um possível CPF que o programa não sabe mascarar: só é apontado (RN-57)."""
 
     def __init__(self, trecho, ao_clicar):
         super().__init__()
@@ -300,7 +300,7 @@ class _ItemDeTrecho(QFrame):
                                   estilo.ESPACO_3, estilo.ESPACO_2)
         layout.setSpacing(estilo.ESPACO_1)
         etiquetas = QHBoxLayout()
-        etiquetas.addWidget(_etiqueta(tipos_na_tela.TEXTO_ESTRAGADO, estilo.COR_IA))
+        etiquetas.addWidget(_etiqueta(tipos_na_tela.NUMERO_PARA_OLHAR, estilo.COR_IA))
         etiquetas.addStretch()
         layout.addLayout(etiquetas)
         layout.addWidget(_frase_do_item(" ".join(trecho.citacao.split()),
@@ -308,7 +308,7 @@ class _ItemDeTrecho(QFrame):
         if trecho.motivo:
             layout.addWidget(_frase_do_item(trecho.motivo, estilo.COR_TEXTO))
         layout.addWidget(_frase_do_item(trecho.origem, estilo.COR_IA))
-        self.botao = QPushButton("Ir para o trecho")
+        self.botao = QPushButton("Ir para o número")
         self.botao.setCursor(Qt.PointingHandCursor)
         self.botao.setStyleSheet(estilo.estilo_botao(principal=False, pequeno=True))
         self.botao.clicked.connect(lambda: ao_clicar(trecho))
@@ -369,6 +369,8 @@ def _etiquetas(ocorrencia):
     if ocorrencia.sem_zero:
         sem_zero = tipos_na_tela.SEM_ZERO[ocorrencia.sem_zero]
         etiquetas.append((sem_zero.nome, sem_zero.cor))
+    if ocorrencia.ia_confirma:
+        etiquetas.append((tipos_na_tela.IA_PARECE_CPF, estilo.COR_IA))
     # O "quase CPF" que passa na conta leva as duas: ele continua suspeito, e
     # também é um número que quase certamente é o CPF de alguém (RN-2).
     #

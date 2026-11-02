@@ -73,5 +73,6 @@ SEM_ZERO = {
 # 004). O número da IA tem o tipo dele, e o nome destas é o da seção e o do selo.
 DA_IA = ComoAparece("apontado pela IA", "apontados pela IA", estilo.COR_IA)
 NUMERO_NOVO = "número novo"
-TEXTO_ESTRAGADO = "texto estragado"
+NUMERO_PARA_OLHAR = "número para olhar"
+IA_PARECE_CPF = "IA: parece CPF"
 TITULO_DA_SECAO_DA_IA = "A IA pediu para olhar"

@@ -163,7 +163,11 @@ class TelaRevisao(QWidget):
         self._trechos = []
         self._ao_salvar = ao_salvar
         # A IA fica aqui, e não no painel: é a revisão que ela olha.
-        self.ia = RevisaoPorIa(self, self.receber_apontamentos)
+        # O liberado fica de fora de propósito: a IA o olha como qualquer outro número, e
+        # é assim que ela avisa quando parece CPF o que a pessoa soltou (RN-63).
+        self.ia = RevisaoPorIa(self, self.receber_apontamentos, lambda: [
+            revisao_ia.NumeroMarcado(o.inicio, o.fim, o.original, o.suspeito and not o.da_ia)
+            for o in self._ocorrencias if o.situacao != cpf.LIBERADO])
         self._texto = ""
         # O texto como está na tela, e onde cada posição do documento foi parar
         # nele. Os dois são refeitos a cada desenho: o CPF sem o zero da frente
@@ -715,7 +719,8 @@ class TelaRevisao(QWidget):
 
         Um clique basta para o suspeito que falha na conta e para a máscara
         feita à mão. Todo número que passa na conta pede a dupla conferência
-        (regra RN-10): é o que menos pode sair do programa por engano.
+        (regra RN-10): é o que menos pode sair do programa por engano. O suspeito
+        que a IA confirmou também pede (RN-66 da spec 004).
         """
         if ocorrencia.pede_dupla_conferencia and not liberar_mesmo_assim(
                 ocorrencia, self):
@@ -946,8 +951,8 @@ class TelaRevisao(QWidget):
             frase += f", {_juntar(dela)} por você"
         if self._trechos:
             quantos = len(self._trechos)
-            trechos = (f"{quantos} trechos apontados pela IA" if quantos != 1
-                       else "1 trecho apontado pela IA")
+            trechos = (f"{quantos} números para olhar apontados pela IA" if quantos != 1
+                       else "1 número para olhar apontado pela IA")
             # Sem nenhum número, a frase diria "0 números mascarados", e a pergunta não
             # falaria do que de fato se perde.
             frase = f"{frase}, {trechos}" if mascarados or dela else trechos
@@ -1094,7 +1099,7 @@ def _origem_do_destino():
 
 
 def _formato_de_trecho():
-    """O fundo lilás e o traço-ponto do trecho que a IA achou frágil.
+    """O fundo lilás e o traço-ponto do número que a IA pediu para olhar.
 
     Traço próprio porque reto, ondulado, tracejado e pontilhado já têm dono, e o traço
     é o que separa os tipos para quem não distingue bem as cores.

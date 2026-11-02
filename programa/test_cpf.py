@@ -399,6 +399,21 @@ def test_a_massa_so_tem_numero_valido_de_digitos_repetidos():
                     assert set(digitos) == {"0"}, (nome, achado.original)
 
 
+def test_titulo_numerado_depois_do_numero_nao_vira_quase_cpf():
+    assert procurar("Número 123456780\n10. Equipe do Projeto") == []
+
+
+def test_cpf_mal_lido_antes_de_um_titulo_numerado_nao_escapa():
+    """A leitura trocou um dígito e partiu a linha: sem isto, ele saía inteiro e calado."""
+    for antes in ("CPF ", "cpf: ", "inscrito no CPF sob o nº "):
+        achados = procurar(f"{antes}123456780\n10. Declaro que recebi")
+        assert [a.original for a in achados] == ["123456780\n10"], antes
+
+
+def test_a_palavra_cpf_longe_do_numero_nao_salva_o_titulo():
+    assert procurar("CPF de quem assina o termo, Número 123456780\n10. Equipe") == []
+
+
 def test_a_ficha_sem_o_zero_da_massa():
     """O arquivo da nona emenda: cada caso, com a decisão que a spec manda."""
     texto = (MASSA / "17-cpf-sem-o-zero.md").read_text(encoding="utf-8")

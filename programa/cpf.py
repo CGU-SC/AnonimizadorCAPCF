@@ -94,6 +94,9 @@ _PADRAO = re.compile(
 )
 
 _GRUPOS_DE_DIGITOS = (1, 3, 5, 7)
+# Depois do número: o ponto e o começo do título de uma seção, como em "12. Equipe".
+_TITULO_NUMERADO = re.compile(r"\.[ \t]+[A-ZÀ-Ý]")
+LETRAS_ATE_A_PALAVRA_CPF = 20
 _GRUPOS_DE_SEPARADOR = (2, 4, 6)
 
 # O CPF que perdeu o zero da frente (nona emenda da spec 003): 10 dígitos, ou 9
@@ -143,6 +146,9 @@ class Ocorrencia:
     # O que a IA disse sobre um número que já estava na lista: nunca muda a seção, a
     # contagem nem a máscara dele (RN-31).
     comentario: str | None = None
+    # A IA olhou as palavras em volta deste suspeito e achou que é CPF (RN-66). É opinião:
+    # o tipo continua o mesmo, porque a conta não fechou.
+    ia_confirma: bool = False
 
     @property
     def da_ia(self):
@@ -157,9 +163,9 @@ class Ocorrencia:
         """Todo número que passa na conta, inteiro ou "quase CPF" (RN-10).
 
         É o que quase certamente é o CPF de alguém - o mais perigoso de sair
-        do programa com um clique.
+        do programa com um clique. O suspeito que a IA confirmou também pede (RN-66).
         """
-        return self.passa_na_conta and self.tipo != MASCARADO_A_MAO
+        return (self.passa_na_conta or self.ia_confirma) and self.tipo != MASCARADO_A_MAO
 
 
 def passa_na_conta(digitos):
@@ -384,6 +390,20 @@ def _avaliar(texto, encontro):
 
     digitos = "".join(LETRA_PARECIDA_COM_DIGITO.get(l, l) for l in posicoes)
     conta = passa_na_conta(digitos)
+
+    # Um número de 9 dígitos no fim da linha, com "12. Equipe do Projeto" na linha de
+    # baixo, fechava as 11 posições com o número da seção. Só quando não fecha a conta: o
+    # que fecha é quase certamente um CPF, e continua mascarado (conferência da
+    # funcionalidade 4, com o número do projeto no formulário do SIGPEX, 01/11/2026).
+    if (not conta and not letras and separadores[:2] == ("", "")
+            and "\n" in separadores[2]
+            and _TITULO_NUMERADO.match(texto, encontro.end())
+            # Com a palavra CPF logo antes, é um CPF mal lido, e a leitura pode ter partido
+            # a linha ali por acaso. Entre um alarme falso e um CPF que escapa calado, fica
+            # o alarme (RN-5). As letras de folga cabem um "inscrito no CPF sob o nº".
+            and "CPF" not in texto[max(0, encontro.start() - LETRAS_ATE_A_PALAVRA_CPF):
+                                   encontro.start()].upper()):
+        return None
 
     if not letras and separadores in FORMATOS_COMBINADOS:
         tipo, motivo = (PASSA_NA_CONTA if conta else FALHA_NA_CONTA), None

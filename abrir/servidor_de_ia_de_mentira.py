@@ -37,13 +37,10 @@ def apontar(texto):
         apontamentos.append({
             "tipo": "numero", "citacao": achado.group(1), "parece_cpf": False,
             "motivo": "Parece o número de um termo, e não um CPF."})
-    for achado in re.finditer(r"\b[A-Za-z]+[0-9][A-Za-z0-9]*\b.{0,30}", texto):
-        trecho = achado.group(0).strip()
-        if sum(c.isalpha() for c in trecho) > 6:
-            apontamentos.append({
-                "tipo": "trecho", "citacao": trecho,
-                "motivo": "Há números no lugar de letras: a leitura desta parte "
-                          "parece frágil."})
+    for achado in re.finditer(r"inscrita no CPF\s+(\S+)", texto):
+        apontamentos.append({
+            "tipo": "numero", "citacao": achado.group(1), "parece_cpf": True,
+            "motivo": "Vem depois do nome de uma pessoa e da palavra CPF."})
     return {"apontamentos": apontamentos}
 
 
@@ -58,6 +55,8 @@ class Comportamento:
         self.cair_no_pedido = None
         self.resposta_estranha_no_pedido = None
         self.redirecionar = False
+        # Um servidor que não conhece o pedido de não pensar antes de responder.
+        self.recusa_nao_pensar = False
         self.demora = 0
         self.resposta = None
         self.pedidos = []
@@ -115,6 +114,9 @@ def _criar_tratador(comportamento):
                 self._responder(307, {}, {"Location": "http://127.0.0.1:9/outro"})
                 return
             corpo = json.loads(cru)
+            if comportamento.recusa_nao_pensar and "reasoning_effort" in corpo:
+                self._responder(400, {"error": "campo desconhecido"})
+                return
             comportamento.pedidos_de_conversa += 1
             numero = comportamento.pedidos_de_conversa
             time.sleep(comportamento.demora)

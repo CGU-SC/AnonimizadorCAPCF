@@ -12,7 +12,6 @@ from dataclasses import dataclass
 import cpf
 
 NUMERO = "numero"
-TRECHO = "trecho"
 
 # Um modelo local pequeno costuma trabalhar com umas 4 mil "palavras" de memória,
 # somando o pedido e a resposta. Seis mil letras dão cerca de um terço disso, e sobra
@@ -27,10 +26,14 @@ MAXIMO_DO_MOTIVO = 200
 
 INSTRUCOES = """Você revisa o texto de um documento administrativo em português, antes de uma pessoa conferi-lo. O texto pode ter vindo da leitura de uma imagem e ter erros.
 
-Aponte somente duas coisas:
-- "numero": um número que pode ser um CPF, mesmo escrito de um jeito estranho, ou que pelo contexto claramente não é um CPF. Cite só o número, sem as palavras em volta, um número por apontamento. Em "parece_cpf", diga true ou false.
-- "trecho": um pedaço de texto que parece estragado pela leitura, como números no lugar de letras.
+Aponte somente número que pode ser um CPF. Na dúvida, aponte, com "parece_cpf": true:
+- número de 9 a 11 dígitos logo depois da palavra CPF, ou na mesma ficha de um nome de pessoa ou de um e-mail, mesmo sem pontuação;
+- número com a palavra CPF por perto, mesmo escrito de um jeito estranho ou incompleto.
 
+Não aponte os outros números do documento, como valor, data, processo, empenho, CEP, número de projeto ou numeração de seção.
+
+Cite só o número, sem as palavras em volta, um número por apontamento. Não aponte mais nada.
+@@MARCADOS@@
 Responda somente com JSON, neste formato:
 {"apontamentos": [{"tipo": "numero", "citacao": "copie exatamente do texto", "parece_cpf": true, "motivo": "uma frase curta"}]}
 Sem nada a apontar, responda {"apontamentos": []}.
@@ -62,8 +65,20 @@ class Apontamento:
 
 
 @dataclass(frozen=True)
+class NumeroMarcado:
+    """O que a IA precisa saber de um número da lista, lido antes de ela começar: a lista
+    de verdade é da tela, e não pode ser lida de dentro do trabalho que corre ao lado."""
+
+    inicio: int
+    fim: int
+    original: str
+    em_duvida: bool
+
+
+@dataclass(frozen=True)
 class TrechoDaIa:
-    """Um trecho que a IA achou frágil. Só é apontado: o texto não muda (RN-30)."""
+    """Um possível CPF que o programa não tem como mascarar sozinho: dois números numa
+    citação só, ou pedaço de um número maior. Só é apontado, e o texto não muda (RN-57)."""
 
     inicio: int
     fim: int
@@ -117,14 +132,36 @@ def _partir_regiao(texto, inicio, fim, pagina, limite):
     return pedacos
 
 
-def pedido(texto_do_pedaco):
+def pedido(texto_do_pedaco, ja_marcados=(), suspeitos=()):
     """As mensagens de um pedaço. Uma mensagem só, porque nem todo modelo local aceita
-    instruções separadas do resto."""
+    instruções separadas do resto.
+
+    `ja_marcados` são os números que o programa já achou neste pedaço. É só sobre eles que
+    a IA opina quando não parecem CPF. Pedir isso de todo número fazia a IA listar dezenas
+    por página, e era esse o tempo que a página levava: medido no documento de teste, de
+    2 a 67 segundos por página, conforme quantos números ela citava (01/11/2026).
+
+    `suspeitos` são os que o programa marcou sem ter certeza, e é só deles que a IA diz
+    também quando parecem CPF: aí a opinião dela responde a uma dúvida (RN-66).
+    """
+    marcados = ""
+    if ja_marcados:
+        lista = ", ".join(ja_marcados)
+        marcados = ("\nO programa já marcou estes números: " + lista + ". Aponte um deles, com "
+                    '"parece_cpf": false, só se o contexto mostrar claramente que ele é outra '
+                    "coisa, e diga o que é no motivo. Não cite os que parecem CPF.\n")
+    if suspeitos:
+        lista = ", ".join(suspeitos)
+        marcados += ("\nO programa está em dúvida sobre estes números: " + lista + ". Aponte "
+                     'cada um deles com "parece_cpf": true se as palavras em volta indicarem '
+                     "CPF, como a palavra CPF, um nome de pessoa ou um e-mail, ou com "
+                     '"parece_cpf": false se ele for outra coisa. Sem indício, não aponte.\n')
     # Um "</documento>" escrito no próprio documento fecharia o bloco antes da hora, e o
     # que viesse depois seria lido como ordem. Só muda o que vai à IA, e não o texto.
     seguro = re.sub(r"<\s*(/?)\s*(documento)\s*>", r"(\1\2)", texto_do_pedaco,
                     flags=re.IGNORECASE)
-    return [{"role": "user", "content": INSTRUCOES + seguro + FIM_DO_DOCUMENTO}]
+    instrucoes = INSTRUCOES.replace("@@MARCADOS@@", marcados)
+    return [{"role": "user", "content": instrucoes + seguro + FIM_DO_DOCUMENTO}]
 
 
 def interpretar(resposta):
@@ -143,13 +180,17 @@ def interpretar(resposta):
         raise RespostaNaoEntendida
     apontamentos = []
     for item in itens:
-        if not isinstance(item, dict) or item.get("tipo") not in (NUMERO, TRECHO):
+        # Só número. Apontar "texto estragado" foi tirado na conferência com documentos de
+        # verdade: vinha muito alarme falso, em frases que estavam certas (RN-57).
+        # O acento e o campo em branco valem: com um tipo só, a instrução mal fala dele, e
+        # descartar por isso deixaria sem máscara um número que ela apontou.
+        if not isinstance(item, dict) or item.get("tipo") not in (NUMERO, "número", None):
             continue
         citacao, motivo = item.get("citacao"), item.get("motivo", "")
         if not isinstance(citacao, str) or not citacao.strip() or len(citacao) > MAXIMO_DA_CITACAO:
             continue
         motivo = " ".join(motivo.split())[:MAXIMO_DO_MOTIVO] if isinstance(motivo, str) else ""
-        apontamentos.append(Apontamento(item["tipo"], citacao, motivo,
+        apontamentos.append(Apontamento(NUMERO, citacao, motivo,
                                         item.get("parece_cpf") is not False))
     return apontamentos
 
@@ -186,12 +227,6 @@ def aplicar(apontamento, texto, ocorrencias, trechos, pedaco, origem):
     Quem decide e quem mascara é o programa, e nunca a IA (RN-28). Mora aqui, e não na
     tela, porque é a regra que os testes com modelos de verdade devem pedir para ajustar.
     """
-    if apontamento.tipo == NUMERO:
-        return _aplicar_numero(apontamento, texto, ocorrencias, trechos, pedaco, origem)
-    return _aplicar_trecho(apontamento, texto, ocorrencias, trechos, pedaco, origem)
-
-
-def _aplicar_numero(apontamento, texto, ocorrencias, trechos, pedaco, origem):
     achou = False
     for inicio, fim in _onde_aparece(texto, apontamento.citacao, 0, len(texto), numero=True):
         # Pedaço de um número maior não é esse número: mascarado, ele deixaria o resto à
@@ -200,23 +235,16 @@ def _aplicar_numero(apontamento, texto, ocorrencias, trechos, pedaco, origem):
             continue
         ja_listados = [o for o in ocorrencias if o.inicio < fim and inicio < o.fim]
         if ja_listados:
-            # Comentário, e nada mais: nem a seção, nem a contagem, nem a máscara
-            # mudam, e o que a pessoa já liberou continua liberado (RN-31).
             for ocorrencia in ja_listados:
-                # Revisar de novo acha o número que a própria IA apontou: o motivo dele já
-                # está lá, e repeti-lo como comentário seria dizer duas vezes a mesma coisa.
-                if (apontamento.motivo
-                        and apontamento.motivo not in (ocorrencia.comentario,
-                                                       ocorrencia.motivo_da_origem)):
-                    ocorrencia.comentario = apontamento.motivo
-                    achou = True
+                achou |= _opinar_sobre_o_listado(apontamento, ocorrencia)
             # A citação foi além do número da lista: o resto dela fica apontado, para
             # um segundo número ali não passar sem ninguém ver (RN-47).
-            if not any(o.inicio <= inicio and fim <= o.fim for o in ja_listados):
+            if apontamento.parece_cpf and not any(o.inicio <= inicio and fim <= o.fim
+                                                  for o in ja_listados):
                 achou |= _aplicar_trecho(apontamento, texto, ocorrencias, trechos, pedaco, origem)
             continue
         # A IA disse que não parece CPF: um CEP ou um empenho não vira máscara por causa
-        # da opinião dela de que ele não é CPF (RN-48).
+        # da opinião dela de que ele não é CPF, nem enche a lista (RN-48 e RN-57).
         if not apontamento.parece_cpf:
             continue
         ocorrencia = cpf.mascarar_apontado(texto, inicio, fim, origem, apontamento.motivo)
@@ -224,9 +252,44 @@ def _aplicar_numero(apontamento, texto, ocorrencias, trechos, pedaco, origem):
             ocorrencias.append(ocorrencia)
             ocorrencias.sort(key=lambda o: o.inicio)
             achou = True
-    # Sem como mascarar, ele continua apontado: curto demais para ser um CPF, mas a IA
-    # achou que vale olhar (RN-30).
-    return achou or _aplicar_trecho(apontamento, texto, ocorrencias, trechos, pedaco, origem)
+    if achou or not apontamento.parece_cpf:
+        return achou
+    # Possível CPF que o programa não sabe mascarar sozinho fica apontado, para não passar
+    # sem ninguém ver. Curto demais para ser um CPF, não vale olhar: seria mais alarme
+    # falso (RN-57).
+    if sum(letra.isdigit() for letra in apontamento.citacao) < cpf.MINIMO_DE_DIGITOS_DO_APONTADO:
+        return False
+    return _aplicar_trecho(apontamento, texto, ocorrencias, trechos, pedaco, origem)
+
+
+def _opinar_sobre_o_listado(apontamento, ocorrencia):
+    """A opinião da IA sobre um número que já está na lista. Diz se algo mudou.
+
+    Nunca muda a seção, a contagem nem a máscara, e o que a pessoa liberou continua
+    liberado (RN-31). A opinião pode só deixar mais difícil soltar um suspeito (RN-66).
+    """
+    parece = apontamento.parece_cpf
+    liberado = ocorrencia.situacao == cpf.LIBERADO
+    mudou = False
+    if ocorrencia.suspeito and not ocorrencia.da_ia and not liberado:
+        # O programa está em dúvida, então a opinião dela vale nos dois sentidos. Confirmado,
+        # ele ganha a etiqueta e fica sem frase. Negado, segue abaixo e ganha a frase.
+        mudou = ocorrencia.ia_confirma != parece
+        ocorrencia.ia_confirma = parece
+        if parece:
+            ocorrencia.comentario = None
+            return mudou
+    # Fora a dúvida, a IA só fala quando discorda da lista: que parece CPF num liberado, ou
+    # que não parece num mascarado. Concordando, a frase não diz nada que a etiqueta já não
+    # diga, e enchia a lista na conferência (RN-63).
+    discorda = liberado if parece else not liberado
+    # Revisar de novo acha o número que a própria IA apontou: o motivo dele já está lá, e
+    # repeti-lo como comentário seria dizer duas vezes a mesma coisa.
+    if (discorda and apontamento.motivo
+            and apontamento.motivo not in (ocorrencia.comentario, ocorrencia.motivo_da_origem)):
+        ocorrencia.comentario = apontamento.motivo
+        return True
+    return mudou
 
 
 def _aplicar_trecho(apontamento, texto, ocorrencias, trechos, pedaco, origem):
@@ -276,3 +339,24 @@ def _onde_aparece(texto, citacao, inicio, fim, numero=False):
         padrao = r"\s+".join(re.escape(palavra) for palavra in citacao.split())
     for encontro in re.finditer(padrao, texto[inicio:fim]):
         yield inicio + encontro.start(), inicio + encontro.end()
+
+
+def duracao(segundos):
+    """Um tempo do jeito que se fala: "45 s" ou "1 min 20 s"."""
+    segundos = int(segundos)
+    if segundos < 60:
+        return f"{segundos} s"
+    return f"{segundos // 60} min {segundos % 60} s"
+
+
+def frase_do_andamento(onde, no_pedaco, faltam=None):
+    """A frase da faixa enquanto a IA revisa.
+
+    O relógio está aí porque um pedaço pode levar minutos, e a tela parada parece
+    travada. "Seguir conferindo", e não "trabalhar": a revisão é só de leitura, e a IA
+    não disputa o texto com a pessoa.
+    """
+    frase = f"A IA está revisando: {onde}, há {duracao(no_pedaco)}."
+    if faltam is not None:
+        frase += f" Faltam cerca de {max(1, round(faltam / 60))} min."
+    return f"{frase} Você pode seguir conferindo."

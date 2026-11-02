@@ -50,7 +50,7 @@ def test_citacao_alem_do_numero_listado_aponta_o_resto(servidor):  # noqa: F811
     tela = _tela(f"CPF {citacao}\n")
     listado = _numero(tela, "111.111.111-11")
     tela.ia.comecar()
-    assert listado.comentario == "olhe"
+    assert listado.comentario is None
     assert [t.citacao for t in tela._trechos] == [citacao]
 
 
@@ -79,7 +79,8 @@ def test_numero_que_a_ia_diz_nao_ser_cpf_nao_vira_mascara(servidor):  # noqa: F8
     tela.ia.comecar()
     assert tela._ocorrencias == []
     assert "88040-900" in tela.texto_para_o_arquivo()
-    assert [t.motivo for t in tela._trechos] == ["É um CEP."]
+    # Nem aparece na lista: seria alarme falso (RN-57).
+    assert tela._trechos == []
 
 
 @pytest.mark.parametrize("campo", [{}, {"parece_cpf": True}, {"parece_cpf": "talvez"}])
@@ -421,11 +422,7 @@ def test_diferenca_de_espacos_nao_descarta_o_numero(servidor, citacao, no_texto)
     assert "901 do" not in tela.texto_para_o_arquivo()
 
 
-def test_diferenca_de_espacos_no_trecho(servidor):  # noqa: F811
-    _responde(servidor, {"tipo": "trecho", "citacao": "Va1or  tota1", "motivo": "x"})
-    tela = _tela("O Va1or tota1 do contrato\n")
-    tela.ia.comecar()
-    assert len(tela._trechos) == 1
+
 
 
 @pytest.mark.parametrize("texto,citacao", [
@@ -451,8 +448,9 @@ def test_vizinho_que_nao_e_numero_nao_impede_a_mascara(servidor, texto):  # noqa
 
 
 def test_o_trecho_repetido_nao_impede_o_seguinte(servidor):  # noqa: F811
-    _responde(servidor, {"tipo": "trecho", "citacao": "Va1or", "motivo": "x"})
-    tela = _tela("Va1or um e Va1or dois\n")
+    dois = "12345678 / 87654321"
+    _responde(servidor, {"tipo": "numero", "citacao": dois, "motivo": "x"})
+    tela = _tela(f"Códigos {dois} e {dois}\n")
     tela.ia.comecar()
     tela.ia.comecar()
     assert len(tela._trechos) == 2
@@ -468,11 +466,12 @@ def test_o_documento_nao_fecha_o_bloco_da_instrucao():
 
 def test_numero_liberado_dentro_de_trecho_continua_com_o_traco_dele(servidor):  # noqa: F811
     from PySide6.QtGui import QTextCharFormat
-    citacao = "CPF 111.111.111-11 do bolsista"
-    _responde(servidor, {"tipo": "trecho", "citacao": citacao, "motivo": "x"})
+    citacao = "CPF 111.111.111-11 e 12345678"
+    _responde(servidor, {"tipo": "numero", "citacao": citacao, "motivo": "x"})
     tela = _tela(f"O {citacao} aqui\n")
     numero = _numero(tela, "111.111.111-11")
     tela.ia.comecar()
+    assert len(tela._trechos) == 1
     tela._ocorrencias[0].situacao = cpf.LIBERADO
     tela._desenhar()
     cursor = tela.texto.textCursor()
@@ -522,8 +521,8 @@ def revisao_ia_pedaco(i):
 
 
 def test_proximo_alcanca_dois_itens_na_mesma_letra(servidor):  # noqa: F811
-    citacao = "111.111.111-11 do bolsista"
-    _responde(servidor, {"tipo": "trecho", "citacao": citacao, "motivo": "x"})
+    citacao = "111.111.111-11 e 12345678"
+    _responde(servidor, {"tipo": "numero", "citacao": citacao, "motivo": "x"})
     tela = _tela(f"CPF {citacao}\n")
     tela.ia.comecar()
     assert len(tela._em_ordem()) == 2
@@ -552,14 +551,16 @@ def test_revisar_de_novo_sem_nada_novo_diz_isso(servidor):  # noqa: F811
     assert tela.ia.frase.text() == NADA_A_MAIS
 
 
-def test_a_pergunta_de_descartar_fala_dos_trechos(servidor):  # noqa: F811
-    _responde(servidor, {"tipo": "trecho", "citacao": "Va1or", "motivo": "x"})
-    tela = _tela("Va1or do contrato\n")
+def test_a_pergunta_de_descartar_fala_do_numero_para_olhar(servidor):  # noqa: F811
+    dois = "12345678 / 87654321"
+    _responde(servidor, {"tipo": "numero", "citacao": dois, "motivo": "x"})
+    tela = _tela(f"Códigos {dois}\n")
     tela.ia.comecar()
-    assert tela.resumo_do_que_se_perde() == "1 trecho apontado pela IA"
-    tela2 = _tela("CPF 111.111.111-11 e Va1or\n")
+    assert tela.resumo_do_que_se_perde() == "1 número para olhar apontado pela IA"
+    tela2 = _tela(f"CPF 111.111.111-11 e {dois}\n")
     tela2.ia.comecar()
-    assert tela2.resumo_do_que_se_perde() == "1 número mascarado, 1 trecho apontado pela IA"
+    assert tela2.resumo_do_que_se_perde() == (
+        "1 número mascarado, 1 número para olhar apontado pela IA")
 
 
 def test_o_aviso_do_trecho_e_a_selecao_ao_contrario_ficam(servidor):  # noqa: F811
@@ -712,3 +713,114 @@ def test_o_trabalho_terminado_nao_fica_guardado_com_o_documento(servidor, monkey
     _esperar(lambda: not tela.ia.rodando() and not tela.ia._antigos, 5000)
     assert not tela.ia.rodando()
     assert tela.ia._antigos == []
+
+
+# --------------------------------------------- o que o teste com modelo de verdade mostrou
+
+
+def test_pede_para_nao_pensar_antes_de_responder(servidor):  # noqa: F811
+    rede_da_ia.conversar(servidor.base, None, "m", [{"role": "user", "content": "x"}], 5)
+    assert json.loads(servidor.comportamento.corpo_cru[0])["reasoning_effort"] == "none"
+
+
+def test_quem_nao_conhece_o_pedido_recebe_sem_ele(servidor):  # noqa: F811
+    servidor.comportamento.recusa_nao_pensar = True
+    resposta = rede_da_ia.conversar(servidor.base, None, "m",
+                                    [{"role": "user", "content": "Responda apenas ok"}], 5)
+    assert resposta == "ok"
+    assert "reasoning_effort" not in json.loads(servidor.comportamento.corpo_cru[-1])
+
+
+def test_a_recusa_do_modelo_diz_o_numero_do_erro(servidor):  # noqa: F811
+    servidor.comportamento.sem_conversa = True
+    def recusa(*_):
+        raise rede_da_ia._NaoEncontrado(f"{rede_da_ia.MODELO_FORA} (erro 400)")
+    original = rede_da_ia._pedir_json
+    rede_da_ia._pedir_json = recusa
+    try:
+        with pytest.raises(rede_da_ia.FalhaDaIa) as falha:
+            rede_da_ia.conversar(servidor.base, None, "m", [], 5)
+    finally:
+        rede_da_ia._pedir_json = original
+    assert "(erro 400)" in str(falha.value)
+
+
+def test_o_pedaco_de_modelo_de_imagem_nao_entra_na_lista(servidor):  # noqa: F811
+    servidor.comportamento.modelos = [
+        {"type": "llm", "key": "fabricante/modelo/modelo-mmproj.gguf"},
+        {"type": "llm", "key": "fabricante/modelo"}]
+    nomes = [m.nome for m in rede_da_ia.listar_modelos(servidor.base)]
+    assert nomes == ["fabricante/modelo"]
+
+
+def test_a_instrucao_pede_o_numero_perto_de_nome_e_recusa_a_numeracao_de_secao():
+    import revisao_ia
+    assert "nome de pessoa ou de um e-mail" in revisao_ia.INSTRUCOES
+    assert "numeração de seção" in revisao_ia.INSTRUCOES
+    assert "Na dúvida, aponte" in revisao_ia.INSTRUCOES
+
+
+@pytest.mark.parametrize("no_pedaco,faltam,esperado", [
+    (45, None, "A IA está revisando: página 1 de 35, há 45 s. Você pode seguir conferindo."),
+    (80, 1500, "A IA está revisando: página 1 de 35, há 1 min 20 s. Faltam cerca de 25 min. "
+               "Você pode seguir conferindo."),
+    (5, 10, "A IA está revisando: página 1 de 35, há 5 s. Faltam cerca de 1 min. "
+            "Você pode seguir conferindo."),
+])
+def test_a_frase_do_andamento(no_pedaco, faltam, esperado):
+    import revisao_ia
+    assert revisao_ia.frase_do_andamento("página 1 de 35", no_pedaco, faltam) == esperado
+
+
+def test_o_relogio_para_quando_a_ia_termina(servidor):  # noqa: F811
+    tela = _tela()
+    tela.ia.comecar()
+    assert not tela.ia._relogio.isActive()
+
+
+# ------------------------------------------------- o título numerado (spec 003)
+
+
+@pytest.mark.parametrize("texto", [
+    "Número: 123456789\n12. Equipe do Projeto:",
+    "Número: 123456789  \n  12. Equipe do Projeto:",
+    "Número: 123456789\r\n12. Área de Conhecimento",
+])
+def test_numero_de_projeto_com_titulo_embaixo_nao_e_cpf(texto):
+    assert cpf.procurar(texto) == []
+
+
+@pytest.mark.parametrize("texto", [
+    # O que fecha a conta continua: é quase certamente um CPF, mesmo antes de um título.
+    "Número: 111111111\n11. Equipe do Projeto:",
+    # Depois do número, uma frase que não é título.
+    "CPF 123456789\n10. depois disso, nada",
+    "CPF 123456789\n10, conforme o termo",
+    # Com pontuação de CPF, não é número de projeto.
+    "CPF 123.456.789\n10. Equipe do Projeto:",
+    # Na mesma linha, não há título nenhum.
+    "CPF 123456789 10. Equipe do Projeto:",
+])
+def test_o_resto_continua_sendo_mascarado(texto):
+    assert len(cpf.procurar(texto)) == 1, texto
+
+
+def test_a_instrucao_nao_manda_listar_o_que_nao_e_cpf():
+    """Era o que tomava o tempo: dezenas de números citados por página."""
+    import revisao_ia
+    assert "Não aponte os outros números" in revisao_ia.INSTRUCOES
+    assert "@@MARCADOS@@" not in revisao_ia.pedido("texto")[0]["content"]
+
+
+def test_a_ia_recebe_so_os_numeros_marcados_daquele_pedaco(servidor):  # noqa: F811
+    _responde(servidor)
+    paginas = ["CPF 111.111.111-11", "CPF 222.222.222-22", "Sem número"]
+    texto = "\n\n".join(paginas) + "\n"
+    tela = _tela(texto, paginas)
+    tela.ia.comecar()
+    enviados = [json.loads(c)["messages"][0]["content"] for c in servidor.comportamento.corpo_cru]
+    instrucao = [e.split("<documento>\n")[-2] for e in enviados]
+    assert "marcou estes números: 111.111.111-11." in instrucao[0]
+    assert "222.222.222-22" not in instrucao[0]
+    assert "marcou estes números: 222.222.222-22." in instrucao[1]
+    assert "marcou estes números" not in instrucao[2]

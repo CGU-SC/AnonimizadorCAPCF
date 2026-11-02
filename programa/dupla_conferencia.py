@@ -1,4 +1,5 @@
-"""A pergunta antes de liberar um número que passa na conta do CPF (regra RN-10).
+"""A pergunta antes de liberar um número que passa na conta do CPF (regra RN-10),
+ou um suspeito que a IA confirmou (RN-66 da spec 004).
 
 É o momento em que um CPF de verdade pode escapar do programa, e por isso é o
 único vermelho da revisão. A caixa mostra o número **como está escrito no
@@ -64,7 +65,7 @@ POR_QUE_PASSA = {
 class DuplaConferencia(QDialog):
     def __init__(self, ocorrencia, pai=None):
         super().__init__(pai)
-        self.setWindowTitle("Este número passa na conta do CPF")
+        self.setWindowTitle(_titulo(ocorrencia))
         self.setModal(True)
         self.setStyleSheet(f"background-color: {estilo.COR_FUNDO};")
 
@@ -92,7 +93,7 @@ class DuplaConferencia(QDialog):
                                   estilo.ESPACO_4, estilo.ESPACO_3)
         dentro.setSpacing(estilo.ESPACO_2)
 
-        titulo = QLabel("Este número passa na conta do CPF")
+        titulo = QLabel(_titulo(ocorrencia))
         titulo.setStyleSheet(
             f"font-size: {estilo.TEXTO_BASE}px; font-weight: 600;"
             f"color: {estilo.COR_TEXTO}; border: none; background: transparent;"
@@ -193,7 +194,20 @@ _LIBERADO_VAI = (
 )
 
 
+def _titulo(ocorrencia):
+    # O suspeito que a IA confirmou não passa na conta, e a caixa não pode dizer que passa.
+    return ("Este número passa na conta do CPF" if ocorrencia.passa_na_conta
+            else "A IA achou que este número é um CPF")
+
+
 def _explicacao(ocorrencia):
+    if not ocorrencia.passa_na_conta:
+        return (
+            "Os dois últimos dígitos não batem com a conta, o que pode ser erro de "
+            "leitura do documento ou de digitação. A IA olhou as palavras em volta e "
+            "achou que ele parece um CPF. Ela pode errar: confira antes de soltar."
+            + _LIBERADO_VAI
+        )
     if ocorrencia.sem_zero:
         # A conclusão vem antes do aviso, e não depois: com o "por isso" logo
         # em seguida ao telefone, ele ficava amarrado ao aviso, e a pessoa lia
