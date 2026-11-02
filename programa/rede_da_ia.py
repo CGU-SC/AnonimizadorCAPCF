@@ -42,6 +42,7 @@ MAXIMO_DE_BYTES_NA_RESPOSTA = 16 * 1024 * 1024
 # pode aparecer em nenhum outro arquivo do programa (testes de guarda).
 SEM_CIFRA = ("Este endereço começa com http://: o texto e o token viajam sem "
              "cifra.")
+ESTA_MAQUINA = "É esta máquina."
 NAO_RESPONDEU = "O destino não respondeu."
 DEMOROU = "O destino demorou demais para responder."
 REDIRECIONOU = ("O destino tentou mandar o programa para outro endereço, e o "
@@ -153,14 +154,23 @@ def conversar(base, token, modelo, mensagens, segundos, cancelador=None):
     a conversa (RN-35): o texto vai com os CPFs inteiros, e não há por que ele
     ficar registrado lá.
     """
-    corpo = {"model": modelo, "messages": mensagens, "temperature": 0, "stream": False}
+    corpo = {"model": modelo, "messages": mensagens, "temperature": 0, "stream": False,
+             "reasoning_effort": "none"}
+    # Sem pensar antes de responder. Medido com um modelo de verdade (01/11/2026): pensando,
+    # ele levava quase 3 minutos num pedaço e esgotava a memória sem responder nada; sem
+    # pensar, 4 segundos. Quem não conhece o pedido recusa, e aí ele vai sem isso.
     try:
-        resposta = _pedir_json(base, "POST", "/v1/chat/completions", corpo, token,
-                               segundos, cancelador)
+        try:
+            resposta = _pedir_json(base, "POST", "/v1/chat/completions", corpo, token,
+                                   segundos, cancelador)
+        except _NaoEncontrado:
+            del corpo["reasoning_effort"]
+            resposta = _pedir_json(base, "POST", "/v1/chat/completions", corpo, token,
+                                   segundos, cancelador)
     except _RespostaInvalida as problema:
         raise FalhaDaIa(RESPOSTA_ESTRANHA) from problema
     except _NaoEncontrado as problema:
-        raise FalhaDaIa(MODELO_FORA) from problema
+        raise FalhaDaIa(str(problema)) from problema
     try:
         texto = resposta["choices"][0]["message"]["content"]
     except (KeyError, IndexError, TypeError) as problema:
@@ -285,7 +295,9 @@ def _pedir_agora(base, metodo, caminho, corpo, token, segundos, cancelador):
     if estado in (401, 403):
         raise FalhaDaIa(TOKEN_RECUSADO)
     if estado in (400, 404, 405, 422):
-        raise _NaoEncontrado(MODELO_FORA)
+        # O número do erro vai junto: a frase serve a mais de uma causa, como um modelo
+        # não carregado ou um pedaço que não coube, e ele é o que permite distinguir.
+        raise _NaoEncontrado(f"{MODELO_FORA} (erro {estado})")
     if estado >= 400:
         raise FalhaDaIa(f"O destino respondeu com o erro {estado}.")
     if len(conteudo) > MAXIMO_DE_BYTES_NA_RESPOSTA:
@@ -304,7 +316,7 @@ def _modelos_da_lista_nova(resposta):
         modelos = []
         for item in itens:
             # Modelo de embedding não conversa, e escolhê-lo só daria erro depois.
-            if item.get("type", "llm") not in ("llm", "vlm"):
+            if item.get("type", "llm") not in ("llm", "vlm") or not _conversa(item["key"]):
                 continue
             capacidades = item.get("capabilities") or {}
             modelos.append(Modelo(
@@ -324,7 +336,7 @@ def _modelos_da_lista_antiga(resposta):
         modelos = []
         for item in resposta["data"]:
             tipo = item.get("type", "llm")
-            if tipo not in ("llm", "vlm"):
+            if tipo not in ("llm", "vlm") or not _conversa(item["id"]):
                 continue
             modelos.append(Modelo(
                 nome=_nome_limpo(item["id"]),
@@ -340,9 +352,16 @@ def _modelos_da_lista_antiga(resposta):
 def _modelos_da_lista_comum(resposta):
     try:
         return [Modelo(nome=_nome_limpo(item["id"])) for item in resposta["data"]
-                if "embed" not in str(item["id"]).lower()]
+                if _conversa(item["id"])]
     except (KeyError, TypeError) as problema:
         raise _RespostaInvalida from problema
+
+
+def _conversa(nome):
+    """Embedding não conversa, e o "mmproj" é só um pedaço de um modelo de imagem, que o
+    LM Studio lista à parte como se fosse um modelo: escolhê-los só daria erro depois."""
+    nome = str(nome).lower()
+    return "embed" not in nome and "mmproj" not in nome
 
 
 def _nome_limpo(nome):
@@ -396,17 +415,23 @@ def avaliar_endereco(endereco, locais=()):
             return Avaliacao(True, True, sem_cifra,
                              "Está na lista de endereços locais desta instalação.")
     if host == "localhost":
-        return Avaliacao(True, True, sem_cifra, "É esta máquina.")
+        return Avaliacao(True, True, sem_cifra, ESTA_MAQUINA)
     if host == "ufsc.br" or host.endswith(".ufsc.br"):
         return Avaliacao(True, True, sem_cifra, "É um nome da UFSC.")
     numeros = _numeros_do_nome(host)
     if numeros and all(_e_desta_maquina(n) for n in numeros):
-        return Avaliacao(True, True, sem_cifra, "É esta máquina.")
+        return Avaliacao(True, True, sem_cifra, ESTA_MAQUINA)
     if numeros and all(_e_interno(n) for n in numeros):
         return Avaliacao(True, True, sem_cifra,
                          "Reconhecido como rede interna. Isso não prova que é a UFSC: "
                          "na rede de casa, um número assim também aparece.")
     return Avaliacao(True, False, sem_cifra)
+
+
+def endereco_desta_maquina(endereco):
+    """A lista de endereços locais fica de fora de propósito: ela diz em quem a instalação
+    confia, e não que o documento fica neste computador."""
+    return avaliar_endereco(endereco).por_que == ESTA_MAQUINA
 
 
 def _numeros_do_nome(host):

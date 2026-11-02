@@ -41,19 +41,35 @@ def test_o_arquivo_da_rede_nao_baixa_nada_nem_conhece_endereco_de_fora():
     assert not any("baixar" in n or "download" in n for n in nomes)
 
 
-def test_com_a_ia_desligada_o_arquivo_da_rede_nem_e_carregado():
-    """RN-43: abre o programa inteiro em outro processo e olha o que foi carregado."""
-    roteiro = (
-        "import sys;"
-        "from PySide6.QtWidgets import QApplication;"
-        "app = QApplication([]);"
-        "import main;"
-        "janela = main.JanelaPrincipal();"
-        "print('rede_da_ia' in sys.modules, 'http.client' in sys.modules)"
-    )
-    resultado = subprocess.run([sys.executable, "-c", roteiro], cwd=PROGRAMA,
+_ROTEIRO_AO_ABRIR = """
+import sys, tempfile
+from pathlib import Path
+import configuracao
+pasta = Path(tempfile.mkdtemp())
+configuracao.pasta_do_programa = lambda: pasta
+import config_ia
+if sys.argv[1] == "ligada":
+    config_ia.guardar_do_destino(config_ia.LM_STUDIO, modelo_revisora="modelo-exemplo")
+    config_ia.marcar_testado(config_ia.LM_STUDIO, True)
+    config_ia.ligar_destino(config_ia.LM_STUDIO)
+    config_ia.ligar_geral()
+from PySide6.QtWidgets import QApplication
+app = QApplication([])
+import main
+janela = main.JanelaPrincipal()
+print(config_ia.revisora_ativa(), "rede_da_ia" in sys.modules, "http.client" in sys.modules)
+"""
+
+
+@pytest.mark.parametrize("ia,ativa", [("desligada", "False"), ("ligada", "True")])
+def test_abrir_o_programa_nem_carrega_o_arquivo_da_rede(ia, ativa):
+    """RN-43: abre o programa inteiro em outro processo e olha o que foi carregado. Com as
+    escolhas numa pasta provisória: com as desta máquina, o resultado mudava conforme a IA
+    estivesse ligada aqui. Ligada, é o caso que pegou um erro de verdade (01/11/2026)."""
+    resultado = subprocess.run([sys.executable, "-c", _ROTEIRO_AO_ABRIR, ia], cwd=PROGRAMA,
                                capture_output=True, text=True, timeout=120)
-    assert "False" in resultado.stdout.split()[0], resultado.stdout + resultado.stderr
+    saida = resultado.stdout.split()
+    assert saida[:2] == [ativa, "False"], resultado.stdout + resultado.stderr
 
 
 _ROTEIRO_DO_CAMINHO_INTEIRO = """

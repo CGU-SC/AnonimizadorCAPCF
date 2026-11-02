@@ -71,6 +71,24 @@ def test_a_opcao_de_iniciar_e_lembrada_e_apaga_sem_a_revisora():
     assert PainelIa().tela_habilitar.inicio_abrir.isChecked()
 
 
+def test_marcar_uma_opcao_de_iniciar_desmarca_a_outra():
+    """Cada uma mora no próprio recuo, e sem o grupo as duas ficavam marcadas."""
+    tela = _painel_ligado().tela_habilitar
+    tela.inicio_abrir.click()
+    assert tela.inicio_abrir.isChecked() and not tela.inicio_clique.isChecked()
+    tela.inicio_clique.click()
+    assert tela.inicio_clique.isChecked() and not tela.inicio_abrir.isChecked()
+    assert config_ia.inicio_da_revisao() == config_ia.INICIO_NO_CLIQUE
+
+
+def test_clicar_de_novo_na_opcao_marcada_nao_a_desmarca():
+    tela = _painel_ligado().tela_habilitar
+    tela.inicio_abrir.click()
+    tela.inicio_abrir.click()
+    assert tela.inicio_abrir.isChecked()
+    assert config_ia.inicio_da_revisao() == config_ia.INICIO_AO_ABRIR
+
+
 def test_a_ressalva_tem_a_data_e_fala_dos_cpfs():
     frase = PainelIa().tela_habilitar.ressalva.frase.text()
     assert "31/10/2026" in frase

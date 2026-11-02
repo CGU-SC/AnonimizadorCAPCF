@@ -121,7 +121,7 @@ def test_abrir_a_tela_sem_o_endereco_confirmado_nao_manda_nada_nem_pergunta(outr
     painel.show()
     assert outro_servidor.comportamento.pedidos == []
     assert perguntas == []
-    assert "Testar de novo" in painel.tela_servidor.situacao.text()
+    assert "Testar conexão" in painel.tela_servidor.situacao.text()
     painel.close()
 
 
@@ -646,7 +646,7 @@ def test_na_tela_do_lm_studio_a_porta_trava_no_teste(servidor, monkeypatch):  # 
     config_ia.guardar_do_destino(config_ia.LM_STUDIO, porta=servidor.porta)
     tela = PainelIa().tela_lm_studio
     tela.interruptor.click()
-    assert not tela.campo_porta.isEnabled()
+    assert not tela.campo_endereco.isEnabled()
 
 
 def test_durante_o_teste_do_motor_a_ia_nao_le(servidor):  # noqa: F811
@@ -671,8 +671,8 @@ def test_durante_o_teste_do_motor_a_ia_nao_le(servidor):  # noqa: F811
 def test_trocar_a_porta_invalida_o_teste_do_motor(servidor):  # noqa: F811
     _motor_pronto(servidor)
     tela = PainelIa().tela_lm_studio
-    tela.campo_porta.setText("4321")
-    tela._porta_mudou()
+    tela.campo_endereco.setText("http://127.0.0.1:4321")
+    tela._endereco_mudou()
     assert not config_ia.motor_ativo()
     config_ia.marcar_testado(config_ia.LM_STUDIO, True)
     config_ia.ligar_destino(config_ia.LM_STUDIO)

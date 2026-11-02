@@ -37,7 +37,7 @@ import config_ia
 import estilo
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
 from leitura import MOTOR_IA, MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
-from pecas_da_ia import Frase
+from pecas_da_ia import Frase, estilo_do_radio
 from leitura_em_segundo_plano import LeituraEmSegundoPlano
 from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
 from tela_decisao import TelaDecisao
@@ -789,30 +789,6 @@ def rotulo_de_secao(texto):
         f"color: {estilo.COR_TEXTO_SECUNDARIO}; letter-spacing: 1px;"
     )
     return rotulo
-
-
-def estilo_do_radio(apagado=False):
-    cor = estilo.COR_TEXTO_APAGADO if apagado else estilo.COR_TEXTO
-    return f"""
-        QRadioButton {{
-            color: {cor};
-            font-size: {estilo.TEXTO_BASE}px;
-            spacing: {estilo.ESPACO_2}px;
-        }}
-        QRadioButton::indicator {{
-            width: 15px;
-            height: 15px;
-            border-radius: 8px;
-            border: 2px solid {estilo.COR_TEXTO_SECUNDARIO};
-        }}
-        QRadioButton::indicator:checked {{
-            border: 2px solid {estilo.COR_DESTAQUE};
-            background-color: {estilo.COR_DESTAQUE};
-        }}
-        QRadioButton::indicator:disabled {{
-            border: 2px solid #4a5058;
-        }}
-    """
 
 
 # O resumo embaixo de cada motor (RN-31 da emenda de 18/10/2026). Os tempos

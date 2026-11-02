@@ -7,6 +7,7 @@ ninguém mexer nestas telas, o programa nem o abre (RN-43 da spec 004).
 """
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QComboBox,
     QFrame,
     QHBoxLayout,
@@ -29,6 +30,9 @@ from pecas_da_ia import (
     Frase,
     Interruptor,
     campo_de_texto,
+    etiqueta_nao_encontrado,
+    estilo_do_radio,
+    etiqueta_online,
     linha_do_switch,
     rotulo_de_campo,
     titulo_de_tela,
@@ -51,7 +55,12 @@ RESSALVA_DO_MOTOR = (
     "é como revisora. Como motor, a IA recebe a imagem da página com os CPFs inteiros, "
     "e o texto do documento passa a ser o que ela escrever."
 )
+LM_STUDIO_NESTA_MAQUINA = "A IA roda nesta máquina, e o documento não sai dela."
+LM_STUDIO_EM_OUTRA_MAQUINA = ("A IA roda no endereço abaixo, fora desta máquina. O texto do "
+                              "documento viaja até lá, com os CPFs inteiros.")
 ENDERECO_NAO_CONFIRMADO = "O endereço não foi confirmado, e nada foi enviado."
+ONLINE = "online"
+NAO_ENCONTRADO = "nao_encontrado"
 TESTANDO = "Testando a conexão... O teste manda uma frase inventada, sem nada do documento."
 
 
@@ -149,14 +158,30 @@ class _TelaDoDestino(_TelaBasica):
         # sabe listar pede o nome digitado.
         self._lista_conhecida = False
         self._sem_lista = False
+        self._base_ao_abrir = None
         self.interruptor = Interruptor()
         self.interruptor.clicked.connect(self._switch_clicado)
-        self.corpo.addWidget(linha_do_switch(self.interruptor, self.rotulo_do_switch))
+        # Só depois de o destino responder nesta abertura: é a prova de que ele está no
+        # ar, e o "testado" guardado de outro dia não prova isso.
+        self.online = etiqueta_online()
+        self.online.setVisible(False)
+        self.nao_encontrado = etiqueta_nao_encontrado()
+        self.nao_encontrado.setVisible(False)
+        # Um campo só, para as duas etiquetas nunca aparecerem juntas (revisão 54).
+        self._conexao = None
+        self.corpo.addWidget(linha_do_switch(self.interruptor, self.rotulo_do_switch,
+                                             ao_lado=(self.online, self.nao_encontrado)))
         self.situacao = Frase()
         self.corpo.addWidget(self.situacao)
         self.faixa_erro = Faixa("erro")
         self.faixa_erro.setVisible(False)
         self.corpo.addWidget(self.faixa_erro)
+        # Fora da troca do switch, e sempre à vista: a pessoa confere o endereço primeiro,
+        # e liga só se quiser (RN-64).
+        self.botao_testar = QPushButton("Testar conexão")
+        self.botao_testar.setCursor(Qt.PointingHandCursor)
+        self.botao_testar.setStyleSheet(estilo.estilo_botao(principal=False, pequeno=True))
+        self.botao_testar.clicked.connect(self._testar_conexao)
         self._montar_campos()
 
         self.rotulo_revisora = rotulo_de_campo("Modelo da revisora")
@@ -171,17 +196,9 @@ class _TelaDoDestino(_TelaBasica):
         self.campo_motor = campo_de_texto()
         self.campo_motor.setPlaceholderText("O nome do modelo, que a TI informa")
         self.campo_motor.editingFinished.connect(self._digitou_motor)
-        self.botao_testar = QPushButton("Testar de novo")
-        self.botao_testar.setCursor(Qt.PointingHandCursor)
-        self.botao_testar.setStyleSheet(estilo.estilo_botao(principal=False, pequeno=True))
-        self.botao_testar.clicked.connect(self._testar_de_novo)
         for peca in (self.rotulo_revisora, self.seletor_revisora, self.campo_revisora,
                      self.rotulo_motor, self.seletor_motor, self.campo_motor):
             self.corpo.addWidget(peca)
-        linha = QHBoxLayout()
-        linha.addWidget(self.botao_testar)
-        linha.addStretch()
-        self.corpo.addLayout(linha)
         self.corpo.addStretch()
         self.atualizar()
 
@@ -214,9 +231,15 @@ class _TelaDoDestino(_TelaBasica):
         ligado = self.esta_ligado()
         self.interruptor.setChecked(ligado)
         self.interruptor.setEnabled(self.pode_ligar() and not self._pedidos_abertos)
+        self._mostrar_etiquetas()
         if not self._pedidos_abertos:
             self.situacao.setText(self._frase_da_situacao() if ligado else "")
         self._mostrar_modelos(ligado)
+
+    def _mostrar_etiquetas(self):
+        livre = not self._pedidos_abertos
+        self.online.setVisible(livre and self._conexao == ONLINE)
+        self.nao_encontrado.setVisible(livre and self._conexao == NAO_ENCONTRADO)
 
     def _frase_da_situacao(self):
         if config_ia.testado(self.nome) and config_ia.modelo_da_revisora(self.nome):
@@ -233,7 +256,6 @@ class _TelaDoDestino(_TelaBasica):
         self.rotulo_motor.setVisible(com_motor)
         self.seletor_motor.setVisible(com_motor and tem_lista)
         self.campo_motor.setVisible(com_motor and self._sem_lista)
-        self.botao_testar.setVisible(ligado)
         if digita:
             self.campo_revisora.setText(config_ia.modelo_da_revisora(self.nome))
             self.campo_motor.setText(config_ia.modelo_do_motor(self.nome))
@@ -250,10 +272,15 @@ class _TelaDoDestino(_TelaBasica):
                      *self._campos_do_destino()):
             peca.setEnabled(livre)
         if ocupado:
+            # O "Online" só se esconde durante o teste, e volta se o modelo responder: quem
+            # testa o modelo já sabe que o destino está no ar.
+            if self._conexao == NAO_ENCONTRADO:
+                self._conexao = None
             self.situacao.setText(TESTANDO)
             self.faixa_erro.setVisible(False)
         elif livre:
             self.interruptor.setEnabled(self.pode_ligar())
+        self._mostrar_etiquetas()
 
     # ---------------------------------------------------------- ligar e desligar
 
@@ -261,6 +288,7 @@ class _TelaDoDestino(_TelaBasica):
         if ligado:
             self._ligar()
         else:
+            self._conexao = None
             config_ia.desligar_destino()
             self.faixa_erro.setVisible(False)
             self.atualizar()
@@ -281,10 +309,52 @@ class _TelaDoDestino(_TelaBasica):
         base, token, cancelador = self.base(), self._token(), self._novo_cancelador()
         trabalho_da_ia.rodar(
             self, lambda: _rede().listar_modelos(base, token, cancelador),
-            self._chegou_a_lista, self._falhou_ao_ligar)
+            self._chegou_a_lista, self._lista_falhou)
 
-    def _testar_de_novo(self):
-        self._listar_e_testar()
+    def _lista_falhou(self, frase):
+        self._falhou_ao_ligar(frase)
+        self._conexao = self._conexao_depois_da_falha(frase)
+        self._mostrar_etiquetas()
+
+    def _conexao_depois_da_falha(self, frase):
+        """Só isto é "não encontrado". Recusar o token, por exemplo, é sinal de que ele foi
+        encontrado, e a etiqueta mandaria a pessoa procurar o defeito no lugar errado."""
+        return NAO_ENCONTRADO if frase in (_rede().NAO_RESPONDEU, _rede().DEMOROU) else None
+
+    def _endereco_pronto(self):
+        """O endereço que está escrito é o guardado? Sem isto, o teste diria "Online" sobre
+        o endereço de antes, com o novo à vista no campo."""
+        return True
+
+    def _testar_conexao(self):
+        if not self._endereco_pronto():
+            return
+        if self.esta_ligado():
+            self._listar_e_testar()
+            return
+        # Desligado, o teste só diz se o destino responde: não liga nada, e não mexe no
+        # destino que estiver em uso (RN-64).
+        if not self.pode_falar():
+            self.faixa_erro.mostrar(ENDERECO_NAO_CONFIRMADO)
+            return
+        self._ocupado(True)
+        base, token, cancelador = self.base(), self._token(), self._novo_cancelador()
+        trabalho_da_ia.rodar(
+            self, lambda: _rede().listar_modelos(base, token, cancelador),
+            self._conexao_respondeu, self._conexao_falhou)
+
+    def _conexao_respondeu(self, modelos):
+        self._ocupado(False)
+        self._conexao = ONLINE
+        self.atualizar()
+        if modelos == []:
+            self.faixa_erro.mostrar(NENHUM_MODELO)
+
+    def _conexao_falhou(self, frase):
+        self._ocupado(False)
+        self._conexao = self._conexao_depois_da_falha(frase)
+        self.atualizar()
+        self.faixa_erro.mostrar(f"{frase} {self.FRASE_DO_TESTE}")
 
     def _chegou_a_lista(self, modelos):
         self._ocupado(False)
@@ -294,6 +364,7 @@ class _TelaDoDestino(_TelaBasica):
         if modelos == []:
             self._desligar_com_falha(NENHUM_MODELO)
             return
+        self._conexao = ONLINE
         self._sem_lista = modelos is None
         self._lista_conhecida = True
         self._encher_seletores(modelos or [])
@@ -372,6 +443,7 @@ class _TelaDoDestino(_TelaBasica):
 
     def _desligar_com_falha(self, frase):
         """O switch volta para desligado, com o que fazer, e as escolhas ficam (RN-6)."""
+        self._conexao = None
         config_ia.marcar_testado(self.nome, False)
         if self.esta_ligado():
             if self._destino_de_antes:
@@ -470,14 +542,27 @@ class _TelaDoDestino(_TelaBasica):
             # Sem perguntar: quem só abriu a tela não pediu nada, e sem o endereço
             # confirmado nesta abertura o token não sai (RN-21).
             if not self.pode_falar(perguntando=False):
-                self.situacao.setText('Clique em "Testar de novo" para conferir.')
+                self.situacao.setText('Clique em "Testar conexão" para conferir.')
                 return
             self._lista_conhecida = True
             base, token, cancelador = self.base(), self._token(), self._novo_cancelador()
+            self._base_ao_abrir = base
             trabalho_da_ia.rodar(self, lambda: _rede().listar_modelos(base, token, cancelador),
                                  self._lista_ao_abrir, self._sem_lista_ao_abrir)
 
+    def _resposta_ao_abrir_vale(self):
+        """Este pedido não trava a tela, porque a pessoa só veio olhar. Então, até a resposta
+        chegar, ela pode ter trocado o endereço ou desligado, e a resposta seria sobre outro
+        endereço. Ignorada, a pergunta volta na próxima vez que a tela abrir."""
+        if self.esta_ligado() and self.base() == self._base_ao_abrir:
+            return True
+        self._lista_conhecida = False
+        return False
+
     def _lista_ao_abrir(self, modelos):
+        if not self._resposta_ao_abrir_vale():
+            return
+        self._conexao = ONLINE
         self._sem_lista = modelos is None
         self._encher_seletores(modelos or [])
         guardado = config_ia.modelo_da_revisora(self.nome)
@@ -489,8 +574,12 @@ class _TelaDoDestino(_TelaBasica):
         self._ao_mudar()
 
     def _sem_lista_ao_abrir(self, frase):
+        if not self._resposta_ao_abrir_vale():
+            return
+        self._conexao = self._conexao_depois_da_falha(frase)
+        self._mostrar_etiquetas()
         self._lista_conhecida = False
-        self.situacao.setText(f"{frase} Clique em \"Testar de novo\" para conferir.")
+        self.situacao.setText(f"{frase} Clique em \"Testar conexão\" para conferir.")
 
     def encerrar(self):
         """Corta o teste em andamento antes de o programa fechar: sem isso, a janela
@@ -504,11 +593,11 @@ class _TelaLmStudio(_TelaDoDestino):
     nome = LM_STUDIO
     rotulo_do_switch = "Habilitar LM Studio"
     FRASE_DE_FALHA = ("Abra o LM Studio, carregue um modelo e ligue o servidor local, "
-                      "e ligue este switch de novo. A porta e o modelo ficaram guardados.")
+                      "e ligue este switch de novo. O endereço e o modelo ficaram guardados.")
+    FRASE_DO_TESTE = "Confira o endereço e veja se o servidor local do LM Studio está ligado."
 
     def __init__(self, ao_mudar):
-        super().__init__("LM Studio", "A IA roda nesta máquina, e o documento não sai dela.",
-                         ao_mudar)
+        super().__init__("LM Studio", LM_STUDIO_NESTA_MAQUINA, ao_mudar)
 
     def _montar_campos(self):
         self.antes_de_ligar = Faixa("info")
@@ -516,32 +605,100 @@ class _TelaLmStudio(_TelaDoDestino):
             "Antes de ligar: abra o LM Studio, carregue um modelo e ligue o servidor "
             "local dele.")
         self.corpo.addWidget(self.antes_de_ligar)
-        self.corpo.addWidget(rotulo_de_campo("Porta"))
-        self.campo_porta = campo_de_texto(140)
-        self.campo_porta.setText(str(config_ia.porta_do_lm_studio()))
-        self.campo_porta.editingFinished.connect(self._porta_mudou)
-        self.corpo.addWidget(self.campo_porta)
+        self.corpo.addWidget(rotulo_de_campo("Endereço, como o LM Studio mostra"))
+        self.campo_endereco = campo_de_texto()
+        self.campo_endereco.editingFinished.connect(self._endereco_mudou)
+        self.corpo.addWidget(self.campo_endereco)
+        linha = QHBoxLayout()
+        linha.addWidget(self.botao_testar)
+        linha.addStretch()
+        self.corpo.addLayout(linha)
+        self._conferindo_o_endereco = False
+        self._recusado_neste_clique = False
+        # Voltou a digitar: aquele clique já passou, e não pode engolir o próximo.
+        self.campo_endereco.textEdited.connect(self._esquecer_a_recusa)
 
-    def _porta_mudou(self):
-        texto = self.campo_porta.text().strip()
-        if texto.isdigit() and 0 < int(texto) < 65536:
-            if int(texto) != config_ia.porta_do_lm_studio():
-                config_ia.guardar_do_destino(LM_STUDIO, porta=int(texto))
-                # Com a porta nova, os testes que passaram não valem mais.
-                config_ia.marcar_testado(LM_STUDIO, False)
-                config_ia.marcar_motor_testado(LM_STUDIO, False)
-                if self.esta_ligado():
-                    config_ia.desligar_destino()
-                self.atualizar()
-                self._ao_mudar()
-        else:
-            self.campo_porta.setText(str(config_ia.porta_do_lm_studio()))
+    def showEvent(self, evento):
+        # Só aqui: o de costume é escrito pelo arquivo da rede, que não abre sem precisar.
+        self.campo_endereco.setText(config_ia.endereco_do_lm_studio())
+        self._dizer_onde_a_ia_roda()
+        super().showEvent(evento)
+
+    def _dizer_onde_a_ia_roda(self):
+        self.legenda.setText(LM_STUDIO_NESTA_MAQUINA if config_ia.lm_studio_nesta_maquina()
+                             else LM_STUDIO_EM_OUTRA_MAQUINA)
+
+    def _endereco_mudou(self):
+        """Cola-se o endereço inteiro, porque é assim que o LM Studio o mostra.
+
+        A trava é porque a caixa do aviso tira o foco do campo, e isso dispara este
+        mesmo aviso de novo: sem ela, abriria uma caixa em cima da outra.
+        """
+        if self._conferindo_o_endereco:
+            return False
+        self._conferindo_o_endereco = True
+        try:
+            return self._conferir_o_endereco()
+        finally:
+            self._conferindo_o_endereco = False
+
+    def _esquecer_a_recusa(self, _texto):
+        self._recusado_neste_clique = False
+
+    def _mouse_no_botao_de_testar(self):
+        return self.botao_testar.underMouse()
+
+    def _endereco_pronto(self):
+        recusado, self._recusado_neste_clique = self._recusado_neste_clique, False
+        if recusado:
+            return False
+        pronto = self._endereco_mudou()
+        # Recusado agora, por este mesmo clique: não sobra nada para o próximo.
+        self._recusado_neste_clique = False
+        return pronto
+
+    def _conferir_o_endereco(self):
+        """Diz se o que está no campo é o que vale agora."""
+        atual = config_ia.endereco_do_lm_studio()
+        texto = self.campo_endereco.text().strip()
+        novo = _rede().base_do_endereco(texto) if texto else atual
+        if novo == _rede().base_do_endereco(atual):
+            self.campo_endereco.setText(atual)
+            return True
+        avaliacao = _rede().avaliar_endereco(novo, config_ia.enderecos_locais())
+        if not avaliacao.valido:
+            self.campo_endereco.setText(atual)
+            self.faixa_erro.mostrar(avaliacao.problema)
+            # O campo já voltou ao endereço antigo: o clique que tirou o foco dele, ao
+            # terminar, testaria esse, e o "Online" apagaria o erro.
+            self._recusado_neste_clique = self._mouse_no_botao_de_testar()
+            return False
+        if not avaliacao.reconhecido and not avisos_da_ia.confirmar_endereco(novo, avaliacao, self):
+            self.campo_endereco.setText(atual)
+            return False
+        self.faixa_erro.setVisible(False)
+        config_ia.guardar_do_destino(LM_STUDIO, endereco=novo)
+        self.campo_endereco.setText(novo)
+        self._dizer_onde_a_ia_roda()
+        # Com o endereço novo, os testes que passaram não valem mais.
+        self._conexao = None
+        config_ia.marcar_testado(LM_STUDIO, False)
+        config_ia.marcar_motor_testado(LM_STUDIO, False)
+        if self.esta_ligado():
+            config_ia.desligar_destino()
+        self.atualizar()
+        self._ao_mudar()
+        return True
 
     def base(self):
-        return _rede().base_do_lm_studio(config_ia.porta_do_lm_studio())
+        return config_ia.base_do_destino(LM_STUDIO)
+
+    def pode_falar(self, perguntando=True):
+        return avisos_da_ia.pode_usar_o_endereco(config_ia.endereco_do_lm_studio(), self,
+                                                 perguntando)
 
     def _campos_do_destino(self):
-        return (self.campo_porta,)
+        return (self.campo_endereco,)
 
     def atualizar(self):
         super().atualizar()
@@ -553,6 +710,7 @@ class _TelaServidor(_TelaDoDestino):
     rotulo_do_switch = "Habilitar Servidor de IA Interno"
     FRASE_DE_FALHA = ("Confira o endereço, ou veja com a TI se ele está no ar. O "
                       "endereço e o token ficaram guardados.")
+    FRASE_DO_TESTE = "Confira o endereço, ou veja com a TI se ele está no ar."
 
     def __init__(self, ao_mudar):
         super().__init__(
@@ -595,11 +753,19 @@ class _TelaServidor(_TelaDoDestino):
         self.botao_salvar = _botao_pequeno("Salvar", self.salvar, principal=True)
         linha_salvar = QHBoxLayout()
         linha_salvar.addWidget(self.botao_salvar)
+        linha_salvar.addWidget(self.botao_testar)
         linha_salvar.addStretch()
         self.corpo.addLayout(linha_salvar)
 
     def base(self):
         return _rede().base_do_endereco(config_ia.endereco_do_servidor())
+
+    def _endereco_pronto(self):
+        # Só salva o que mudou: salvar de novo um endereço de fora abriria o aviso à toa.
+        if (self.campo_endereco.text().strip() == config_ia.endereco_do_servidor()
+                and not self.campo_token.text().strip() and self.pode_ligar()):
+            return True
+        return self.salvar()
 
     def _campos_do_destino(self):
         return (self.campo_endereco, self.campo_token, self.botao_salvar,
@@ -628,23 +794,24 @@ class _TelaServidor(_TelaDoDestino):
         self.por_que.setText(avaliacao.por_que)
 
     def salvar(self):
-        """Grava o endereço e o token, com o aviso antes, quando ele cabe (RN-19)."""
+        """Grava o endereço e o token, com o aviso antes, quando ele cabe (RN-19). Diz se
+        gravou: o teste de conexão salva antes, e não pode seguir sem isso."""
         self.faixa_erro.setVisible(False)
         endereco = self.campo_endereco.text().strip()
         if not endereco:
             self.faixa_erro.mostrar("Escreva o endereço que a TI informou.")
-            return
+            return False
         avaliacao = _rede().avaliar_endereco(endereco, config_ia.enderecos_locais())
         if not avaliacao.valido:
             self.faixa_erro.mostrar(avaliacao.problema)
-            return
+            return False
         mudou_o_endereco = endereco != config_ia.endereco_do_servidor()
         if mudou_o_endereco:
             # Endereço novo: a confirmação do antigo não vale para ele (RN-20).
             avisos_da_ia.esquecer_confirmado()
         if not avaliacao.reconhecido and not avisos_da_ia.confirmar_endereco(endereco, avaliacao, self):
             self.campo_endereco.setText(config_ia.endereco_do_servidor())
-            return
+            return False
 
         token = self.campo_token.text().strip()
         if token and not config_ia.salvar_token(token):
@@ -653,7 +820,7 @@ class _TelaServidor(_TelaDoDestino):
             self.faixa_erro.mostrar(
                 "Não foi possível guardar o token: a pasta do programa não aceitou. "
                 "Nada foi salvo.")
-            return
+            return False
         anterior = config_ia.endereco_do_servidor()
         if (mudou_o_endereco and anterior and not token and config_ia.token_salvo()
                 and not avisos_da_ia.manter_o_token_no_endereco_novo(self)
@@ -664,7 +831,7 @@ class _TelaServidor(_TelaDoDestino):
             self.campo_endereco.setText(anterior)
             self.faixa_erro.mostrar("Não foi possível apagar o token: a pasta do programa "
                                     "não aceitou. O endereço novo não foi salvo.")
-            return
+            return False
         self.campo_token.clear()
         self._trocando_token = False
         config_ia.guardar_do_destino(SERVIDOR, endereco=endereco)
@@ -673,8 +840,10 @@ class _TelaServidor(_TelaDoDestino):
             self._o_teste_nao_vale_mais()
         self.atualizar()
         self._ao_mudar()
+        return True
 
     def _o_teste_nao_vale_mais(self):
+        self._conexao = None
         config_ia.marcar_testado(SERVIDOR, False)
         config_ia.marcar_motor_testado(SERVIDOR, False)
         if self.esta_ligado():
@@ -729,9 +898,12 @@ class _TelaHabilitar(_TelaBasica):
         self.corpo.addWidget(_recuado(rotulo_de_campo("A revisão por IA começa"), 2 * self.RECUO))
         self.inicio_clique = QRadioButton('ao clicar no botão "Revisar com IA"')
         self.inicio_abrir = QRadioButton("sozinha, ao abrir a revisão")
+        # O grupo é preciso: cada radio mora no próprio recuo, e o Qt só faz um desmarcar o
+        # outro entre vizinhos da mesma caixa. Sem ele, os dois ficavam marcados.
+        self.grupo_do_inicio = QButtonGroup(self)
         for botao, inicio in ((self.inicio_clique, config_ia.INICIO_NO_CLIQUE),
                               (self.inicio_abrir, config_ia.INICIO_AO_ABRIR)):
-            botao.setStyleSheet(f"color: {estilo.COR_TEXTO}; font-size: {estilo.TEXTO_PEQUENO}px;")
+            self.grupo_do_inicio.addButton(botao)
             botao.clicked.connect(lambda _=False, i=inicio: config_ia.escolher_inicio(i))
             self.corpo.addWidget(_recuado(botao, 2 * self.RECUO))
 
@@ -763,6 +935,7 @@ class _TelaHabilitar(_TelaBasica):
         self.revisora.setChecked(ligada and config_ia.revisora_marcada())
         for botao in (self.inicio_clique, self.inicio_abrir):
             botao.setEnabled(self.revisora.isChecked())
+            botao.setStyleSheet(estilo_do_radio(apagado=not botao.isEnabled()))
         marcado = (self.inicio_abrir if config_ia.inicio_da_revisao() == config_ia.INICIO_AO_ABRIR
                    else self.inicio_clique)
         marcado.setChecked(True)

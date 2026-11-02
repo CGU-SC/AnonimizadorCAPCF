@@ -124,6 +124,30 @@ class Faixa(QFrame):
         self.setVisible(True)
 
 
+def estilo_do_radio(apagado=False):
+    cor = estilo.COR_TEXTO_APAGADO if apagado else estilo.COR_TEXTO
+    return f"""
+        QRadioButton {{
+            color: {cor};
+            font-size: {estilo.TEXTO_BASE}px;
+            spacing: {estilo.ESPACO_2}px;
+        }}
+        QRadioButton::indicator {{
+            width: 15px;
+            height: 15px;
+            border-radius: 8px;
+            border: 2px solid {estilo.COR_TEXTO_SECUNDARIO};
+        }}
+        QRadioButton::indicator:checked {{
+            border: 2px solid {estilo.COR_DESTAQUE};
+            background-color: {estilo.COR_DESTAQUE};
+        }}
+        QRadioButton::indicator:disabled {{
+            border: 2px solid #4a5058;
+        }}
+    """
+
+
 def titulo_de_tela(texto):
     rotulo = QLabel(texto)
     rotulo.setStyleSheet(
@@ -161,7 +185,26 @@ def campo_de_texto(largura=LARGURA_DO_CONTEUDO):
     return campo
 
 
-def linha_do_switch(interruptor, texto, recuo=0):
+def _etiqueta(texto, cor):
+    """No desenho das etiquetas da lista da revisão."""
+    rotulo = QLabel(texto)
+    rotulo.setStyleSheet(
+        f"font-size: 11px; font-weight: 600; color: {cor};"
+        f"border: 1px solid {cor}; border-radius: 8px; padding: 0 6px;"
+        "background: transparent;"
+    )
+    return rotulo
+
+
+def etiqueta_online():
+    return _etiqueta("Online", estilo.COR_SUCESSO)
+
+
+def etiqueta_nao_encontrado():
+    return _etiqueta("Servidor não encontrado", estilo.COR_ERRO)
+
+
+def linha_do_switch(interruptor, texto, recuo=0, ao_lado=()):
     """O switch com o nome ao lado, e o nome clicável como o próprio switch."""
     fora = QWidget()
     linha = QHBoxLayout(fora)
@@ -174,5 +217,7 @@ def linha_do_switch(interruptor, texto, recuo=0):
     nome.setBuddy(interruptor)
     linha.addWidget(interruptor)
     linha.addWidget(nome)
+    for peca in ao_lado:
+        linha.addWidget(peca)
     linha.addStretch()
     return fora

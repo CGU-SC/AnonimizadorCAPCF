@@ -52,11 +52,30 @@ def base_do_destino(nome):
     carregado só aqui, na hora de usar."""
     import rede_da_ia
     if nome == LM_STUDIO:
-        return rede_da_ia.base_do_lm_studio(porta_do_lm_studio())
+        return rede_da_ia.base_do_endereco(endereco_do_lm_studio())
     return rede_da_ia.base_do_endereco(endereco_do_servidor())
 
 
+def endereco_do_lm_studio():
+    """O endereço colado pela pessoa, como o LM Studio o mostra. Sem nenhum guardado, o
+    de costume, nesta máquina."""
+    guardado = do_destino(LM_STUDIO).get("endereco")
+    if guardado:
+        return guardado
+    import rede_da_ia
+    return rede_da_ia.base_do_lm_studio(porta_do_lm_studio())
+
+
+def lm_studio_nesta_maquina():
+    """O endereço colado pode ser de outro computador, e aí o texto sai deste, com os CPFs
+    inteiros: nenhuma tela pode dizer "nesta máquina" sem perguntar aqui."""
+    import rede_da_ia
+    return rede_da_ia.endereco_desta_maquina(endereco_do_lm_studio())
+
+
 def porta_do_lm_studio():
+    """Nenhuma tela grava mais a porta, desde que se cola o endereço inteiro (RN-59). Ela
+    sobra para compor o endereço de costume, e para quem ainda a tem guardada no arquivo."""
     try:
         porta = int(do_destino(LM_STUDIO).get("porta", PORTA_PADRAO))
     except ValueError:

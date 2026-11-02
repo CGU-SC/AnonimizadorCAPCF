@@ -137,9 +137,12 @@ def pode_usar_o_destino(pai=None):
 
     Conferido de novo porque um nome que dava em número interno pode passar a dar
     em número externo (RN-21). O aviso só aparece uma vez por abertura, para os
-    dois usos juntos (RN-20). O LM Studio é sempre esta máquina, e não passa aqui.
+    dois usos juntos (RN-20). O LM Studio nesta máquina é reconhecido, e não pergunta.
     """
-    if config_ia.destino_ligado() != config_ia.SERVIDOR:
+    destino = config_ia.destino_ligado()
+    if destino == config_ia.LM_STUDIO:
+        return pode_usar_o_endereco(config_ia.endereco_do_lm_studio(), pai)
+    if destino != config_ia.SERVIDOR:
         return True
     return pode_usar_o_servidor(pai)
 
@@ -148,8 +151,11 @@ def pode_usar_o_servidor(pai=None, perguntando=True):
     """O mesmo, para quem vai falar com o servidor mesmo sem ele estar ligado: ligar o
     switch e testar também mandam o token (lente crítica). `perguntando=False` é para
     o que acontece sem a pessoa pedir, como abrir a tela: nada de janela do nada."""
+    return pode_usar_o_endereco(config_ia.endereco_do_servidor(), pai, perguntando)
+
+
+def pode_usar_o_endereco(endereco, pai=None, perguntando=True):
     import rede_da_ia
-    endereco = config_ia.endereco_do_servidor()
     avaliacao = rede_da_ia.avaliar_endereco(endereco, config_ia.enderecos_locais())
     if not avaliacao.valido:
         return False

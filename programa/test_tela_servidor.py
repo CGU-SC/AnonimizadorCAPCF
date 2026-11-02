@@ -54,6 +54,57 @@ def _texto_de_todas_as_telas(tela):
     return " ".join(textos)
 
 
+# ----------------------------------------------------------- testar sem ligar (RN-64)
+
+
+def test_testar_salva_o_endereco_escrito_e_nao_liga(servidor):
+    tela = _tela()
+    tela.campo_endereco.setText(servidor.base)
+    tela.botao_testar.click()
+    assert config_ia.endereco_do_servidor() == servidor.base
+    assert not tela.online.isHidden() and tela.nao_encontrado.isHidden()
+    assert not tela.interruptor.isChecked()
+    assert config_ia.destino_ligado() is None
+
+
+def test_testar_sem_endereco_pede_o_endereco_e_nao_pede_nada_a_rede():
+    tela = _tela()
+    tela.botao_testar.click()
+    assert "Escreva o endereço" in tela.faixa_erro.frase.text()
+    assert tela.online.isHidden() and tela.nao_encontrado.isHidden()
+
+
+def test_testar_com_o_servidor_fora_do_ar_diz_que_nao_encontrou(servidor):
+    base = servidor.base
+    servidor.parar()
+    tela = _tela()
+    tela.campo_endereco.setText(base)
+    tela.botao_testar.click()
+    assert not tela.nao_encontrado.isHidden()
+    assert "com a TI" in tela.faixa_erro.frase.text()
+    assert not tela.interruptor.isChecked()
+
+
+def test_testar_endereco_de_fora_recusado_nao_manda_nada(servidor, perguntas):
+    perguntas.resposta = False
+    tela = _tela()
+    tela.campo_endereco.setText(EXTERNO)
+    tela.botao_testar.click()
+    assert [titulo for titulo, _ in perguntas.feitas] == ["Este endereço pode ser externo"]
+    assert config_ia.endereco_do_servidor() == ""
+    assert servidor.comportamento.pedidos == []
+    assert tela.online.isHidden() and tela.nao_encontrado.isHidden()
+
+
+def test_token_recusado_no_teste_nao_e_servidor_nao_encontrado(servidor):
+    servidor.comportamento.token = TOKEN
+    tela = _tela()
+    tela.campo_endereco.setText(servidor.base)
+    tela.botao_testar.click()
+    assert tela.nao_encontrado.isHidden() and tela.online.isHidden()
+    assert "recusou o token" in tela.faixa_erro.frase.text()
+
+
 # ------------------------------------------------------------------ o endereço
 
 
