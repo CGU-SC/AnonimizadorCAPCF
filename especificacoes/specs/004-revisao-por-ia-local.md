@@ -326,7 +326,7 @@ branco.
   trecho estragado sem número também.
 - RN-31: **comentário sobre um número já listado vira etiqueta nele**, e nunca muda
   a seção, a contagem nem a máscara. Isso vale também para o que a pessoa já liberou
-  e o que ela mascarou à mão.
+  e o que ela mascarou à mão. As exceções da seção são as RN-69 e RN-70.
 - RN-32: trecho citado que não existe no texto é descartado. Revisar de novo não
   repete o que já está na lista.
 - RN-33: os apontamentos valem só na revisão aberta, e nada deles entra no `.md`
@@ -627,6 +627,25 @@ combinado: fecham buracos que deixariam dígito à vista ou o token sair sem avi
   nas 6 vezes medidas, e com a frase pegou as 6. No documento de teste real, o tempo e o que
   ele apontou ficaram iguais. Ajuda, mas não garante: o mesmo modelo tinha pegado o caso na
   véspera, com a instrução antiga.
+- RN-69: **o liberado que a IA acha que é CPF sobe para "Revisar liberação".** Pedido da
+  solicitante em 03/11/2026: no lugar de sempre, no fim da lista, quem não rolasse não via o
+  aviso. A seção fica no topo, acima dos suspeitos, com o título em vermelho, a frase da IA e
+  "Mascarar de novo"; o alto da tela ganha o selo "1 liberação para revisar", que filtra como
+  os outros. Mascarado de novo, o número volta à seção dele. Ele continua contado entre os
+  liberados, e nada muda no que vai para o arquivo. Vale só quando a IA disse que parece CPF:
+  liberar um número sobre o qual ela disse "não é CPF" não o leva para lá. A IA não guarda a
+  opinião de quando concorda, porque isso a faria citar cada CPF mascarado, com o custo da
+  RN-66: quem libera depois da revisão usa "Revisar de novo com IA". Vale sobre a RN-31, que
+  continua para todo o resto. O número mascarado que a IA acha que não é CPF segue a RN-70.
+- RN-70: **o suspeito que a IA diz que não é CPF sai de "Suspeitos".** Pedido da solicitante
+  em 03/11/2026: o termo de outorga, com a frase da IA numa linha do item e o amarelo no
+  texto, parecia olhado pela IA e mantido suspeito. Ele vai para a seção "Suspeitos que a IA
+  nega", abaixo dos suspeitos, com o selo "1 suspeito que a IA nega", e no texto fica lilás,
+  com o traço ondulado do suspeito. **Continua mascarado** até a pessoa desfazer, com um
+  clique, como todo suspeito: a IA lê só o texto, e um dígito lido errado num CPF de verdade
+  também o faz falhar na conta. Liberado, ele fica na seção, para ser mascarado de novo.
+  Vale só para o suspeito: o CPF válido que a IA nega fica onde está, porque soltar por uma
+  frase o número que passa na conta é o risco maior.
 
 ## Questões em aberto
 

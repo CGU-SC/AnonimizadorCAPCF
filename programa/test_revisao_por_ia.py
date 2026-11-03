@@ -7,11 +7,13 @@ import json
 from pathlib import Path
 
 import pytest
+from PySide6.QtGui import QColor
 
 import arquivo_md
 import avisos_da_ia
 import config_ia
 import cpf
+import estilo
 import revisao_ia
 from painel_anonimizar import PainelAnonimizar
 from revisao_por_ia_na_tela import (
@@ -20,7 +22,14 @@ from revisao_por_ia_na_tela import (
     NADA_A_MAIS,
     RevisaoEmSegundoPlano,
 )
-from tela_revisao import DA_IA, TelaRevisao, TrechoDaIa, quantos_em_cada_grupo
+from tela_revisao import (
+    A_REVISAR,
+    DA_IA,
+    IA_NEGA,
+    TelaRevisao,
+    TrechoDaIa,
+    quantos_em_cada_grupo,
+)
 
 
 # "3333-3333-333" tem 11 dígitos repetidos e passa na conta, mas em grupos que o
@@ -130,7 +139,8 @@ def test_o_numero_da_ia_conta_so_no_selo_dela(servidor):
     tela = _tela()
     tela.ia.comecar()
     contas = quantos_em_cada_grupo(tela._ocorrencias)
-    assert contas["validos"] == 1 and contas["suspeitos"] == 1 and contas[DA_IA] == 1
+    # O termo de outorga, que a IA nega, sai dos suspeitos (RN-70).
+    assert contas["validos"] == 1 and contas[IA_NEGA] == 1 and contas[DA_IA] == 1
     assert tela.selo_da_ia.text() == "1 da IA"
     assert not tela.selo_da_ia.isHidden() and not tela.chave_ia.isHidden()
     assert "1 apontado pela IA" in tela.resumo_do_que_sai()
@@ -145,7 +155,9 @@ def test_comentario_em_numero_ja_listado_nao_muda_nada_alem_da_etiqueta(servidor
     assert listado.comentario == "Parece o número de um termo, e não um CPF."
     assert (listado.tipo, listado.situacao, listado.mascara) == antes
     assert not listado.da_ia
-    assert quantos_em_cada_grupo(tela._ocorrencias)["suspeitos"] == 1
+    # Muda de grupo, e não de contagem: continua um dos mascarados (RN-70).
+    contas = quantos_em_cada_grupo(tela._ocorrencias)
+    assert contas["suspeitos"] == 0 and contas[IA_NEGA] == 1
     assert sum(o.original == "123.456.789-10" for o in tela._ocorrencias) == 1
 
 
@@ -193,6 +205,149 @@ def test_liberado_que_a_ia_tambem_acha_que_nao_e_cpf_nao_aparece(servidor):
     tela.ia.comecar()
     assert listado.situacao == cpf.LIBERADO
     assert listado.comentario is None
+
+
+# ------------------------------------------- o liberado que a IA acha que é CPF (RN-69)
+
+
+def _titulos_da_lista(tela):
+    return [tela.lista._layout.itemAt(i).widget().text()
+            for i in range(tela.lista._layout.count())
+            if hasattr(tela.lista._layout.itemAt(i).widget(), "text")]
+
+
+def _liberado_que_a_ia_acha_cpf(servidor):
+    servidor.comportamento.resposta = json.dumps({"apontamentos": [
+        {"tipo": "numero", "citacao": "123.456.789-10", "parece_cpf": True,
+         "motivo": "Está na ficha de uma pessoa."}]})
+    tela = _tela()
+    listado = _numero(tela, "123.456.789-10")
+    tela.liberar(listado)
+    tela.ia.comecar()
+    return tela, listado
+
+
+def test_o_liberado_que_a_ia_acha_cpf_sobe_para_o_topo_da_lista(servidor):
+    tela, listado = _liberado_que_a_ia_acha_cpf(servidor)
+    assert listado.liberacao_para_revisar
+    assert _titulos_da_lista(tela)[1] == "Revisar liberação 1"
+    # Sai da seção dos suspeitos, e não aparece duas vezes.
+    assert "Suspeitos — olhe estes 0" not in _titulos_da_lista(tela)
+    assert sum(item is listado for item in (
+        tela.lista._layout.itemAt(i).widget()._ocorrencia
+        for i in range(tela.lista._layout.count())
+        if hasattr(tela.lista._layout.itemAt(i).widget(), "_ocorrencia"))) == 1
+
+
+def test_o_selo_da_liberacao_para_revisar_aparece_e_filtra(servidor):
+    tela, listado = _liberado_que_a_ia_acha_cpf(servidor)
+    assert tela.selo_a_revisar.text() == "1 liberação para revisar"
+    assert not tela.selo_a_revisar.isHidden()
+    # Continua contado entre os liberados: a soma dos selos não muda.
+    assert tela.selo_liberados.text() == "1 liberado por você"
+    tela.filtrar(A_REVISAR)
+    assert tela._em_ordem() == [listado]
+
+
+def test_o_liberado_para_revisar_nao_conta_como_mascarado(servidor):
+    tela, _ = _liberado_que_a_ia_acha_cpf(servidor)
+    assert tela.resumo_do_que_sai().startswith("1 número mascarado:")
+    assert "123.456.789-10" in tela.texto_para_o_arquivo()
+
+
+def test_mascarar_de_novo_devolve_o_numero_a_secao_dele(servidor):
+    tela, listado = _liberado_que_a_ia_acha_cpf(servidor)
+    tela.mascarar_de_novo(listado)
+    assert not listado.liberacao_para_revisar
+    assert tela.selo_a_revisar.isHidden()
+    assert not any(t.startswith("Revisar liberação") for t in _titulos_da_lista(tela))
+    assert "Suspeitos — olhe estes 1" in _titulos_da_lista(tela)
+
+
+def test_o_numero_da_ia_liberado_sobe_mesmo_com_a_mesma_frase(servidor):
+    """Revisar de novo, a IA repete o motivo de quando o apontou. A frase repetida não vira
+    comentário, mas a opinião vale do mesmo jeito (lente crítica, 03/11/2026)."""
+    servidor.comportamento.resposta = json.dumps({"apontamentos": [
+        {"tipo": "numero", "citacao": "1234-5678-901", "motivo": "parece um CPF"}]})
+    tela = _tela("Inscrição do bolsista: 1234-5678-901\n")
+    tela.ia.comecar()
+    novo = _numero(tela, "1234-5678-901")
+    tela.liberar(novo)
+    tela.ia.comecar()
+    assert novo.liberacao_para_revisar
+    assert novo.comentario is None
+    assert _titulos_da_lista(tela)[1] == "Revisar liberação 1"
+    assert tela.selo_a_revisar.text() == "1 liberação para revisar"
+
+
+def test_liberar_o_que_a_ia_disse_que_nao_e_cpf_nao_pede_revisao(servidor):
+    """A frase "é o número de um termo" num liberado não é alerta: a IA concorda com ele."""
+    tela = _tela()
+    listado = _numero(tela, "123.456.789-10")
+    tela.ia.comecar()
+    assert listado.comentario == "Parece o número de um termo, e não um CPF."
+    tela.liberar(listado)
+    assert not listado.liberacao_para_revisar
+    assert tela.selo_a_revisar.isHidden()
+
+
+# ---------------------------------------- o suspeito que a IA diz que não é CPF (RN-70)
+
+
+def test_o_suspeito_que_a_ia_nega_ganha_secao_e_selo_proprios(servidor):
+    tela = _tela()
+    listado = _numero(tela, "123.456.789-10")
+    tela.ia.comecar()
+    assert listado.suspeito_que_a_ia_nega and listado.situacao == cpf.MASCARADO
+    assert "Suspeitos que a IA nega 1" in _titulos_da_lista(tela)
+    assert not any(t.startswith("Suspeitos —") for t in _titulos_da_lista(tela))
+    assert tela.selo_ia_nega.text() == "1 suspeito que a IA nega"
+    assert tela.selo_suspeitos.isHidden()
+    tela.filtrar(IA_NEGA)
+    assert tela._em_ordem() == [listado]
+
+
+def test_o_suspeito_que_a_ia_nega_continua_mascarado_e_contado(servidor):
+    """Quem decide soltar é a pessoa: a IA lê só o texto, e um dígito lido errado num CPF
+    de verdade também o faz falhar na conta."""
+    tela = _tela()
+    tela.ia.comecar()
+    assert "XXX.456.789-XX" in tela.texto_para_o_arquivo()
+    assert "1 suspeito que a IA nega" in tela.resumo_do_que_sai()
+
+
+def test_no_texto_o_suspeito_que_a_ia_nega_fica_lilas(servidor):
+    tela = _tela()
+    listado = _numero(tela, "123.456.789-10")
+    tela.ia.comecar()
+    assert not tela.chave_ia_nega.isHidden()
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(tela._no_qt(listado.inicio) + 1)
+    assert cursor.charFormat().foreground().color() == QColor(estilo.COR_IA)
+
+
+def test_o_suspeito_que_a_ia_nega_liberado_fica_na_secao_dela(servidor):
+    tela = _tela()
+    listado = _numero(tela, "123.456.789-10")
+    tela.ia.comecar()
+    tela.liberar(listado)
+    assert "Suspeitos que a IA nega 0" in _titulos_da_lista(tela)
+    assert tela.selo_ia_nega.isHidden() and tela.chave_ia_nega.isHidden()
+    tela.mascarar_de_novo(listado)
+    assert tela.selo_ia_nega.text() == "1 suspeito que a IA nega"
+
+
+def test_o_cpf_valido_que_a_ia_nega_fica_onde_estava(servidor):
+    """Ele passa na conta: o risco de soltá-lo por uma frase é maior que o de olhá-lo."""
+    servidor.comportamento.resposta = json.dumps({"apontamentos": [
+        {"tipo": "numero", "citacao": "111.111.111-11", "parece_cpf": False,
+         "motivo": "É o número de um termo."}]})
+    tela = _tela("Termo 111.111.111-11\n")
+    listado = _numero(tela, "111.111.111-11")
+    tela.ia.comecar()
+    assert not listado.suspeito_que_a_ia_nega
+    assert "CPF válido 1" in _titulos_da_lista(tela)
+    assert tela.selo_ia_nega.isHidden()
 
 
 @pytest.mark.parametrize("campo", [{"tipo": "numero"}, {"tipo": "número"}, {}])

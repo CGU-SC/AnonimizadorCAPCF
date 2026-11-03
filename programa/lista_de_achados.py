@@ -75,10 +75,17 @@ class ListaDeAchados(QScrollArea):
         self._limpar()
         self._itens = {}
 
+        # O liberado que a IA acha que é CPF sai da seção dele e vai para o topo: no lugar
+        # de sempre, no fim da lista, quem não rolasse até lá não o via (RN-69).
+        a_revisar = [o for o in ocorrencias if o.liberacao_para_revisar]
+        resto = [o for o in ocorrencias if not o.liberacao_para_revisar]
         # O número da IA fica só na seção dela, e cada número aparece uma vez só.
-        da_ia = [o for o in ocorrencias if o.da_ia]
-        do_programa = [o for o in ocorrencias if not o.da_ia]
-        suspeitos = [o for o in do_programa if o.suspeito]
+        da_ia = [o for o in resto if o.da_ia]
+        do_programa = [o for o in resto if not o.da_ia]
+        suspeitos = [o for o in do_programa if o.suspeito and not o.suspeito_que_a_ia_nega]
+        # Separados dos outros suspeitos: entre eles, com a frase da IA numa linha do item,
+        # pareciam olhados por ela e mantidos (RN-70).
+        ia_nega = [o for o in do_programa if o.suspeito_que_a_ia_nega]
         validos = [o for o in do_programa if o.tipo == cpf.PASSA_NA_CONTA]
         a_mao = [o for o in do_programa if o.tipo == cpf.MASCARADO_A_MAO]
 
@@ -88,10 +95,21 @@ class ListaDeAchados(QScrollArea):
         # O número do título conta o que continua mascarado, igual ao selo do
         # alto; o item liberado continua listado no mesmo lugar, para ser
         # mascarado de novo com um clique (conferência da etapa 3, 17/09/2026).
-        # Os suspeitos vêm primeiro, sempre: são os que pedem decisão.
+        # Os suspeitos vêm primeiro, sempre: são os que pedem decisão. Só a liberação para
+        # revisar vem antes deles, porque ela é o CPF que vai sair inteiro. O número dela
+        # conta todos, e não só os mascarados: ali nenhum está.
+        self._montar_secao(
+            f"{tipos_na_tela.TITULO_DA_SECAO_DE_REVISAR} {len(a_revisar)}", a_revisar, texto,
+            cor=tipos_na_tela.LIBERACAO_PARA_REVISAR.cor)
         self._montar_secao(
             f"{tipos_na_tela.SUSPEITO.plural.capitalize()} — olhe estes "
             f"{_ainda_mascarados(suspeitos)}", suspeitos, texto)
+        # Só a primeira letra sobe: o `capitalize()` faria "IA" virar "ia".
+        nome_da_ia_nega = tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.plural
+        self._montar_secao(
+            f"{nome_da_ia_nega[0].upper()}{nome_da_ia_nega[1:]} "
+            f"{_ainda_mascarados(ia_nega)}", ia_nega, texto,
+            cor=tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.cor)
         self._montar_secao_da_ia(da_ia, trechos, texto)
         self._montar_secao(
             f"{tipos_na_tela.POR_TIPO[cpf.PASSA_NA_CONTA].nome} "
@@ -133,11 +151,11 @@ class ListaDeAchados(QScrollArea):
 
     # -------------------------------------------------------------- por dentro
 
-    def _montar_secao(self, titulo, ocorrencias, texto):
+    def _montar_secao(self, titulo, ocorrencias, texto, cor=estilo.COR_TEXTO):
         if not ocorrencias:
             return
         self._layout.addSpacing(estilo.ESPACO_2)
-        self._layout.addWidget(_titulo_de_secao(titulo))
+        self._layout.addWidget(_titulo_de_secao(titulo, cor=cor))
         for ocorrencia in ocorrencias:
             item = _Item(
                 ocorrencia,
@@ -396,9 +414,11 @@ def _cor_do_tipo(ocorrencia):
 
 
 def _cor_da_barra(ocorrencia):
+    if ocorrencia.liberacao_para_revisar:
+        return estilo.COR_ERRO
     if ocorrencia.situacao == cpf.LIBERADO:
         return estilo.COR_BORDA
-    if ocorrencia.da_ia:
+    if ocorrencia.da_ia or ocorrencia.suspeito_que_a_ia_nega:
         return estilo.COR_IA
     return _cor_do_tipo(ocorrencia)
 

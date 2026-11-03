@@ -143,13 +143,34 @@ class Ocorrencia:
     # é a de sempre, feita aqui: a IA nunca escreve o texto (RN-28).
     origem: str | None = None
     motivo_da_origem: str | None = None
-    # O que a IA disse sobre um número que já estava na lista: nunca muda a seção, a
-    # contagem nem a máscara dele (RN-31).
+    # O que a IA disse sobre um número que já estava na lista: nunca muda a contagem nem
+    # a máscara dele (RN-31), e a seção só nos casos do `liberacao_para_revisar` e do
+    # `suspeito_que_a_ia_nega`.
     comentario: str | None = None
+    # Para que lado vai o comentário. A frase sozinha não diz: "é o número de um termo"
+    # num mascarado que depois é liberado não pode parecer um alerta de CPF (RN-69).
+    # Falso também é o valor de quem a IA nunca comentou: "a IA nega" pede o comentário
+    # junto, senão todo suspeito pareceria negado por ela antes mesmo de ela rodar.
+    ia_acha_cpf: bool = False
 
     @property
     def da_ia(self):
         return self.origem is not None
+
+    @property
+    def suspeito_que_a_ia_nega(self):
+        """Suspeito do programa sobre o qual a IA disse que não é CPF (RN-70).
+
+        Liberado ou não: depois de liberado ele continua na seção dela, para ser
+        mascarado de novo com um clique, como nas outras seções.
+        """
+        return (self.suspeito and not self.da_ia and self.comentario is not None
+                and not self.ia_acha_cpf)
+
+    @property
+    def liberacao_para_revisar(self):
+        """Liberado pela pessoa, e a IA acha que é CPF: o que mais pode vazar (RN-69)."""
+        return self.situacao == LIBERADO and self.ia_acha_cpf
 
     @property
     def suspeito(self):

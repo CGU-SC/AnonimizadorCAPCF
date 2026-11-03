@@ -272,21 +272,28 @@ def aplicar(apontamento, texto, ocorrencias, trechos, pedaco, origem):
 def _opinar_sobre_o_listado(apontamento, ocorrencia):
     """A opinião da IA sobre um número que já está na lista. Diz se algo mudou.
 
-    Nunca muda a seção, a contagem nem a máscara, e o que a pessoa liberou continua
-    liberado (RN-31).
+    Nunca muda a contagem nem a máscara, e o que a pessoa liberou continua liberado
+    (RN-31). A seção muda em dois casos: o liberado que a IA acha que é CPF sobe para
+    "Revisar liberação" (RN-69), e o suspeito que ela nega vai para a seção dele (RN-70).
     """
     liberado = ocorrencia.situacao == cpf.LIBERADO
     # A IA só fala quando discorda da lista: que parece CPF num liberado, ou que não parece
     # num mascarado. Concordando, a frase não diz nada que a etiqueta já não diga, e enchia
     # a lista na conferência (RN-63).
     discorda = liberado if apontamento.parece_cpf else not liberado
+    if not (discorda and apontamento.motivo):
+        return False
+    # A opinião é anotada mesmo quando a frase se repete. Presa à frase, o número que a
+    # própria IA apontou, liberado e revisado de novo, só subia para "Revisar liberação"
+    # se ela escrevesse outra frase (lente crítica, 03/11/2026).
+    mudou = ocorrencia.ia_acha_cpf != apontamento.parece_cpf
+    ocorrencia.ia_acha_cpf = apontamento.parece_cpf
     # Revisar de novo acha o número que a própria IA apontou: o motivo dele já está lá, e
     # repeti-lo como comentário seria dizer duas vezes a mesma coisa.
-    if (discorda and apontamento.motivo
-            and apontamento.motivo not in (ocorrencia.comentario, ocorrencia.motivo_da_origem)):
+    if apontamento.motivo not in (ocorrencia.comentario, ocorrencia.motivo_da_origem):
         ocorrencia.comentario = apontamento.motivo
-        return True
-    return False
+        mudou = True
+    return mudou
 
 
 def _aplicar_trecho(apontamento, texto, ocorrencias, trechos, pedaco, origem):

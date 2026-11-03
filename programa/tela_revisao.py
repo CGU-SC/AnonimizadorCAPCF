@@ -96,6 +96,8 @@ SUSPEITOS = "suspeitos"
 LIBERADOS = "liberados"
 A_MAO = "a_mao"
 DA_IA = "da_ia"
+A_REVISAR = "a_revisar"
+IA_NEGA = "ia_nega"
 # O nome e a cor de cada grupo saem do `tipos_na_tela`, e não são escritos aqui:
 # o nome de um tipo já mudou duas vezes em quatro dias, e com ele escrito em
 # cada tela a lista e o aviso de antes de gravar podiam divergir.
@@ -117,8 +119,12 @@ GRUPOS = {
                    and not o.da_ia),
         _VALIDO.nome, _VALIDO.plural),
     SUSPEITOS: Grupo(
-        lambda o: o.suspeito and o.situacao == cpf.MASCARADO and not o.da_ia,
+        lambda o: (o.suspeito and o.situacao == cpf.MASCARADO and not o.da_ia
+                   and not o.suspeito_que_a_ia_nega),
         tipos_na_tela.SUSPEITO.nome, tipos_na_tela.SUSPEITO.plural),
+    IA_NEGA: Grupo(
+        lambda o: o.suspeito_que_a_ia_nega and o.situacao == cpf.MASCARADO,
+        tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.nome, tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.plural),
     DA_IA: Grupo(
         lambda o: o.da_ia and o.situacao == cpf.MASCARADO,
         tipos_na_tela.DA_IA.nome, tipos_na_tela.DA_IA.plural),
@@ -128,7 +134,14 @@ GRUPOS = {
     LIBERADOS: Grupo(
         lambda o: o.situacao == cpf.LIBERADO,
         tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.plural),
+    # Uma parte dos liberados, e não um grupo a mais: a soma dos selos continua fechando
+    # sem ele (RN-69).
+    A_REVISAR: Grupo(
+        lambda o: o.liberacao_para_revisar,
+        tipos_na_tela.LIBERACAO_PARA_REVISAR.nome, tipos_na_tela.LIBERACAO_PARA_REVISAR.plural),
 }
+# Os grupos de quem vai inteiro para o arquivo.
+_DE_LIBERADOS = (LIBERADOS, A_REVISAR)
 
 
 def quantos_em_cada_grupo(ocorrencias):
@@ -147,7 +160,7 @@ def _quantos_mascarados(contas):
     Num lugar só para a tela de salvar e a pergunta de descartar não contarem coisas
     diferentes quando um grupo novo entrar, como entrou o da IA.
     """
-    return sum(contas[grupo] for grupo in GRUPOS if grupo != LIBERADOS)
+    return sum(contas[grupo] for grupo in GRUPOS if grupo not in _DE_LIBERADOS)
 
 
 class TelaRevisao(QWidget):
@@ -331,6 +344,10 @@ class TelaRevisao(QWidget):
         self.selo_liberados = _Selo(cor=tipos_na_tela.LIBERADO.cor,
                                     ao_clicar=lambda: self.filtrar(LIBERADOS))
         self.selo_da_ia = _Selo(cor=estilo.COR_IA, ao_clicar=lambda: self.filtrar(DA_IA))
+        self.selo_a_revisar = _Selo(cor=tipos_na_tela.LIBERACAO_PARA_REVISAR.cor,
+                                    ao_clicar=lambda: self.filtrar(A_REVISAR))
+        self.selo_ia_nega = _Selo(cor=tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.cor,
+                                  ao_clicar=lambda: self.filtrar(IA_NEGA))
 
         # O título tem a linha dele, e os selos vão para a de baixo, descendo
         # mais uma quando não cabem. Na mesma linha, com os cinco acesos, título
@@ -341,8 +358,11 @@ class TelaRevisao(QWidget):
         cabecalho.addWidget(titulo)
         selos = LinhaQueDesce(espaco=estilo.ESPACO_2)
         selos.addWidget(self.selo_encontrados)
+        # Logo depois do total, na mesma ordem da lista: é o primeiro a olhar (RN-69).
+        selos.addWidget(self.selo_a_revisar)
         selos.addWidget(self.selo_validos)
         selos.addWidget(self.selo_suspeitos)
+        selos.addWidget(self.selo_ia_nega)
         selos.addWidget(self.selo_da_ia)
         selos.addWidget(self.selo_a_mao)
         selos.addWidget(self.selo_liberados)
@@ -362,8 +382,13 @@ class TelaRevisao(QWidget):
         self.chave_ia = _amostra_da_chave(
             "da IA", ondulado=False, cor=estilo.COR_IA, traco_ponto=True)
         self.chave_ia.setVisible(False)
+        self.chave_ia_nega = _amostra_da_chave(
+            tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.nome, ondulado=True,
+            cor=tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.cor)
+        self.chave_ia_nega.setVisible(False)
         linha.addWidget(self.chave_valido)
         linha.addWidget(self.chave_suspeito)
+        linha.addWidget(self.chave_ia_nega)
         linha.addWidget(self.chave_a_mao)
         linha.addWidget(self.chave_ia)
         linha.addStretch()
@@ -692,7 +717,8 @@ class TelaRevisao(QWidget):
             self._filtro = None
         for grupo, selo in ((None, self.selo_encontrados), (VALIDOS, self.selo_validos),
                             (SUSPEITOS, self.selo_suspeitos), (A_MAO, self.selo_a_mao),
-                            (DA_IA, self.selo_da_ia), (LIBERADOS, self.selo_liberados)):
+                            (DA_IA, self.selo_da_ia), (LIBERADOS, self.selo_liberados),
+                            (A_REVISAR, self.selo_a_revisar), (IA_NEGA, self.selo_ia_nega)):
             selo.acender(self._filtro is not None and grupo == self._filtro)
 
         # Sem nenhum número, a navegação não tem para onde ir - e botão que não
@@ -906,7 +932,7 @@ class TelaRevisao(QWidget):
         if not por_tipo:
             return f"{quantos}."
         partes = []
-        for grupo in (VALIDOS, SUSPEITOS, DA_IA, A_MAO):
+        for grupo in (VALIDOS, SUSPEITOS, IA_NEGA, DA_IA, A_MAO):
             if contas[grupo]:
                 do_grupo = GRUPOS[grupo]
                 partes.append(f"{contas[grupo]} "
@@ -1086,6 +1112,23 @@ class TelaRevisao(QWidget):
         # O selo só existe quando houve o que liberar: aviso que aparece sem
         # motivo ensina a não olhar para ele.
         self.selo_liberados.setVisible(bool(liberados))
+        a_revisar = sum(1 for o in self._ocorrencias if GRUPOS[A_REVISAR].pertence(o))
+        self.selo_a_revisar.setText(
+            f"{a_revisar} liberações para revisar" if a_revisar != 1
+            else "1 liberação para revisar"
+        )
+        self.selo_a_revisar.setVisible(bool(a_revisar))
+        ia_nega = sum(1 for o in self._ocorrencias if GRUPOS[IA_NEGA].pertence(o))
+        self.selo_ia_nega.setText(
+            f"{ia_nega} suspeitos que a IA nega" if ia_nega != 1
+            else "1 suspeito que a IA nega"
+        )
+        self.selo_ia_nega.setVisible(bool(ia_nega))
+        # Só enquanto algum está mascarado: o liberado é desenhado com o traço do liberado,
+        # e a chave explicaria um traço lilás que não está no texto.
+        self.chave_ia_nega.setVisible(
+            any(o.suspeito_que_a_ia_nega and o.situacao == cpf.MASCARADO
+                for o in self._ocorrencias))
 
 
 def _origem_do_destino():
@@ -1184,6 +1227,11 @@ def _formato(ocorrencia):
         # com o vermelho do "CPF válido" faria a contagem do alto mentir.
         cor = QColor(tipos_na_tela.POR_TIPO[cpf.MASCARADO_A_MAO].cor)
         traco = QTextCharFormat.DotLine
+    elif ocorrencia.suspeito_que_a_ia_nega:
+        # O traço do suspeito, porque para o programa ele continua sendo um, e a cor da
+        # IA, porque é a opinião dela que o separa dos outros (RN-70).
+        cor = QColor(tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.cor)
+        traco = QTextCharFormat.WaveUnderline
     elif ocorrencia.suspeito:
         cor = QColor(tipos_na_tela.SUSPEITO.cor)
         traco = QTextCharFormat.WaveUnderline

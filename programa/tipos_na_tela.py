@@ -75,3 +75,16 @@ DA_IA = ComoAparece("apontado pela IA", "apontados pela IA", estilo.COR_IA)
 NUMERO_NOVO = "número novo"
 NUMERO_PARA_OLHAR = "número para olhar"
 TITULO_DA_SECAO_DA_IA = "A IA pediu para olhar"
+
+# O número que a pessoa liberou e a IA acha que é CPF (RN-69). Vermelho de letra, como o
+# "CPF válido": o vermelho forte, em letra pequena, fica abaixo do contraste mínimo. Ele
+# vai só na barra do item, que não é letra.
+LIBERACAO_PARA_REVISAR = ComoAparece("liberação para revisar", "liberações para revisar",
+                                     estilo.COR_ERRO_TEXTO)
+TITULO_DA_SECAO_DE_REVISAR = "Revisar liberação"
+
+# O suspeito que a IA diz que não é CPF (RN-70). Lilás, a cor da IA, porque é a opinião
+# dela que o separa dos outros suspeitos; na amarela, a tela dizia que a IA o tinha olhado
+# e mantido a suspeita (conferência de 03/11/2026).
+SUSPEITO_QUE_A_IA_NEGA = ComoAparece("suspeito que a IA nega", "suspeitos que a IA nega",
+                                     estilo.COR_IA)
