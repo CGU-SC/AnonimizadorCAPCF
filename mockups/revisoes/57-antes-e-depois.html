@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 57 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 57 — antes e depois</h1>
+<p class="subtitulo">Lente de clareza sobre o que seria gravado (RN-66 a RN-70), em 03/11/2026, logo depois da lente crítica da revisão 56. Dois achados, os dois aprovados pela solicitante e consertados. Só comentários mudaram: nada muda na tela do programa.</p>
+
+<div class="achado"><h3>Quando a legenda "suspeito que a IA nega" aparece</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>O comentário dizia que a legenda aparece para o número "mascarado ou não", e a linha de baixo conta só os mascarados. Quem confiasse no comentário podia "consertar" o código e criar uma legenda sem nada lilás no texto.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O comentário diz o que o código faz e por quê: o liberado é desenhado com o traço verde de liberado, então a legenda falaria de um traço que não está lá.</div></div></div>
+<div class="achado"><h3>O que quer dizer "a IA não acha que é CPF"</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Nada avisava que o mesmo valor serve para "a IA disse que não é" e para "a IA não disse nada". Quem simplificasse a regra mandaria todo suspeito para a seção lilás, antes mesmo de a IA rodar.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O comentário do campo explica os dois sentidos, e por que "a IA nega" pede também a frase dela.</div></div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul><li>Só comentários em <code>tela_revisao.py</code> e <code>cpf.py</code>. Nenhum arquivo criado, apagado ou movido além desta página. 958 testes passam.</li></ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li>Nada desta lente ficou de fora.</li>
+  <li><strong>Fora da lente, nos documentos:</strong> o <code>CLAUDE.md</code> e a RN-66 da spec dizem que cada número citado custa de 3 a 4 segundos. A medição de 03/11/2026 deu 1,4 segundo por número, e mostrou que o tempo é o da escrita da resposta, sem raciocínio escondido.</li>
+</ul>
+<p class="rodape">Gerada em 03/11/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>
