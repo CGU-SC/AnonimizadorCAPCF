@@ -615,6 +615,12 @@ combinado: fecham buracos que deixariam dígito à vista ou o token sair sem avi
   segundos, e uma página cheia que levava mais de 150 segundos cai para poucos sem citá-los.
   Pedir só a ordem dos números foi rápido, mas ele disse "CPF" em todos os 15 que não eram.
   Os suspeitos vão com os outros marcados, e vale a RN-63: a IA só fala quando discorda.
+- RN-67: **a parte que falhou pode ser pulada.** Ao lado de "Tentar de novo", "Pular esta parte
+  e seguir" manda a revisão para a parte seguinte, porque repetir a mesma tende a falhar igual.
+  No fim, a faixa continua dizendo quais páginas ou partes ficaram sem revisão, mesmo que a IA
+  tenha apontado outras coisas. Cancelar não oferece pular: ali nada falhou. Revisar de novo
+  ou abrir outro documento esquece o que foi pulado. Isso resolve o que a RN-37 deixava
+  parado, e não muda o que ela diz sobre o que faltou.
 
 ## Questões em aberto
 

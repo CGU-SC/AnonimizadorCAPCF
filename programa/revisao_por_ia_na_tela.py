@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QLabel,
+    QVBoxLayout,
 )
 
 import avisos_da_ia
@@ -113,6 +114,9 @@ class RevisaoPorIa(QObject):
         self._parando = False
         # O próximo pedaço que ainda não foi aplicado: é dali que o "Tentar de novo" segue.
         self._proximo = 0
+        # As partes que a pessoa mandou pular. Ficam ditas na faixa até o fim: o resto do
+        # documento revisado não pode fazer esquecer o que ficou sem revisão (RN-67).
+        self._pulados = set()
         # O relógio da faixa: um pedaço pode levar minutos, e a tela parada parece travada.
         self._relogio = QTimer(self)
         self._relogio.setInterval(1000)
@@ -153,14 +157,22 @@ class RevisaoPorIa(QObject):
         self.botao_cancelar.clicked.connect(lambda _=False: self.cancelar())
         self.botao_tentar = QPushButton("Tentar de novo")
         self.botao_tentar.clicked.connect(lambda _=False: self.retomar())
-        for botao in (self.botao_cancelar, self.botao_tentar):
+        self.botao_pular = QPushButton("Pular esta parte e seguir")
+        self.botao_pular.clicked.connect(lambda _=False: self.pular())
+        for botao in (self.botao_cancelar, self.botao_tentar, self.botao_pular):
             botao.setCursor(Qt.PointingHandCursor)
             botao.setStyleSheet(estilo.estilo_botao(principal=False, pequeno=True))
         dentro.addWidget(self.barra)
         dentro.addWidget(self.frase)
         dentro.addStretch()
         dentro.addWidget(self.botao_cancelar)
-        dentro.addWidget(self.botao_tentar)
+        # Um em cima do outro: lado a lado, os dois não cabem ao lado da frase, e o Qt
+        # cortaria o texto dos botões sem nada acusar ("O que já nos mordeu").
+        botoes_da_falha = QVBoxLayout()
+        botoes_da_falha.setSpacing(estilo.ESPACO_1)
+        botoes_da_falha.addWidget(self.botao_tentar)
+        botoes_da_falha.addWidget(self.botao_pular)
+        dentro.addLayout(botoes_da_falha)
         self.faixa.setVisible(False)
 
         self.limite = Frase(LIMITE_DA_REVISORA, largura=LARGURA)
@@ -177,6 +189,7 @@ class RevisaoPorIa(QObject):
         self._apontou = False
         self.rodou = False
         self._retomar_de = None
+        self._pulados = set()
         self.faixa.setVisible(False)
         self.limite.setVisible(False)
         self.atualizar()
@@ -193,6 +206,7 @@ class RevisaoPorIa(QObject):
         self._apontou = False
         self.rodou = False
         self._retomar_de = None
+        self._pulados = set()
         self.faixa.setVisible(False)
         self.limite.setVisible(False)
 
@@ -229,6 +243,19 @@ class RevisaoPorIa(QObject):
         """Só o que faltou (RN-37)."""
         self._mandar(self._retomar_de or 0)
 
+    def pular(self):
+        """Segue depois da parte que falhou. "Tentar de novo" manda a mesma parte, e o modelo
+        tende a falhar igual, deixando o resto do documento sem revisão (RN-67)."""
+        indice = self._retomar_de
+        if indice is None:
+            return
+        self._pulados.add(indice)
+        if indice + 1 < len(self._pedacos):
+            self._mandar(indice + 1)
+        else:
+            self._retomar_de = None
+            self._mostrar_o_fim()
+
     def _mandar(self, a_partir_de):
         # A revisora pode ter sido desligada entre o agendamento e aqui.
         if self._trabalho is not None or not self._pedacos or not config_ia.revisora_ativa():
@@ -247,6 +274,7 @@ class RevisaoPorIa(QObject):
         self._proximo = a_partir_de
         if a_partir_de == 0:
             self._apontou = False
+            self._pulados = set()
         self.rodou = True
         self.limite.setVisible(True)
         self.atualizar()
@@ -328,10 +356,20 @@ class RevisaoPorIa(QObject):
             self._cancelou(trabalho, self._proximo)
             return
         self._acabou(None)
-        if self._apontou:
+        self._mostrar_o_fim()
+
+    def _mostrar_o_fim(self):
+        if self._pulados:
+            self._mostrar_faixa(self._frase_dos_pulados(), andando=False, alerta=True)
+        elif self._apontou:
             self.faixa.setVisible(False)
         else:
             self._mostrar_faixa(NADA_A_MAIS, andando=False)
+
+    def _frase_dos_pulados(self):
+        if not self._pulados:
+            return ""
+        return revisao_ia.o_que_foi_pulado(self._pedacos, self._pulados)
 
     def _falhou(self, trabalho, indice, frase):
         if not self._e_o_de_agora(trabalho):
@@ -341,15 +379,16 @@ class RevisaoPorIa(QObject):
             return
         self._acabou(indice)
         faltou = revisao_ia.o_que_faltou(self._pedacos, indice)
-        self._mostrar_faixa(f"{faltou} {frase}", andando=False, pode_tentar=True, alerta=True)
+        self._mostrar_faixa(f"{faltou} {frase} {self._frase_dos_pulados()}".strip(),
+                            andando=False, pode_tentar=True, pode_pular=True, alerta=True)
 
     def _cancelou(self, trabalho, indice):
         if not self._e_o_de_agora(trabalho):
             return
         self._acabou(self._proximo)
         faltou = revisao_ia.o_que_faltou(self._pedacos, self._proximo)
-        self._mostrar_faixa(f"{faltou} Você cancelou.", andando=False, pode_tentar=True,
-                            alerta=True)
+        self._mostrar_faixa(f"{faltou} Você cancelou. {self._frase_dos_pulados()}".strip(),
+                            andando=False, pode_tentar=True, alerta=True)
 
     def _acabou(self, retomar_de):
         self._relogio.stop()
@@ -368,7 +407,7 @@ class RevisaoPorIa(QObject):
         if trabalho in self._antigos:
             self._antigos.remove(trabalho)
 
-    def _mostrar_faixa(self, frase, andando, pode_tentar=False, alerta=False):
+    def _mostrar_faixa(self, frase, andando, pode_tentar=False, pode_pular=False, alerta=False):
         cor = estilo.COR_ALERTA if alerta else estilo.COR_IA
         fundo = "rgba(217, 164, 65, 26)" if alerta else "rgba(179, 157, 219, 23)"
         self.faixa.setStyleSheet(
@@ -384,4 +423,5 @@ class RevisaoPorIa(QObject):
         self.barra.setVisible(andando)
         self.botao_cancelar.setVisible(andando)
         self.botao_tentar.setVisible(pode_tentar)
+        self.botao_pular.setVisible(pode_pular)
         self.faixa.setVisible(True)

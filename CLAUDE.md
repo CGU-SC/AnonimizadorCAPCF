@@ -230,13 +230,6 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   Tesseract, se a TI a tiver escrito (decidido em 31/10/2026). A TI precisa responder
   se o servidor guarda o texto recebido: ele vai com os CPFs inteiros.
 
-- **Um pedaço com resposta ruim trava a revisão por IA no meio** (decidido em
-  31/10/2026): "Tentar de novo" manda o mesmo pedaço, e o modelo tende a falhar igual,
-  deixando o resto do documento sem revisão. A tela diz isso, então não passa calado.
-  Um botão "Pular esta parte e seguir" foi oferecido e fica para depois do teste com um
-  modelo de verdade, porque ainda não se sabe com que frequência isso acontece. Quem
-  fizer esse teste decide com a solicitante.
-
 - **Quando o backlog terminar, organizar a documentação num índice só**
   (pedido da solicitante em 22/10/2026, que achou a documentação "muito
   bagunçada"). Hoje ela está espalhada em `especificacoes/`, `mockups/`

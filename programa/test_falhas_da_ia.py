@@ -6,7 +6,7 @@ import cpf
 import revisao_ia
 from main import JanelaPrincipal
 from painel_anonimizar import PainelAnonimizar
-from revisao_por_ia_na_tela import RevisaoEmSegundoPlano
+from revisao_por_ia_na_tela import LARGURA, RevisaoEmSegundoPlano
 from test_revisao_por_ia import START_DE_VERDADE, servidor, sem_trabalho_ao_lado  # noqa: F401
 from test_revisao_por_ia import DOCUMENTO, _numero, _tela
 
@@ -52,6 +52,97 @@ def test_tentar_de_novo_retoma_so_o_que_faltou(servidor):
     assert NUMEROS[2] in novos[0] and NUMEROS[0] not in novos[0]
     assert tela.ia.botao_tentar.isHidden()
     assert all(any(o.original == n for o in tela._ocorrencias) for n in NUMEROS)
+
+
+def test_pular_segue_depois_da_parte_que_falhou_e_diz_qual_ficou(servidor):
+    servidor.comportamento.cair_no_pedido = 3
+    tela = _tela(TEXTO, CINCO_PAGINAS)
+    tela.ia.comecar()
+    assert not tela.ia.botao_pular.isHidden()
+    enviados = len(_partes_enviadas(servidor))
+    tela.ia.botao_pular.click()
+    novos = _partes_enviadas(servidor)[enviados:]
+    assert len(novos) == 2 and NUMEROS[3] in novos[0] and NUMEROS[2] not in novos[0]
+    assert not any(o.original == NUMEROS[2] for o in tela._ocorrencias)
+    assert any(o.original == NUMEROS[4] for o in tela._ocorrencias)
+    # Mesmo com apontamentos, que escondem a faixa, a parte pulada continua dita.
+    assert not tela.ia.faixa.isHidden()
+    assert tela.ia.frase.text() == "Ficou sem revisão da IA a página 3."
+    assert tela.ia.botao_pular.isHidden() and tela.ia.botao_tentar.isHidden()
+
+
+def test_pular_a_ultima_parte_termina_sem_mandar_mais_nada(servidor):
+    servidor.comportamento.cair_no_pedido = 5
+    tela = _tela(TEXTO, CINCO_PAGINAS)
+    tela.ia.comecar()
+    enviados = len(_partes_enviadas(servidor))
+    tela.ia.botao_pular.click()
+    assert len(_partes_enviadas(servidor)) == enviados
+    assert tela.ia.frase.text() == "Ficou sem revisão da IA a página 5."
+    assert not tela.ia.rodando() and tela.ia.botao.isEnabled()
+
+
+def test_outra_falha_depois_de_pular_lembra_o_que_foi_pulado(servidor):
+    servidor.comportamento.cair_no_pedido = 2
+    tela = _tela(TEXTO, CINCO_PAGINAS)
+    tela.ia.comecar()
+    servidor.comportamento.cair_no_pedido = 4
+    tela.ia.botao_pular.click()
+    frase = tela.ia.frase.text()
+    assert "A IA revisou até a página 3 de 5" in frase
+    assert "Ficou sem revisão da IA a página 2." in frase
+    tela.ia.botao_pular.click()
+    assert tela.ia.frase.text() == "Ficaram sem revisão da IA as páginas 2 e 4."
+
+
+def test_revisar_de_novo_esquece_o_que_foi_pulado(servidor):
+    servidor.comportamento.cair_no_pedido = 3
+    tela = _tela(TEXTO, CINCO_PAGINAS)
+    tela.ia.comecar()
+    tela.ia.botao_pular.click()
+    tela.ia.comecar()
+    assert "Ficou sem revisão" not in tela.ia.frase.text()
+    assert any(o.original == NUMEROS[2] for o in tela._ocorrencias)
+
+
+def test_outro_documento_esquece_o_que_foi_pulado(servidor):
+    servidor.comportamento.cair_no_pedido = 3
+    tela = _tela(TEXTO, CINCO_PAGINAS)
+    tela.ia.comecar()
+    tela.ia.botao_pular.click()
+    tela.mostrar("outro.pdf", TEXTO, cpf.procurar(TEXTO), None, CINCO_PAGINAS)
+    assert tela.ia.faixa.isHidden()
+    servidor.comportamento.resposta = '{"apontamentos": []}'
+    tela.ia.comecar()
+    assert "Ficou sem revisão" not in tela.ia.frase.text()
+
+
+def test_cancelar_nao_oferece_pular(servidor):
+    tela = _tela(TEXTO, CINCO_PAGINAS)
+    tela.ia.comecar()
+    tela.ia._mostrar_faixa("Você cancelou.", andando=False, pode_tentar=True, alerta=True)
+    assert not tela.ia.botao_tentar.isHidden() and tela.ia.botao_pular.isHidden()
+
+
+def test_texto_sem_paginas_pula_partes():
+    pedacos = [revisao_ia.Pedaco(i, i + 1) for i in range(5)]
+    assert revisao_ia.o_que_foi_pulado(pedacos, {1}) == "Ficou sem revisão da IA a parte 2."
+    assert revisao_ia.o_que_foi_pulado(pedacos, {3, 0, 1}) == (
+        "Ficaram sem revisão da IA as partes 1, 2 e 4.")
+
+
+def test_pagina_partida_conta_uma_vez_so():
+    pedacos = [revisao_ia.Pedaco(0, 1, 1), revisao_ia.Pedaco(1, 2, 1), revisao_ia.Pedaco(2, 3, 2)]
+    assert revisao_ia.o_que_foi_pulado(pedacos, {0, 1}) == "Ficou sem revisão da IA a página 1."
+
+
+def test_os_botoes_da_falha_cabem_ao_lado_da_frase_sem_cortar(servidor):
+    """Medido, e não no olho: fileira do Qt espreme o texto em vez de descer."""
+    servidor.comportamento.cair_no_pedido = 1
+    tela = _tela(TEXTO, CINCO_PAGINAS)
+    tela.ia.comecar()
+    tela.ia.faixa.ensurePolished()
+    assert tela.ia.faixa.sizeHint().width() <= LARGURA
 
 
 def test_resposta_que_nao_se_entende_entra_no_que_faltou(servidor):

@@ -204,6 +204,21 @@ def o_que_faltou(pedacos, proximo):
             "O resto não teve segundo par de olhos.")
 
 
+def o_que_foi_pulado(pedacos, pulados):
+    """A frase do que a pessoa mandou pular. Conta as páginas, e não os pedaços: uma página
+    partida em dois, com um deles pulado, ficou sem revisão do mesmo jeito."""
+    if pedacos[0].pagina is not None:
+        nome = "página"
+        numeros = sorted({pedacos[indice].pagina for indice in pulados})
+    else:
+        nome = "parte"
+        numeros = sorted(indice + 1 for indice in pulados)
+    if len(numeros) == 1:
+        return f"Ficou sem revisão da IA a {nome} {numeros[0]}."
+    lista = ", ".join(str(n) for n in numeros[:-1]) + f" e {numeros[-1]}"
+    return f"Ficaram sem revisão da IA as {nome}s {lista}."
+
+
 def onde_esta(pedacos, indice):
     """A frase do andamento: em que ponto a IA está agora."""
     pedaco = pedacos[indice]
