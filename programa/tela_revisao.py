@@ -600,6 +600,12 @@ class TelaRevisao(QWidget):
         self.texto.setTextCursor(cursor)
         self._selecionando = False
         self.texto.ensureCursorVisible()
+        # O número para no meio da área do texto. Só com o "deixar visível" do Qt, ele
+        # parava no alto quando vinha de cima e rente à borda de baixo quando vinha de
+        # baixo, onde quase não se achava (conferência de 03/11/2026).
+        barra = self.texto.verticalScrollBar()
+        barra.setValue(barra.value() + self.texto.cursorRect(cursor).center().y()
+                       - self.texto.viewport().height() // 2)
         self.lista.marcar(ocorrencia)
         self._atual = ocorrencia
         self._atualizar_navegacao()

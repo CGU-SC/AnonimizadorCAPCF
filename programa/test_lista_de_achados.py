@@ -402,6 +402,28 @@ def test_o_conteudo_da_lista_cabe_na_largura_da_coluna(aplicacao):
         assert lista.horizontalScrollBar().value() == 0
 
 
+def test_ir_para_um_numero_o_deixa_no_meio_do_texto(aplicacao):
+    """Conferência de 03/11/2026: vindo de baixo, o número parava rente à borda de baixo, e
+    quase não se achava. Vindo de cima ou de baixo, ele fica no meio."""
+    linhas = [f"Linha {n} do relatório inventado." for n in range(120)]
+    linhas[30] = "CPF 111.111.111-11"
+    linhas[90] = "CPF 222.222.222-22"
+    texto = "\n".join(linhas) + "\n"
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 640)
+    tela.show()
+    tela.mostrar("relatorio.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+    primeiro, segundo = tela._ocorrencias
+    meio = tela.texto.viewport().height() // 2
+    altura_da_linha = tela.texto.fontMetrics().height()
+    for ocorrencia in (segundo, primeiro):
+        tela.ir_para(ocorrencia)
+        aplicacao.processEvents()
+        centro = tela.texto.cursorRect().center().y()
+        assert abs(centro - meio) <= altura_da_linha
+
+
 # --------------------------------------------------- mascarar à mão (etapa 4)
 
 def _marcar_no_texto(tela, trecho):
