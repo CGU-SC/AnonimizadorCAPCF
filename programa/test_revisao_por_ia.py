@@ -363,7 +363,7 @@ def test_outro_tipo_continua_descartado(tipo):
 
 
 def test_o_suspeito_vai_com_os_marcados_e_a_ia_nao_confirma_cada_um(servidor):
-    """RN-66, retirada: confirmar cada um levava de 3 a 4 segundos por número, e uma página
+    """RN-66, retirada: confirmar cada um custava a escrita de uma entrada por número, e uma página
     cheia passava do tempo limite, deixando o resto do documento sem revisão."""
     servidor.comportamento.resposta = '{"apontamentos": []}'
     tela = _tela()

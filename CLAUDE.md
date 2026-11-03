@@ -261,11 +261,13 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   o outro entre vizinhos da mesma caixa: cada um no próprio recuo, os dois ficavam marcados,
   e o último clique não era o que a tela parecia dizer. Use `estilo_do_radio` e um
   `QButtonGroup` (`programa/painel_ia.py`, conferência da funcionalidade 4, 01/11/2026).
-- **Cada número que o modelo cita custa de 3 a 4 segundos.** Pedir uma opinião por número
-  parece barato e não é: com o `gemma-4-12b-qat`, uma página com 45 suspeitos passou de 150
-  segundos, e a revisão parou por tempo limite no meio do documento (RN-66, retirada em
-  02/11/2026). Pedir só a ordem dos números foi rápido, mas ele disse "CPF" em quase todos.
-  Antes de pedir mais à IA, meça com uma página cheia.
+- **O que pesa na IA é o que ela escreve, e não o que ela lê.** Pedir uma opinião por número
+  parece barato e não é: com o `gemma-4-12b-qat`, uma página com 45 suspeitos levou de 63 a
+  mais de 150 segundos, e a revisão parou por tempo limite no meio do documento (RN-66,
+  retirada em 02/11/2026). Medido em 03/11/2026: a página é lida num instante, e ele escreve
+  uns 32 pedaços de palavra por segundo, cerca de 47 por número citado (1,4 s cada), sem
+  raciocínio escondido. Pedir só a ordem dos números foi rápido, mas ele disse "CPF" em
+  quase todos. Antes de pedir mais à IA, meça com uma página cheia.
 - **`lms ls` acorda o serviço do LM Studio.** Um comando que parece só de leitura sobe
   o serviço, e pode ficar sem voltar. O programa fala com o LM Studio só pela porta do
   servidor local, e não usa esse comando (levantamento da funcionalidade 4, 31/10/2026).

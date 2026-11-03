@@ -611,8 +611,10 @@ combinado: fecham buracos que deixariam dígito à vista ou o token sair sem avi
   locais não conta como esta máquina: ela diz em quem a instalação confia.
 - RN-66: **retirada em 02/11/2026: a IA não confirma os suspeitos.** A etiqueta "IA: parece
   CPF" chegou a ser construída, e uma revisão parou por tempo limite na página 3 de 12.
-  Medido com o `gemma-4-12b-qat` em documentos inventados, cada número citado custa de 3 a 4
-  segundos, e uma página cheia que levava mais de 150 segundos cai para poucos sem citá-los.
+  Medido com o `gemma-4-12b-qat` em documentos inventados, uma página cheia que levava de 63
+  a mais de 150 segundos cai para poucos sem citar os números. O tempo é o que o modelo
+  escreve: medido em 03/11/2026, cerca de 1,4 segundo por número citado, sem raciocínio
+  escondido, e a leitura da página leva um instante.
   Pedir só a ordem dos números foi rápido, mas ele disse "CPF" em todos os 15 que não eram.
   Os suspeitos vão com os outros marcados, e vale a RN-63: a IA só fala quando discorda.
 - RN-67: **a parte que falhou pode ser pulada.** Ao lado de "Tentar de novo", "Pular esta parte
