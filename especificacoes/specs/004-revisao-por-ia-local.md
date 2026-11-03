@@ -621,6 +621,12 @@ combinado: fecham buracos que deixariam dígito à vista ou o token sair sem avi
   tenha apontado outras coisas. Cancelar não oferece pular: ali nada falhou. Revisar de novo
   ou abrir outro documento esquece o que foi pulado. Isso resolve o que a RN-37 deixava
   parado, e não muda o que ela diz sobre o que faltou.
+- RN-68: **a instrução cita o número que identifica uma pessoa**, como a inscrição, o
+  cadastro ou o documento de um bolsista, com 11 dígitos e qualquer pontuação. Na conferência
+  de 03/11/2026, o `gemma-4-12b-qat` deixou passar a inscrição do bolsista do documento 30
+  nas 6 vezes medidas, e com a frase pegou as 6. No documento de teste real, o tempo e o que
+  ele apontou ficaram iguais. Ajuda, mas não garante: o mesmo modelo tinha pegado o caso na
+  véspera, com a instrução antiga.
 
 ## Questões em aberto
 

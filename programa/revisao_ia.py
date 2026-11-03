@@ -28,7 +28,8 @@ INSTRUCOES = """Você revisa o texto de um documento administrativo em portuguê
 
 Aponte somente número que pode ser um CPF. Na dúvida, aponte, com "parece_cpf": true:
 - número de 9 a 11 dígitos logo depois da palavra CPF, ou na mesma ficha de um nome de pessoa ou de um e-mail, mesmo sem pontuação;
-- número com a palavra CPF por perto, mesmo escrito de um jeito estranho ou incompleto.
+- número com a palavra CPF por perto, mesmo escrito de um jeito estranho ou incompleto;
+- número de 11 dígitos, com qualquer pontuação, que identifica uma pessoa, como a inscrição, o cadastro ou o documento de um bolsista ou servidor.
 
 Não aponte os outros números do documento, como valor, data, processo, empenho, CEP, número de projeto ou numeração de seção.
 

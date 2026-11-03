@@ -760,6 +760,13 @@ def test_a_instrucao_pede_o_numero_perto_de_nome_e_recusa_a_numeracao_de_secao()
     assert "Na dúvida, aponte" in revisao_ia.INSTRUCOES
 
 
+def test_a_instrucao_cita_o_numero_que_identifica_uma_pessoa():
+    """RN-68: sem esta frase, o modelo deixou passar a inscrição do bolsista do documento 30
+    nas 6 vezes medidas; com ela, pegou as 6, sem custo de tempo no documento de teste."""
+    import revisao_ia
+    assert "que identifica uma pessoa, como a inscrição" in revisao_ia.INSTRUCOES
+
+
 @pytest.mark.parametrize("no_pedaco,faltam,esperado", [
     (45, None, "A IA está revisando: página 1 de 35, há 45 s. Você pode seguir conferindo."),
     (80, 1500, "A IA está revisando: página 1 de 35, há 1 min 20 s. Faltam cerca de 25 min. "
