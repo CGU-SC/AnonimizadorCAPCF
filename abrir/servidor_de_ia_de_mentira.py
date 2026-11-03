@@ -37,6 +37,12 @@ def apontar(texto):
         apontamentos.append({
             "tipo": "numero", "citacao": achado.group(1), "parece_cpf": False,
             "motivo": "Parece o número de um termo, e não um CPF."})
+    # Mascarado, o programa ignora o "parece CPF" sobre um CPF válido; liberado, ele sobe
+    # para "Revisar liberação". É o que a conferência 06 pede para ver (RN-69).
+    for achado in re.finditer(r"Bruno Fictício\s+CPF\s+(\S+)", texto):
+        apontamentos.append({
+            "tipo": "numero", "citacao": achado.group(1), "parece_cpf": True,
+            "motivo": "Vem depois do nome de uma pessoa e da palavra CPF."})
     return {"apontamentos": apontamentos}
 
 
