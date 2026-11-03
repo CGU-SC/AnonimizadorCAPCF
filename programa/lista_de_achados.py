@@ -369,8 +369,6 @@ def _etiquetas(ocorrencia):
     if ocorrencia.sem_zero:
         sem_zero = tipos_na_tela.SEM_ZERO[ocorrencia.sem_zero]
         etiquetas.append((sem_zero.nome, sem_zero.cor))
-    if ocorrencia.ia_confirma:
-        etiquetas.append((tipos_na_tela.IA_PARECE_CPF, estilo.COR_IA))
     # O "quase CPF" que passa na conta leva as duas: ele continua suspeito, e
     # também é um número que quase certamente é o CPF de alguém (RN-2).
     #

@@ -20,9 +20,6 @@ from revisao_por_ia_na_tela import (
     NADA_A_MAIS,
     RevisaoEmSegundoPlano,
 )
-from dupla_conferencia import DuplaConferencia
-from lista_de_achados import _etiquetas
-import tipos_na_tela
 from tela_revisao import DA_IA, TelaRevisao, TrechoDaIa, quantos_em_cada_grupo
 
 
@@ -210,51 +207,29 @@ def test_outro_tipo_continua_descartado(tipo):
     assert revisao_ia.interpretar(resposta) == []
 
 
+def test_o_suspeito_vai_com_os_marcados_e_a_ia_nao_confirma_cada_um(servidor):
+    """RN-66, retirada: confirmar cada um levava de 3 a 4 segundos por número, e uma página
+    cheia passava do tempo limite, deixando o resto do documento sem revisão."""
+    servidor.comportamento.resposta = '{"apontamentos": []}'
+    tela = _tela()
+    tela.ia.comecar()
+    corpo = json.loads(servidor.comportamento.corpo_cru[-1])["messages"][0]["content"]
+    assert "já marcou estes números: 111.111.111-11, 123.456.789-10." in corpo
+    assert "em dúvida" not in corpo
+
+
 def _responde_sobre_o_suspeito(servidor, **campos):
     servidor.comportamento.resposta = json.dumps({"apontamentos": [
         {"tipo": "numero", "citacao": "123.456.789-10", "motivo": "Vem depois de um nome.",
          **campos}]})
 
 
-def test_o_suspeito_que_a_ia_confirma_ganha_a_etiqueta_e_fica_onde_esta(servidor):
-    """RN-66: a opinião responde à dúvida, sem virar CPF válido e sem frase."""
-    _responde_sobre_o_suspeito(servidor, parece_cpf=True)
-    tela = _tela()
-    listado = _numero(tela, "123.456.789-10")
-    antes = (listado.tipo, listado.mascara, quantos_em_cada_grupo(tela._ocorrencias)["suspeitos"])
-    tela.ia.comecar()
-    assert listado.ia_confirma and listado.comentario is None
-    assert (listado.tipo, listado.mascara,
-            quantos_em_cada_grupo(tela._ocorrencias)["suspeitos"]) == antes
-    assert not listado.passa_na_conta and not listado.da_ia
-    assert "123.456.789-10" not in tela.texto_para_o_arquivo()
-    assert "parece CPF" not in tela.texto_para_o_arquivo()
-    assert tipos_na_tela.IA_PARECE_CPF in [t for t, _ in _etiquetas(listado)]
-
-
-def test_o_suspeito_confirmado_pede_a_dupla_conferencia_ao_soltar(servidor, monkeypatch):
-    _responde_sobre_o_suspeito(servidor, parece_cpf=True)
-    tela = _tela()
-    listado = _numero(tela, "123.456.789-10")
-    assert not listado.pede_dupla_conferencia
-    tela.ia.comecar()
-    assert listado.pede_dupla_conferencia
-    perguntas = []
-    monkeypatch.setattr("tela_revisao.liberar_mesmo_assim",
-                        lambda o, _pai: perguntas.append(o) or False)
-    tela.liberar(listado)
-    assert perguntas == [listado] and listado.situacao == cpf.MASCARADO
-
-
-def test_a_caixa_do_suspeito_confirmado_nao_diz_que_passa_na_conta(servidor):
+def test_o_suspeito_com_que_a_ia_concorda_fica_como_estava(servidor):
     _responde_sobre_o_suspeito(servidor, parece_cpf=True)
     tela = _tela()
     listado = _numero(tela, "123.456.789-10")
     tela.ia.comecar()
-    caixa = DuplaConferencia(listado)
-    assert caixa.windowTitle() == "A IA achou que este número é um CPF"
-    assert "não batem" in caixa.explicacao.text() and "pode errar" in caixa.explicacao.text()
-    assert "quase certamente" not in caixa.explicacao.text()
+    assert listado.comentario is None and not listado.pede_dupla_conferencia
 
 
 def test_o_suspeito_que_a_ia_nega_fica_com_a_frase_e_um_clique_solta(servidor):
@@ -262,21 +237,8 @@ def test_o_suspeito_que_a_ia_nega_fica_com_a_frase_e_um_clique_solta(servidor):
     tela = _tela()
     listado = _numero(tela, "123.456.789-10")
     tela.ia.comecar()
-    assert not listado.ia_confirma and listado.comentario == "Vem depois de um nome."
+    assert listado.comentario == "Vem depois de um nome."
     assert not listado.pede_dupla_conferencia
-
-
-def test_revisar_de_novo_troca_a_opiniao_sobre_o_suspeito(servidor):
-    _responde_sobre_o_suspeito(servidor, parece_cpf=False)
-    tela = _tela()
-    listado = _numero(tela, "123.456.789-10")
-    tela.ia.comecar()
-    _responde_sobre_o_suspeito(servidor, parece_cpf=True)
-    tela.ia.comecar()
-    assert listado.ia_confirma and listado.comentario is None
-    _responde_sobre_o_suspeito(servidor, parece_cpf=False)
-    tela.ia.comecar()
-    assert not listado.ia_confirma and listado.comentario
 
 
 def test_o_suspeito_que_a_pessoa_soltou_nao_ganha_a_etiqueta(servidor):
@@ -285,26 +247,8 @@ def test_o_suspeito_que_a_pessoa_soltou_nao_ganha_a_etiqueta(servidor):
     listado = _numero(tela, "123.456.789-10")
     tela.liberar(listado)
     tela.ia.comecar()
-    assert listado.situacao == cpf.LIBERADO and not listado.ia_confirma
+    assert listado.situacao == cpf.LIBERADO
     assert listado.comentario == "Vem depois de um nome."
-
-
-def test_cpf_valido_nao_ganha_a_etiqueta(servidor):
-    servidor.comportamento.resposta = json.dumps({"apontamentos": [
-        {"tipo": "numero", "citacao": "111.111.111-11", "parece_cpf": True, "motivo": "x"}]})
-    tela = _tela()
-    listado = _numero(tela, "111.111.111-11")
-    tela.ia.comecar()
-    assert not listado.ia_confirma
-
-
-def test_o_pedido_separa_os_suspeitos_dos_outros_marcados(servidor):
-    servidor.comportamento.resposta = '{"apontamentos": []}'
-    tela = _tela()
-    tela.ia.comecar()
-    corpo = json.loads(servidor.comportamento.corpo_cru[-1])["messages"][0]["content"]
-    assert "já marcou estes números: 111.111.111-11." in corpo
-    assert "em dúvida sobre estes números: 123.456.789-10." in corpo
 
 
 def test_o_liberado_nao_vai_na_lista_dos_marcados(servidor):

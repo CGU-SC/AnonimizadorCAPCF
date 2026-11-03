@@ -444,8 +444,7 @@ branco.
 - Dado um número apontado com menos de 8 dígitos, ou um trecho sem número, então nada
   aparece, e o texto não muda.
 - Dada a IA discordando de um número listado, então ele ganha o comentário, e a seção, a
-  contagem e a máscara não mudam. Concordando, nada aparece; num suspeito, ganha a
-  etiqueta "IA: parece CPF".
+  contagem e a máscara não mudam. Concordando, nada aparece.
 - Dado um trecho citado que não está no texto, então nada aparece.
 - Dada uma resposta que tente soltar uma máscara ou reescrever o texto, então nada
   disso acontece.
@@ -610,15 +609,12 @@ combinado: fecham buracos que deixariam dígito à vista ou o token sair sem avi
   outro computador, a tela dele diz que o texto viaja até lá, com os CPFs inteiros, e a
   revisão diz "em outra máquina", com o endereço no balão. Estar na lista de endereços
   locais não conta como esta máquina: ela diz em quem a instalação confia.
-- RN-66: **a IA opina sobre os suspeitos.** Decidido com a solicitante, olhando números que
-  falham na conta e vêm depois de um nome e da palavra CPF. O suspeito que ela confirma
-  ganha a etiqueta "IA: parece CPF", sem frase, e desfazer passa a pedir a dupla
-  conferência. Ele continua na seção dos suspeitos e na contagem deles, porque a conta não
-  fechou e o que a IA dá é opinião. É a exceção da RN-63, que segue valendo para o resto:
-  num suspeito a concordância responde a uma dúvida; num CPF válido, não acrescenta nada. Sem
-  resposta clara, vale como se parecesse (RN-48): o erro custa um clique a mais. Não vale
-  para o número que a própria IA apontou, que já tem o motivo dela, e nada disso entra no
-  `.md`.
+- RN-66: **retirada em 02/11/2026: a IA não confirma os suspeitos.** A etiqueta "IA: parece
+  CPF" chegou a ser construída, e uma revisão parou por tempo limite na página 3 de 12.
+  Medido com o `gemma-4-12b-qat` em documentos inventados, cada número citado custa de 3 a 4
+  segundos, e uma página cheia que levava mais de 150 segundos cai para poucos sem citá-los.
+  Pedir só a ordem dos números foi rápido, mas ele disse "CPF" em todos os 15 que não eram.
+  Os suspeitos vão com os outros marcados, e vale a RN-63: a IA só fala quando discorda.
 
 ## Questões em aberto
 

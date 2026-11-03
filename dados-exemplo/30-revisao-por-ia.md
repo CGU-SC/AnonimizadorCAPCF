@@ -7,8 +7,6 @@ CPF 111.111.111-11
 
 Termo de outorga nº 123.456.789-10
 
-Carla Inventada, inscrita no CPF 987.654.321-99
-
 Inscrição do bolsista: 3333-3333-333
 
 Valor total do contrato: R$ 18.000,00

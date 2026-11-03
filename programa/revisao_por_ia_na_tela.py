@@ -75,13 +75,11 @@ class RevisaoEmSegundoPlano(QThread):
                     return
                 self.avancou.emit(indice)
                 pedaco = self._pedacos[indice]
-                aqui = [n for n in self._numeros
-                        if n.inicio < pedaco.fim and pedaco.inicio < n.fim]
                 resposta = rede_da_ia.conversar(
                     self._base, self._token, self._modelo,
                     revisao_ia.pedido(self._texto[pedaco.inicio:pedaco.fim],
-                                      [n.original for n in aqui if not n.em_duvida],
-                                      [n.original for n in aqui if n.em_duvida]),
+                                      [n.original for n in self._numeros
+                                       if n.inicio < pedaco.fim and pedaco.inicio < n.fim]),
                     SEGUNDOS_POR_PEDACO, self._cancelador)
                 self.chegou.emit(indice, revisao_ia.interpretar(resposta))
                 indice += 1

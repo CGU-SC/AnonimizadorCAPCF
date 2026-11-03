@@ -72,7 +72,6 @@ class NumeroMarcado:
     inicio: int
     fim: int
     original: str
-    em_duvida: bool
 
 
 @dataclass(frozen=True)
@@ -132,17 +131,15 @@ def _partir_regiao(texto, inicio, fim, pagina, limite):
     return pedacos
 
 
-def pedido(texto_do_pedaco, ja_marcados=(), suspeitos=()):
+def pedido(texto_do_pedaco, ja_marcados=()):
     """As mensagens de um pedaço. Uma mensagem só, porque nem todo modelo local aceita
     instruções separadas do resto.
 
     `ja_marcados` são os números que o programa já achou neste pedaço. É só sobre eles que
     a IA opina quando não parecem CPF. Pedir isso de todo número fazia a IA listar dezenas
     por página, e era esse o tempo que a página levava: medido no documento de teste, de
-    2 a 67 segundos por página, conforme quantos números ela citava (01/11/2026).
-
-    `suspeitos` são os que o programa marcou sem ter certeza, e é só deles que a IA diz
-    também quando parecem CPF: aí a opinião dela responde a uma dúvida (RN-66).
+    2 a 67 segundos por página, conforme quantos números ela citava (01/11/2026). Pela
+    mesma razão, os suspeitos vão junto, e a IA não confirma cada um (RN-66, retirada).
     """
     marcados = ""
     if ja_marcados:
@@ -150,12 +147,6 @@ def pedido(texto_do_pedaco, ja_marcados=(), suspeitos=()):
         marcados = ("\nO programa já marcou estes números: " + lista + ". Aponte um deles, com "
                     '"parece_cpf": false, só se o contexto mostrar claramente que ele é outra '
                     "coisa, e diga o que é no motivo. Não cite os que parecem CPF.\n")
-    if suspeitos:
-        lista = ", ".join(suspeitos)
-        marcados += ("\nO programa está em dúvida sobre estes números: " + lista + ". Aponte "
-                     'cada um deles com "parece_cpf": true se as palavras em volta indicarem '
-                     "CPF, como a palavra CPF, um nome de pessoa ou um e-mail, ou com "
-                     '"parece_cpf": false se ele for outra coisa. Sem indício, não aponte.\n')
     # Um "</documento>" escrito no próprio documento fecharia o bloco antes da hora, e o
     # que viesse depois seria lido como ordem. Só muda o que vai à IA, e não o texto.
     seguro = re.sub(r"<\s*(/?)\s*(documento)\s*>", r"(\1\2)", texto_do_pedaco,
@@ -266,30 +257,20 @@ def _opinar_sobre_o_listado(apontamento, ocorrencia):
     """A opinião da IA sobre um número que já está na lista. Diz se algo mudou.
 
     Nunca muda a seção, a contagem nem a máscara, e o que a pessoa liberou continua
-    liberado (RN-31). A opinião pode só deixar mais difícil soltar um suspeito (RN-66).
+    liberado (RN-31).
     """
-    parece = apontamento.parece_cpf
     liberado = ocorrencia.situacao == cpf.LIBERADO
-    mudou = False
-    if ocorrencia.suspeito and not ocorrencia.da_ia and not liberado:
-        # O programa está em dúvida, então a opinião dela vale nos dois sentidos. Confirmado,
-        # ele ganha a etiqueta e fica sem frase. Negado, segue abaixo e ganha a frase.
-        mudou = ocorrencia.ia_confirma != parece
-        ocorrencia.ia_confirma = parece
-        if parece:
-            ocorrencia.comentario = None
-            return mudou
-    # Fora a dúvida, a IA só fala quando discorda da lista: que parece CPF num liberado, ou
-    # que não parece num mascarado. Concordando, a frase não diz nada que a etiqueta já não
-    # diga, e enchia a lista na conferência (RN-63).
-    discorda = liberado if parece else not liberado
+    # A IA só fala quando discorda da lista: que parece CPF num liberado, ou que não parece
+    # num mascarado. Concordando, a frase não diz nada que a etiqueta já não diga, e enchia
+    # a lista na conferência (RN-63).
+    discorda = liberado if apontamento.parece_cpf else not liberado
     # Revisar de novo acha o número que a própria IA apontou: o motivo dele já está lá, e
     # repeti-lo como comentário seria dizer duas vezes a mesma coisa.
     if (discorda and apontamento.motivo
             and apontamento.motivo not in (ocorrencia.comentario, ocorrencia.motivo_da_origem)):
         ocorrencia.comentario = apontamento.motivo
         return True
-    return mudou
+    return False
 
 
 def _aplicar_trecho(apontamento, texto, ocorrencias, trechos, pedaco, origem):

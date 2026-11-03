@@ -37,10 +37,6 @@ def apontar(texto):
         apontamentos.append({
             "tipo": "numero", "citacao": achado.group(1), "parece_cpf": False,
             "motivo": "Parece o número de um termo, e não um CPF."})
-    for achado in re.finditer(r"inscrita no CPF\s+(\S+)", texto):
-        apontamentos.append({
-            "tipo": "numero", "citacao": achado.group(1), "parece_cpf": True,
-            "motivo": "Vem depois do nome de uma pessoa e da palavra CPF."})
     return {"apontamentos": apontamentos}
 
 

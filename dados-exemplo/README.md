@@ -103,7 +103,7 @@ não leva para a revisão, como um comentário.
 | `23-doc-antigo-renomeado.docx` | **imitação** de um `.doc` antigo com o nome trocado, do mesmo jeito | a frase do `.doc` antigo |
 | `24-word-vazio.docx` | um Word com um parágrafo vazio | a frase de "vazio" |
 | `26-documento-com-macro.docm` | o mesmo Word de teste, com o nome de documento com macros | a frase de "outro tipo": o `.docm` fica de fora (RN-23) |
-| `30-revisao-por-ia.md` | documento escrito à mão, com números de dígitos repetidos e o que falha na conta, um número em grupos estranhos e um e-mail com número no meio | a revisão por IA com o servidor de mentira (`abrir\servidor-de-ia-de-mentira.bat`): número novo, comentário de quem discorda e suspeito confirmado |
+| `30-revisao-por-ia.md` | documento escrito à mão, com números de dígitos repetidos e o que falha na conta, um número em grupos estranhos e um e-mail com número no meio | a revisão por IA com o servidor de mentira (`abrir\servidor-de-ia-de-mentira.bat`): número novo e comentário de quem discorda |
 | `25-word-grande-demais.docx` | um Word de 53 KB que, descompactado, passa de 50 MB de texto (espaços em branco) | a frase de "grande demais", dada sem descompactar nada |
 
 ## Uma observação honesta sobre o `04`

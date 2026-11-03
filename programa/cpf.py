@@ -146,9 +146,6 @@ class Ocorrencia:
     # O que a IA disse sobre um número que já estava na lista: nunca muda a seção, a
     # contagem nem a máscara dele (RN-31).
     comentario: str | None = None
-    # A IA olhou as palavras em volta deste suspeito e achou que é CPF (RN-66). É opinião:
-    # o tipo continua o mesmo, porque a conta não fechou.
-    ia_confirma: bool = False
 
     @property
     def da_ia(self):
@@ -163,9 +160,9 @@ class Ocorrencia:
         """Todo número que passa na conta, inteiro ou "quase CPF" (RN-10).
 
         É o que quase certamente é o CPF de alguém - o mais perigoso de sair
-        do programa com um clique. O suspeito que a IA confirmou também pede (RN-66).
+        do programa com um clique.
         """
-        return (self.passa_na_conta or self.ia_confirma) and self.tipo != MASCARADO_A_MAO
+        return self.passa_na_conta and self.tipo != MASCARADO_A_MAO
 
 
 def passa_na_conta(digitos):

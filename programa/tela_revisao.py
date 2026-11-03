@@ -166,7 +166,7 @@ class TelaRevisao(QWidget):
         # O liberado fica de fora de propósito: a IA o olha como qualquer outro número, e
         # é assim que ela avisa quando parece CPF o que a pessoa soltou (RN-63).
         self.ia = RevisaoPorIa(self, self.receber_apontamentos, lambda: [
-            revisao_ia.NumeroMarcado(o.inicio, o.fim, o.original, o.suspeito and not o.da_ia)
+            revisao_ia.NumeroMarcado(o.inicio, o.fim, o.original)
             for o in self._ocorrencias if o.situacao != cpf.LIBERADO])
         self._texto = ""
         # O texto como está na tela, e onde cada posição do documento foi parar
@@ -719,8 +719,7 @@ class TelaRevisao(QWidget):
 
         Um clique basta para o suspeito que falha na conta e para a máscara
         feita à mão. Todo número que passa na conta pede a dupla conferência
-        (regra RN-10): é o que menos pode sair do programa por engano. O suspeito
-        que a IA confirmou também pede (RN-66 da spec 004).
+        (regra RN-10): é o que menos pode sair do programa por engano.
         """
         if ocorrencia.pede_dupla_conferencia and not liberar_mesmo_assim(
                 ocorrencia, self):
