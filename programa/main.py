@@ -23,7 +23,7 @@ from estilo import (
     LARGURA_MENU,
     TEXTO_PEQUENO,
 )
-from desenhos_da_faixa import SimboloDoPrograma
+from desenhos_da_faixa import TAMANHO_DO_ICONE, SimboloDoPrograma, icone_do_item
 import preferencias
 from painel_anonimizar import PainelAnonimizar
 from painel_ia import HABILITAR, LM_STUDIO, SERVIDOR, PainelIa
@@ -140,13 +140,15 @@ class MenuLateral(QWidget):
         principal = QVBoxLayout(self.pagina_principal)
         principal.setContentsMargins(0, 0, 0, 0)
         principal.setSpacing(4)
-        self.botao_ocr = self._criar_item_menu("Gerar OCR")
-        self.botao_anonimizar = self._criar_item_menu("Anonimizar")
+        self.botao_ocr = self._criar_item_menu("Gerar OCR", "lupa")
+        self.botao_anonimizar = self._criar_item_menu("Anonimizar", "cadeado")
         # Depois do espaço vazio, longe dos módulos: quem só lê documento não
         # tropeça nele (RN-1 da spec 004).
         # A engrenagem é o sinal de "aqui se configura", e separa este item dos dois
         # módulos de cima (pedido na conferência da funcionalidade 4, 31/10/2026).
-        self.botao_config_ia = self._criar_item_menu("⚙  Configurações de IA")
+        # Era um emoji, colorido, e passou a ser desenhada como a lupa e o cadeado,
+        # para os três serem da mesma família (emenda de 03/11/2026 da spec 001).
+        self.botao_config_ia = self._criar_item_menu("Configurações de IA", "engrenagem")
         principal.addWidget(self.botao_ocr)
         principal.addWidget(self.botao_anonimizar)
         principal.addStretch()
@@ -217,9 +219,14 @@ class MenuLateral(QWidget):
         linha.addStretch()
         return cabecalho
 
-    def _criar_item_menu(self, texto):
+    def _criar_item_menu(self, texto, desenho=None):
         botao = QPushButton(texto)
         botao.setCursor(Qt.PointingHandCursor)
+        # Só os três itens do menu principal têm ícone; os do submenu continuam
+        # só texto (fora de escopo da emenda de 03/11/2026 da spec 001).
+        if desenho:
+            botao.setIcon(icone_do_item(desenho))
+            botao.setIconSize(TAMANHO_DO_ICONE)
         botao.setStyleSheet(
             f"""
             QPushButton {{
