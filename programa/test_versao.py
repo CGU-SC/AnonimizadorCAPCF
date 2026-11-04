@@ -9,7 +9,7 @@ def test_a_janela_mostra_o_numero_da_versao(aplicacao):
     """Sem o número na tela, "qual versão você está usando?" não tem resposta."""
     janela = JanelaPrincipal()
 
-    assert janela.menu.versao.text() == f"versão {VERSAO}"
+    assert janela.menu.versao.text() == f"CAPCF · versão {VERSAO}"
 
 
 def test_o_numero_tem_tres_partes():

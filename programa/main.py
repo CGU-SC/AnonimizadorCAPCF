@@ -23,6 +23,7 @@ from estilo import (
     LARGURA_MENU,
     TEXTO_PEQUENO,
 )
+from desenhos_da_faixa import SimboloDoPrograma
 import preferencias
 from painel_anonimizar import PainelAnonimizar
 from painel_ia import HABILITAR, LM_STUDIO, SERVIDOR, PainelIa
@@ -126,18 +127,13 @@ class MenuLateral(QWidget):
         layout.setContentsMargins(0, 24, 0, 24)
         layout.setSpacing(4)
 
-        # Numa linha só, o nome pede 244 px e a faixa tem 220: o fim sairia
-        # cortado, sem aviso. A quebra vai escrita no texto, e não pela quebra
-        # automática do Qt, que reserva a altura de uma linha e corta a segunda.
-        nome = QLabel(NOME_PROGRAMA.replace(" ", "\n"))
-        nome.setStyleSheet(
-            f"color: {COR_TEXTO}; font-size: 20px; font-weight: 700;"
-            f"padding: 0 16px 16px 16px; border-bottom: 1px solid {COR_BORDA};"
-        )
-        layout.addWidget(nome)
+        layout.addWidget(self._criar_cabecalho())
+        # O respiro entre a linha do cabeçalho e o primeiro item, como no rascunho
+        # aprovado: sem ele, o primeiro item encosta na linha.
+        layout.addSpacing(12)
 
-        # O submenu da IA toma o lugar do menu inteiro (RN-2 da spec 004); o nome
-        # do programa e a versão ficam parados, fora da troca.
+        # O submenu da IA toma o lugar do menu inteiro (RN-2 da spec 004); o
+        # cabeçalho, com a versão, fica parado, fora da troca (RN-10 da spec 001).
         self.paginas = QStackedWidget()
         self.paginas.setStyleSheet("background: transparent;")
         self.pagina_principal = QWidget()
@@ -182,16 +178,44 @@ class MenuLateral(QWidget):
         self.paginas.addWidget(self.pagina_ia)
         layout.addWidget(self.paginas, stretch=1)
 
-        # No pé da faixa, discreta: é para quem precisa responder "qual versão
-        # você está usando?" ao relatar um defeito, e não para o uso do dia.
-        # Fundo transparente: a cor da faixa também pinta os textos de dentro
-        # dela, e a versão saía numa caixa de outro tom (entrega, 24/09/2026).
-        self.versao = QLabel(f"versão {VERSAO}")
+    def _criar_cabecalho(self):
+        """O símbolo, o nome e a versão, no alto da faixa (RN-9 da spec 001).
+
+        O nome vai em duas linhas de tamanhos diferentes porque, numa linha só e
+        no tamanho de título, ele pede 244 px e a faixa tem 220. A versão vira a
+        segunda linha do nome, em vez de ficar solta no pé: é para quem precisa
+        responder "qual versão você está usando?" ao relatar um defeito, e no pé
+        ninguém a achava (pedido da conferência da funcionalidade 4, 01/11/2026).
+        """
+        cabecalho = QWidget()
+        # A linha de baixo vale só para este quadro, pelo nome, e os textos de
+        # dentro ficam transparentes: regra sem alvo pinta cada texto de dentro
+        # com uma caixinha de outro tom ("O que já nos mordeu").
+        cabecalho.setObjectName("cabecalho_da_faixa")
+        cabecalho.setAttribute(Qt.WA_StyledBackground, True)
+        cabecalho.setStyleSheet(
+            f"QWidget#cabecalho_da_faixa {{ border-bottom: 1px solid {COR_BORDA}; }}"
+            "QLabel { background: transparent; }"
+        )
+        linha = QHBoxLayout(cabecalho)
+        linha.setContentsMargins(16, 0, 16, 20)
+        linha.setSpacing(10)
+        linha.addWidget(SimboloDoPrograma())
+
+        primeiro, resto = NOME_PROGRAMA.split(" ", 1)
+        textos = QVBoxLayout()
+        textos.setSpacing(2)
+        self.nome = QLabel(primeiro)
+        self.nome.setStyleSheet(f"color: {COR_TEXTO}; font-size: 16px; font-weight: 700;")
+        self.versao = QLabel(f"{resto} · versão {VERSAO}")
         self.versao.setStyleSheet(
             f"color: {COR_TEXTO_SECUNDARIO}; font-size: {TEXTO_PEQUENO}px;"
-            "padding: 0 16px; border: none; background: transparent;"
         )
-        layout.addWidget(self.versao)
+        textos.addWidget(self.nome)
+        textos.addWidget(self.versao)
+        linha.addLayout(textos)
+        linha.addStretch()
+        return cabecalho
 
     def _criar_item_menu(self, texto):
         botao = QPushButton(texto)

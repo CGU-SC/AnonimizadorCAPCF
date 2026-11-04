@@ -20,9 +20,10 @@ def test_o_item_fica_no_fim_da_faixa_longe_dos_modulos(janela):
     # O espaço vazio é o que o empurra para baixo.
     assert principal.itemAt(ordem[1] + 1).spacerItem() is not None
     assert ordem[2] == principal.count() - 1
-    # A versão continua no pé, abaixo do item.
+    # Nada vem abaixo das páginas do menu: desde a emenda de 03/11/2026 da spec
+    # 001 a versão mora no cabeçalho, e o item é o último da faixa.
     faixa = janela.menu.layout()
-    assert faixa.indexOf(janela.menu.paginas) < faixa.indexOf(janela.menu.versao)
+    assert faixa.indexOf(janela.menu.paginas) == faixa.count() - 1
 
 
 def test_o_clique_troca_o_menu_inteiro_pelo_submenu(janela):
