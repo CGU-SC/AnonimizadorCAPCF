@@ -232,8 +232,9 @@ branco.
 
 ### O menu
 
-- RN-1: "Configurações de IA" fica no fim da faixa da esquerda, logo acima da
-  versão, longe dos módulos.
+- RN-1: "Configurações de IA" fica no fim da faixa da esquerda, longe dos
+  módulos. *(Emendado em 03/11/2026, pela emenda de mesma data da spec 001: era
+  "logo acima da versão", e a versão subiu para o cabeçalho da faixa.)*
 - RN-2: o clique troca o menu inteiro pelo submenu, com o "voltar". Quando a saída
   descartaria uma revisão aberta e não salva, vale a mesma pergunta dos outros
   itens (RN-19 da spec 003).
@@ -379,9 +380,10 @@ branco.
 
 ### Menu e destinos
 
-- Dado o programa aberto, então "Configurações de IA" está no fim da faixa, acima
-  da versão, e o clique troca o menu por "LM Studio", "Servidor de IA Interno" e
-  "Habilitar IA", com o "voltar".
+- Dado o programa aberto, então "Configurações de IA" está no fim da faixa, e o
+  clique troca o menu por "LM Studio", "Servidor de IA Interno" e "Habilitar IA",
+  com o "voltar". *(Emendado em 03/11/2026: o "acima da versão" saiu com a versão,
+  que subiu para o cabeçalho - emenda de mesma data da spec 001.)*
 - Dada uma revisão não salva, quando a pessoa clica em "Configurações de IA", então
   vem a pergunta de descartar.
 - Dado o LM Studio ligado, quando a pessoa liga o switch do servidor e confirma,

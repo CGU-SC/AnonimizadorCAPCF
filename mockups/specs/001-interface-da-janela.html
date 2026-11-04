@@ -243,6 +243,60 @@
   <p style="margin: 12px 0 0 0;"><strong>Fica de fora:</strong> a posição da janela, e qual item do menu estava marcado — o menu abre sempre sem nada marcado.</p>
 </div>
 
+<h2>Emenda de 03/11/2026 — a faixa da esquerda redesenhada</h2>
+<div style="background: rgba(59,110,165,0.10); border: 1px solid #3b6ea5; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovada em 04/11/2026.</strong> Funcionalidade 9 do backlog, pedida na conferência da
+  funcionalidade 4. A aparência foi aprovada no rascunho <code>mockups/janela/04-tres-direcoes.html</code>, direção C.
+  Nenhum fluxo novo: abrir, escolher, desmarcar e o submenu da IA continuam como estão. Muda só como a faixa se mostra.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>Cabeçalho:</strong> símbolo à esquerda, "Anonimizador" ao lado e "CAPCF · versão 0.1.0" embaixo (RN-9).</li>
+    <li><strong>A versão sobe:</strong> sai do pé da faixa e fica só no cabeçalho, parada também no submenu da IA (RN-10).</li>
+    <li><strong>Um ícone por item do menu principal:</strong> lupa em Gerar OCR, cadeado em Anonimizar, engrenagem em
+      Configurações de IA, desenhados pelo próprio programa, sem nada baixado (RN-11), na cor do texto do item (RN-12).</li>
+    <li><strong>O marcado fica suave:</strong> fundo fraco com um filete à esquerda, em todo item da faixa, inclusive no
+      submenu da IA. O filete diz "este é o escolhido" sem depender da cor (RN-13).</li>
+  </ol>
+</div>
+
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho vazio">Item normal</div>
+    <div class="estado-corpo">Ícone e texto no cinza de apoio. Com o mouse em cima, como hoje.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho selecionado">Item marcado</div>
+    <div class="estado-corpo">Fundo fraco e filete à esquerda; ícone e texto claros, em negrito leve.</div>
+  </div>
+</div>
+<div class="estados">
+  <div class="nao-aplica">Carregando — não se aplica: a faixa não carrega nada.</div>
+  <div class="nao-aplica">Erro — não se aplica: a faixa não tem operação que possa falhar.</div>
+</div>
+
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Entra na emenda</div>
+    <ul class="escopo-lista dentro">
+      <li>O cabeçalho com o símbolo provisório, o nome e a versão</li>
+      <li>A versão fora do pé da faixa</li>
+      <li>A lupa, o cadeado e a engrenagem, desenhados pelo programa</li>
+      <li>O item marcado suave, no menu e no submenu da IA</li>
+      <li>O CLAUDE.md sem o "pé da faixa", e os roteiros na lista da próxima entrega</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Fora da emenda</div>
+    <ul class="escopo-lista fora">
+      <li>O tema claro e "Configurações" com Tema e IA — funcionalidade 10</li>
+      <li>Ícone nos itens do submenu, que continuam só texto</li>
+      <li>O ícone da janela, que continua o padrão do Windows</li>
+      <li>A marca definitiva — o símbolo é provisório</li>
+      <li>O passar do mouse, os módulos, as telas dos painéis e o painel vazio</li>
+      <li>Os roteiros "Como usar" e "Como instalar" — refeitos na próxima entrega</li>
+    </ul>
+  </div>
+</div>
+
 <p class="rodape">
   Gerado pela <code>skill-07-designer-de-telas</code> a partir da spec 001. Mostra o
   combinado — não a aparência da tela. O rascunho visual (cores, botões,

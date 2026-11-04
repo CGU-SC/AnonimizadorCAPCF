@@ -11,6 +11,10 @@ motor lembrado, da mesma funcionalidade, está na emenda de mesma data da spec
 **Emendada em:** 2026-10-31, pela spec 004 (aprovada no mesmo dia) — o menu ganha
 "Configurações de IA", no fim da faixa, que troca o menu inteiro por um submenu
 (RN-1 a RN-3 da spec 004). Dentro do submenu, a RN-2 daqui vale igual.
+**Emendada em:** 2026-11-03 (aprovada em 04/11/2026) — a faixa da
+esquerda redesenhada: cabeçalho com símbolo e a versão junto do nome, ícones em
+traço nos três itens do menu e o item marcado suave (funcionalidade 9 do
+backlog). Está na seção "Emenda de 03/11/2026", no fim.
 
 ## Objetivo
 Dar ao programa uma janela própria, com a estrutura onde os dois módulos futuros
@@ -151,3 +155,125 @@ Funcionalidade 8 do backlog. Levantamento em
   900 × 560, então ela abre com 900 × 560.
 - Dado qualquer tamanho lembrado, então a janela abre no meio da tela, e nunca
   fora dela.
+
+## Emenda de 03/11/2026 — a faixa da esquerda redesenhada
+
+**Situação:** aprovada em 04/11/2026.
+
+Funcionalidade 9 do backlog, pedida na conferência da funcionalidade 4, em
+01/11/2026. Rascunho aprovado: `mockups/janela/04-tres-direcoes.html`, direção C,
+em 03/11/2026. Os rascunhos 02 (ícones em emoji) e 03 (a versão à direita)
+ficaram feios ao olhar e foram superados por ele.
+
+### Objetivo
+
+Deixar a faixa da esquerda mais fácil de ler de relance: cada módulo com um
+ícone que diz o que ele faz, e o número da versão junto do nome do programa, e
+não perdido no pé.
+
+### Escopo
+
+- O cabeçalho da faixa passa a ter um símbolo à esquerda e, ao lado,
+  "Anonimizador" numa linha e "CAPCF · versão 0.1.0" embaixo, em letra menor.
+- A versão sai do pé da faixa.
+- "Gerar OCR" ganha uma lupa, "Anonimizar" um cadeado, e "Configurações de IA"
+  troca o emoji de engrenagem por uma engrenagem do mesmo desenho dos outros
+  dois. A engrenagem entra a pedido da solicitante, ao olhar o rascunho.
+- O item marcado deixa de ser um bloco azul cheio e passa a ter um fundo azul
+  fraco com um filete à esquerda, em todos os itens da faixa, inclusive os do
+  submenu da IA.
+- O `CLAUDE.md` deixa de dizer que a versão fica "no pé da faixa", e a lista da
+  próxima entrega ganha os roteiros com a faixa nova.
+
+### Fora de escopo
+
+- **O tema claro, e "Configurações" com Tema e IA dentro**: funcionalidade 10
+  do backlog, com levantamento e spec próprios. Pedidos em 03/11/2026, ao
+  aprovar o rascunho; separados porque atravessam o programa inteiro.
+- **Ícone nos itens do submenu** ("Voltar", "LM Studio", "Servidor de IA
+  Interno", "Habilitar IA"): continuam só texto. O que muda neles é só o jeito
+  de marcar.
+- **O ícone da janela** (o da barra de título e da barra de tarefas): continua o
+  padrão do Windows, como decidido em 04/09/2026. O símbolo do cabeçalho não
+  vira ícone da janela.
+- **A marca definitiva do programa**: é decisão de identidade visual. O símbolo
+  desta emenda é provisório, e ela toma o lugar dele quando existir.
+- **O passar do mouse** sobre um item: continua como hoje.
+- O que os módulos fazem, as telas dos painéis e o desenho do painel vazio.
+- Os roteiros "Como usar" e "Como instalar", que desenham a faixa com a versão
+  no pé: são refeitos na próxima entrega, que é trabalho à parte.
+
+### Premissas
+
+- premissa: os desenhos do rascunho (o símbolo, a lupa, o cadeado e a
+  engrenagem) saem iguais desenhados pelo programa. A palavra final é a
+  conferência na tela.
+- premissa: o filete à esquerda basta para quem distingue mal as cores
+  reconhecer o item marcado, sem depender do tom do fundo.
+
+### Fluxos
+
+Nenhum fluxo novo. Abrir, escolher um módulo, clicar no item já marcado e entrar
+e sair do submenu da IA continuam como nas RN-1 a RN-3 daqui e nas RN-1 a RN-3 da
+spec 004. Muda só a aparência da faixa.
+
+### Dados
+
+Nenhum dado novo. O número da versão continua vindo de `programa/versao.py`, o
+mesmo que o instalador lê, e nada entra no `preferencias.ini`.
+
+### Estados da interface
+
+- **Item normal:** ícone e texto no cinza de apoio.
+- **Item com o mouse em cima:** como hoje.
+- **Item marcado:** fundo azul fraco, filete à esquerda, ícone e texto claros,
+  em negrito leve.
+- **Carregando e erro:** não se aplicam. A faixa não carrega nada e não tem
+  operação que possa falhar.
+
+### Regras de negócio
+
+- RN-9: **o cabeçalho tem o símbolo, o nome e a versão.** O símbolo fica à
+  esquerda: um quadrado azul de cantos arredondados com uma página e uma linha
+  tarjada, em branco. Ao lado, "Anonimizador" numa linha e, embaixo, em letra
+  menor e cinza, "CAPCF · versão" seguido do número. Nada do cabeçalho sai
+  cortado na faixa de 220 px.
+- RN-10: **a versão aparece só no cabeçalho**, e não mais no pé da faixa. Ela
+  continua parada quando o submenu da IA toma o lugar do menu.
+- RN-11: **cada item do menu principal tem o seu ícone**: lupa em "Gerar OCR",
+  cadeado em "Anonimizar", engrenagem em "Configurações de IA". Os três e o
+  símbolo do cabeçalho são desenhados pelo próprio programa: sem arquivo de
+  imagem, sem fonte de ícones e sem nada baixado da internet, porque o programa
+  roda sem rede.
+- RN-12: **o ícone acompanha a cor do texto do item**: cinza no item normal,
+  claro no item marcado.
+- RN-13: **o item marcado tem fundo azul fraco e um filete à esquerda**, e não
+  mais o bloco azul cheio. Vale para todo item da faixa, inclusive os do submenu
+  da IA. O filete é o que diz "este é o escolhido" sem depender da cor.
+
+### Critérios de aceite
+
+- Dado o programa aberto, então o cabeçalho mostra o símbolo, "Anonimizador" e
+  "CAPCF · versão 0.1.0", com o número de `programa/versao.py`, e o pé da faixa
+  não mostra versão nenhuma.
+- Dado o programa aberto, quando a pessoa entra no submenu da IA, então o
+  cabeçalho, com a versão, continua igual.
+- Dado o programa aberto na janela mínima de 900 × 560, então nenhum texto do
+  cabeçalho e dos itens do menu e do submenu sai cortado: a largura que cada um
+  pede cabe na largura que ele tem.
+- Dado o programa aberto, então "Gerar OCR", "Anonimizar" e "Configurações de
+  IA" têm cada um o seu ícone, e o texto de "Configurações de IA" não tem mais
+  o emoji de engrenagem.
+- Dado um item marcado, então o ícone dele é claro; dado um item não marcado,
+  então o ícone dele é cinza.
+- Dado que a pessoa clica em "Anonimizar", então ele fica com o fundo azul fraco
+  e o filete à esquerda, e os outros itens ficam sem fundo; e, no submenu da IA,
+  o mesmo vale para o item marcado.
+- Dado o programa instalado e aberto sem rede, então o símbolo e os ícones
+  aparecem, e a receita do PyInstaller não ganhou nenhum arquivo de imagem.
+- Dada a lista inteira de testes, então ela continua passando: o que as RN-1 a
+  RN-8 daqui e as RN-1 a RN-3 da spec 004 prometem não muda.
+
+### Questões em aberto
+
+Nenhuma.
