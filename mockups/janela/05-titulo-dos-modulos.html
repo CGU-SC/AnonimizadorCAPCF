@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 05 — O título dos módulos</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-texto-apagado: #6c737d;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --azul-fraco: rgba(59, 110, 165, 0.24);
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #14171c; color: var(--cor-texto);
+    font-family: var(--fonte-texto); font-size: var(--texto-base);
+    padding: var(--espaco-5); line-height: 1.45;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  h2 { font-size: var(--texto-grande); margin: 56px 0 var(--espaco-2) 0; }
+  .subtitulo, .explica { color: var(--cor-texto-secundario); max-width: 920px; margin: 0 0 var(--espaco-3) 0; }
+  .explica b, .subtitulo b { color: var(--cor-texto); }
+  .rotulo {
+    font-size: var(--texto-pequeno); font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--cor-texto-secundario); margin: var(--espaco-3) 0 var(--espaco-2) 0;
+  }
+  .rotulo .recomendada { color: var(--cor-sucesso); text-transform: none; letter-spacing: 0; margin-left: 6px; }
+  .rotulo .diz { text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 8px; }
+
+  svg.ic { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---- a faixa aprovada no rascunho 04, direção C (medidas do main.py) ---- */
+  .janela { display: flex; border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+  .janela.mil { width: 1000px; height: 470px; }
+  .janela.novecentos { width: 900px; height: 470px; }
+  .faixa {
+    width: 220px; flex: 0 0 220px; background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda); padding: 24px 0;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .espaco { flex: 1; }
+  .cabeca-app { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px 16px; border-bottom: 1px solid var(--cor-borda); margin-bottom: 12px; }
+  .simbolo { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 8px; background: var(--cor-destaque); display: flex; align-items: center; justify-content: center; }
+  .simbolo svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .nome-app { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .sub { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); line-height: 1.3; margin-top: 2px; }
+  .item {
+    display: flex; align-items: center; gap: 10px; padding: 12px; margin: 0 8px;
+    border-radius: var(--raio); color: var(--cor-texto-secundario); font-size: var(--texto-base);
+  }
+  .item svg { width: 18px; height: 18px; flex: 0 0 18px; }
+  .item.marcado { background: var(--azul-fraco); color: var(--cor-texto); font-weight: 600; box-shadow: inset 3px 0 0 var(--cor-destaque-hover); }
+  .item.pequeno { font-size: var(--texto-pequeno); padding: 8px 12px; }
+  .titulo-sub { font-weight: 600; padding: 4px 20px 8px 20px; }
+
+  /* ---- o painel da direita ---- */
+  .painel { flex: 1; background: var(--cor-fundo); display: flex; flex-direction: column; min-width: 0; }
+  .corpo { padding: var(--espaco-4); }
+  .corpo.sem-topo { padding-top: var(--espaco-4); }
+
+  /* Hoje: título de 20 px, semibold, solto no alto, sem linha embaixo. */
+  .titulo-hoje { padding: 24px 24px 0 24px; }
+  .titulo-hoje .t { font-size: 20px; font-weight: 600; line-height: 1.25; }
+  .titulo-hoje .l { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+
+  /* A e B: a linha embaixo do título fica na altura da linha do cabeçalho da faixa
+     (24 + 38 + 20 = 82 px, e a linha logo abaixo). */
+  .cab-mod {
+    min-height: 83px; padding: 24px 24px 14px 24px; border-bottom: 1px solid var(--cor-borda);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .cab-mod .t { font-size: 20px; font-weight: 700; line-height: 1.2; }
+  .cab-mod .l { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); line-height: 1.3; margin-top: 2px; }
+  .caixa-ic {
+    width: 38px; height: 38px; flex: 0 0 38px; border-radius: 8px; background: var(--azul-fraco);
+    display: flex; align-items: center; justify-content: center; color: var(--cor-texto);
+  }
+  .caixa-ic svg { width: 22px; height: 22px; }
+  .B .cab-mod .t { font-size: 22px; }
+  .B .cab-mod .l { font-size: 14px; }
+
+  /* C: barra de ponta a ponta, no tom da faixa, da mesma altura do cabeçalho dela. */
+  .barra {
+    height: 83px; flex: 0 0 83px; background: var(--cor-fundo-elevado); border-bottom: 1px solid var(--cor-borda);
+    display: flex; align-items: center; gap: 10px; padding: 0 24px;
+  }
+  .barra svg { width: 18px; height: 18px; flex: 0 0 18px; color: var(--cor-texto-secundario); }
+  .barra .t { font-size: 18px; font-weight: 600; line-height: 1.2; }
+  .barra .l { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); line-height: 1.3; }
+
+  /* o conteúdo de baixo, igual em todas */
+  .soltar {
+    border: 2px dashed var(--cor-borda); border-radius: 8px; padding: 26px; text-align: center; margin-bottom: 22px;
+  }
+  .soltar .grande { font-size: 18px; margin: 4px 0; }
+  .soltar .ou { font-size: 12px; color: var(--cor-texto-secundario); margin: 6px 0 10px 0; }
+  .botao { display: inline-block; background: var(--cor-destaque); color: #fff; padding: 9px 18px; border-radius: var(--raio); font-size: 14px; font-weight: 600; }
+  .botao.secundario { background: transparent; color: var(--cor-texto-secundario); border: 1px solid var(--cor-borda); font-weight: 400; }
+  .secao { font-size: var(--texto-pequeno); font-weight: 700; letter-spacing: 0.04em; color: var(--cor-texto-secundario); margin-bottom: 8px; }
+  .radio { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-top: 6px; }
+  .radio .bola { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--cor-texto-secundario); flex: 0 0 16px; }
+  .radio .bola.cheia { border-color: var(--cor-destaque-hover); background: radial-gradient(circle, var(--cor-destaque-hover) 0 45%, transparent 50%); }
+  .expl { font-size: 12.5px; color: var(--cor-texto-secundario); margin: 2px 0 0 24px; }
+  .expl.encostada { margin-left: 0; }
+  .expl b { color: var(--cor-texto); font-weight: 400; }
+  .ficha { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: 8px; padding: 14px 16px; font-size: 14px; color: var(--cor-texto-secundario); }
+
+  /* ---- a grade das outras telas ---- */
+  .grade { display: grid; grid-template-columns: 150px repeat(3, 360px); gap: 14px; align-items: start; }
+  .grade .cabeca-col { font-weight: 600; font-size: 14px; }
+  .grade .cabeca-col .recomendada { color: var(--cor-sucesso); font-size: 12px; font-weight: 700; margin-left: 4px; }
+  .grade .nome-linha { font-size: 13px; color: var(--cor-texto-secundario); padding-top: 10px; }
+  .grade .nome-linha b { color: var(--cor-texto); display: block; font-size: 14px; }
+  .recorte { background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; height: 150px; display: flex; flex-direction: column; }
+  .recorte .corpo { padding: 14px 24px; font-size: 13px; color: var(--cor-texto-secundario); }
+  .recorte.centro { align-items: center; justify-content: center; text-align: center; }
+  .recorte.centro .t { font-size: 20px; font-weight: 600; color: var(--cor-texto); }
+  .recorte.centro .l { font-size: 13px; color: var(--cor-texto-secundario); margin: 4px 24px 10px 24px; }
+  .carregando { width: 160px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--cor-borda) 0 30%, var(--cor-destaque-hover) 30% 60%, var(--cor-borda) 60%); }
+
+  .lado-a-lado { display: flex; gap: var(--espaco-5); flex-wrap: wrap; align-items: flex-start; }
+  .cartao-motor { width: 520px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 18px 22px; }
+  .marca-erro { outline: 2px dashed var(--cor-alerta); outline-offset: 3px; border-radius: 2px; }
+
+  .notas { margin-top: 56px; border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 920px; }
+  .notas li { margin-bottom: 6px; }
+  .notas b { color: var(--cor-texto); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="lupa" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.6 12.6L17.5 17.5"/></symbol>
+    <symbol id="cadeado" viewBox="0 0 20 20"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/><path d="M10 12.5v2"/></symbol>
+    <symbol id="engrenagem" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke-width="2.8" stroke-dasharray="2.75 2.75" stroke-linecap="butt"/><circle cx="10" cy="10" r="5.2"/><circle cx="10" cy="10" r="2"/></symbol>
+    <symbol id="simbolo" viewBox="0 0 22 22"><path d="M6 2.5h7l4 4V18a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 5 18V4a1.5 1.5 0 0 1 1-1.5z"/><path d="M13 2.5v4h4"/><path d="M8 10.5h6"/><rect x="8" y="13.5" width="6" height="2.2" rx="1" fill="#fff" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<h1>Rascunho 05 — O título dos módulos</h1>
+<p class="subtitulo">
+  Funcionalidade 9. A faixa ganhou cabeçalho e ícones (rascunho 04, direção C), e o título do
+  painel ficou para trás: <b>um texto de 20 px solto no alto</b>, sem nada que o ligue ao item
+  marcado no menu e sem nada que separe o título do resto da tela. Abaixo, três direções, cada
+  uma mudando uma coisa só. A faixa aparece já com o item marcado suave da etapa 3, como foi
+  aprovada.
+</p>
+
+<h2>1. As três direções na tela de entrada do Gerar OCR</h2>
+<p class="explica">
+  Na janela de 1000 × 640, a que abre fora do maximizado. Repare na <b>altura da linha</b> embaixo
+  do título: nas direções A e B ela fica na mesma altura da linha do cabeçalho da faixa, e o alto
+  da janela passa a ler como uma faixa só.
+</p>
+
+<!-- HOJE -->
+<div class="rotulo">Hoje <span class="diz">para comparar</span></div>
+<div class="janela mil">
+  <div class="faixa">
+    <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+    <div class="item marcado"><svg class="ic"><use href="#lupa"/></svg>Gerar OCR</div>
+    <div class="item"><svg class="ic"><use href="#cadeado"/></svg>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><svg class="ic"><use href="#engrenagem"/></svg>Configurações de IA</div>
+  </div>
+  <div class="painel">
+    <div class="titulo-hoje"><div class="t">Gerar OCR</div><div class="l">Converte documento digitalizado em texto para conferência.</div></div>
+    <div class="corpo">
+      <div class="soltar"><div class="grande">Arraste o PDF aqui</div><div class="ou">ou</div><span class="botao">Escolher arquivo…</span></div>
+      <div class="secao">MOTOR DE LEITURA</div>
+      <div class="radio"><span class="bola cheia"></span>PaddleOCR (nesta máquina)</div>
+      <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- A -->
+<div class="rotulo">A — ícone e título <span class="recomendada">✅ RECOMENDADA</span><span class="diz">o ícone do item marcado vai para o título, num quadrado azul fraco; título mais forte; linha embaixo</span></div>
+<div class="janela mil">
+  <div class="faixa">
+    <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+    <div class="item marcado"><svg class="ic"><use href="#lupa"/></svg>Gerar OCR</div>
+    <div class="item"><svg class="ic"><use href="#cadeado"/></svg>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><svg class="ic"><use href="#engrenagem"/></svg>Configurações de IA</div>
+  </div>
+  <div class="painel">
+    <div class="cab-mod">
+      <div class="caixa-ic"><svg class="ic"><use href="#lupa"/></svg></div>
+      <div><div class="t">Gerar OCR</div><div class="l">Converte documento digitalizado em texto para conferência.</div></div>
+    </div>
+    <div class="corpo">
+      <div class="soltar"><div class="grande">Arraste o PDF aqui</div><div class="ou">ou</div><span class="botao">Escolher arquivo…</span></div>
+      <div class="secao">MOTOR DE LEITURA</div>
+      <div class="radio"><span class="bola cheia"></span>PaddleOCR (nesta máquina)</div>
+      <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- B -->
+<div class="rotulo">B — só a letra <span class="diz">título de 22 px em negrito, legenda de 14 px, a mesma linha embaixo; nenhum desenho a mais</span></div>
+<div class="janela mil B">
+  <div class="faixa">
+    <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+    <div class="item marcado"><svg class="ic"><use href="#lupa"/></svg>Gerar OCR</div>
+    <div class="item"><svg class="ic"><use href="#cadeado"/></svg>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><svg class="ic"><use href="#engrenagem"/></svg>Configurações de IA</div>
+  </div>
+  <div class="painel">
+    <div class="cab-mod">
+      <div><div class="t">Gerar OCR</div><div class="l">Converte documento digitalizado em texto para conferência.</div></div>
+    </div>
+    <div class="corpo">
+      <div class="soltar"><div class="grande">Arraste o PDF aqui</div><div class="ou">ou</div><span class="botao">Escolher arquivo…</span></div>
+      <div class="secao">MOTOR DE LEITURA</div>
+      <div class="radio"><span class="bola cheia"></span>PaddleOCR (nesta máquina)</div>
+      <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- C -->
+<div class="rotulo">C — barra no topo <span class="diz">uma barra de ponta a ponta, no tom da faixa e da altura do cabeçalho dela; o ícone pequeno, cinza, como no menu</span></div>
+<div class="janela mil">
+  <div class="faixa">
+    <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+    <div class="item marcado"><svg class="ic"><use href="#lupa"/></svg>Gerar OCR</div>
+    <div class="item"><svg class="ic"><use href="#cadeado"/></svg>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><svg class="ic"><use href="#engrenagem"/></svg>Configurações de IA</div>
+  </div>
+  <div class="painel">
+    <div class="barra">
+      <svg class="ic"><use href="#lupa"/></svg>
+      <div><div class="t">Gerar OCR</div><div class="l">Converte documento digitalizado em texto para conferência.</div></div>
+    </div>
+    <div class="corpo">
+      <div class="soltar"><div class="grande">Arraste o PDF aqui</div><div class="ou">ou</div><span class="botao">Escolher arquivo…</span></div>
+      <div class="secao">MOTOR DE LEITURA</div>
+      <div class="radio"><span class="bola cheia"></span>PaddleOCR (nesta máquina)</div>
+      <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+    </div>
+  </div>
+</div>
+
+<h2>2. Nas outras telas que têm título</h2>
+<p class="explica">
+  O mesmo título aparece em mais lugares: a entrada do Anonimizar, as telas do caminho do PDF (que
+  rodam dentro dos dois módulos) e as três telas de Configurações de IA. Em cada uma, <b>o ícone é o
+  do módulo em que a pessoa está</b>: a lupa no Gerar OCR, o cadeado no Anonimizar, a engrenagem na
+  IA. Recortes estreitos do alto de cada tela; no programa o painel é mais largo, e o texto quebra menos.
+</p>
+<div class="grade">
+  <div></div>
+  <div class="cabeca-col">A — ícone e título <span class="recomendada">✅</span></div>
+  <div class="cabeca-col">B — só a letra</div>
+  <div class="cabeca-col">C — barra no topo</div>
+
+  <!-- Anonimizar, entrada -->
+  <div class="nome-linha"><b>Entrada do Anonimizar</b>a legenda é longa e desce para a segunda linha</div>
+  <div class="recorte"><div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#cadeado"/></svg></div><div><div class="t">Anonimizar</div><div class="l">Gera um novo arquivo que tarja os três primeiros e dois últimos dígitos dos CPFs contidos no documento enviado.</div></div></div><div class="corpo">Arraste o arquivo aqui…</div></div>
+  <div class="recorte B"><div class="cab-mod"><div><div class="t">Anonimizar</div><div class="l">Gera um novo arquivo que tarja os três primeiros e dois últimos dígitos dos CPFs contidos no documento enviado.</div></div></div><div class="corpo">Arraste o arquivo aqui…</div></div>
+  <div class="recorte"><div class="barra" style="height:auto;min-height:83px;padding-top:12px;padding-bottom:12px"><svg class="ic"><use href="#cadeado"/></svg><div><div class="t">Anonimizar</div><div class="l">Gera um novo arquivo que tarja os três primeiros e dois últimos dígitos dos CPFs contidos no documento enviado.</div></div></div><div class="corpo">Arraste o arquivo aqui…</div></div>
+
+  <!-- Caminho do PDF, ficha -->
+  <div class="nome-linha"><b>Caminho do PDF, no Anonimizar</b>o título é da tela, e o ícone continua o do módulo</div>
+  <div class="recorte"><div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#cadeado"/></svg></div><div><div class="t">Este documento precisa ser lido</div><div class="l">ofício-0417.pdf — 6 páginas, sem texto por dentro.</div></div></div><div class="corpo">LER COM · PaddleOCR (nesta máquina)</div></div>
+  <div class="recorte B"><div class="cab-mod"><div><div class="t">Este documento precisa ser lido</div><div class="l">ofício-0417.pdf — 6 páginas, sem texto por dentro.</div></div></div><div class="corpo">LER COM · PaddleOCR (nesta máquina)</div></div>
+  <div class="recorte"><div class="barra"><svg class="ic"><use href="#cadeado"/></svg><div><div class="t">Este documento precisa ser lido</div><div class="l">ofício-0417.pdf — 6 páginas, sem texto por dentro.</div></div></div><div class="corpo">LER COM · PaddleOCR (nesta máquina)</div></div>
+
+  <!-- Conferindo -->
+  <div class="nome-linha"><b>Telas de espera</b>"Conferindo o documento…": título no meio da tela, com a barra correndo</div>
+  <div class="recorte centro"><div class="t">Conferindo o documento…</div><div class="l">Verificando a quantidade de páginas e a existência de camada de texto.</div><div class="carregando"></div></div>
+  <div class="recorte centro"><div class="t">Conferindo o documento…</div><div class="l">Verificando a quantidade de páginas e a existência de camada de texto.</div><div class="carregando"></div></div>
+  <div class="recorte centro"><div class="t">Conferindo o documento…</div><div class="l">Verificando a quantidade de páginas e a existência de camada de texto.</div><div class="carregando"></div></div>
+
+  <!-- IA -->
+  <div class="nome-linha"><b>Configurações de IA</b>a tela do LM Studio; as outras duas iguais</div>
+  <div class="recorte"><div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#engrenagem"/></svg></div><div><div class="t">LM Studio</div><div class="l">A IA roda nesta máquina, e o documento não sai dela.</div></div></div><div class="corpo">Usar o LM Studio como destino ●</div></div>
+  <div class="recorte B"><div class="cab-mod"><div><div class="t">LM Studio</div><div class="l">A IA roda nesta máquina, e o documento não sai dela.</div></div></div><div class="corpo">Usar o LM Studio como destino ●</div></div>
+  <div class="recorte"><div class="barra"><svg class="ic"><use href="#engrenagem"/></svg><div><div class="t">LM Studio</div><div class="l">A IA roda nesta máquina, e o documento não sai dela.</div></div></div><div class="corpo">Usar o LM Studio como destino ●</div></div>
+</div>
+<p class="explica" style="margin-top: 14px">
+  <b>As telas de espera não mudam em nenhuma das três.</b> Elas são de passagem, com o título no
+  meio, e um cabeçalho no alto disputaria a atenção com a barra que corre. Na entrada do
+  Anonimizar, a legenda é longa e pode descer para a segunda linha nas janelas menores. Quando
+  desce, a linha fica um pouco abaixo da linha da faixa; na janela maximizada, alinha.
+</p>
+
+<h2>3. O desalinhamento da IA local, no "Motor de leitura"</h2>
+<p class="explica">
+  Visto na conferência da etapa 2, e vale para as três direções. A explicação embaixo de "IA local"
+  começa encostada na margem, enquanto as do PaddleOCR e do Tesseract começam recuadas, debaixo do
+  nome. E o tempo dela não tem o destaque claro que o tempo dos outros dois tem.
+</p>
+<div class="lado-a-lado">
+  <div>
+    <div class="rotulo">Hoje</div>
+    <div class="cartao-motor">
+      <div class="secao">MOTOR DE LEITURA</div>
+      <div class="radio"><span class="bola"></span>PaddleOCR (nesta máquina)</div>
+      <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+      <div class="radio"><span class="bola"></span>Tesseract (nesta máquina)</div>
+      <div class="expl">Pode pular tabela com grade · <b>cerca de 3 segundos por página</b></div>
+      <div class="radio"><span class="bola cheia"></span>IA local (LM Studio)</div>
+      <div class="expl encostada"><span class="marca-erro">Lê pior que os outros dois, e a página vai com os CPFs inteiros. Tempo: depende do modelo.</span></div>
+    </div>
+  </div>
+  <div>
+    <div class="rotulo">Acertado</div>
+    <div class="cartao-motor">
+      <div class="secao">MOTOR DE LEITURA</div>
+      <div class="radio"><span class="bola"></span>PaddleOCR (nesta máquina)</div>
+      <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+      <div class="radio"><span class="bola"></span>Tesseract (nesta máquina)</div>
+      <div class="expl">Pode pular tabela com grade · <b>cerca de 3 segundos por página</b></div>
+      <div class="radio"><span class="bola cheia"></span>IA local (LM Studio)</div>
+      <div class="expl">Lê pior que os outros dois, e a página vai com os CPFs inteiros · <b>tempo: depende do modelo</b></div>
+    </div>
+  </div>
+</div>
+<p class="explica" style="margin-top: 14px">
+  As outras frases da linha da IA ("Ligue em Configurações de IA…", "A marca passou a outro
+  motor…") também passam a começar recuadas. O texto delas não muda.
+</p>
+
+<div class="notas">
+  <ul>
+    <li><b>Por que recomendo a A</b>: o item marcado e o título do painel passam a ter o mesmo desenho no mesmo azul fraco. De longe se vê em qual módulo se está, sem ler. A B resolve o peso, mas não a ligação com o menu. A C tem cara de aplicativo, mas são duas faixas escuras no alto disputando com o cabeçalho da faixa, e a barra fica pesada nas telas de IA.</li>
+    <li><b>Isto estica o combinado</b>: a emenda de 03/11/2026 da spec 001 deixou os módulos de fora. Escolhida uma direção, a emenda ganha uma regra nova (RN-14) e critérios para ela, e você aprova antes de eu construir. A construção entra como uma etapa a mais, depois do item marcado suave e antes do instalador de teste.</li>
+    <li><b>O texto dos títulos e das legendas não muda</b>, só a aparência. Encurtar a legenda do Anonimizar, para caber numa linha e alinhar com a faixa, seria mudança de texto e ficaria para outra conversa.</li>
+    <li><b>Continua de fora</b>: as telas de espera, a tela de revisão do Anonimizar ("Revisar antes de salvar", que tem cabeçalho próprio, com os botões ao lado), o painel vazio de boas-vindas e o tema claro (funcionalidade 10).</li>
+  </ul>
+</div>
+
+</body>
+</html>

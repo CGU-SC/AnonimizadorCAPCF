@@ -14,7 +14,9 @@ motor lembrado, da mesma funcionalidade, está na emenda de mesma data da spec
 **Emendada em:** 2026-11-03 (aprovada em 04/11/2026) — a faixa da
 esquerda redesenhada: cabeçalho com símbolo e a versão junto do nome, ícones em
 traço nos três itens do menu e o item marcado suave (funcionalidade 9 do
-backlog). Está na seção "Emenda de 03/11/2026", no fim.
+backlog). Está na seção "Emenda de 03/11/2026", no fim. O acréscimo de
+04/11/2026, dentro dela, leva o ícone do módulo ao título do painel
+(aprovado no mesmo dia).
 
 ## Objetivo
 Dar ao programa uma janela própria, com a estrutura onde os dois módulos futuros
@@ -158,7 +160,8 @@ Funcionalidade 8 do backlog. Levantamento em
 
 ## Emenda de 03/11/2026 — a faixa da esquerda redesenhada
 
-**Situação:** aprovada em 04/11/2026.
+**Situação:** aprovada em 04/11/2026. O acréscimo de 04/11/2026, no fim desta
+seção, foi aprovado no mesmo dia.
 
 Funcionalidade 9 do backlog, pedida na conferência da funcionalidade 4, em
 01/11/2026. Rascunho aprovado: `mockups/janela/04-tres-direcoes.html`, direção C,
@@ -200,6 +203,8 @@ não perdido no pé.
   desta emenda é provisório, e ela toma o lugar dele quando existir.
 - **O passar do mouse** sobre um item: continua como hoje.
 - O que os módulos fazem, as telas dos painéis e o desenho do painel vazio.
+  *(O título das telas dos painéis entrou no acréscimo de 04/11/2026, no
+  fim desta seção.)*
 - Os roteiros "Como usar" e "Como instalar", que desenham a faixa com a versão
   no pé: são refeitos na próxima entrega, que é trabalho à parte.
 
@@ -277,3 +282,84 @@ mesmo que o instalador lê, e nada entra no `preferencias.ini`.
 ### Questões em aberto
 
 Nenhuma.
+
+### Acréscimo de 04/11/2026 — o título dos módulos
+
+**Situação:** aprovado em 04/11/2026.
+
+Pedido pela solicitante na conferência da etapa 2, em 04/11/2026: com a faixa
+nova, o título do painel ficou fraco e solto. Rascunho aprovado:
+`mockups/janela/05-titulo-dos-modulos.html`, direção A, em 04/11/2026. Na mesma
+conferência apareceu o desalinhamento da explicação da IA local, que entra junto.
+
+#### Escopo
+
+- O título das telas dos módulos ganha, à esquerda, o ícone do módulo num
+  quadrado de fundo azul fraco, fica em negrito, e passa a ter uma linha fina
+  embaixo, na altura da linha do cabeçalho da faixa.
+- As telas que ganham esse título: a entrada do Gerar OCR e a do Anonimizar; no
+  caminho do PDF, a ficha do documento, "Este documento já tem texto por dentro"
+  e a tela de ler ("Este documento precisa ser lido" e "Ler as imagens deste
+  documento"); e as três telas de Configurações de IA.
+- Na escolha do motor de leitura, a explicação embaixo de "IA local" começa
+  recuada, como as do PaddleOCR e do Tesseract, e o tempo dela ganha o mesmo
+  destaque claro.
+
+#### Fora de escopo
+
+- **O texto dos títulos e das legendas**: não muda. Encurtar a legenda do
+  Anonimizar, para caber numa linha, seria mudança de texto.
+- **As telas de espera** ("Conferindo o documento…" e a de "Lendo a página"):
+  continuam com o título no meio. São de passagem, e um título no alto
+  disputaria a atenção com a barra que corre.
+- **As caixas de erro** ("Não foi possível abrir o documento", "Não foi
+  possível usar este arquivo"): continuam como hoje, no meio da tela.
+- **"Conferir o texto" e "Revisar antes de salvar"**: têm cabeçalho próprio,
+  com selo e botões ao lado do título, e continuam como estão.
+- **O painel vazio** de boas-vindas e o **tema claro** (funcionalidade 10).
+
+#### Premissas
+
+- premissa: o quadrado com o ícone, no mesmo azul fraco do item marcado, liga o
+  painel ao menu sem depender da cor: o desenho é o mesmo nos dois lugares.
+
+#### Estados da interface
+
+- **Legenda numa linha:** a linha embaixo do título fica na altura da linha do
+  cabeçalho da faixa.
+- **Legenda em duas linhas** (a do Anonimizar, nas janelas menores, e as das
+  telas do caminho do PDF, com o nome do arquivo): a linha desce junto, sem
+  cortar nada.
+- **Carregando e erro:** não se aplicam ao título.
+
+#### Regras de negócio
+
+- RN-14: **o título da tela leva o ícone do módulo em que a pessoa está**: a
+  lupa no Gerar OCR, o cadeado no Anonimizar, a engrenagem nas Configurações
+  de IA. Nas telas do caminho do PDF, que rodam nos dois módulos, o ícone é o do
+  módulo por onde a pessoa entrou. O ícone fica num quadrado de cantos
+  arredondados, no mesmo azul fraco do item marcado, e é desenhado pelo
+  programa, como os da faixa (RN-11). Embaixo do título e da legenda, uma linha
+  fina separa o título do resto da tela.
+- RN-15: **as explicações da escolha do motor ficam alinhadas**: a da IA local
+  começa recuada, debaixo do nome, como as outras duas, e o tempo dela aparece
+  no mesmo destaque claro. Vale para todas as frases que aparecem nessa linha.
+
+#### Critérios de aceite
+
+- Dado que a pessoa escolhe "Gerar OCR", então o título da tela de entrada tem
+  a lupa no quadrado azul fraco, à esquerda, e uma linha embaixo; dado
+  "Anonimizar", o mesmo com o cadeado.
+- Dado que a pessoa entra num documento pelo Anonimizar e chega à ficha, à
+  decisão sobre o texto ou à tela de ler, então o título delas tem o cadeado;
+  pelo Gerar OCR, a lupa.
+- Dado que a pessoa entra em Configurações de IA, então o título de cada uma das
+  três telas tem a engrenagem.
+- Dada a janela aberta no tamanho em que a legenda cabe numa linha, então a
+  linha embaixo do título fica na altura da linha do cabeçalho da faixa.
+- Dada a janela mínima de 900 × 560, então nenhum título e nenhuma legenda sai
+  cortado.
+- Dada a tela "Conferindo o documento…", as caixas de erro, "Conferir o texto"
+  e "Revisar antes de salvar", então elas continuam como antes.
+- Dada a escolha do motor, então a explicação da IA local começa no mesmo
+  recuo das do PaddleOCR e do Tesseract, com qualquer frase que estiver ali.
