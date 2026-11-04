@@ -1,11 +1,12 @@
 """A faixa da esquerda redesenhada (emenda de 03/11/2026 da spec 001, RN-9 a RN-13)."""
 import pytest
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon
 from PySide6.QtWidgets import QApplication, QLabel
 
 from desenhos_da_faixa import TAMANHO_DO_ICONE, SimboloDoPrograma, icone_do_item
-from estilo import COR_TEXTO, COR_TEXTO_SECUNDARIO
-from main import TAMANHO_MINIMO, JanelaPrincipal
+from estilo import (COR_DESTAQUE, COR_DESTAQUE_HOVER, COR_FUNDO_ELEVADO, COR_TEXTO,
+                    COR_TEXTO_SECUNDARIO)
+from main import LARGURA_DO_FILETE, TAMANHO_MINIMO, JanelaPrincipal
 from versao import VERSAO
 
 
@@ -100,3 +101,97 @@ def test_o_icone_e_cinza_no_item_normal_e_claro_no_marcado(aplicacao, desenho):
     icone = icone_do_item(desenho)
     assert _cor_do_traco(icone, QIcon.Off) == COR_TEXTO_SECUNDARIO
     assert _cor_do_traco(icone, QIcon.On) == COR_TEXTO
+
+
+def _foto_da_faixa(janela):
+    janela.showNormal()
+    QApplication.processEvents()
+    return janela.menu.grab().toImage()
+
+
+def _cores_na_linha_do_item(foto, menu, item):
+    """A cor do filete (logo depois da margem de 8 px) e a do fundo (perto da
+    ponta direita, longe do texto), no meio da altura do item."""
+    canto = item.mapTo(menu, item.rect().topLeft())
+    y = canto.y() + item.height() // 2
+    filete = foto.pixelColor(canto.x() + 8 + LARGURA_DO_FILETE // 2, y)
+    fundo = foto.pixelColor(canto.x() + item.width() - 20, y)
+    return filete, fundo
+
+
+def _fundo_do_marcado_esperado():
+    """O azul de destaque a 24% por cima do fundo da faixa."""
+    azul, faixa = QColor(COR_DESTAQUE), QColor(COR_FUNDO_ELEVADO)
+    return [round(0.24 * a + 0.76 * f) for a, f in
+            ((azul.red(), faixa.red()), (azul.green(), faixa.green()),
+             (azul.blue(), faixa.blue()))]
+
+
+def _perto(cor, rgb):
+    return all(abs(c - e) <= 2 for c, e in zip((cor.red(), cor.green(), cor.blue()), rgb))
+
+
+def test_o_item_marcado_tem_fundo_fraco_e_filete_e_os_outros_nada(janela):
+    """RN-13: o marcado não é mais o bloco azul cheio."""
+    menu = janela.menu
+    menu.botao_anonimizar.click()
+    foto = _foto_da_faixa(janela)
+
+    filete, fundo = _cores_na_linha_do_item(foto, menu, menu.botao_anonimizar)
+    assert filete.name() == COR_DESTAQUE_HOVER
+    assert _perto(fundo, _fundo_do_marcado_esperado()), fundo.name()
+
+    for item in (menu.botao_ocr, menu.botao_config_ia):
+        filete, fundo = _cores_na_linha_do_item(foto, menu, item)
+        assert filete.name() == fundo.name() == COR_FUNDO_ELEVADO, item.text()
+
+
+def test_no_submenu_o_marcado_e_igual(janela):
+    menu = janela.menu
+    menu.botao_config_ia.click()
+    foto = _foto_da_faixa(janela)
+
+    filete, fundo = _cores_na_linha_do_item(foto, menu, menu.botao_lm_studio)
+    assert filete.name() == COR_DESTAQUE_HOVER
+    assert _perto(fundo, _fundo_do_marcado_esperado()), fundo.name()
+    filete, fundo = _cores_na_linha_do_item(foto, menu, menu.botao_servidor_ia)
+    assert filete.name() == fundo.name() == COR_FUNDO_ELEVADO
+
+
+def test_o_texto_nao_pula_para_o_lado_ao_marcar(janela):
+    """O filete transparente já ocupa o lugar no item normal: marcar só o pinta."""
+    menu = janela.menu
+    item = menu.botao_anonimizar
+
+    def onde_comeca_o_icone():
+        foto = _foto_da_faixa(janela)
+        canto = item.mapTo(menu, item.rect().topLeft())
+        y = canto.y() + item.height() // 2
+        fundo = foto.pixelColor(canto.x() + item.width() - 20, y)
+        for x in range(canto.x() + 8 + LARGURA_DO_FILETE, canto.x() + item.width()):
+            if foto.pixelColor(x, y) != fundo:
+                return x - canto.x()
+
+    antes = onde_comeca_o_icone()
+    item.click()
+    assert onde_comeca_o_icone() == antes
+
+
+def test_nenhum_item_marcado_sai_cortado(janela):
+    """Marcado, o texto fica em negrito e mais largo. O Qt não refaz a largura
+    pedida pelo botão quando o estilo muda com o estado, então a conta é feita
+    aqui: a frase em negrito precisa caber no que sobra do botão depois da
+    margem (8 + 8), do filete, do respiro (12 de cada lado, menos o filete) e
+    do ícone, quando há."""
+    janela.showNormal()
+    janela.resize(TAMANHO_MINIMO)
+    QApplication.processEvents()
+    menu = janela.menu
+    for item in (menu.botao_ocr, menu.botao_anonimizar, *menu.itens_do_submenu):
+        fonte = QFont(item.font())
+        fonte.setPixelSize(15)
+        fonte.setWeight(QFont.DemiBold)
+        frase = QFontMetrics(fonte).horizontalAdvance(item.text())
+        icone = 0 if item.icon().isNull() else TAMANHO_DO_ICONE.width() + 4
+        sobra = menu.width() - 16 - LARGURA_DO_FILETE - (12 - LARGURA_DO_FILETE) - 12 - icone
+        assert frase <= sobra, (item.text(), frase, sobra)

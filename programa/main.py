@@ -2,6 +2,7 @@
 import sys
 
 from PySide6.QtCore import QRect, QSize, Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
 from estilo import (
     COR_BORDA,
     COR_DESTAQUE,
+    COR_DESTAQUE_HOVER,
     COR_FUNDO,
     COR_FUNDO_ELEVADO,
     COR_TEXTO,
@@ -31,6 +33,13 @@ from painel_ocr import PainelOcr
 from versao import VERSAO
 
 NOME_PROGRAMA = "Anonimizador CAPCF"
+
+# O item marcado da faixa (RN-13 da spec 001): o azul de destaque com 24% de
+# força, que sobre o fundo da faixa deixa o texto claro em cerca de 9,5 para 1
+# de contraste (rascunho 04), e um filete de 3 px no azul mais vivo.
+_azul = QColor(COR_DESTAQUE)
+FUNDO_DO_MARCADO = f"rgba({_azul.red()}, {_azul.green()}, {_azul.blue()}, 0.24)"
+LARGURA_DO_FILETE = 3
 
 # O bloco do preferencias.ini em que a janela lembra como foi fechada (emenda
 # de 28/10/2026 da spec 001).
@@ -227,6 +236,12 @@ class MenuLateral(QWidget):
         if desenho:
             botao.setIcon(icone_do_item(desenho))
             botao.setIconSize(TAMANHO_DO_ICONE)
+        # O marcado era um bloco azul cheio, a coisa mais forte da tela; virou um
+        # fundo azul fraco com um filete à esquerda (RN-13 da spec 001). O filete
+        # diz "este é o escolhido" para quem distingue mal as cores. Todo item já
+        # tem o filete, transparente, e por isso 3 px a menos de espaço à
+        # esquerda: o texto não pula para o lado ao ser marcado. O texto marcado
+        # é o mesmo claro do ícone marcado (RN-12), e não branco puro.
         botao.setStyleSheet(
             f"""
             QPushButton {{
@@ -234,8 +249,9 @@ class MenuLateral(QWidget):
                 color: {COR_TEXTO_SECUNDARIO};
                 background: transparent;
                 border: none;
+                border-left: {LARGURA_DO_FILETE}px solid transparent;
                 border-radius: 6px;
-                padding: 12px;
+                padding: 12px 12px 12px {12 - LARGURA_DO_FILETE}px;
                 margin: 0 8px;
                 font-size: 15px;
             }}
@@ -243,8 +259,9 @@ class MenuLateral(QWidget):
                 background-color: rgba(255, 255, 255, 0.06);
             }}
             QPushButton:checked {{
-                background-color: {COR_DESTAQUE};
-                color: #ffffff;
+                background-color: {FUNDO_DO_MARCADO};
+                border-left-color: {COR_DESTAQUE_HOVER};
+                color: {COR_TEXTO};
                 font-weight: 600;
             }}
             """
