@@ -33,6 +33,7 @@ import arquivo_texto
 import arquivo_word
 import cpf
 import estilo
+from cabecalho_da_tela import CabecalhoDaTela
 from caminho_do_pdf import CaminhoDoPdf, FaixaDoTopo
 from lembranca_do_motor import LembrancaDoMotor
 from motor_na_tela import ControleDoMotor
@@ -161,6 +162,7 @@ class PainelAnonimizar(QWidget):
             ao_faltar_motor=self.motor.mostrar_que_falta,
             rotulo_de_outro="Escolher outro arquivo",
             lembranca_do_motor=LembrancaDoMotor(LEMBRAR_COMO),
+            desenho="cadeado",
         )
         self.motor.ligar_escolha(self.pdf.tela_de_ler.escolha_do_motor)
         self.tela_erro = _TelaErro(ao_escolher_outro=self.voltar_para_escolher)
@@ -183,22 +185,11 @@ class PainelAnonimizar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        titulo = QLabel("Anonimizar")
-        titulo.setStyleSheet(
-            f"font-size: {estilo.TEXTO_GRANDE}px; font-weight: 600;"
-            f"color: {estilo.COR_TEXTO};"
-        )
-        legenda = QLabel(
+        self.cabecalho = CabecalhoDaTela(
+            "cadeado", "Anonimizar",
             "Gera um novo arquivo que tarja os três primeiros e dois últimos "
-            "dígitos dos CPFs contidos no documento enviado."
-        )
-        legenda.setWordWrap(True)
-        legenda.setStyleSheet(
-            f"font-size: {estilo.TEXTO_PEQUENO}px;"
-            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
-        )
-        layout.addWidget(titulo)
-        layout.addWidget(legenda)
+            "dígitos dos CPFs contidos no documento enviado.")
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_4)
         layout.addWidget(self.motor.aviso)
         layout.addWidget(self.motor.espaco_depois_do_aviso)

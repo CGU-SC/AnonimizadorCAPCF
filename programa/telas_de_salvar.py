@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 import arquivo_md
 import estilo
+from cabecalho_da_tela import CabecalhoDaTela
 
 
 class TelaSaida(QWidget):
@@ -37,9 +38,11 @@ class TelaSaida(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        layout.addWidget(_titulo("Texto conferido. E agora?"))
-        self.legenda = _legenda("")
-        layout.addWidget(self.legenda)
+        # O título leva o ícone do módulo, como as outras telas dele (RN-14 da
+        # spec 001).
+        self.cabecalho = CabecalhoDaTela("lupa", "Texto conferido. E agora?")
+        self.legenda = self.cabecalho.legenda
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_4)
 
         cartoes = QHBoxLayout()
@@ -106,9 +109,11 @@ class TelaSalvar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        layout.addWidget(_titulo("Onde salvar o arquivo"))
-        self.legenda = _legenda("")
-        layout.addWidget(self.legenda)
+        # O título leva o ícone do módulo, como as outras telas dele (RN-14 da
+        # spec 001).
+        self.cabecalho = CabecalhoDaTela("lupa", "Onde salvar o arquivo")
+        self.legenda = self.cabecalho.legenda
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_4)
 
         rotulo = QLabel("CAMINHO DO ARQUIVO")

@@ -16,6 +16,13 @@ COR_TEXTO_SECUNDARIO = "#9aa1ac"
 COR_TEXTO_APAGADO = "#6c737d"
 COR_DESTAQUE = "#3b6ea5"
 COR_DESTAQUE_HOVER = "#4f86bf"
+# O azul de destaque com 24% de força: o fundo do item marcado na faixa e do
+# quadrado do ícone no título das telas, que é o mesmo azul de propósito - o
+# desenho e a cor ligam o título ao item do menu (RN-13 e RN-14 da spec 001).
+# Sobre o fundo da faixa, deixa o texto claro em cerca de 9,5 para 1.
+FORCA_DO_DESTAQUE_FRACO = 0.24
+COR_DESTAQUE_FRACO = (f"rgba({int(COR_DESTAQUE[1:3], 16)}, {int(COR_DESTAQUE[3:5], 16)}, "
+                      f"{int(COR_DESTAQUE[5:7], 16)}, {FORCA_DO_DESTAQUE_FRACO})")
 COR_SUCESSO = "#4caf6d"
 COR_ALERTA = "#d9a441"
 COR_ERRO = "#d9534f"
@@ -42,6 +49,11 @@ ESPACO_5 = 32
 RAIO = 6
 
 LARGURA_MENU = 220
+# A altura do cabeçalho da faixa (o nome em duas linhas e 20 px de respiro
+# embaixo) e a do título das telas dos módulos. As duas começam a 24 px do alto
+# da janela; com a mesma altura, a linha embaixo de uma continua a da outra
+# (RN-14 da spec 001).
+ALTURA_DO_CABECALHO = 60
 
 
 def estilo_botao(principal=True, pequeno=False):

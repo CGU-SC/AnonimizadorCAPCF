@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 )
 
 import estilo
+from cabecalho_da_tela import CabecalhoDaTela
 from documento import primeiras_linhas
 from leitura import MOTOR_PADDLEOCR, tempo_estimado
 
@@ -30,7 +31,7 @@ LINHAS_DA_AMOSTRA = 12
 
 
 class TelaDecisao(QWidget):
-    def __init__(self, ao_aproveitar, ao_ignorar, ao_escolher_outro):
+    def __init__(self, ao_aproveitar, ao_ignorar, ao_escolher_outro, desenho="lupa"):
         super().__init__()
         self._ao_aproveitar = ao_aproveitar
         self._ao_ignorar = ao_ignorar
@@ -41,19 +42,10 @@ class TelaDecisao(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        titulo = QLabel("Este documento já tem texto por dentro")
-        titulo.setStyleSheet(
-            f"font-size: {estilo.TEXTO_GRANDE}px; font-weight: 600;"
-            f"color: {estilo.COR_TEXTO};"
-        )
-        layout.addWidget(titulo)
-
-        self.legenda = QLabel()
-        self.legenda.setStyleSheet(
-            f"font-size: {estilo.TEXTO_PEQUENO}px;"
-            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
-        )
-        layout.addWidget(self.legenda)
+        # O ícone é o do módulo por onde a pessoa entrou (RN-14 da spec 001).
+        self.cabecalho = CabecalhoDaTela(desenho, "Este documento já tem texto por dentro")
+        self.legenda = self.cabecalho.legenda
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_3)
 
         selo = QLabel("TEXTO GRAVADO NO PRÓPRIO DOCUMENTO")

@@ -71,7 +71,9 @@ def test_com_a_chave_e_o_modelo_acende_nos_dois_modulos_sem_ficar_marcada():
     for escolha in _escolhas():
         assert escolha.ia_local.isEnabled()
         assert escolha.ia_local.text() == "IA local (LM Studio)"
-        assert escolha.frase_da_ia.text() == FRASE_DA_IA_ACESA
+        frase, tempo = FRASE_DA_IA_ACESA
+        assert escolha.frase_da_ia.text().startswith(frase)
+        assert tempo in escolha.frase_da_ia.text()
         assert escolha.marcado() == MOTOR_PADDLEOCR
 
 

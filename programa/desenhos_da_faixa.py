@@ -67,6 +67,14 @@ def _engrenagem(pintor):
 DESENHOS = {"lupa": _lupa, "cadeado": _cadeado, "engrenagem": _engrenagem}
 
 
+def pintar_desenho(pintor, desenho, cor):
+    """Pinta um dos desenhos na grade de 20 x 20, com o pintor já na escala
+    certa. É o mesmo traço no item da faixa e no título das telas (RN-14)."""
+    pintor.setPen(_caneta(cor))
+    pintor.setBrush(Qt.NoBrush)
+    DESENHOS[desenho](pintor)
+
+
 def _pintar(desenho, cor, ampliacao):
     largura = round(TAMANHO_DO_ICONE.width() * ampliacao)
     altura = round(TAMANHO_DO_ICONE.height() * ampliacao)
@@ -76,9 +84,7 @@ def _pintar(desenho, cor, ampliacao):
     pintor.setRenderHint(QPainter.Antialiasing)
     pintor.scale(LADO_DO_ICONE * ampliacao / GRADE_DO_ICONE,
                  LADO_DO_ICONE * ampliacao / GRADE_DO_ICONE)
-    pintor.setPen(_caneta(cor))
-    pintor.setBrush(Qt.NoBrush)
-    DESENHOS[desenho](pintor)
+    pintar_desenho(pintor, desenho, cor)
     pintor.end()
     return imagem
 

@@ -2,7 +2,6 @@
 import sys
 
 from PySide6.QtCore import QRect, QSize, Qt
-from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -16,7 +15,8 @@ from PySide6.QtWidgets import (
 
 from estilo import (
     COR_BORDA,
-    COR_DESTAQUE,
+    ALTURA_DO_CABECALHO,
+    COR_DESTAQUE_FRACO,
     COR_DESTAQUE_HOVER,
     COR_FUNDO,
     COR_FUNDO_ELEVADO,
@@ -34,11 +34,7 @@ from versao import VERSAO
 
 NOME_PROGRAMA = "Anonimizador CAPCF"
 
-# O item marcado da faixa (RN-13 da spec 001): o azul de destaque com 24% de
-# força, que sobre o fundo da faixa deixa o texto claro em cerca de 9,5 para 1
-# de contraste (rascunho 04), e um filete de 3 px no azul mais vivo.
-_azul = QColor(COR_DESTAQUE)
-FUNDO_DO_MARCADO = f"rgba({_azul.red()}, {_azul.green()}, {_azul.blue()}, 0.24)"
+# O filete do item marcado da faixa, no azul mais vivo (RN-13 da spec 001).
 LARGURA_DO_FILETE = 3
 
 # O bloco do preferencias.ini em que a janela lembra como foi fechada (emenda
@@ -208,6 +204,9 @@ class MenuLateral(QWidget):
             f"QWidget#cabecalho_da_faixa {{ border-bottom: 1px solid {COR_BORDA}; }}"
             "QLabel { background: transparent; }"
         )
+        # A mesma altura do título das telas dos módulos, para a linha de baixo
+        # das duas ficar na mesma altura (RN-14 da spec 001).
+        cabecalho.setMinimumHeight(ALTURA_DO_CABECALHO)
         linha = QHBoxLayout(cabecalho)
         linha.setContentsMargins(16, 0, 16, 20)
         linha.setSpacing(10)
@@ -259,7 +258,7 @@ class MenuLateral(QWidget):
                 background-color: rgba(255, 255, 255, 0.06);
             }}
             QPushButton:checked {{
-                background-color: {FUNDO_DO_MARCADO};
+                background-color: {COR_DESTAQUE_FRACO};
                 border-left-color: {COR_DESTAQUE_HOVER};
                 color: {COR_TEXTO};
                 font-weight: 600;

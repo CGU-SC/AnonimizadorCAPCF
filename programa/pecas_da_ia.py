@@ -148,15 +148,6 @@ def estilo_do_radio(apagado=False):
     """
 
 
-def titulo_de_tela(texto):
-    rotulo = QLabel(texto)
-    rotulo.setStyleSheet(
-        f"font-size: {estilo.TEXTO_GRANDE}px; font-weight: 600;"
-        f"color: {estilo.COR_TEXTO};"
-    )
-    return rotulo
-
-
 def rotulo_de_campo(texto):
     rotulo = QLabel(texto)
     rotulo.setStyleSheet(

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QApplication, QLabel
 
 from desenhos_da_faixa import TAMANHO_DO_ICONE, SimboloDoPrograma, icone_do_item
 from estilo import (COR_DESTAQUE, COR_DESTAQUE_HOVER, COR_FUNDO_ELEVADO, COR_TEXTO,
-                    COR_TEXTO_SECUNDARIO)
+                    COR_TEXTO_SECUNDARIO, FORCA_DO_DESTAQUE_FRACO)
 from main import LARGURA_DO_FILETE, TAMANHO_MINIMO, JanelaPrincipal
 from versao import VERSAO
 
@@ -120,9 +120,9 @@ def _cores_na_linha_do_item(foto, menu, item):
 
 
 def _fundo_do_marcado_esperado():
-    """O azul de destaque a 24% por cima do fundo da faixa."""
-    azul, faixa = QColor(COR_DESTAQUE), QColor(COR_FUNDO_ELEVADO)
-    return [round(0.24 * a + 0.76 * f) for a, f in
+    """O azul de destaque fraco por cima do fundo da faixa."""
+    azul, faixa, f = QColor(COR_DESTAQUE), QColor(COR_FUNDO_ELEVADO), FORCA_DO_DESTAQUE_FRACO
+    return [round(f * a + (1 - f) * b) for a, b in
             ((azul.red(), faixa.red()), (azul.green(), faixa.green()),
              (azul.blue(), faixa.blue()))]
 

@@ -26,12 +26,11 @@ from PySide6.QtWidgets import (
 )
 
 import estilo
+from cabecalho_da_tela import CabecalhoDaTela
 from caminho_do_pdf import (
     CaminhoDoPdf,
     EscolhaDoMotor,
-    legenda_da_tela,
     FaixaDoTopo,
-    titulo_da_tela,
 )
 from arquivo_md import caminho_livre, caminho_sugerido, gravar, montar_conteudo
 from telas_de_salvar import (
@@ -97,6 +96,7 @@ class PainelOcr(QWidget):
             tem_motor=self.motor.conferir,
             ao_faltar_motor=self.motor.mostrar_que_falta,
             motor_escolhido=self.escolha_do_motor.marcado,
+            desenho="lupa",
         )
         self.tela_verificando = self.pdf.tela_verificando
         self.tela_ficha = self.pdf.tela_ficha
@@ -155,9 +155,10 @@ class PainelOcr(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        layout.addWidget(titulo_da_tela("Gerar OCR"))
-        layout.addWidget(legenda_da_tela(
-            "Converte documento digitalizado em texto para conferência."))
+        self.cabecalho = CabecalhoDaTela(
+            "lupa", "Gerar OCR",
+            "Converte documento digitalizado em texto para conferência.")
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_4)
 
         # O aviso vem já na tela de escolher, antes de qualquer documento: fazer

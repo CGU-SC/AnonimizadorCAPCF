@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 import arquivo_md
 import estilo
+from cabecalho_da_tela import CabecalhoDaTela
 import tipos_na_tela
 from telas_de_salvar import escolher_onde_salvar
 
@@ -45,9 +46,11 @@ class TelaSalvarSemCpf(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        layout.addWidget(_titulo("Onde salvar o texto mascarado"))
-        self.legenda = _legenda("")
-        layout.addWidget(self.legenda)
+        # O título leva o ícone do módulo, como as outras telas dele (RN-14 da
+        # spec 001).
+        self.cabecalho = CabecalhoDaTela("cadeado", "Onde salvar o texto mascarado")
+        self.legenda = self.cabecalho.legenda
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_4)
 
         rotulo = QLabel("CAMINHO DO ARQUIVO")

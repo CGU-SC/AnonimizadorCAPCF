@@ -35,8 +35,8 @@ from pecas_da_ia import (
     etiqueta_online,
     linha_do_switch,
     rotulo_de_campo,
-    titulo_de_tela,
 )
+from cabecalho_da_tela import CabecalhoDaTela
 
 LM_STUDIO = config_ia.LM_STUDIO
 SERVIDOR = config_ia.SERVIDOR
@@ -123,9 +123,11 @@ class _TelaBasica(QWidget):
         self.corpo = QVBoxLayout(self)
         self.corpo.setContentsMargins(0, 0, 0, 0)
         self.corpo.setSpacing(estilo.ESPACO_3)
-        self.corpo.addWidget(titulo_de_tela(titulo))
-        self.legenda = Frase(legenda)
-        self.corpo.addWidget(self.legenda)
+        # A engrenagem do item do menu vai para o título das três telas (RN-14
+        # da spec 001).
+        self.cabecalho = CabecalhoDaTela("engrenagem", titulo, legenda)
+        self.legenda = self.cabecalho.legenda
+        self.corpo.addWidget(self.cabecalho)
 
 
 class _TelaDoDestino(_TelaBasica):

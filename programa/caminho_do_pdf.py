@@ -35,6 +35,7 @@ from PySide6.QtWidgets import (
 import avisos_da_ia
 import config_ia
 import estilo
+from cabecalho_da_tela import CabecalhoDaTela
 from documento import DocumentoNaoAbre, conferir, texto_da_camada
 from leitura import MOTOR_IA, MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
 from pecas_da_ia import Frase, estilo_do_radio
@@ -54,7 +55,9 @@ class CaminhoDoPdf:
     `titulo` e `legenda` são o cabeçalho do cartão do que o programa descobriu;
     `o_que_vai_acontecer` diz, em uma frase, o que vem depois - e no Anonimizar
     essa frase termina na revisão, e não no salvar do outro módulo (oitava
-    emenda da spec 003).
+    emenda da spec 003). `desenho` é o ícone do módulo que usa a peça, posto no
+    título das telas daqui: a pessoa continua no módulo por onde entrou (RN-14
+    da spec 001).
 
     Os avisos de volta são todos do mesmo tipo: a peça faz o trabalho e chama
     quem a usa quando a decisão é de lá.
@@ -65,7 +68,7 @@ class CaminhoDoPdf:
                  com_cartao=True, ao_abrir_conferencia=None,
                  tem_motor=None, ao_faltar_motor=None,
                  rotulo_de_outro="Escolher outro documento",
-                 motor_escolhido=None, lembranca_do_motor=None):
+                 motor_escolhido=None, lembranca_do_motor=None, desenho="lupa"):
         self._pilha = pilha
         # O Gerar OCR mostra o cartão do que o programa descobriu antes de
         # tudo. O Anonimizar não: o PDF sem texto vai para a tela de ler, que
@@ -96,12 +99,14 @@ class CaminhoDoPdf:
         self.tela_ficha = _TelaFicha(
             titulo=titulo,
             legenda=legenda,
+            desenho=desenho,
             rotulo_de_outro=rotulo_de_outro,
             ao_escolher_outro=self._escolher_outro,
             ao_ler=self.seguir_a_partir_da_ficha,
         )
         self.tela_lendo = _TelaLendo(ao_cancelar=self.cancelar_leitura)
         self.tela_decisao = TelaDecisao(
+            desenho=desenho,
             ao_aproveitar=self.aproveitar_o_texto_existente,
             ao_ignorar=self._ignorar_o_texto_existente,
             ao_escolher_outro=self._escolher_outro,
@@ -110,6 +115,7 @@ class CaminhoDoPdf:
         # Anonimizar). O Gerar OCR monta esta tela sem usá-la, e lembrar por
         # ela misturaria a escolha dele com a escondida (RN-36).
         self.tela_de_ler = _TelaDeLer(
+            desenho=desenho,
             ao_ler=self.comecar_a_ler,
             ao_escolher_outro=self._escolher_outro,
             ao_voltar_a_decisao=self.decidir_sobre_o_texto_existente,
@@ -361,7 +367,8 @@ class CaminhoDoPdf:
 class _TelaFicha(QWidget):
     """O que o programa descobriu sobre o documento escolhido."""
 
-    def __init__(self, titulo, legenda, rotulo_de_outro, ao_escolher_outro, ao_ler):
+    def __init__(self, titulo, legenda, rotulo_de_outro, ao_escolher_outro, ao_ler,
+                 desenho="lupa"):
         super().__init__()
         self._ao_ler = ao_ler
         self._ficha = None
@@ -370,8 +377,8 @@ class _TelaFicha(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        layout.addWidget(titulo_da_tela(titulo))
-        layout.addWidget(legenda_da_tela(legenda))
+        self.cabecalho = CabecalhoDaTela(desenho, titulo, legenda)
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_4)
 
         self.cartao = QFrame()
@@ -818,6 +825,12 @@ FALTA_PORTUGUES = ("Sem o pacote de português nesta máquina — sem ele, pági
 FALTA_PORTUGUES_SEM_NENHUM = "Sem o pacote de português nesta máquina."
 
 
+# O recuo que põe a explicação de cada motor debaixo do nome dele, e não
+# debaixo da bolinha. Vale para as três linhas, a da IA local inclusive
+# (RN-15 da spec 001): encostada na margem, ela parecia de outro assunto.
+RECUO_DA_EXPLICACAO = 22
+
+
 def _linha_de_explicacao(texto=""):
     # Sem quebra automática de linha: a quebra do Qt reservaria a altura de uma
     # linha só, cortando o resto. As frases daqui foram medidas para caber numa
@@ -825,7 +838,7 @@ def _linha_de_explicacao(texto=""):
     linha = QLabel(texto)
     linha.setStyleSheet(
         f"font-size: {estilo.TEXTO_PEQUENO}px;"
-        f"color: {estilo.COR_TEXTO_SECUNDARIO}; margin-left: 22px;"
+        f"color: {estilo.COR_TEXTO_SECUNDARIO}; margin-left: {RECUO_DA_EXPLICACAO}px;"
     )
     return linha
 
@@ -834,21 +847,27 @@ def _linha_de_falta():
     linha = _linha_de_explicacao()
     linha.setStyleSheet(
         f"font-size: {estilo.TEXTO_PEQUENO}px;"
-        f"color: {estilo.COR_ALERTA}; margin-left: 22px;"
+        f"color: {estilo.COR_ALERTA}; margin-left: {RECUO_DA_EXPLICACAO}px;"
     )
     linha.setVisible(False)
     return linha
 
 
+def _com_o_tempo_em_destaque(frase, tempo):
+    return f"{frase}<span style='color: {estilo.COR_TEXTO};'>{tempo}</span>"
+
+
 def _resumo(frase, tempo):
     linha = _linha_de_explicacao()
     linha.setTextFormat(Qt.RichText)
-    linha.setText(f"{frase}<span style='color: {estilo.COR_TEXTO};'>{tempo}</span>")
+    linha.setText(_com_o_tempo_em_destaque(frase, tempo))
     return linha
 
 
-FRASE_DA_IA_ACESA = ("Lê pior que os outros dois, e a página vai com os CPFs inteiros. "
-                     "Tempo: depende do modelo.")
+# No mesmo jeito das outras duas, com o tempo em destaque no fim (RN-15 da
+# spec 001; rascunho mockups/janela/05-titulo-dos-modulos.html).
+FRASE_DA_IA_ACESA = ("Lê pior que os outros dois, e a página vai com os CPFs inteiros · ",
+                     "tempo: depende do modelo")
 
 
 class EscolhaDoMotor(QWidget):
@@ -889,7 +908,7 @@ class EscolhaDoMotor(QWidget):
         self.saidas_do_tesseract = QWidget()
         self.saidas_do_tesseract.setVisible(False)
         self._lugar_das_saidas = QVBoxLayout(self.saidas_do_tesseract)
-        self._lugar_das_saidas.setContentsMargins(22, 0, 0, 0)
+        self._lugar_das_saidas.setContentsMargins(RECUO_DA_EXPLICACAO, 0, 0, 0)
         self._lugar_das_saidas.setSpacing(estilo.ESPACO_1)
 
         # "Local" porque ela roda na própria máquina da pessoa ou num servidor
@@ -898,7 +917,14 @@ class EscolhaDoMotor(QWidget):
         self.ia_local = QRadioButton("IA local")
         self.ia_local.setEnabled(False)
         self.ia_local.setStyleSheet(estilo_do_radio(apagado=True))
+        # Uma frase que quebra linha, porque as daqui não foram medidas para
+        # caber numa linha só. O recuo vai na folha de estilo, como nas outras
+        # duas: posto numa moldura em volta, a letra começava 3 px antes da
+        # delas, porque o Qt soma um respiro seu à margem escrita no estilo.
         self.frase_da_ia = Frase()
+        self.frase_da_ia.setStyleSheet(
+            self.frase_da_ia.styleSheet() + f"margin-left: {RECUO_DA_EXPLICACAO}px;")
+        self.frase_da_ia.setTextFormat(Qt.RichText)
         # A marca que saiu da IA fica dita até a pessoa marcar outra coisa.
         self._frase_da_troca = ""
         for botao in (self.paddleocr, self.tesseract):
@@ -941,7 +967,7 @@ class EscolhaDoMotor(QWidget):
         self.ia_local.setText(f"IA local ({config_ia.NOME_NA_TELA[destino]})" if ativa else "IA local")
         if ativa:
             self._frase_da_troca = ""
-            frase = FRASE_DA_IA_ACESA
+            frase = _com_o_tempo_em_destaque(*FRASE_DA_IA_ACESA)
         elif self.ia_local.isChecked():
             self.paddleocr.setChecked(True)
             self._frase_da_troca = "A marca passou a outro motor porque a IA foi desligada."
@@ -954,6 +980,8 @@ class EscolhaDoMotor(QWidget):
                      else "Escolha o modelo do motor em Configurações de IA.")
         else:
             frase = 'Ligue em Configurações de IA, em "Habilitar IA".'
+        # As frases são todas do programa, e o texto rico só serve ao destaque
+        # do tempo; as outras vão sem marcação nenhuma.
         self.frase_da_ia.setText(frase)
 
     def _pessoa_marcou(self):
@@ -1026,7 +1054,7 @@ class _TelaDeLer(QWidget):
     """
 
     def __init__(self, ao_ler, ao_escolher_outro, ao_voltar_a_decisao,
-                 lembranca_do_motor=None):
+                 lembranca_do_motor=None, desenho="cadeado"):
         super().__init__()
         self._ao_ler = ao_ler
         self._ao_escolher_outro = ao_escolher_outro
@@ -1038,10 +1066,10 @@ class _TelaDeLer(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        self.titulo = titulo_da_tela("")
-        self.legenda = legenda_da_tela("")
-        layout.addWidget(self.titulo)
-        layout.addWidget(self.legenda)
+        self.cabecalho = CabecalhoDaTela(desenho)
+        self.titulo = self.cabecalho.titulo
+        self.legenda = self.cabecalho.legenda
+        layout.addWidget(self.cabecalho)
         layout.addSpacing(estilo.ESPACO_4)
 
         self.escolha_do_motor = EscolhaDoMotor("LER COM", lembranca=lembranca_do_motor)
