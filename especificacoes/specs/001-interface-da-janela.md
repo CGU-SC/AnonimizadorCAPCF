@@ -300,7 +300,11 @@ conferência apareceu o desalinhamento da explicação da IA local, que entra ju
 - As telas que ganham esse título: a entrada do Gerar OCR e a do Anonimizar; no
   caminho do PDF, a ficha do documento, "Este documento já tem texto por dentro"
   e a tela de ler ("Este documento precisa ser lido" e "Ler as imagens deste
-  documento"); e as três telas de Configurações de IA.
+  documento"); depois da conferência, "Texto conferido. E agora?", "Onde salvar
+  o arquivo" e "Onde salvar o texto mascarado"; e as três telas de
+  Configurações de IA. As três de depois da conferência entraram na
+  construção, no mesmo dia, por escolha da solicitante: tinham o título no
+  alto, como as outras, e tinham ficado fora da lista.
 - Na escolha do motor de leitura, a explicação embaixo de "IA local" começa
   recuada, como as do PaddleOCR e do Tesseract, e o tempo dela ganha o mesmo
   destaque claro.
@@ -313,7 +317,9 @@ conferência apareceu o desalinhamento da explicação da IA local, que entra ju
   continuam com o título no meio. São de passagem, e um título no alto
   disputaria a atenção com a barra que corre.
 - **As caixas de erro** ("Não foi possível abrir o documento", "Não foi
-  possível usar este arquivo"): continuam como hoje, no meio da tela.
+  possível usar este arquivo") e **as telas com o título no meio** ("Arquivo
+  gravado", a pergunta antes de descartar, "Já existe um arquivo com esse
+  nome"): continuam como hoje.
 - **"Conferir o texto" e "Revisar antes de salvar"**: têm cabeçalho próprio,
   com selo e botões ao lado do título, e continuam como estão.
 - **O painel vazio** de boas-vindas e o **tema claro** (funcionalidade 10).
@@ -359,7 +365,11 @@ conferência apareceu o desalinhamento da explicação da IA local, que entra ju
   linha embaixo do título fica na altura da linha do cabeçalho da faixa.
 - Dada a janela mínima de 900 × 560, então nenhum título e nenhuma legenda sai
   cortado.
-- Dada a tela "Conferindo o documento…", as caixas de erro, "Conferir o texto"
-  e "Revisar antes de salvar", então elas continuam como antes.
+- Dado que a pessoa chega ao salvar, então "Texto conferido. E agora?" e
+  "Onde salvar o arquivo" têm a lupa, e "Onde salvar o texto mascarado", o
+  cadeado.
+- Dada a tela "Conferindo o documento…", as caixas de erro, as telas com o
+  título no meio, "Conferir o texto" e "Revisar antes de salvar", então elas
+  continuam como antes.
 - Dada a escolha do motor, então a explicação da IA local começa no mesmo
   recuo das do PaddleOCR e do Tesseract, com qualquer frase que estiver ali.
