@@ -676,3 +676,55 @@ vale o escuro. Nada mais é guardado. As regras de guardar são as da spec 002
 ### Questões em aberto
 
 Nenhuma.
+
+### Acréscimo de 06/11/2026 — a pergunta com mais de uma coisa a perder
+
+**Situação:** aprovado em 06/11/2026.
+
+O fluxo do texto lido e ainda não salvo diz que, havendo mais de uma coisa a
+perder, a frase cita todas numa pergunta só, mas não trazia o texto. Achado ao
+começar a construção da funcionalidade 10. Cada módulo tem um documento por vez,
+então em cada um há no máximo uma leitura em andamento ou um texto lido e ainda
+não salvo; com os dois módulos, são quatro combinações. A faixa é a mesma das
+perguntas de uma coisa só, com a linha de cima em negrito e a de baixo comum.
+
+| Gerar OCR | Anonimizar | Linha de cima | Linha de baixo | Botão forte |
+| --- | --- | --- | --- | --- |
+| leitura | leitura | Há uma leitura em andamento no Gerar OCR e outra no Anonimizar. | Reabrir agora interrompe as duas, e os documentos precisam ser lidos de novo depois. | Continuar a leitura |
+| leitura | texto não salvo | Há uma leitura em andamento no Gerar OCR e um texto lido e ainda não salvo no Anonimizar. | Reabrir agora interrompe a leitura e descarta o texto, e os dois documentos precisam ser lidos de novo depois. | Continuar a leitura |
+| texto não salvo | leitura | Há um texto lido e ainda não salvo no Gerar OCR e uma leitura em andamento no Anonimizar. | Reabrir agora descarta o texto e interrompe a leitura, e os dois documentos precisam ser lidos de novo depois. | Continuar a leitura |
+| texto não salvo | texto não salvo | Há um texto lido e ainda não salvo no Gerar OCR e outro no Anonimizar. | Reabrir agora descarta os dois, e os documentos precisam ser lidos de novo depois. | Não reabrir |
+
+O outro botão é sempre "Reabrir mesmo assim". O botão forte não perde nada: a
+pergunta some, e a leitura segue ou o texto continua lá.
+
+#### Regras de negócio
+
+- RN-27: **com mais de uma coisa a perder, uma pergunta só, com as frases da
+  tabela acima**, e o botão forte é "Continuar a leitura" sempre que uma delas é
+  uma leitura (RN-25).
+- RN-28: **uma revisão não salva vem antes de tudo.** A pergunta dela aparece no
+  Anonimizar, com "Reabrir sem salvar" (RN-25); quem escolhe reabrir sem salvar
+  passa depois pela pergunta da tela do Tema, se ainda houver uma leitura ou um
+  texto a perder no Gerar OCR. Hoje ninguém chega a esse caso: sair do
+  Anonimizar com uma revisão aberta já pergunta antes.
+
+#### Critérios de aceite
+
+- Dada uma leitura em andamento no Gerar OCR e um PDF na conferência do
+  Anonimizar, quando a pessoa clica em "Reabrir agora", então aparece uma
+  pergunta só, com "Há uma leitura em andamento no Gerar OCR e um texto lido e
+  ainda não salvo no Anonimizar.", "Continuar a leitura" e "Reabrir mesmo
+  assim"; com "Continuar a leitura", a leitura segue e o texto continua lá.
+- Dadas as quatro combinações da tabela, então cada uma mostra as duas linhas e
+  o botão forte da linha dela.
+- Dada a janela mínima de 900 × 560, então a pergunta mais longa da tabela sai
+  inteira, sem nada cortado.
+- Dada uma revisão não salva e uma leitura em andamento no Gerar OCR, quando
+  "Reabrir agora" é acionado e a pessoa escolhe "Reabrir sem salvar", então
+  aparece a pergunta da tela do Tema sobre a leitura, e nada reabre antes da
+  resposta.
+
+#### Questões em aberto
+
+Nenhuma.

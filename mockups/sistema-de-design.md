@@ -51,6 +51,30 @@ Toda tela nova nasce desenhada nos dois temas.
 | `--cor-erro-texto` | `#f08a86` | `#b3261e`, o mesmo do erro: no claro ele já tem contraste de letra | letra em vermelho sobre o fundo escuro (contraste 6,6:1) — é este vermelho que marca o "forma CPF válido" no texto da revisão e o selo dele. O `#d9534f` tem 4:1 sobre o fundo e 3,6:1 sobre o fundo elevado, abaixo do mínimo de 4,5:1 para letra pequena |
 | `--cor-ia` | `#b39ddb` | `#7356c8`, 5,3:1 | o que **veio da IA** na revisão: a seção "A IA pediu para olhar", o selo, a etiqueta e o número ou trecho no texto, com **traço-ponto**. Lilás porque amarelo, vermelho, azul e verde já têm dono, e traço-ponto porque reto, ondulado, tracejado e pontilhado também. Aprovado em 31/10/2026 (spec 004, rascunho 11 do Anonimizar) |
 
+**Os tons que as telas já usavam sem nome**, aprovados em 06/11/2026 no rascunho
+`mockups/janela/07-os-tons-que-faltavam.html`, onde cada um aparece na peça de
+verdade, nos dois temas. O escuro de cada um é o valor que o programa já usava;
+o contraste do claro está medido sobre o fundo dos quadros e o da janela, com a
+letra que fica em cima.
+
+| Papel | Escuro | Claro | Uso |
+| --- | --- | --- | --- |
+| `--cor-erro-fundo` | `#d9534f` a 10% (26 de 255) | `#b3261e` a 7%, do rascunho 06 | a faixa de falha, a caixa da dupla conferência, o erro de salvar |
+| `--cor-alerta-fundo` | `#d9a441` a 10% (26 de 255) | `#c2aa07` a 12%, do rascunho 06 | a faixa de cuidado: o motor que falta, o aviso da conferência, os avisos da IA |
+| `--cor-alerta-fundo-forte` | `#d9a441` a 12% (31 de 255) | `#c2aa07` a 15% | o aviso antes de gravar com os CPFs inteiros, e o dos números liberados |
+| `--cor-alerta-selo` | `#d9a441` a 15% (38 de 255) | `#c2aa07` a 18%; a letra é o `alerta-texto`, 5,0:1 | o selo "LIDO PELO ..." da conferência |
+| `--cor-destaque-aviso` | `#3b6ea5` a 10% (26 de 255) | `#1f4e8c` a 6% | a faixa azul de informação. Mais fraca que no escuro: a 10%, o azul-marinho pesava mais que um aviso |
+| `--cor-destaque-na-lista` | `#3b6ea5` a 18% (46 de 255) | `#f2f5f8`, o azul a 4% já misturado; pior letra 4,55:1 | o item marcado na lista de achados e o selo aceso do grupo. Bem mais fraco que no escuro, de propósito: com mais fundo, a etiqueta "mascarado por você" cai abaixo de 4,5:1. No claro, quem diz "é este" é a borda azul |
+| `--cor-destaque-selo` | `#3b6ea5` a 20% (51 de 255) | `#1f4e8c` a 10% | o selo "VEIO DO PRÓPRIO PDF" e o "TEXTO GRAVADO NO PRÓPRIO DOCUMENTO" |
+| `--cor-destaque-selo-texto` | `#7fb1e8` | `#1f4e8c`, 6,4:1 | a letra desses dois selos |
+| `--cor-ia-fundo` | `#b39ddb` a 9% (23 de 255) | `#7356c8` a 10%, do rascunho 06 | a faixa da revisão por IA. No escuro fica o 9% de sempre, e não os 14% que o rascunho 06 desenhou |
+| `--cor-ia-marca` | `#b39ddb` a 14% (36 de 255) | `#7356c8` a 6%; letra lilás 4,5 a 4,9:1 | o fundo atrás do número que a IA apontou, no texto da revisão. Mais fraco que no escuro, porque a letra lilás é a própria marca |
+| `--cor-area-de-soltar` | branco a 1,6% (4 de 255) | `#16202b` a 2% | o fundo da área tracejada de soltar o arquivo |
+| `--cor-texto-desligado` | `#5d646e` | `#8a96a3`, 2,9:1 | a letra de botão e de campo desligados. Apagada de propósito (RN-18 da spec 001) |
+| `--cor-texto-desligado-pequeno` | `#565d66` | `#8a96a3`, 2,9:1 | a letra dos botões pequenos desligados da conferência. No escuro é um cinza um pouco diferente, e por isso é papel próprio |
+| `--cor-borda-desligada` | `#4a5058` | `#dde2e7` | a borda do radio desligado: mais fraca que a borda comum, nos dois temas |
+| `--cor-bolinha-ligada` | `#ffffff` | `#fbfcfd`, 8,1:1 sobre o destaque | a bolinha da chave ligada. É papel com valor em cada tema, e não uma terceira exceção da RN-26 |
+
 **Mudou em 18/09/2026** (conferência da etapa 5 do Anonimizar, sétima emenda da
 spec 003): a máscara do CPF passa de `***.456.789-**` para **`XXX.456.789-XX`**,
 na tela e no arquivo gravado. O asterisco é a marcação de negrito e itálico do
