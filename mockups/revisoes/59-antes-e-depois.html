@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 59 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  pre { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 10px 12px; white-space: pre-wrap; margin: 6px 0 0; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 59 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre a etapa 1 da funcionalidade 10 (as cores ganham nome, e o escuro fica igual),
+em 06/11/2026, depois de a solicitante conferir na tela que nada mudou. A varredura levantou nove suspeitas; uma virou
+achado, aprovado e consertado. As outras oito estão no fim, com o motivo de cada uma.</p>
+
+<div class="achado"><h3>Os títulos da lista de achados ficariam invisíveis no claro</h3>
+  <p>Dois trechos da lista que fica ao lado do texto, na revisão do Anonimizar, guardavam a cor do título de seção
+  no instante em que o programa carrega — antes de o tema ser escolhido. No claro, "Suspeitos — olhe estes 3",
+  "CPF válido 12" e "Mascarados à mão 1" sairiam na letra quase branca do escuro sobre o fundo claro, praticamente
+  invisíveis. Agora a cor é lida na hora de montar a lista, como no resto do programa. No escuro, nada muda.</p>
+  <div class="lados">
+    <div class="lado antes"><div class="rotulo">Antes</div>
+<pre>def _titulo_de_secao(texto, cor=estilo.COR_TEXTO):
+    rotulo = QLabel(texto)</pre></div>
+    <div class="lado depois"><div class="rotulo">Depois</div>
+<pre>def _titulo_de_secao(texto, cor=None):
+    # A cor de sempre é lida aqui dentro, na hora
+    # de montar, e não como valor padrão ...
+    cor = cor or estilo.COR_TEXTO
+    rotulo = QLabel(texto)</pre></div>
+  </div>
+  <p>O mesmo no <code>_montar_secao</code>, que passa a cor adiante.</p>
+</div>
+
+<div class="achado"><h3>O teste que deixou passar, e o que entrou no lugar</h3>
+  <p>O teste da janela no claro só olha as peças que existem quando a janela abre, e a lista só nasce quando um
+  documento chega. Entrou uma procura nova, que lê o código e acusa qualquer cor lida cedo demais — fora de função,
+  no corpo de uma classe ou como valor padrão de uma função —, com um arquivo de mentira que prova que ela acha o que
+  deve achar. E um teste do próprio título, no claro.</p>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li><code>programa/lista_de_achados.py</code>: as duas linhas acima e um comentário.</li>
+  <li><code>programa/test_tema.py</code>: três testes novos. A lista inteira passa com eles.</li>
+  <li>Nenhum arquivo criado, apagado ou movido além desta página.</li>
+</ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li><b>O programa ainda não escolhe o tema ao abrir.</b> É a etapa 3, como no plano.</li>
+  <li><b>No claro, o fundo atrás do PDF tem o mesmo cinza da borda</b> (<code>#c9d0d8</code>), e a borda da área
+    some nele. O valor é o aprovado no rascunho 06; fica para você olhar na conferência da etapa 4.</li>
+  <li><b>No claro, a barra lateral do item suspeito, na lista, sai no âmbar escuro da letra</b>, e não no amarelo
+    das bordas de aviso. A regra só proíbe o amarelo como letra; se destoar, você vê na etapa 4.</li>
+  <li><b>Um nome de papel escrito errado só falharia ao abrir aquela tela</b>, e não ao abrir o programa. É assunto
+    da lente de manutenção; hoje todos os nomes existem, e as telas são montadas pelos testes.</li>
+  <li><b>A procura de cor escrita não reconhece nome de cor ("white"), cor de quatro dígitos nem hsl.</b> Nenhuma
+    existe no programa hoje. Também é da lente de manutenção.</li>
+  <li><b>Os nomes das cores não aparecem escritos no <code>estilo.py</code></b>, porque nascem da tabela dos temas: um
+    editor de código os marca como desconhecidos. É da lente de clareza.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 06/11/2026.</p>
+</body>
+</html>

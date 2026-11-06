@@ -191,7 +191,7 @@ class _CaixaDeAviso(QFrame):
         self.setStyleSheet(
             f"""
             QFrame#aviso {{
-                background-color: rgba(217, 164, 65, 31);
+                background-color: {estilo.COR_ALERTA_FUNDO_FORTE};
                 border-left: 4px solid {estilo.COR_ALERTA};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -206,7 +206,7 @@ class _CaixaDeAviso(QFrame):
         self.titulo = QLabel()
         self.titulo.setStyleSheet(
             f"font-size: {estilo.TEXTO_BASE}px; font-weight: 600;"
-            f"color: {estilo.COR_ALERTA};"
+            f"color: {estilo.COR_ALERTA_TEXTO};"
         )
         # A frase muda conforme quem foi liberado: vem em `mostrar`.
         self.explicacao = QLabel()
@@ -334,7 +334,7 @@ class _CaixaDeProblema(QFrame):
         self.setStyleSheet(
             f"""
             QFrame#problema {{
-                background-color: rgba(217, 83, 79, 26);
+                background-color: {estilo.COR_ERRO_FUNDO};
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -422,7 +422,7 @@ class TelaGravadoSemCpf(QWidget):
         self.lembrete.setAlignment(Qt.AlignCenter)
         self.lembrete.setFixedWidth(self.LARGURA_DO_LEMBRETE)
         self.lembrete.setStyleSheet(
-            f"font-size: {estilo.TEXTO_PEQUENO}px; color: {estilo.COR_ALERTA};"
+            f"font-size: {estilo.TEXTO_PEQUENO}px; color: {estilo.COR_ALERTA_TEXTO};"
         )
         layout.addWidget(self.lembrete, alignment=Qt.AlignCenter)
         layout.addSpacing(estilo.ESPACO_4)

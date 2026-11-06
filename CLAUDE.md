@@ -430,3 +430,16 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   Python não abriu mais. Resolve gravando o script num arquivo do projeto
   pela ferramenta de escrever, sem passar pelo terminal, rodando e apagando
   (etapa 5 da funcionalidade 5, 24/10/2026).
+- **No Python 3.12, procurar texto no código pelo `tokenize` pula todo `f"..."`.**
+  O texto de um f-string chega em pedaços de outro tipo (`FSTRING_MIDDLE`), e não
+  como `STRING`: a varredura de cor escrita fora do `estilo.py` passava sem achar
+  nada, e quase todas as folhas de estilo do programa são f-strings. Só o teste que
+  prova a varredura com um arquivo de mentira acusou (`programa/test_tema.py`,
+  etapa 1 da funcionalidade 10, 06/11/2026). Varredura nova ganha o teste dela.
+- **Cor guardada ao carregar o arquivo fica presa no tema de antes.** `from estilo
+  import COR_...`, ou uma cor posta numa variável fora de função, é lida quando o
+  Python carrega o arquivo - antes de o tema ser escolhido. As telas leem
+  `estilo.COR_...` na hora de montar a peça, e quem guarda cor guarda o nome do
+  papel (`tipos_na_tela.py`, `pecas_da_ia.py`). O teste que monta a janela no claro
+  e procura valor do escuro é o que pega a que escapar (etapa 1 da funcionalidade
+  10, 06/11/2026).

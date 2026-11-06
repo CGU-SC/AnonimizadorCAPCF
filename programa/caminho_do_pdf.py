@@ -458,7 +458,7 @@ class _TelaFicha(QWidget):
             )
             self.botao_ler.setText("Ver o texto e decidir")
         else:
-            self.linha_texto.definir("não há", cor=estilo.COR_ALERTA)
+            self.linha_texto.definir("não há", cor=estilo.COR_ALERTA_TEXTO)
             self.botao_ler.setText(f"Ler as {ficha.paginas} páginas")
         # A frase do que vem depois é de quem está usando a peça: no Anonimizar
         # ela termina na revisão, e no Gerar OCR, na conferência.
@@ -610,7 +610,7 @@ class _TelaErro(QWidget):
         caixa.setStyleSheet(
             f"""
             QFrame#quadro {{
-                background-color: rgba(217, 83, 79, 26);
+                background-color: {estilo.COR_ERRO_FUNDO};
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -847,7 +847,7 @@ def _linha_de_falta():
     linha = _linha_de_explicacao()
     linha.setStyleSheet(
         f"font-size: {estilo.TEXTO_PEQUENO}px;"
-        f"color: {estilo.COR_ALERTA}; margin-left: {RECUO_DA_EXPLICACAO}px;"
+        f"color: {estilo.COR_ALERTA_TEXTO}; margin-left: {RECUO_DA_EXPLICACAO}px;"
     )
     linha.setVisible(False)
     return linha
@@ -1140,7 +1140,7 @@ class FaixaDoTopo(QLabel):
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
             f"color: {estilo.COR_TEXTO_SECUNDARIO};"
             f"border-left: 3px solid {estilo.COR_DESTAQUE};"
-            "background-color: rgba(59, 110, 165, 26);"
+            f"background-color: {estilo.COR_DESTAQUE_AVISO};"
             f"border-radius: {estilo.RAIO}px;"
             f"padding: {estilo.ESPACO_2}px {estilo.ESPACO_3}px;"
         )

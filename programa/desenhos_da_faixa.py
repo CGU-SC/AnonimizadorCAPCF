@@ -128,7 +128,7 @@ class SimboloDoPrograma(QWidget):
 
         margem = (self.LADO - self.GRADE) / 2
         pintor.translate(margem, margem)
-        caneta = QPen(QColor("#ffffff"), 1.6)
+        caneta = QPen(QColor(estilo.COR_DESENHO_DO_SIMBOLO), 1.6)
         caneta.setCapStyle(Qt.RoundCap)
         caneta.setJoinStyle(Qt.RoundJoin)
         pintor.setPen(caneta)
@@ -157,5 +157,5 @@ class SimboloDoPrograma(QWidget):
         # A linha tarjada é cheia, e não traço: é ela que diz "aqui havia um
         # dado, e ele foi tirado".
         pintor.setPen(Qt.NoPen)
-        pintor.setBrush(QColor("#ffffff"))
+        pintor.setBrush(QColor(estilo.COR_DESENHO_DO_SIMBOLO))
         pintor.drawRoundedRect(QRectF(8, 13.5, 6, 2.2), 1, 1)

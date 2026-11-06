@@ -13,18 +13,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from estilo import (
-    COR_BORDA,
-    ALTURA_DO_CABECALHO,
-    COR_DESTAQUE_FRACO,
-    COR_DESTAQUE_HOVER,
-    COR_FUNDO,
-    COR_FUNDO_ELEVADO,
-    COR_TEXTO,
-    COR_TEXTO_SECUNDARIO,
-    LARGURA_MENU,
-    TEXTO_PEQUENO,
-)
+# As cores são lidas como `estilo.COR_...`, na hora em que cada peça nasce, e
+# nunca trazidas para cá pelo nome: trazidas, ficariam com o valor do tema de
+# quando este arquivo carregou (RN-17 da spec 001). As medidas não mudam com o
+# tema, e podem vir pelo nome.
+import estilo
+from estilo import ALTURA_DO_CABECALHO, LARGURA_MENU, TEXTO_PEQUENO
 from desenhos_da_faixa import TAMANHO_DO_ICONE, SimboloDoPrograma, icone_do_item
 import preferencias
 from painel_anonimizar import PainelAnonimizar
@@ -124,8 +118,8 @@ class MenuLateral(QWidget):
         self.setObjectName("menu_lateral")
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setStyleSheet(
-            f"QWidget#menu_lateral {{ background-color: {COR_FUNDO_ELEVADO};"
-            f" border-right: 1px solid {COR_BORDA}; }}"
+            f"QWidget#menu_lateral {{ background-color: {estilo.COR_FUNDO_ELEVADO};"
+            f" border-right: 1px solid {estilo.COR_BORDA}; }}"
         )
 
         layout = QVBoxLayout(self)
@@ -166,7 +160,7 @@ class MenuLateral(QWidget):
         self.botao_voltar_ia = self._criar_item_menu("‹ Voltar")
         titulo_ia = QLabel("Configurações de IA")
         titulo_ia.setStyleSheet(
-            f"color: {COR_TEXTO}; font-weight: 600; padding: 4px 20px 8px 20px;"
+            f"color: {estilo.COR_TEXTO}; font-weight: 600; padding: 4px 20px 8px 20px;"
             "background: transparent;"
         )
         self.botao_lm_studio = self._criar_item_menu("LM Studio")
@@ -201,7 +195,7 @@ class MenuLateral(QWidget):
         cabecalho.setObjectName("cabecalho_da_faixa")
         cabecalho.setAttribute(Qt.WA_StyledBackground, True)
         cabecalho.setStyleSheet(
-            f"QWidget#cabecalho_da_faixa {{ border-bottom: 1px solid {COR_BORDA}; }}"
+            f"QWidget#cabecalho_da_faixa {{ border-bottom: 1px solid {estilo.COR_BORDA}; }}"
             "QLabel { background: transparent; }"
         )
         # A mesma altura do título das telas dos módulos, para a linha de baixo
@@ -216,10 +210,10 @@ class MenuLateral(QWidget):
         textos = QVBoxLayout()
         textos.setSpacing(2)
         self.nome = QLabel(primeiro)
-        self.nome.setStyleSheet(f"color: {COR_TEXTO}; font-size: 16px; font-weight: 700;")
+        self.nome.setStyleSheet(f"color: {estilo.COR_TEXTO}; font-size: 16px; font-weight: 700;")
         self.versao = QLabel(f"{resto} · versão {VERSAO}")
         self.versao.setStyleSheet(
-            f"color: {COR_TEXTO_SECUNDARIO}; font-size: {TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO}; font-size: {TEXTO_PEQUENO}px;"
         )
         textos.addWidget(self.nome)
         textos.addWidget(self.versao)
@@ -245,7 +239,7 @@ class MenuLateral(QWidget):
             f"""
             QPushButton {{
                 text-align: left;
-                color: {COR_TEXTO_SECUNDARIO};
+                color: {estilo.COR_TEXTO_SECUNDARIO};
                 background: transparent;
                 border: none;
                 border-left: {LARGURA_DO_FILETE}px solid transparent;
@@ -255,12 +249,12 @@ class MenuLateral(QWidget):
                 font-size: 15px;
             }}
             QPushButton:hover {{
-                background-color: rgba(255, 255, 255, 0.06);
+                background-color: {estilo.COR_PASSAR_O_MOUSE};
             }}
             QPushButton:checked {{
-                background-color: {COR_DESTAQUE_FRACO};
-                border-left-color: {COR_DESTAQUE_HOVER};
-                color: {COR_TEXTO};
+                background-color: {estilo.COR_DESTAQUE_FRACO};
+                border-left-color: {estilo.COR_DESTAQUE_HOVER};
+                color: {estilo.COR_TEXTO};
                 font-weight: 600;
             }}
             """
@@ -279,15 +273,15 @@ class PainelVazio(QWidget):
 
         icone = QLabel("◧")
         icone.setAlignment(Qt.AlignCenter)
-        icone.setStyleSheet(f"font-size: 40px; color: {COR_TEXTO_SECUNDARIO};")
+        icone.setStyleSheet(f"font-size: 40px; color: {estilo.COR_TEXTO_SECUNDARIO};")
 
         titulo = QLabel("Escolha um módulo para começar")
         titulo.setAlignment(Qt.AlignCenter)
-        titulo.setStyleSheet(f"font-size: 20px; color: {COR_TEXTO};")
+        titulo.setStyleSheet(f"font-size: 20px; color: {estilo.COR_TEXTO};")
 
         texto = QLabel('Clique em "Gerar OCR" ou "Anonimizar" no menu ao lado.')
         texto.setAlignment(Qt.AlignCenter)
-        texto.setStyleSheet(f"font-size: 15px; color: {COR_TEXTO_SECUNDARIO};")
+        texto.setStyleSheet(f"font-size: 15px; color: {estilo.COR_TEXTO_SECUNDARIO};")
 
         layout.addWidget(icone)
         layout.addWidget(titulo)
@@ -311,7 +305,7 @@ class JanelaPrincipal(QMainWindow):
         # QStackedWidget porque o painel troca de conteúdo conforme o módulo
         # escolhido no menu: cada página é um estado da tela.
         self.painel = QStackedWidget()
-        self.painel.setStyleSheet(f"background-color: {COR_FUNDO};")
+        self.painel.setStyleSheet(f"background-color: {estilo.COR_FUNDO};")
         self.painel_vazio = PainelVazio()
         self.painel.addWidget(self.painel_vazio)
         raiz_layout.addWidget(self.painel)

@@ -20,11 +20,20 @@ import estilo
 
 
 class ComoAparece(NamedTuple):
-    """O nome de um tipo na tela, no singular e no plural, e a cor dele."""
+    """O nome de um tipo na tela, no singular e no plural, e a cor dele.
+
+    Guarda o nome do papel da cor, e não a cor: este arquivo carrega antes de o
+    tema ser escolhido, e a cor guardada aqui ficaria a do escuro também no claro
+    (RN-17 da spec 001). A cor é lida do estilo cada vez que uma tela a pede.
+    """
 
     nome: str
     plural: str
-    cor: str
+    papel: str
+
+    @property
+    def cor(self):
+        return getattr(estilo, self.papel)
 
 
 # O vermelho de letra para o que passa na conta - o número mais perigoso da
@@ -33,21 +42,21 @@ class ComoAparece(NamedTuple):
 # o que ela soltou (sistema de design, 14 a 17/09/2026).
 POR_TIPO = {
     cpf.PASSA_NA_CONTA: ComoAparece("CPF válido", "CPFs válidos",
-                                    estilo.COR_ERRO_TEXTO),
+                                    "COR_ERRO_TEXTO"),
     cpf.FALHA_NA_CONTA: ComoAparece("falha na conta", "falham na conta",
-                                    estilo.COR_ALERTA),
-    cpf.QUASE_CPF: ComoAparece("quase CPF", "quase CPF", estilo.COR_ALERTA),
+                                    "COR_ALERTA_TEXTO"),
+    cpf.QUASE_CPF: ComoAparece("quase CPF", "quase CPF", "COR_ALERTA_TEXTO"),
     cpf.MASCARADO_A_MAO: ComoAparece("mascarado à mão", "mascarados à mão",
-                                     estilo.COR_DESTAQUE_HOVER),
+                                     "COR_DESTAQUE_HOVER"),
 }
 
 # "Suspeito" não é um tipo: é o grupo que junta o que falha na conta e o "quase
 # CPF". Ele tem nome próprio na tela porque é assim que a pessoa pensa neles -
 # são os que pedem uma olhada.
-SUSPEITO = ComoAparece("suspeito", "suspeitos", estilo.COR_ALERTA)
+SUSPEITO = ComoAparece("suspeito", "suspeitos", "COR_ALERTA_TEXTO")
 
 # Também não é tipo, e sim situação: o número que a pessoa soltou.
-LIBERADO = ComoAparece("liberado", "liberados", estilo.COR_SUCESSO)
+LIBERADO = ComoAparece("liberado", "liberados", "COR_SUCESSO")
 
 # A etiqueta do "quase CPF" que passa na conta depois de corrigidas as letras.
 # Ela não diz "CPF válido", que é o nome da seção de cima: com o mesmo nome nos
@@ -55,7 +64,7 @@ LIBERADO = ComoAparece("liberado", "liberados", estilo.COR_SUCESSO)
 # certinho ou o que só fecha a conta depois de corrigido (nome escolhido pela
 # usuária em 17/09/2026).
 VALIDO_SE_CORRIGIDO = ComoAparece("válido se corrigido", "válidos se corrigidos",
-                                  estilo.COR_ERRO_TEXTO)
+                                  "COR_ERRO_TEXTO")
 
 # A etiqueta do CPF que perdeu o zero da frente (nona emenda da spec 003,
 # rascunho 09). Ela fica ao lado de "CPF válido" e explica por que um número de
@@ -64,14 +73,14 @@ VALIDO_SE_CORRIGIDO = ComoAparece("válido se corrigido", "válidos se corrigido
 # plural. A chave é quantos zeros faltavam.
 SEM_ZERO = {
     1: ComoAparece("sem o zero da frente", "sem o zero da frente",
-                   estilo.COR_ERRO_TEXTO),
+                   "COR_ERRO_TEXTO"),
     2: ComoAparece("sem os zeros da frente", "sem os zeros da frente",
-                   estilo.COR_ERRO_TEXTO),
+                   "COR_ERRO_TEXTO"),
 }
 
 # O que veio da IA. Não é um tipo de CPF: é outra origem de suspeita (RN-29 da spec
 # 004). O número da IA tem o tipo dele, e o nome destas é o da seção e o do selo.
-DA_IA = ComoAparece("apontado pela IA", "apontados pela IA", estilo.COR_IA)
+DA_IA = ComoAparece("apontado pela IA", "apontados pela IA", "COR_IA")
 NUMERO_NOVO = "número novo"
 NUMERO_PARA_OLHAR = "número para olhar"
 TITULO_DA_SECAO_DA_IA = "A IA pediu para olhar"
@@ -80,11 +89,11 @@ TITULO_DA_SECAO_DA_IA = "A IA pediu para olhar"
 # "CPF válido": o vermelho forte, em letra pequena, fica abaixo do contraste mínimo. Ele
 # vai só na barra do item, que não é letra.
 LIBERACAO_PARA_REVISAR = ComoAparece("liberação para revisar", "liberações para revisar",
-                                     estilo.COR_ERRO_TEXTO)
+                                     "COR_ERRO_TEXTO")
 TITULO_DA_SECAO_DE_REVISAR = "Revisar liberação"
 
 # O suspeito que a IA diz que não é CPF (RN-70). Lilás, a cor da IA, porque é a opinião
 # dela que o separa dos outros suspeitos; na amarela, a tela dizia que a IA o tinha olhado
 # e mantido a suspeita (conferência de 03/11/2026).
 SUSPEITO_QUE_A_IA_NEGA = ComoAparece("suspeito que a IA nega", "suspeitos que a IA nega",
-                                     estilo.COR_IA)
+                                     "COR_IA")

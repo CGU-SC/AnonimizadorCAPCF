@@ -223,7 +223,7 @@ class PainelOcr(QWidget):
             QFrame#area_de_arrastar {{
                 border: 2px dashed {estilo.COR_BORDA};
                 border-radius: {estilo.RAIO}px;
-                background-color: rgba(255, 255, 255, 4);
+                background-color: {estilo.COR_AREA_DE_SOLTAR};
             }}
             QLabel {{ background: transparent; }}
             """

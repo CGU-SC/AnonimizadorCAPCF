@@ -413,7 +413,7 @@ class TelaRevisao(QWidget):
         guardar_o_lugar.setRetainSizeWhenHidden(True)
         self.aviso_do_trecho.setSizePolicy(guardar_o_lugar)
         self.aviso_do_trecho.setStyleSheet(
-            f"font-size: {estilo.TEXTO_PEQUENO}px; color: {estilo.COR_ALERTA};"
+            f"font-size: {estilo.TEXTO_PEQUENO}px; color: {estilo.COR_ALERTA_TEXTO};"
         )
         self.botao_mascarar = QPushButton("Mascarar o trecho marcado")
         self.botao_mascarar.setCursor(Qt.PointingHandCursor)
@@ -468,7 +468,7 @@ class TelaRevisao(QWidget):
         caixa.setStyleSheet(
             f"""
             QFrame#faixa_do_word {{
-                background-color: rgba(59, 110, 165, 26);
+                background-color: {estilo.COR_DESTAQUE_AVISO};
                 border-left: 4px solid {estilo.COR_DESTAQUE};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -522,7 +522,7 @@ class TelaRevisao(QWidget):
         caixa.setStyleSheet(
             f"""
             QFrame#aviso_sem_cpf {{
-                background-color: rgba(59, 110, 165, 26);
+                background-color: {estilo.COR_DESTAQUE_AVISO};
                 border-left: 4px solid {estilo.COR_DESTAQUE};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -1155,7 +1155,7 @@ def _formato_de_trecho():
     formato = QTextCharFormat()
     cor = QColor(estilo.COR_IA)
     fundo = QColor(estilo.COR_IA)
-    fundo.setAlpha(36)
+    fundo.setAlpha(estilo.FORCA_DA_MARCA_DA_IA)
     formato.setBackground(fundo)
     formato.setUnderlineColor(cor)
     formato.setUnderlineStyle(QTextCharFormat.DashDotLine)
@@ -1270,7 +1270,7 @@ class _Selo(QLabel):
         """
         self.aceso = aceso
         borda = estilo.COR_DESTAQUE if aceso else estilo.COR_BORDA
-        fundo = "rgba(59, 110, 165, 46)" if aceso else estilo.COR_FUNDO_ELEVADO
+        fundo = estilo.COR_DESTAQUE_NA_LISTA if aceso else estilo.COR_FUNDO_ELEVADO
         self.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px; color: {self._cor};"
             f"background-color: {fundo}; border: 1px solid {borda};"

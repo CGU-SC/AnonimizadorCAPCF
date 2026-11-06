@@ -69,6 +69,19 @@ def env_isolado(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def tema_escuro_depois():
+    """O teste que monta telas no claro devolve o escuro ao terminar.
+
+    O tema vale para o programa inteiro, e não para uma tela: esquecido no claro,
+    ele passaria para os testes seguintes, que conferem as cores do escuro, e
+    eles falhariam longe de quem causou (funcionalidade 10).
+    """
+    yield
+    import estilo
+    estilo.usar_tema(estilo.ESCURO)
+
+
+@pytest.fixture(autouse=True)
 def caixa_sem_resposta_falha(monkeypatch):
     """Uma caixa de aviso esperando resposta travaria a lista inteira, sem nada dizer.
     Assim, o teste que esqueceu de responder falha na hora, e diz qual caixa foi."""

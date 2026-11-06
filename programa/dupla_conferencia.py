@@ -81,7 +81,7 @@ class DuplaConferencia(QDialog):
         caixa.setStyleSheet(
             f"""
             QFrame#caixa {{
-                background-color: rgba(217, 83, 79, 26);
+                background-color: {estilo.COR_ERRO_FUNDO};
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}

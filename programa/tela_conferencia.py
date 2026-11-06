@@ -88,7 +88,7 @@ class TelaConferencia(QWidget):
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
             f"color: {estilo.COR_TEXTO};"
             f"border-left: 3px solid {estilo.COR_ERRO};"
-            "background-color: rgba(217, 83, 79, 26);"
+            f"background-color: {estilo.COR_ERRO_FUNDO};"
             f"border-radius: {estilo.RAIO}px;"
             f"padding: {estilo.ESPACO_2}px {estilo.ESPACO_3}px;"
             f"margin-top: {estilo.ESPACO_2}px;"
@@ -110,7 +110,7 @@ class TelaConferencia(QWidget):
             f"font-size: {estilo.TEXTO_PEQUENO}px;"
             f"color: {estilo.COR_TEXTO_SECUNDARIO};"
             f"border-left: 3px solid {estilo.COR_ALERTA};"
-            "background-color: rgba(217, 164, 65, 26);"
+            f"background-color: {estilo.COR_ALERTA_FUNDO};"
             f"border-radius: {estilo.RAIO}px;"
             f"padding: {estilo.ESPACO_2}px {estilo.ESPACO_3}px;"
             f"margin-top: {estilo.ESPACO_2}px;"
@@ -219,7 +219,7 @@ class TelaConferencia(QWidget):
         self.rolagem_do_pdf.setStyleSheet(
             f"""
             QScrollArea {{
-                background-color: #0f1216;
+                background-color: {estilo.COR_ATRAS_DO_PDF};
                 border: 1px solid {estilo.COR_BORDA};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -515,13 +515,13 @@ class TelaConferencia(QWidget):
 
     def _definir_selo(self, origem, motor=None):
         if origem == ORIGEM_CAMADA_DO_PDF:
-            texto, cor, fundo = "VEIO DO PRÓPRIO PDF", "#7fb1e8", "rgba(59, 110, 165, 51)"
+            texto, cor, fundo = "VEIO DO PRÓPRIO PDF", estilo.COR_DESTAQUE_SELO_TEXTO, estilo.COR_DESTAQUE_SELO
         else:
             # Quem estranhar uma leitura precisa saber com que motor ela foi
             # feita, para decidir se vale ler de novo com o outro (RN-32).
             texto = (f"LIDO PELO {NOME_NA_TELA[motor].upper()}" if motor
                      else "VEIO DO OCR")
-            cor, fundo = estilo.COR_ALERTA, "rgba(217, 164, 65, 38)"
+            cor, fundo = estilo.COR_ALERTA_TEXTO, estilo.COR_ALERTA_SELO
 
         self.selo.setText(texto)
         self.selo.setStyleSheet(
@@ -558,7 +558,7 @@ def _seta(texto):
             font-size: {estilo.TEXTO_PEQUENO}px;
         }}
         QPushButton:hover {{ border-color: {estilo.COR_DESTAQUE}; }}
-        QPushButton:disabled {{ color: #565d66; }}
+        QPushButton:disabled {{ color: {estilo.COR_TEXTO_DESLIGADO_PEQUENO}; }}
         """
     )
     return botao
@@ -581,7 +581,7 @@ def _botao_pequeno(texto, explicacao):
             font-size: {estilo.TEXTO_PEQUENO}px;
         }}
         QPushButton:hover {{ border-color: {estilo.COR_DESTAQUE}; }}
-        QPushButton:disabled {{ color: #565d66; }}
+        QPushButton:disabled {{ color: {estilo.COR_TEXTO_DESLIGADO_PEQUENO}; }}
         """
     )
     return botao

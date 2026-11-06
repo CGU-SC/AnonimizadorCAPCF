@@ -216,7 +216,7 @@ class PainelAnonimizar(QWidget):
             QFrame#area_de_arrastar {{
                 border: 2px dashed {estilo.COR_BORDA};
                 border-radius: {estilo.RAIO}px;
-                background-color: rgba(255, 255, 255, 4);
+                background-color: {estilo.COR_AREA_DE_SOLTAR};
             }}
             QLabel {{ background: transparent; }}
             """
@@ -254,7 +254,7 @@ class PainelAnonimizar(QWidget):
             f"<span style='color:{estilo.COR_SUCESSO}'>✓</span> .md, .txt e .docx<br>"
             f"<span style='color:{estilo.COR_SUCESSO}'>✓</span> PDF com texto por "
             "dentro, como os do sistema de processos<br>"
-            f"<span style='color:{estilo.COR_ALERTA}'>✗</span> PDF escaneado — "
+            f"<span style='color:{estilo.COR_ALERTA_TEXTO}'>✗</span> PDF escaneado — "
             "precisa do motor de leitura"
         )
         self.lista_sem_motor.setTextFormat(Qt.RichText)
@@ -770,7 +770,7 @@ class _TelaErro(QWidget):
         caixa.setStyleSheet(
             f"""
             QFrame#caixa_de_erro {{
-                background-color: rgba(217, 83, 79, 26);
+                background-color: {estilo.COR_ERRO_FUNDO};
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}

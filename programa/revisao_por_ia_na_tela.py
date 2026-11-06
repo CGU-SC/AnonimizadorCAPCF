@@ -409,7 +409,7 @@ class RevisaoPorIa(QObject):
 
     def _mostrar_faixa(self, frase, andando, pode_tentar=False, pode_pular=False, alerta=False):
         cor = estilo.COR_ALERTA if alerta else estilo.COR_IA
-        fundo = "rgba(217, 164, 65, 26)" if alerta else "rgba(179, 157, 219, 23)"
+        fundo = estilo.COR_ALERTA_FUNDO if alerta else estilo.COR_IA_FUNDO
         self.faixa.setStyleSheet(
             f"""
             QFrame#faixa_da_revisao_por_ia {{

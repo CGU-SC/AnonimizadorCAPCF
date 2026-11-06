@@ -51,7 +51,7 @@ class TelaDecisao(QWidget):
         selo = QLabel("TEXTO GRAVADO NO PRÓPRIO DOCUMENTO")
         selo.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 700;"
-            "color: #7fb1e8; background-color: rgba(59, 110, 165, 51);"
+            f"color: {estilo.COR_DESTAQUE_SELO_TEXTO}; background-color: {estilo.COR_DESTAQUE_SELO};"
             "border-radius: 10px; padding: 3px 10px;"
         )
         layout.addWidget(selo, alignment=Qt.AlignLeft)

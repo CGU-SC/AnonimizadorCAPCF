@@ -19,8 +19,11 @@ from pecas_da_ia import Frase
 LARGURA = 520
 LARGURA_DO_TEXTO = 460
 
-_TONS = {"alerta": ("rgba(217, 164, 65, 26)", estilo.COR_ALERTA),
-         "perigo": ("rgba(217, 83, 79, 26)", estilo.COR_ERRO)}
+# O fundo e a borda de cada tom, pelo nome do papel no estilo: a cor é lida na
+# hora de montar a caixa, e não ao carregar este arquivo, quando o tema ainda
+# nem foi escolhido (RN-17 da spec 001).
+_TONS = {"alerta": ("COR_ALERTA_FUNDO", "COR_ALERTA"),
+         "perigo": ("COR_ERRO_FUNDO", "COR_ERRO")}
 
 # O endereço que a pessoa confirmou nesta abertura do programa. Só na memória: o
 # aviso volta na próxima abertura, e não fica confirmação gravada (RN-20).
@@ -41,7 +44,7 @@ class CaixaDaIa(QDialog):
         caixa = QFrame()
         caixa.setObjectName("caixa")
         caixa.setFixedWidth(LARGURA)
-        fundo, borda = _TONS[tom]
+        fundo, borda = (getattr(estilo, papel) for papel in _TONS[tom])
         caixa.setStyleSheet(
             f"""
             QFrame#caixa {{

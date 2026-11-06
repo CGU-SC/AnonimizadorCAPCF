@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 07 — tema claro e menu Configurações</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5; --cor-alerta: #d9a441; --cor-sucesso: #4caf6d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 980px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--cor-borda); }
+  h3 { font-size: 16px; margin: 24px 0 8px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--cor-borda); }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  ol { padding-left: 24px; }
+  li { margin-bottom: 10px; }
+  .ve { color: var(--cor-texto-secundario); display: block; font-size: 14px; }
+  .torto { color: var(--cor-alerta); font-weight: 600; }
+  .aviso { border: 1px solid var(--cor-alerta); background: rgba(217,164,65,.10); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .situacao { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--cor-borda); color: var(--cor-texto-secundario); }
+  .situacao.agora { border-color: var(--cor-destaque); color: var(--cor-texto); }
+  .situacao.feita { border-color: var(--cor-sucesso); color: var(--cor-sucesso); }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Conferência 07 — tema claro e menu Configurações</h1>
+<p class="subtitulo">Funcionalidade 10, construída em seis etapas a partir de 06/11/2026. Esta página cresce a cada etapa:
+o que ficou pronto, o que os testes automáticos provam, e o roteiro para conferir na tela.</p>
+
+<div class="aviso"><strong>O que os testes automáticos não provam:</strong> a aparência. Eles conferem os valores
+das cores e onde cada uma está escrita, mas quem diz se a tela ficou igual, legível e sem nada cortado é quem olha.</div>
+
+<h2>As etapas</h2>
+<table>
+  <tr><th>Etapa</th><th>O que você vê ao fim</th><th>Situação</th></tr>
+  <tr><td>1</td><td>Nada muda: o escuro igual, cor por cor</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
+  <tr><td>2</td><td>O menu "Configurações", com as seções, os ícones e a tela do Tema</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>3</td><td>O programa abre no tema guardado</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>4</td><td>O claro conferido tela por tela</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>5</td><td>O "Reabrir agora", sem nada a perder</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>6</td><td>As perguntas antes de reabrir</td><td><span class="situacao">a fazer</span></td></tr>
+</table>
+
+<h2>Etapa 1 — as cores ganham nome, e o escuro fica igual</h2>
+
+<h3>O que mudou por dentro</h3>
+<p>Antes, as cores estavam escritas à mão dentro das telas, ou guardadas no instante em que o programa carrega, em dezoito arquivos. Agora todas
+moram num lugar só, cada uma com o nome do papel que cumpre e com o valor dos dois temas ao lado — os quinze tons
+novos são os do rascunho <code>mockups\janela\07-os-tons-que-faltavam.html</code>. Também a letra de aviso, que no
+escuro usa o mesmo amarelo das bordas, passou a ter nome próprio: no claro, ela vai ser o âmbar escuro.</p>
+<p>Nada disso aparece na tela. O tema claro ainda não pode ser escolhido: isso vem nas etapas 2 e 3.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O escuro de antes</td><td>Cada um dos 33 valores do escuro é exatamente o que o programa usava antes, copiado à mão do código antigo</td></tr>
+  <tr><td>Nenhuma cor fora do lugar</td><td>Nenhum arquivo de tela tem cor escrita dentro (RN-26). Um teste à parte prova que a procura acha cor de verdade, para ela não passar calada</td></tr>
+  <tr><td>Nada do escuro no claro</td><td>Com o claro escolhido por dentro, a janela inteira é montada e nenhuma peça tem um valor do escuro (RN-17)</td></tr>
+  <tr><td>Contraste do claro</td><td>Cada cor de letra do claro tem 4,5 para 1 ou mais sobre o fundo e sobre os quadros, e o amarelo do claro não é letra de nenhuma peça (RN-18)</td></tr>
+  <tr><td>Cor lida cedo demais</td><td>Nenhuma tela lê a cor quando o programa carrega — fora de função, no corpo de uma classe ou como valor padrão —, com um arquivo de mentira que prova a procura. Entrou na revisão pela lente crítica (revisão 59), que achou dois títulos da lista de achados que ficariam invisíveis no claro</td></tr>
+  <tr><td>A lista inteira</td><td>1.000 testes passando: os 986 de antes e 14 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026:</strong> os sete passos do roteiro abaixo, tudo como antes.</p>
+
+<h3>Roteiro na tela</h3>
+<p>O que se confere aqui é que <strong>nada mudou</strong>. Se alguma cor parecer diferente do que você via até ontem,
+me diga em que tela e em que peça — mesmo que a diferença seja pequena.</p>
+<ol>
+  <li><strong>Abrir.</strong> Dois cliques em <code>abrir\abrir-dev.bat</code>.
+    <span class="ve">Você deve ver: o programa no escuro de sempre, com o menu da esquerda como ontem.</span></li>
+  <li><strong>Um PDF com texto por dentro.</strong> No Gerar OCR, escolha <code>dados-exemplo\01-com-texto-e-tabela.pdf</code>.
+    <span class="ve">Você deve ver: a tela de decisão com a etiqueta azul "TEXTO GRAVADO NO PRÓPRIO DOCUMENTO", na mesma cor de antes.</span></li>
+  <li><strong>A conferência.</strong> Siga até a conferência.
+    <span class="ve">Você deve ver: a etiqueta azul "VEIO DO PRÓPRIO PDF", o fundo quase preto atrás da página e, na primeira página, o botão de página anterior apagado.</span></li>
+  <li><strong>O aviso de antes de gravar.</strong> Clique em "Conferido" e escolha salvar o texto.
+    <span class="ve">Você deve ver: a caixa amarela "⚠ Este arquivo sai com os CPFs inteiros", com o título em amarelo.</span></li>
+  <li><strong>A revisão.</strong> No Anonimizar, abra <code>dados-exemplo\14-folha-com-40-bolsistas.md</code> e clique num número da lista ao lado do texto.
+    <span class="ve">Você deve ver: os números vermelhos e amarelos de sempre no texto, e o item clicado com o fundo azul.</span></li>
+  <li><strong>A chave da IA.</strong> Vá a "Configurações de IA" e depois a "Habilitar IA".
+    <span class="ve">Você deve ver: as chaves de ligar como antes, com a bolinha branca na ligada.</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>um PDF estragado.</strong> No Anonimizar, escolha <code>dados-exemplo\05-corrompido.pdf</code>.
+    <span class="ve">Você deve ver: o aviso de erro com o fundo avermelhado de sempre, e o programa de pé.</span></li>
+</ol>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-08, em 06/11/2026. Os números de CPF dos documentos de
+exemplo são inventados.</p>
+</body>
+</html>

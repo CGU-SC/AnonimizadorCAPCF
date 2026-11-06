@@ -125,7 +125,7 @@ class AvisoDoMotor(QFrame):
             f"""
             QFrame#aviso_do_motor {{
                 border: 1px solid {estilo.COR_ALERTA};
-                background-color: rgba(217, 164, 65, 26);
+                background-color: {estilo.COR_ALERTA_FUNDO};
                 border-radius: {estilo.RAIO}px;
             }}
             """
@@ -141,7 +141,7 @@ class AvisoDoMotor(QFrame):
         self.titulo = titulo = QLabel(TITULO_SEM_MOTOR)
         titulo.setStyleSheet(
             f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 600;"
-            f"color: {estilo.COR_ALERTA}; border: none; background: transparent;"
+            f"color: {estilo.COR_ALERTA_TEXTO}; border: none; background: transparent;"
         )
 
         # No Anonimizar a frase é mais curta: logo abaixo do aviso vem a lista
@@ -207,7 +207,7 @@ class TelaSemMotor(QWidget):
         caixa.setStyleSheet(
             f"""
             QFrame#caixa_sem_motor {{
-                background-color: rgba(217, 83, 79, 26);
+                background-color: {estilo.COR_ERRO_FUNDO};
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}

@@ -916,7 +916,7 @@ class _TelaHabilitar(_TelaBasica):
         self.ressalva.mostrar(RESSALVA_DO_MOTOR)
         self.corpo.addWidget(_recuado(self.ressalva, 2 * self.RECUO))
         self.falta_modelo = Frase(largura=LARGURA_DO_CONTEUDO - 2 * self.RECUO,
-                                  cor=estilo.COR_ALERTA)
+                                  cor=estilo.COR_ALERTA_TEXTO)
         self.corpo.addWidget(_recuado(self.falta_modelo, 2 * self.RECUO))
         self.corpo.addStretch()
         self.atualizar()

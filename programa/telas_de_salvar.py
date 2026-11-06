@@ -250,7 +250,7 @@ class TelaSobrescrever(QWidget):
         caixa.setStyleSheet(
             f"""
             QFrame#quadro {{
-                background-color: rgba(217, 83, 79, 26);
+                background-color: {estilo.COR_ERRO_FUNDO};
                 border-left: 4px solid {estilo.COR_ERRO};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -334,7 +334,7 @@ class TelaDescartar(QWidget):
         caixa.setStyleSheet(
             f"""
             QFrame#quadro {{
-                background-color: rgba(217, 164, 65, 26);
+                background-color: {estilo.COR_ALERTA_FUNDO};
                 border-left: 4px solid {estilo.COR_ALERTA};
                 border-radius: {estilo.RAIO}px;
             }}
@@ -476,7 +476,7 @@ def _aviso_dos_cpfs():
     caixa.setStyleSheet(
         f"""
         QFrame#quadro {{
-            background-color: rgba(217, 164, 65, 31);
+            background-color: {estilo.COR_ALERTA_FUNDO_FORTE};
             border-left: 4px solid {estilo.COR_ALERTA};
             border-radius: {estilo.RAIO}px;
         }}
@@ -491,7 +491,7 @@ def _aviso_dos_cpfs():
     titulo = QLabel("⚠ Este arquivo sai com os CPFs inteiros")
     titulo.setStyleSheet(
         f"font-size: {estilo.TEXTO_BASE}px; font-weight: 600;"
-        f"color: {estilo.COR_ALERTA}; border: none;"
+        f"color: {estilo.COR_ALERTA_TEXTO}; border: none;"
     )
     # O aviso continua dizendo que o arquivo sai com os CPFs inteiros, e passa
     # a dizer por onde se chega ao Anonimizar, que agora existe (RN-17).

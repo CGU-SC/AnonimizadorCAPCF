@@ -151,7 +151,7 @@ class ListaDeAchados(QScrollArea):
 
     # -------------------------------------------------------------- por dentro
 
-    def _montar_secao(self, titulo, ocorrencias, texto, cor=estilo.COR_TEXTO):
+    def _montar_secao(self, titulo, ocorrencias, texto, cor=None):
         if not ocorrencias:
             return
         self._layout.addSpacing(estilo.ESPACO_2)
@@ -286,7 +286,7 @@ class _Item(QFrame):
         """
         self.marcado = marcado
         borda = estilo.COR_DESTAQUE if marcado else estilo.COR_BORDA
-        fundo = "rgba(59, 110, 165, 46)" if marcado else estilo.COR_FUNDO_ELEVADO
+        fundo = estilo.COR_DESTAQUE_NA_LISTA if marcado else estilo.COR_FUNDO_ELEVADO
         self.setStyleSheet(
             f"""
             QFrame#item {{
@@ -338,7 +338,7 @@ class _ItemDeTrecho(QFrame):
     def marcar(self, marcado):
         self.marcado = marcado
         borda = estilo.COR_DESTAQUE if marcado else estilo.COR_BORDA
-        fundo = "rgba(59, 110, 165, 46)" if marcado else estilo.COR_FUNDO_ELEVADO
+        fundo = estilo.COR_DESTAQUE_NA_LISTA if marcado else estilo.COR_FUNDO_ELEVADO
         self.setStyleSheet(
             f"""
             QFrame#item {{
@@ -457,7 +457,12 @@ def _titulo_da_lista(texto):
     return rotulo
 
 
-def _titulo_de_secao(texto, cor=estilo.COR_TEXTO):
+def _titulo_de_secao(texto, cor=None):
+    # A cor de sempre é lida aqui dentro, na hora de montar, e não como valor
+    # padrão na linha de cima: o valor padrão é lido quando o programa carrega,
+    # antes de o tema ser escolhido, e no claro o título saía na letra quase
+    # branca do escuro (lente crítica da etapa 1 da funcionalidade 10).
+    cor = cor or estilo.COR_TEXTO
     rotulo = QLabel(texto)
     rotulo.setStyleSheet(
         f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 600;"

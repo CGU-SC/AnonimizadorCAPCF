@@ -40,7 +40,7 @@ class Interruptor(QAbstractButton):
         pintor.setRenderHint(QPainter.Antialiasing)
         ligado = self.isChecked()
         trilho = estilo.COR_DESTAQUE if ligado else estilo.COR_BORDA
-        bolinha = "#ffffff" if ligado else estilo.COR_TEXTO_SECUNDARIO
+        bolinha = estilo.COR_BOLINHA_LIGADA if ligado else estilo.COR_TEXTO_SECUNDARIO
         # Apagado continua dizendo se está ligado: só fica mais fraco.
         pintor.setOpacity(1.0 if self.isEnabled() else 0.45)
         pintor.setPen(Qt.NoPen)
@@ -86,10 +86,13 @@ class Frase(QLabel):
 class Faixa(QFrame):
     """A faixa de aviso com a borda grossa à esquerda, em três tons."""
 
+    # O fundo e a borda de cada tom, pelo nome do papel no estilo: a cor é lida
+    # ao pintar a faixa, e não ao carregar este arquivo, quando o tema ainda nem
+    # foi escolhido (RN-17 da spec 001).
     TONS = {
-        "info": ("rgba(59, 110, 165, 26)", estilo.COR_DESTAQUE),
-        "alerta": ("rgba(217, 164, 65, 26)", estilo.COR_ALERTA),
-        "erro": ("rgba(217, 83, 79, 26)", estilo.COR_ERRO),
+        "info": ("COR_DESTAQUE_AVISO", "COR_DESTAQUE"),
+        "alerta": ("COR_ALERTA_FUNDO", "COR_ALERTA"),
+        "erro": ("COR_ERRO_FUNDO", "COR_ERRO"),
     }
 
     def __init__(self, tom="info", largura=LARGURA_DO_CONTEUDO):
@@ -106,7 +109,7 @@ class Faixa(QFrame):
         self.tom(tom)
 
     def tom(self, tom):
-        fundo, borda = self.TONS[tom]
+        fundo, borda = (getattr(estilo, papel) for papel in self.TONS[tom])
         self.setStyleSheet(
             f"""
             QFrame#faixa_da_ia {{
@@ -143,7 +146,7 @@ def estilo_do_radio(apagado=False):
             background-color: {estilo.COR_DESTAQUE};
         }}
         QRadioButton::indicator:disabled {{
-            border: 2px solid #4a5058;
+            border: 2px solid {estilo.COR_BORDA_DESLIGADA};
         }}
     """
 
@@ -170,7 +173,7 @@ def campo_de_texto(largura=LARGURA_DO_CONTEUDO):
             font-family: {estilo.FONTE_MONO};
             font-size: {estilo.TEXTO_PEQUENO}px;
         }}
-        QLineEdit:disabled {{ color: #5d646e; }}
+        QLineEdit:disabled {{ color: {estilo.COR_TEXTO_DESLIGADO}; }}
         """
     )
     return campo
