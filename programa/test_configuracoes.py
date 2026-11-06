@@ -7,6 +7,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QAbstractButton, QApplication, QLabel, QPushButton, QRadioButton
 
 import estilo
+import main
 import preferencias
 import tela_do_tema
 from main import TAMANHO_MINIMO, JanelaPrincipal
@@ -134,6 +135,55 @@ def test_sem_gravacao_a_escolha_vale_ate_fechar(janela, preferencias_isoladas):
 def test_o_tema_lembrado_so_vale_se_for_escuro_ou_claro(escrito, vale):
     preferencias.gravar(tela_do_tema.LEMBRAR_TEMA, tela_do_tema.CHAVE_DO_TEMA, escrito)
     assert tela_do_tema.lembrado() == vale
+
+
+@pytest.fixture
+def modo_do_windows(aplicacao):
+    """Devolve o modo de cores ao do Windows depois do teste: ele vale para o
+    programa inteiro, e forçado no claro passaria para os testes seguintes."""
+    yield aplicacao.styleHints()
+    aplicacao.styleHints().setColorScheme(Qt.ColorScheme.Unknown)
+
+
+@pytest.mark.parametrize("guardado, abre", [(None, "escuro"), ("escuro", "escuro"),
+                                            ("claro", "claro"), ("azul", "escuro")])
+def test_o_programa_abre_no_tema_guardado(aplicacao, modo_do_windows, guardado, abre):
+    if guardado is not None:
+        preferencias.gravar(tela_do_tema.LEMBRAR_TEMA, tela_do_tema.CHAVE_DO_TEMA, guardado)
+    assert main.usar_o_tema_lembrado(aplicacao) == abre
+    assert estilo.TEMA == abre
+    assert estilo.COR_FUNDO == estilo.TEMAS[abre]["COR_FUNDO"]
+
+
+def test_guardado_que_nao_da_para_ler_abre_no_escuro(aplicacao, modo_do_windows,
+                                                      preferencias_isoladas):
+    # Uma pasta no lugar do arquivo: nada se lê, e o programa abre no escuro, sem erro.
+    preferencias_isoladas.mkdir()
+    assert main.usar_o_tema_lembrado(aplicacao) == estilo.ESCURO
+
+
+def test_no_claro_as_pecas_do_windows_seguem_o_claro(aplicacao, modo_do_windows):
+    preferencias.gravar(tela_do_tema.LEMBRAR_TEMA, tela_do_tema.CHAVE_DO_TEMA, "claro")
+    main.usar_o_tema_lembrado(aplicacao)
+    assert modo_do_windows.colorScheme() == Qt.ColorScheme.Light
+
+
+def test_no_escuro_o_modo_do_windows_fica_como_estava(aplicacao, modo_do_windows):
+    antes = modo_do_windows.colorScheme()
+    main.usar_o_tema_lembrado(aplicacao)
+    assert modo_do_windows.colorScheme() == antes
+
+
+def test_aberto_no_claro_a_tela_do_tema_mostra_claro_e_nada_embaixo(aplicacao, modo_do_windows):
+    preferencias.gravar(tela_do_tema.LEMBRAR_TEMA, tela_do_tema.CHAVE_DO_TEMA, "claro")
+    main.usar_o_tema_lembrado(aplicacao)
+    janela = JanelaPrincipal()
+    janela.menu.botao_config_ia.click()
+    tela = janela.painel_ia.tela_tema
+    assert tela.opcoes[estilo.CLARO].isChecked()
+    assert tela.aviso.isHidden()
+    # E a janela inteira nasceu no claro: o fundo do painel já é o do claro.
+    assert estilo.TEMAS[estilo.CLARO]["COR_FUNDO"] in janela.painel.styleSheet()
 
 
 def test_na_janela_minima_nada_sai_cortado_no_submenu_nem_no_tema(janela):

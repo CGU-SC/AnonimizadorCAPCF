@@ -23,7 +23,7 @@ from desenhos_da_faixa import TAMANHO_DO_ICONE, SimboloDoPrograma, icone_do_item
 import preferencias
 from painel_anonimizar import PainelAnonimizar
 from painel_ia import HABILITAR, LM_STUDIO, SERVIDOR, PainelIa
-from tela_do_tema import TEMA
+from tela_do_tema import TEMA, lembrado
 from painel_ocr import PainelOcr
 from versao import VERSAO
 
@@ -525,8 +525,26 @@ class JanelaPrincipal(QMainWindow):
         self.painel.setCurrentWidget(destino)
 
 
+def usar_o_tema_lembrado(aplicacao):
+    """Escolhe o tema do programa inteiro, antes de a janela ser montada.
+
+    Tem de vir antes: cada peça põe as cores quando nasce, e a janela nasce com
+    um tema só (RN-17 da spec 001). Sem tema guardado, ou com um que não dá para
+    ler, vale o escuro, sem erro e sem aviso (RN-42 da spec 002).
+    """
+    estilo.usar_tema(lembrado() or estilo.ESCURO)
+    if estilo.TEMA == estilo.CLARO:
+        # As peças que o Windows desenha, e não o programa - a barra de rolagem, o
+        # menu do botão direito, a dica do mouse - seguem o modo do Windows; com o
+        # Windows escuro, sairiam escuras no meio do claro. No escuro nada se força,
+        # para ele continuar exatamente como sempre foi (RN-16).
+        aplicacao.styleHints().setColorScheme(Qt.ColorScheme.Light)
+    return estilo.TEMA
+
+
 def main():
     app = QApplication(sys.argv)
+    usar_o_tema_lembrado(app)
     janela = JanelaPrincipal()
     janela.abrir()
     sys.exit(app.exec())

@@ -1,5 +1,8 @@
-# Interface gráfica (janela do programa)
-PySide6>=6.7,<7
+# Interface gráfica (janela do programa). A partir da 6.8, e não da 6.7: é a
+# versão que deixa o programa pedir ao Windows as peças no modo claro (o tema
+# claro, funcionalidade 10). Com a 6.7, quem guardou o claro não abriria o
+# programa - ele quebra antes de a janela aparecer (lente crítica da etapa 3).
+PySide6>=6.8,<7
 
 # Leitura de PDF: extrai texto, detecta ausência de texto e converte página em imagem para o OCR
 PyMuPDF>=1.24,<2

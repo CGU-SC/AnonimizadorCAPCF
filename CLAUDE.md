@@ -20,7 +20,7 @@ maduro do mercado para ler PDF, rodar OCR e achar padrão com regex.
 | OCR | Dois motores na escolha (spec 002, emenda de 18/10/2026). **PaddleOCR**, o padrão: os modelos PP-OCRv6 pequenos, rodados pelo RapidOCR 3.10.0 com o onnxruntime 1.31.0, dentro do programa — nada é baixado. **Tesseract**, a alternativa, via pytesseract, com pacote de português; o detector de orientação dele endireita a página também para o PaddleOCR |
 | Leitura de Word | Sem biblioteca — o `.docx` é um pacote compactado de XML, aberto com o `zipfile` e o `xml.etree.ElementTree`, que já vêm no Python (funcionalidade 5, decidido em 23/10/2026). Descartados: o PyMuPDF, que só abre `.docx` na versão paga (Pro); a python-docx, que não lê caixa de texto, nota nem alteração controlada; o mammoth, que deixa de fora cabeçalho e rodapé; o docx2python, mantido por uma pessoa só; e o pandoc, programa a mais em cada máquina |
 | Validação de CPF | Sem biblioteca — dígito verificador calculado na mão |
-| Dados | Sem banco — cada documento é processado sozinho, sem estado entre usos. A **escolha da pessoa** (o motor de cada módulo, o tamanho da janela) é lembrada num `preferencias.ini` na pasta da instalação, ao lado do `.env`, lido e gravado com o `configparser` do Python (funcionalidade 8, decidido em 28/10/2026); nada do trabalho é guardado. Descartados: escrever no `.env`, que é da TI; a pasta de configurações do usuário (`%APPDATA%`), que esta máquina dividiria entre o programa instalado e o de desenvolvimento; e o registro do Windows, invisível para quem não programa |
+| Dados | Sem banco — cada documento é processado sozinho, sem estado entre usos. A **escolha da pessoa** (o motor de cada módulo, o tamanho da janela e, desde a funcionalidade 10, o tema) é lembrada num `preferencias.ini` na pasta da instalação, ao lado do `.env`, lido e gravado com o `configparser` do Python (funcionalidade 8, decidido em 28/10/2026); nada do trabalho é guardado. Descartados: escrever no `.env`, que é da TI; a pasta de configurações do usuário (`%APPDATA%`), que esta máquina dividiria entre o programa instalado e o de desenvolvimento; e o registro do Windows, invisível para quem não programa |
 | Testes | pytest |
 | Distribuição | instalador do Windows (Inno Setup) com o programa numa pasta montada pelo PyInstaller — sem exigir Python nas máquinas do núcleo. Era `.exe` único até 23/09/2026: com instalador a pasta não aparece, e o `.exe` único se desempacota a cada abertura (5 a 10 s) e o antivírus desconfia dele |
 
@@ -107,6 +107,13 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
   passa a ser lembrado como o outro (RN-36 a RN-41 da spec 002). A janela abre
   maximizada no primeiro uso, e depois como foi fechada, sempre no meio da tela
   (RN-4 a RN-8 da spec 001). Desinstalar apaga o arquivo; atualizar o mantém.
+- **Tema**: escuro, o de sempre e o padrão, ou claro, com as cores do projeto
+  Gerencial (funcionalidade 10, emenda de 05/11/2026 da spec 001). Só as cores
+  mudam: desenho, tamanhos, fontes e textos são os mesmos. Escolhe-se em
+  Configurações → Tema, e a escolha é lembrada no `preferencias.ini` (RN-42 da spec
+  002); a janela nasce com um tema só, e por isso o tema novo vale ao reabrir o
+  programa. Os valores de cada papel nos dois temas estão no
+  `mockups/sistema-de-design.md`, e no código só no `programa/estilo.py`.
 - **Revisão por IA** (spec 004, aprovada em 31/10/2026, em construção): vem
   desligada; só no Anonimizar; vê só o texto, com os CPFs inteiros; aponta, e quem
   mascara é o programa. O token do servidor é digitado por quem usa e guardado no
@@ -232,6 +239,10 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   Studio antes, e que desinstalar apaga o `.env` inteiro, com o token e a pasta do
   Tesseract, se a TI a tiver escrito (decidido em 31/10/2026). A TI precisa responder
   se o servidor guarda o texto recebido: ele vai com os CPFs inteiros.
+  E ganham a funcionalidade 10: o `como-usar.html` diz que o menu da IA passou a se
+  chamar "Configurações", onde se escolhe o tema (Configurações → Tema) e que o tema
+  novo vale ao reabrir, com o "Reabrir agora" para não esperar a próxima abertura
+  (spec 001, emenda de 05/11/2026).
 
 - **Quando o backlog terminar, organizar a documentação num índice só**
   (pedido da solicitante em 22/10/2026, que achou a documentação "muito

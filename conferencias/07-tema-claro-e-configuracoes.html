@@ -40,9 +40,9 @@ das cores e onde cada uma está escrita, mas quem diz se a tela ficou igual, leg
   <tr><th>Etapa</th><th>O que você vê ao fim</th><th>Situação</th></tr>
   <tr><td>1</td><td>Nada muda: o escuro igual, cor por cor</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
   <tr><td>2</td><td>O menu "Configurações", com as seções, os ícones e a tela do Tema</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
-  <tr><td>3</td><td>O programa abre no tema guardado</td><td><span class="situacao">a fazer</span></td></tr>
-  <tr><td>4</td><td>O claro conferido tela por tela</td><td><span class="situacao">a fazer</span></td></tr>
-  <tr><td>5</td><td>O "Reabrir agora", sem nada a perder</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>3</td><td>O programa abre no tema guardado</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
+  <tr><td>4</td><td>O "Reabrir agora", sem nada a perder</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>5</td><td>O claro conferido tela por tela</td><td><span class="situacao">a fazer</span></td></tr>
   <tr><td>6</td><td>As perguntas antes de reabrir</td><td><span class="situacao">a fazer</span></td></tr>
 </table>
 
@@ -95,7 +95,7 @@ me diga em que tela e em que peça — mesmo que a diferença seja pequena.</p>
 ícone em traço: o círculo metade cheio, a tela de computador, as caixas empilhadas e a chave de ligar. Entrar abre o
 Tema. Marcar "Claro" já fica guardado e mostra a frase "O tema novo vale quando o programa abrir de novo." As cinco
 frases que mandavam a "Configurações de IA" passam a dizer "Configurações".</p>
-<p>O que ainda não existe: abrir no tema guardado (etapa 3) e o botão "Reabrir agora" (etapa 5). O programa continua
+<p>O que ainda não existe: abrir no tema guardado (etapa 3) e o botão "Reabrir agora" (etapa 4, na ordem nova). O programa continua
 abrindo no escuro, mesmo com "Claro" marcado.</p>
 
 <h3>O que os testes provam</h3>
@@ -131,6 +131,50 @@ pela lente crítica não achou defeito.</p>
     <span class="ve">Você deve ver: a pergunta de descartar a revisão, como antes, e o menu continuar no Anonimizar.</span></li>
   <li><strong>A janela pequena.</strong> Saia do maximizado e encolha a janela até o mínimo, com o submenu aberto.
     <span class="ve">Você deve ver: nada cortado no submenu nem na tela do Tema.</span></li>
+</ol>
+
+<h2>Etapa 3 — o programa abre no tema guardado</h2>
+<p class="explica" style="color:var(--cor-texto-secundario)">A ordem das etapas mudou em 06/11/2026, a pedido da
+solicitante: o "Reabrir agora" passou a vir antes do claro conferido tela por tela, para a troca de tema levar um
+clique durante aquela conferência.</p>
+
+<h3>O que mudou</h3>
+<p>Ao abrir, o programa lê o tema guardado e o escolhe antes de montar a janela, que já nasce inteira no tema. Sem
+tema guardado, ou com um que não dá para ler, vale o escuro, sem erro. No claro, as peças que o Windows desenha — a
+barra de rolagem, o menu do botão direito, a dica do mouse — passam a seguir o claro também; no escuro, nada se
+força, e elas continuam como sempre foram.</p>
+<p>Esta é a primeira vez que o claro aparece. A conferência dele tela por tela é a etapa 5: aqui basta ver que ele
+chega, e que o escuro volta.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O tema ao abrir</td><td>Nada guardado, escuro, claro e um valor estranho ("azul"): abre no escuro, no escuro, no claro e no escuro, sem erro</td></tr>
+  <tr><td>O guardado que não se lê</td><td>Com o arquivo impossível de ler, abre no escuro</td></tr>
+  <tr><td>As peças do Windows</td><td>No claro, o programa pede o modo claro ao Windows; no escuro, não muda nada</td></tr>
+  <tr><td>Fechar e abrir no claro</td><td>A janela nasce no claro, e a tela do Tema mostra "Claro" marcado e nada embaixo</td></tr>
+  <tr><td>A lista inteira</td><td>1.024 testes passando: os 1.016 de antes e 8 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026:</strong> o claro chega ao abrir, e o escuro volta. Na conferência, a
+solicitante trouxe dois pedidos que mudam o que foi aprovado, e que voltam para as skills donas antes da etapa 4: o
+ícone do título das telas de Configurações igual ao da opção, e o âmbar do suspeito no claro, que se confunde com o
+preto do texto. A lente crítica achou um defeito, consertado: o programa passa a pedir o Qt a partir da versão 6.8
+(revisão 60).</p>
+
+<h3>Roteiro na tela</h3>
+<ol>
+  <li><strong>Escolher.</strong> Com o programa aberto, vá a Configurações → Tema e marque "Claro". Feche a janela pelo X.
+    <span class="ve">Você deve ver: o programa fechar normalmente.</span></li>
+  <li><strong>Abrir no claro.</strong> Dois cliques em <code>abrir\abrir-dev.bat</code>.
+    <span class="ve">Você deve ver: o programa inteiro no claro — a faixa da esquerda, o painel, o símbolo azul-marinho no alto. Compare com <code>mockups\janela\06-tema-claro-e-configuracoes.html</code>.</span></li>
+  <li><strong>A tela do Tema.</strong> Vá a Configurações.
+    <span class="ve">Você deve ver: "Claro" marcado, e nada embaixo das opções.</span></li>
+  <li><strong>Uma olhada no resto.</strong> Clique em "Gerar OCR" e em "Anonimizar".
+    <span class="ve">Você deve ver: as duas telas de entrada no claro, inteiras. Se algo estiver escuro ou difícil de ler, anote: a conferência tela por tela é a etapa 5, mas já dá para contar.</span></li>
+  <li><strong>A barra de rolagem.</strong> No Gerar OCR, com a janela fora do maximizado e baixa, role a tela até o fim.
+    <span class="ve">Você deve ver: a barra de rolagem clara. Ela é pintada pelo próprio programa, e por isso não prova as peças que o Windows desenha: essas — a dica do mouse e o menu do botão direito — ficam para a etapa 5, onde há botões pequenos e texto para provar (revisão da etapa 3).</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>voltar ao escuro.</strong> Em Configurações → Tema, marque "Escuro", feche pelo X e abra de novo.
+    <span class="ve">Você deve ver: o escuro de sempre, igual ao de antes da funcionalidade.</span></li>
 </ol>
 
 <p class="rodape">Gerada pela skill-07, a pedido da skill-08, em 06/11/2026. Os números de CPF dos documentos de
