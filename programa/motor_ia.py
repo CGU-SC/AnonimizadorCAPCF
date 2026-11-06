@@ -51,7 +51,7 @@ def preparar(cancelador=None):
     """
     if not config_ia.motor_ativo():
         raise IaIndisponivel(
-            "A IA local não está disponível: confira as Configurações de IA.")
+            "A IA local não está disponível: confira as Configurações.")
     nome = config_ia.destino_ligado()
     return _Leitura(config_ia.base_do_destino(nome), config_ia.token_do_destino(nome),
                     config_ia.modelo_do_motor(nome), cancelador)

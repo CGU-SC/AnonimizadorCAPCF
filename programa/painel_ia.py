@@ -1,6 +1,7 @@
-"""O painel de Configurações de IA: três telas, uma por item do submenu.
+"""O painel de Configurações: uma tela por item do submenu.
 
-Segue o rascunho aprovado mockups/ia/01-configuracoes-de-ia.html.
+As três da IA seguem o rascunho aprovado mockups/ia/01-configuracoes-de-ia.html;
+a do Tema, desde a funcionalidade 10, mora em `tela_do_tema.py`.
 
 O arquivo que fala com a rede só é carregado quando a pessoa aciona algo aqui: sem
 ninguém mexer nestas telas, o programa nem o abre (RN-43 da spec 004).
@@ -37,6 +38,7 @@ from pecas_da_ia import (
     rotulo_de_campo,
 )
 from cabecalho_da_tela import CabecalhoDaTela
+from tela_do_tema import TEMA, TelaDoTema
 
 LM_STUDIO = config_ia.LM_STUDIO
 SERVIDOR = config_ia.SERVIDOR
@@ -987,8 +989,12 @@ class PainelIa(QWidget):
         self.tela_habilitar = _TelaHabilitar(self._mudou, self._testar_o_motor)
         self.tela_lm_studio.ao_motor_falhar = self.tela_habilitar.mostrar_falha_do_motor
         self.tela_servidor.ao_motor_falhar = self.tela_habilitar.mostrar_falha_do_motor
+        # A tela do Tema mora aqui também: desde a funcionalidade 10, este é o painel
+        # de "Configurações" inteiro, e não só o da IA (RN-20 da spec 001).
+        self.tela_tema = TelaDoTema()
         self._areas = {}
-        for nome, tela in ((LM_STUDIO, self.tela_lm_studio),
+        for nome, tela in ((TEMA, self.tela_tema),
+                           (LM_STUDIO, self.tela_lm_studio),
                            (SERVIDOR, self.tela_servidor),
                            (HABILITAR, self.tela_habilitar)):
             area = _rolavel(tela)

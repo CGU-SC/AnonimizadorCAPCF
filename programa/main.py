@@ -23,6 +23,7 @@ from desenhos_da_faixa import TAMANHO_DO_ICONE, SimboloDoPrograma, icone_do_item
 import preferencias
 from painel_anonimizar import PainelAnonimizar
 from painel_ia import HABILITAR, LM_STUDIO, SERVIDOR, PainelIa
+from tela_do_tema import TEMA
 from painel_ocr import PainelOcr
 from versao import VERSAO
 
@@ -147,7 +148,9 @@ class MenuLateral(QWidget):
         # módulos de cima (pedido na conferência da funcionalidade 4, 31/10/2026).
         # Era um emoji, colorido, e passou a ser desenhada como a lupa e o cadeado,
         # para os três serem da mesma família (emenda de 03/11/2026 da spec 001).
-        self.botao_config_ia = self._criar_item_menu("Configurações de IA", "engrenagem")
+        # Era "Configurações de IA"; com o Tema, passou a guardar mais que a IA
+        # (RN-20 da spec 001, emenda de 05/11/2026 da spec 004).
+        self.botao_config_ia = self._criar_item_menu("Configurações", "engrenagem")
         principal.addWidget(self.botao_ocr)
         principal.addWidget(self.botao_anonimizar)
         principal.addStretch()
@@ -157,22 +160,23 @@ class MenuLateral(QWidget):
         submenu = QVBoxLayout(self.pagina_ia)
         submenu.setContentsMargins(0, 0, 0, 0)
         submenu.setSpacing(4)
+        # O "‹ Voltar" fica sem ícone: a seta escrita já é o desenho dele (RN-21).
         self.botao_voltar_ia = self._criar_item_menu("‹ Voltar")
-        titulo_ia = QLabel("Configurações de IA")
-        titulo_ia.setStyleSheet(
-            f"color: {estilo.COR_TEXTO}; font-weight: 600; padding: 4px 20px 8px 20px;"
-            "background: transparent;"
-        )
-        self.botao_lm_studio = self._criar_item_menu("LM Studio")
-        self.botao_servidor_ia = self._criar_item_menu("Servidor de IA Interno")
-        self.botao_habilitar_ia = self._criar_item_menu("Habilitar IA")
-        submenu.addWidget(self.botao_voltar_ia)
-        submenu.addWidget(titulo_ia)
-        self.itens_do_submenu = (self.botao_lm_studio, self.botao_servidor_ia,
-                                 self.botao_habilitar_ia)
+        self.botao_tema = self._criar_item_menu("Tema", "tema")
+        self.botao_lm_studio = self._criar_item_menu("LM Studio", "lm_studio")
+        self.botao_servidor_ia = self._criar_item_menu("Servidor de IA Interno", "servidor")
+        self.botao_habilitar_ia = self._criar_item_menu("Habilitar IA", "habilitar")
+        self.titulos_de_secao = (_titulo_de_secao("Configurações Gerais"),
+                                 _titulo_de_secao("Configurações de IA"))
+        self.itens_do_submenu = (self.botao_tema, self.botao_lm_studio,
+                                 self.botao_servidor_ia, self.botao_habilitar_ia)
         for item in self.itens_do_submenu:
             item.setCheckable(True)
-            submenu.addWidget(item)
+        for peca in (self.botao_voltar_ia,
+                     self.titulos_de_secao[0], self.botao_tema,
+                     self.titulos_de_secao[1], self.botao_lm_studio,
+                     self.botao_servidor_ia, self.botao_habilitar_ia):
+            submenu.addWidget(peca)
         submenu.addStretch()
 
         self.paginas.addWidget(self.pagina_principal)
@@ -224,8 +228,8 @@ class MenuLateral(QWidget):
     def _criar_item_menu(self, texto, desenho=None):
         botao = QPushButton(texto)
         botao.setCursor(Qt.PointingHandCursor)
-        # Só os três itens do menu principal têm ícone; os do submenu continuam
-        # só texto (fora de escopo da emenda de 03/11/2026 da spec 001).
+        # Todo item tem ícone, menos o "‹ Voltar" (RN-21 da spec 001, que revogou o
+        # "submenu só texto" da emenda de 03/11/2026).
         if desenho:
             botao.setIcon(icone_do_item(desenho))
             botao.setIconSize(TAMANHO_DO_ICONE)
@@ -260,6 +264,34 @@ class MenuLateral(QWidget):
             """
         )
         return botao
+
+
+def _titulo_de_secao(texto):
+    """O título de uma seção do submenu: letra pequena, no cinza de apoio, e um
+    filete fino que corre à direita dele (RN-20 da spec 001).
+
+    É texto e não botão: não se clica e nunca fica marcado. As medidas são as do
+    rascunho aprovado; com o filete dos dois lados, como no desenho do pedido,
+    sobrariam só 10 px de cada lado na faixa de 220.
+    """
+    titulo = QWidget()
+    linha = QHBoxLayout(titulo)
+    linha.setContentsMargins(20, 10, 20, 4)
+    linha.setSpacing(8)
+    rotulo = QLabel(texto)
+    rotulo.setStyleSheet(
+        f"font-size: {TEXTO_PEQUENO}px; font-weight: 600;"
+        f"color: {estilo.COR_TEXTO_SECUNDARIO}; background: transparent;"
+    )
+    filete = QWidget()
+    filete.setObjectName("filete")
+    filete.setAttribute(Qt.WA_StyledBackground, True)
+    filete.setFixedHeight(1)
+    filete.setStyleSheet(f"QWidget#filete {{ background-color: {estilo.COR_BORDA}; }}")
+    linha.addWidget(rotulo)
+    linha.addWidget(filete, stretch=1, alignment=Qt.AlignVCenter)
+    titulo.rotulo = rotulo
+    return titulo
 
 
 class PainelVazio(QWidget):
@@ -323,7 +355,7 @@ class JanelaPrincipal(QMainWindow):
         self.menu.botao_config_ia.clicked.connect(self._abrir_configuracoes_de_ia)
         self.menu.botao_voltar_ia.clicked.connect(self._fechar_configuracoes_de_ia)
         for item, nome in zip(self.menu.itens_do_submenu,
-                              (LM_STUDIO, SERVIDOR, HABILITAR)):
+                              (TEMA, LM_STUDIO, SERVIDOR, HABILITAR)):
             item.clicked.connect(lambda _=False, i=item, n=nome: self._mostrar_tela_de_ia(i, n))
 
         self.setCentralWidget(raiz)
@@ -425,7 +457,8 @@ class JanelaPrincipal(QMainWindow):
         for item in self.itens_do_menu:
             item.setChecked(False)
         self.menu.paginas.setCurrentWidget(self.menu.pagina_ia)
-        self._mostrar_tela_de_ia(self.menu.botao_lm_studio, LM_STUDIO)
+        # Entra pela primeira opção, o Tema, e não mais pelo LM Studio (RN-22).
+        self._mostrar_tela_de_ia(self.menu.botao_tema, TEMA)
         self.painel.setCurrentWidget(self.painel_ia)
 
     def _mostrar_tela_de_ia(self, item_clicado, nome):

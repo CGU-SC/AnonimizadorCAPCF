@@ -74,12 +74,16 @@ def test_cada_item_do_menu_principal_tem_o_seu_icone(janela):
     menu = janela.menu
     for item in (menu.botao_ocr, menu.botao_anonimizar, menu.botao_config_ia):
         assert not item.icon().isNull(), item.text()
-    assert menu.botao_config_ia.text() == "Configurações de IA"
+    # Era "Configurações de IA" até a funcionalidade 10 (RN-20).
+    assert menu.botao_config_ia.text() == "Configurações"
 
 
-def test_os_itens_do_submenu_continuam_so_texto(janela):
-    for item in (janela.menu.botao_voltar_ia, *janela.menu.itens_do_submenu):
-        assert item.icon().isNull(), item.text()
+def test_cada_opcao_do_submenu_tem_o_seu_icone_menos_o_voltar(janela):
+    # RN-21 da spec 001, que revogou o "submenu só texto" de 03/11/2026: a seta
+    # escrita já é o desenho do Voltar.
+    assert janela.menu.botao_voltar_ia.icon().isNull()
+    for item in janela.menu.itens_do_submenu:
+        assert not item.icon().isNull(), item.text()
 
 
 def _cor_do_traco(icone, estado):
@@ -151,7 +155,8 @@ def test_no_submenu_o_marcado_e_igual(janela):
     menu.botao_config_ia.click()
     foto = _foto_da_faixa(janela)
 
-    filete, fundo = _cores_na_linha_do_item(foto, menu, menu.botao_lm_studio)
+    # Entrar marca o Tema, a primeira opção (RN-22).
+    filete, fundo = _cores_na_linha_do_item(foto, menu, menu.botao_tema)
     assert filete.name() == COR_DESTAQUE_HOVER
     assert _perto(fundo, _fundo_do_marcado_esperado()), fundo.name()
     filete, fundo = _cores_na_linha_do_item(foto, menu, menu.botao_servidor_ia)

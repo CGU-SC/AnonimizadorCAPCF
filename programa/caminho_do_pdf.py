@@ -975,11 +975,13 @@ class EscolhaDoMotor(QWidget):
         elif self._frase_da_troca:
             frase = self._frase_da_troca
         elif config_ia.motor_ligado():
-            frase = ("O modelo do motor não passou no teste: veja em Configurações de IA."
+            # "Configurações", e não mais "Configurações de IA": é o nome do item na
+            # faixa desde a funcionalidade 10 (emenda de 05/11/2026 da spec 004).
+            frase = ("O modelo do motor não passou no teste: veja em Configurações."
                      if config_ia.modelo_do_motor(destino)
-                     else "Escolha o modelo do motor em Configurações de IA.")
+                     else "Escolha o modelo do motor em Configurações.")
         else:
-            frase = 'Ligue em Configurações de IA, em "Habilitar IA".'
+            frase = 'Ligue em Configurações, em "Habilitar IA".'
         # As frases são todas do programa, e o texto rico só serve ao destaque
         # do tempo; as outras vão sem marcação nenhuma.
         self.frase_da_ia.setText(frase)

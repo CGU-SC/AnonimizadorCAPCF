@@ -116,6 +116,9 @@ def test_o_aviso_dos_cpfs_inteiros_nao_sai_cortado(janela, monkeypatch):
     janela.showNormal()
     janela.resize(TAMANHO_MINIMO)
     janela.menu.botao_config_ia.click()
+    # Configurações abre no Tema desde a funcionalidade 10 (RN-22): o LM Studio
+    # é a segunda opção.
+    janela.menu.botao_lm_studio.click()
     QApplication.processEvents()
     cabecalho = janela.painel_ia.tela_lm_studio.cabecalho
     assert cabecalho.legenda.text() == LM_STUDIO_EM_OUTRA_MAQUINA
@@ -131,6 +134,7 @@ def test_a_janela_que_encolhe_faz_o_titulo_crescer(janela, monkeypatch):
     janela.showNormal()
     janela.resize(1400, 800)
     janela.menu.botao_config_ia.click()
+    janela.menu.botao_lm_studio.click()
     QApplication.processEvents()
     janela.resize(TAMANHO_MINIMO)
     QApplication.processEvents()
@@ -156,6 +160,9 @@ def test_a_legenda_que_encolhe_devolve_o_titulo_a_altura_da_faixa(janela):
     janela.showNormal()
     janela.resize(TAMANHO_MINIMO)
     janela.menu.botao_config_ia.click()
+    # Configurações abre no Tema desde a funcionalidade 10 (RN-22): o LM Studio
+    # é a segunda opção.
+    janela.menu.botao_lm_studio.click()
     QApplication.processEvents()
     cabecalho = janela.painel_ia.tela_lm_studio.cabecalho
     curta = cabecalho.legenda.text()
@@ -181,7 +188,7 @@ def _primeiro_ponto_da_frase(foto, escolha, rotulo):
 
 def test_a_explicacao_da_ia_comeca_no_recuo_das_outras(aplicacao):
     """RN-15: encostada na margem, ela parecia de outro assunto. Sem a IA
-    ligada a frase é a de "Ligue em Configurações de IA", e o recuo é o mesmo
+    ligada a frase é a de "Ligue em Configurações", e o recuo é o mesmo
     para qualquer frase."""
     escolha = EscolhaDoMotor("LER COM")
     escolha.resize(640, escolha.sizeHint().height())

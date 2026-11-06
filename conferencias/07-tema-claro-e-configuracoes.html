@@ -39,7 +39,7 @@ das cores e onde cada uma está escrita, mas quem diz se a tela ficou igual, leg
 <table>
   <tr><th>Etapa</th><th>O que você vê ao fim</th><th>Situação</th></tr>
   <tr><td>1</td><td>Nada muda: o escuro igual, cor por cor</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
-  <tr><td>2</td><td>O menu "Configurações", com as seções, os ícones e a tela do Tema</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>2</td><td>O menu "Configurações", com as seções, os ícones e a tela do Tema</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
   <tr><td>3</td><td>O programa abre no tema guardado</td><td><span class="situacao">a fazer</span></td></tr>
   <tr><td>4</td><td>O claro conferido tela por tela</td><td><span class="situacao">a fazer</span></td></tr>
   <tr><td>5</td><td>O "Reabrir agora", sem nada a perder</td><td><span class="situacao">a fazer</span></td></tr>
@@ -85,6 +85,52 @@ me diga em que tela e em que peça — mesmo que a diferença seja pequena.</p>
     <span class="ve">Você deve ver: as chaves de ligar como antes, com a bolinha branca na ligada.</span></li>
   <li><span class="torto">Caminho torto:</span> <strong>um PDF estragado.</strong> No Anonimizar, escolha <code>dados-exemplo\05-corrompido.pdf</code>.
     <span class="ve">Você deve ver: o aviso de erro com o fundo avermelhado de sempre, e o programa de pé.</span></li>
+</ol>
+
+<h2>Etapa 2 — o menu "Configurações", com as seções, os ícones e a tela do Tema</h2>
+
+<h3>O que mudou</h3>
+<p>O último item da faixa passa a se chamar "Configurações". Dentro dele, o submenu tem duas seções com título —
+"Configurações Gerais", com o Tema, e "Configurações de IA", com as três opções de sempre —, e cada opção ganha o seu
+ícone em traço: o círculo metade cheio, a tela de computador, as caixas empilhadas e a chave de ligar. Entrar abre o
+Tema. Marcar "Claro" já fica guardado e mostra a frase "O tema novo vale quando o programa abrir de novo." As cinco
+frases que mandavam a "Configurações de IA" passam a dizer "Configurações".</p>
+<p>O que ainda não existe: abrir no tema guardado (etapa 3) e o botão "Reabrir agora" (etapa 5). O programa continua
+abrindo no escuro, mesmo com "Claro" marcado.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O submenu</td><td>As sete linhas na ordem da spec; cada opção com o seu ícone, e o "‹ Voltar" sem; o título de seção em letra pequena, no cinza, com o filete; clicar nele não muda nada</td></tr>
+  <tr><td>A tela do Tema</td><td>A engrenagem no título, os textos exatos, o tema da tela marcado ao entrar, e a frase só quando a escolha é outra</td></tr>
+  <tr><td>Guardar a escolha</td><td>Marcar grava na hora; marcar de volta grava de novo; o motor e o tamanho da janela continuam como estavam; sem poder gravar, a escolha vale até fechar, sem erro</td></tr>
+  <tr><td>O nome do menu</td><td>O único texto do programa com "Configurações de IA" é o título de seção</td></tr>
+  <tr><td>A janela mínima</td><td>Em 900 × 560, nada sai cortado no submenu nem na tela do Tema</td></tr>
+  <tr><td>A lista inteira</td><td>1.016 testes passando: os 1.000 de antes e 16 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026:</strong> os nove passos do roteiro abaixo, tudo como esperado. A revisão
+pela lente crítica não achou defeito.</p>
+
+<h3>Roteiro na tela</h3>
+<ol>
+  <li><strong>Abrir.</strong> Dois cliques em <code>abrir\abrir-dev.bat</code>.
+    <span class="ve">Você deve ver: o último item da faixa chamado "Configurações", com a engrenagem.</span></li>
+  <li><strong>Entrar.</strong> Clique em "Configurações".
+    <span class="ve">Você deve ver: "‹ Voltar"; o título "Configurações Gerais" com um traço fino à direita; "Tema" marcado; o título "Configurações de IA"; e "LM Studio", "Servidor de IA Interno" e "Habilitar IA", cada um com o seu ícone. À direita, a tela "Tema" com a engrenagem, "Escuro" marcado e nada embaixo das opções. Compare com <code>mockups\janela\06-tema-claro-e-configuracoes.html</code>, seção 1.</span></li>
+  <li><strong>Escolher o claro.</strong> Marque "Claro".
+    <span class="ve">Você deve ver: uma faixa com "O tema novo vale quando o programa abrir de novo." O programa continua escuro — abrir no claro é a etapa 3.</span></li>
+  <li><strong>Mudar de ideia.</strong> Marque "Escuro" de novo.
+    <span class="ve">Você deve ver: a faixa sumir.</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>clicar num título de seção.</strong> Clique em "LM Studio" e depois em "Configurações Gerais".
+    <span class="ve">Você deve ver: nada mudar — "LM Studio" continua marcado, com a tela dele.</span></li>
+  <li><strong>As telas da IA.</strong> Clique em "Servidor de IA Interno" e em "Habilitar IA".
+    <span class="ve">Você deve ver: as telas de sempre, com o ícone da opção claro quando ela está marcada e cinza nas outras.</span></li>
+  <li><strong>As frases que apontam para o menu.</strong> Clique em "‹ Voltar". No Anonimizar, abra <code>dados-exemplo\14-folha-com-40-bolsistas.md</code>.
+    <span class="ve">Você deve ver: ao lado de "Revisar com IA", apagado, "Ligue em Configurações, no fim do menu". E no Gerar OCR, com <code>dados-exemplo\20-paginas-dificeis.pdf</code>, embaixo de "IA local": 'Ligue em Configurações, em "Habilitar IA".'</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>uma revisão não salva.</strong> Com a revisão da folha de bolsistas aberta no Anonimizar, clique em "Configurações".
+    <span class="ve">Você deve ver: a pergunta de descartar a revisão, como antes, e o menu continuar no Anonimizar.</span></li>
+  <li><strong>A janela pequena.</strong> Saia do maximizado e encolha a janela até o mínimo, com o submenu aberto.
+    <span class="ve">Você deve ver: nada cortado no submenu nem na tela do Tema.</span></li>
 </ol>
 
 <p class="rodape">Gerada pela skill-07, a pedido da skill-08, em 06/11/2026. Os números de CPF dos documentos de

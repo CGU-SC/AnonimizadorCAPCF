@@ -1,8 +1,10 @@
-"""O item "Configurações de IA" e o submenu (etapa 2, RN-1 a RN-3 da spec 004)."""
+"""O item "Configurações" e o submenu (etapa 2, RN-1 a RN-3 da spec 004; nome e
+Tema desde a emenda de 05/11/2026 da spec 001, RN-20 a RN-22)."""
 import pytest
 
 from main import JanelaPrincipal
 from painel_ia import HABILITAR, LM_STUDIO, SERVIDOR
+from tela_do_tema import TEMA
 from test_antes_de_descartar import _copia
 
 
@@ -31,9 +33,10 @@ def test_o_clique_troca_o_menu_inteiro_pelo_submenu(janela):
     assert janela.menu.paginas.currentWidget() is janela.menu.pagina_ia
     assert janela.painel.currentWidget() is janela.painel_ia
     assert [i.text() for i in janela.menu.itens_do_submenu] == [
-        "LM Studio", "Servidor de IA Interno", "Habilitar IA"]
-    assert janela.menu.botao_lm_studio.isChecked()
-    assert janela.painel_ia.tela_atual() == LM_STUDIO
+        "Tema", "LM Studio", "Servidor de IA Interno", "Habilitar IA"]
+    # Entra pela primeira opção, o Tema, e não mais pelo LM Studio (RN-22).
+    assert janela.menu.botao_tema.isChecked()
+    assert janela.painel_ia.tela_atual() == TEMA
 
 
 def test_cada_item_traz_a_sua_tela_e_so_um_fica_marcado(janela):
@@ -42,7 +45,8 @@ def test_cada_item_traz_a_sua_tela_e_so_um_fica_marcado(janela):
     assert janela.painel_ia.tela_atual() == SERVIDOR
     janela.menu.botao_habilitar_ia.click()
     assert janela.painel_ia.tela_atual() == HABILITAR
-    assert [i.isChecked() for i in janela.menu.itens_do_submenu] == [False, False, True]
+    assert [i.isChecked() for i in janela.menu.itens_do_submenu] == [
+        False, False, False, True]
     # Clicar no já marcado não desmarca: aqui não há tela de boas-vindas.
     janela.menu.botao_habilitar_ia.click()
     assert janela.menu.botao_habilitar_ia.isChecked()

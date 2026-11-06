@@ -12,4 +12,4 @@ def test_a_revisao_por_ia_nasce_apagada_e_explicada(aplicacao):
 
     assert tela.botao_revisar_com_ia.text() == "Revisar com IA"
     assert not tela.botao_revisar_com_ia.isEnabled()
-    assert tela.explicacao_revisar_com_ia.text() == "Ligue em Configurações de IA, no fim do menu"
+    assert tela.explicacao_revisar_com_ia.text() == "Ligue em Configurações, no fim do menu"

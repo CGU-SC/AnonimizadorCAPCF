@@ -49,7 +49,7 @@ def test_com_a_chave_desligada_fica_apagada_e_diz_onde_ligar():
     for escolha in _escolhas():
         assert not escolha.ia_local.isEnabled()
         assert escolha.ia_local.text() == "IA local"
-        assert escolha.frase_da_ia.text() == 'Ligue em Configurações de IA, em "Habilitar IA".'
+        assert escolha.frase_da_ia.text() == 'Ligue em Configurações, em "Habilitar IA".'
 
 
 def test_com_a_chave_sem_modelo_pede_o_modelo():

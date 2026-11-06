@@ -113,6 +113,9 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
   `.env` - a única linha que o programa grava nele, porque a TI não dá conta de
   configurar máquina por máquina. Baixar, carregar modelo e ligar o servidor ficam
   no próprio LM Studio: um motor próprio com download foi avaliado e recusado.
+  Liga-se no último item da faixa, **"Configurações"** (até a funcionalidade 10 se
+  chamava "Configurações de IA"), na seção "Configurações de IA", ao lado da seção
+  "Configurações Gerais", que tem o Tema.
 - **Conferência humana**: parte fixa do processo quando o texto veio de OCR, e
   não etapa opcional. O dígito verificador do CPF confere o que foi lido; o
   que não fechar vira lista de suspeitos para a pessoa olhar, em vez de passar
@@ -423,6 +426,13 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   os `.md` da massa como alterados, e o `git diff` não mostra nada. Confira com
   `git diff --stat`; vazio, devolva os arquivos com `git restore` e commite só o
   que mudou de verdade (etapa 5 da funcionalidade 6, 21/10/2026).
+- **O `sed -i` do Git Bash troca a quebra de linha de qualquer arquivo, e não só
+  dos `.md`.** A maioria dos `.py` do programa usa a do Windows (alguns, como o
+  `caminho_do_pdf.py`, já vinham com a do Linux), e duas trocas pequenas com
+  `sed -i` gravaram o arquivo inteiro com a do Linux, calado - o `git diff` não
+  acusa, porque o git converte na entrada. Em arquivo do projeto, troque texto pela
+  ferramenta de editar, ou por script Python que abre com `newline=""`, e confira
+  a quebra no fim (etapas 1 e 2 da funcionalidade 10, 06/11/2026).
 - **Texto com barra invertida mandado pelo terminal do Bash chega trocado.**
   Um script ou um trecho de código com `\r`, `\n` ou `\x89` escrito,
   passado pelo Bash (num `<<'EOF'` ou num `python -c`), foi gravado com a

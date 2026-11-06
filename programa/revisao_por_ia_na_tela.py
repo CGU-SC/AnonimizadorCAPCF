@@ -35,7 +35,7 @@ LIMITE_DA_REVISORA = (
     "número que parece normal pode passar. Ela não dispensa a sua leitura."
 )
 NADA_A_MAIS = "A IA terminou e não apontou nada a mais. Isso não dispensa a sua leitura."
-LIGUE_NO_MENU = "Ligue em Configurações de IA, no fim do menu"
+LIGUE_NO_MENU = "Ligue em Configurações, no fim do menu"
 NAO_CONFIRMADO = "A revisão segue sem IA: o endereço não foi confirmado, e nada foi enviado."
 
 

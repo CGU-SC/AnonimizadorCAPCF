@@ -64,7 +64,53 @@ def _engrenagem(pintor):
     pintor.drawEllipse(QPointF(10, 10), 2, 2)
 
 
-DESENHOS = {"lupa": _lupa, "cadeado": _cadeado, "engrenagem": _engrenagem}
+# Os quatro do submenu de Configurações (RN-21 da spec 001), com as medidas do
+# rascunho aprovado (mockups/janela/06-tema-claro-e-configuracoes.html).
+
+def _tema(pintor):
+    # Um círculo metade cheio: os dois temas num desenho só.
+    pintor.drawEllipse(QPointF(10, 10), 7, 7)
+    metade = QPainterPath()
+    metade.moveTo(10, 3)
+    metade.arcTo(QRectF(3, 3, 14, 14), 90, 180)
+    metade.closeSubpath()
+    _encher(pintor, metade)
+
+
+def _lm_studio(pintor):
+    # Uma tela de computador: o LM Studio roda na própria máquina.
+    pintor.drawRoundedRect(QRectF(2.5, 3.5, 15, 10), 1.5, 1.5)
+    pintor.drawLine(QLineF(10, 13.5, 10, 16.5))
+    pintor.drawLine(QLineF(6.5, 16.5, 13.5, 16.5))
+
+
+def _servidor(pintor):
+    # Caixas empilhadas: o servidor fica em outra máquina, na rede.
+    for topo in (3, 11):
+        pintor.drawRoundedRect(QRectF(3, topo, 14, 6), 1.5, 1.5)
+        pintor.drawLine(QLineF(10, topo + 3, 14, topo + 3))
+        ponto = QPainterPath()
+        ponto.addEllipse(QPointF(6, topo + 3), 1, 1)
+        _encher(pintor, ponto)
+
+
+def _habilitar(pintor):
+    # Uma chave de ligar, ligada.
+    pintor.drawRoundedRect(QRectF(2, 6, 16, 8), 4, 4)
+    bolinha = QPainterPath()
+    bolinha.addEllipse(QPointF(14, 10), 2.2, 2.2)
+    _encher(pintor, bolinha)
+
+
+def _encher(pintor, forma):
+    """Pinta uma forma cheia, na cor do traço: é a mesma cor do resto do ícone,
+    clara no item marcado e cinza nos outros (RN-12)."""
+    pintor.fillPath(forma, pintor.pen().color())
+
+
+DESENHOS = {"lupa": _lupa, "cadeado": _cadeado, "engrenagem": _engrenagem,
+            "tema": _tema, "lm_studio": _lm_studio, "servidor": _servidor,
+            "habilitar": _habilitar}
 
 
 def pintar_desenho(pintor, desenho, cor):
