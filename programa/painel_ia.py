@@ -120,14 +120,17 @@ def _botao_pequeno(texto, ao_clicar, principal=False):
 
 
 class _TelaBasica(QWidget):
+    # O desenho do item do submenu que abre a tela vai para o título dela: com a
+    # engrenagem nas quatro, o título não dizia em qual a pessoa está (RN-31 da
+    # spec 001). Cada tela diz o seu.
+    DESENHO = None
+
     def __init__(self, titulo, legenda):
         super().__init__()
         self.corpo = QVBoxLayout(self)
         self.corpo.setContentsMargins(0, 0, 0, 0)
         self.corpo.setSpacing(estilo.ESPACO_3)
-        # A engrenagem do item do menu vai para o título das três telas (RN-14
-        # da spec 001).
-        self.cabecalho = CabecalhoDaTela("engrenagem", titulo, legenda)
+        self.cabecalho = CabecalhoDaTela(self.DESENHO, titulo, legenda)
         self.legenda = self.cabecalho.legenda
         self.corpo.addWidget(self.cabecalho)
 
@@ -595,6 +598,7 @@ class _TelaDoDestino(_TelaBasica):
 
 class _TelaLmStudio(_TelaDoDestino):
     nome = LM_STUDIO
+    DESENHO = "lm_studio"
     rotulo_do_switch = "Habilitar LM Studio"
     FRASE_DE_FALHA = ("Abra o LM Studio, carregue um modelo e ligue o servidor local, "
                       "e ligue este switch de novo. O endereço e o modelo ficaram guardados.")
@@ -711,6 +715,7 @@ class _TelaLmStudio(_TelaDoDestino):
 
 class _TelaServidor(_TelaDoDestino):
     nome = SERVIDOR
+    DESENHO = "servidor"
     rotulo_do_switch = "Habilitar Servidor de IA Interno"
     FRASE_DE_FALHA = ("Confira o endereço, ou veja com a TI se ele está no ar. O "
                       "endereço e o token ficaram guardados.")
@@ -872,6 +877,7 @@ class _TelaHabilitar(_TelaBasica):
     """Os três switches (RN-24, RN-25, RN-38 e RN-39 da spec 004)."""
 
     RECUO = 44
+    DESENHO = "habilitar"
 
     def __init__(self, ao_mudar, ao_ligar_o_motor):
         super().__init__("Habilitar IA", "")

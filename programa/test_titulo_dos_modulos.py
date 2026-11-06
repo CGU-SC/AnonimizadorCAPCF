@@ -38,10 +38,28 @@ def test_cada_tela_do_anonimizar_leva_o_cadeado(janela):
         assert _desenho(tela) == "cadeado", type(tela).__name__
 
 
-def test_as_tres_telas_da_ia_levam_a_engrenagem(janela):
+def test_cada_tela_das_configuracoes_leva_o_desenho_da_sua_opcao(janela):
+    """RN-31: o mesmo desenho do item do submenu, e não a engrenagem."""
     ia = janela.painel_ia
-    for tela in (ia.tela_lm_studio, ia.tela_servidor, ia.tela_habilitar):
-        assert _desenho(tela) == "engrenagem", type(tela).__name__
+    for tela, desenho in ((ia.tela_tema, "tema"), (ia.tela_lm_studio, "lm_studio"),
+                          (ia.tela_servidor, "servidor"), (ia.tela_habilitar, "habilitar")):
+        assert _desenho(tela) == desenho, type(tela).__name__
+
+
+def test_o_desenho_das_configuracoes_aparece_pintado_no_titulo(janela):
+    """Os quatro desenhos nasceram para o tamanho do submenu: pintados no quadrado
+    do título, eles precisam sair, e não um quadrado vazio sem nenhum erro."""
+    from PySide6.QtGui import QColor
+    import estilo
+
+    ia = janela.painel_ia
+    letra = QColor(estilo.COR_TEXTO)
+    for tela in (ia.tela_tema, ia.tela_lm_studio, ia.tela_servidor, ia.tela_habilitar):
+        foto = tela.cabecalho.icone.grab().toImage()
+        tracos = sum(
+            1 for x in range(foto.width()) for y in range(foto.height())
+            if abs(foto.pixelColor(x, y).lightness() - letra.lightness()) < 40)
+        assert tracos > 20, type(tela).__name__
 
 
 def test_os_textos_dos_titulos_nao_mudaram(janela):

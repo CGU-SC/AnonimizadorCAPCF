@@ -38,12 +38,13 @@ def test_o_submenu_tem_as_duas_secoes_na_ordem_combinada(janela):
         "LM Studio", "Servidor de IA Interno", "Habilitar IA"]
 
 
-def test_entrar_abre_o_tema_com_a_engrenagem_no_titulo(janela):
+def test_entrar_abre_o_tema_com_o_desenho_do_tema_no_titulo(janela):
     janela.menu.botao_config_ia.click()
     assert janela.menu.botao_tema.isChecked()
     assert janela.painel_ia.tela_atual() == TEMA
     cabecalho = janela.painel_ia.tela_tema.cabecalho
-    assert cabecalho.icone.desenho == "engrenagem"
+    # RN-31: o desenho do item "Tema"; a engrenagem fica no item da faixa.
+    assert cabecalho.icone.desenho == "tema"
     assert cabecalho.titulo.text() == "Tema"
     assert cabecalho.legenda.text() == "As cores do programa. O desenho das telas é o mesmo nos dois."
 

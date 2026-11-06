@@ -783,3 +783,42 @@ O fundo das caixas de erro e o amarelo das caixas de aviso ficam como estão.
 #### Questões em aberto
 
 Nenhuma.
+
+### Acréscimo de 06/11/2026 — o ícone do título nas Configurações
+
+**Situação:** aprovado em 06/11/2026.
+
+Pedido da solicitante na conferência da etapa 3 da funcionalidade 10: com cada
+opção do submenu tendo o seu ícone (RN-21), a engrenagem repetida no título das
+quatro telas não dizia em qual delas a pessoa está. Nenhum desenho novo: o
+título passa a levar o mesmo desenho do item do submenu, no mesmo quadrado azul
+fraco de sempre. Nenhum fluxo, texto, tamanho ou cor muda.
+
+| Tela | Ícone do título antes | Ícone do título agora |
+| --- | --- | --- |
+| Tema | engrenagem | o do item "Tema" |
+| LM Studio | engrenagem | o do item "LM Studio" |
+| Servidor de IA Interno | engrenagem | o do item "Servidor de IA Interno" |
+| Habilitar IA | engrenagem | o do item "Habilitar IA" |
+
+A engrenagem continua no item "Configurações" da faixa.
+
+#### Regras de negócio
+
+- RN-31: **nas Configurações, o título da tela leva o ícone da opção do submenu
+  em que a pessoa está**, igual ao do item. Ficam revogadas a segunda frase da
+  RN-22 (o título do Tema com a engrenagem) e, na RN-14, "a engrenagem nas
+  Configurações de IA". No Gerar OCR e no Anonimizar, a RN-14 continua como está.
+
+#### Critérios de aceite
+
+- Dado o submenu de "Configurações", quando a pessoa clica em "Tema", "LM
+  Studio", "Servidor de IA Interno" ou "Habilitar IA", então o título da tela
+  mostra o mesmo desenho do item clicado, no quadrado azul fraco, e não a
+  engrenagem.
+- Dado que a pessoa clica em "Configurações", então a tela do Tema abre com o
+  ícone do Tema no título, e o item da faixa continua com a engrenagem.
+
+#### Questões em aberto
+
+Nenhuma.

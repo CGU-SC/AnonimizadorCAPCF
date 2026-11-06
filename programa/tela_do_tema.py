@@ -54,9 +54,9 @@ class TelaDoTema(QWidget):
         corpo = QVBoxLayout(self)
         corpo.setContentsMargins(0, 0, 0, 0)
         corpo.setSpacing(0)
-        # A engrenagem, e não o círculo do Tema: o ícone do título é o do lugar em
-        # que a pessoa está, como nas três telas da IA (RN-22 e RN-14).
-        self.cabecalho = CabecalhoDaTela("engrenagem", TITULO, LEGENDA)
+        # O desenho do item "Tema", e não a engrenagem: com ela nas quatro telas, o
+        # título não dizia em qual a pessoa está (RN-31 da spec 001).
+        self.cabecalho = CabecalhoDaTela("tema", TITULO, LEGENDA)
         corpo.addWidget(self.cabecalho)
         corpo.addSpacing(estilo.ESPACO_4)
         corpo.addWidget(rotulo_de_secao("TEMA"))
