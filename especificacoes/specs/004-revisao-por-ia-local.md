@@ -3,6 +3,11 @@
 **Status:** aprovada; construída, à espera da conferência na tela
 **Data:** 2026-10-31
 **Aprovada em:** 2026-10-31
+**Emendada em:** 2026-11-05 (aprovada no mesmo dia) — "Configurações de IA" vira
+"Configurações", com o Tema e a IA dentro, e entrar nele abre o Tema
+(funcionalidade 10 do backlog). Está na seção "Emenda de 05/11/2026", antes das
+questões em aberto; as RN-1 a RN-3 e os dois primeiros critérios de "Menu e
+destinos" trazem a remissão.
 **Levantamento:** `mockups/requisitos/08-mapa-do-entendimento.html`, começado em
 23/09/2026 e fechado em 31/10/2026. A anotação de setembro está em
 `especificacoes/004-levantamento-interrompido.md`, e vale o que está aqui quando
@@ -234,12 +239,16 @@ branco.
 
 - RN-1: "Configurações de IA" fica no fim da faixa da esquerda, longe dos
   módulos. *(Emendado em 03/11/2026, pela emenda de mesma data da spec 001: era
-  "logo acima da versão", e a versão subiu para o cabeçalho da faixa.)*
+  "logo acima da versão", e a versão subiu para o cabeçalho da faixa. E, desde
+  a emenda de 05/11/2026, o item se chama "Configurações".)*
 - RN-2: o clique troca o menu inteiro pelo submenu, com o "voltar". Quando a saída
   descartaria uma revisão aberta e não salva, vale a mesma pergunta dos outros
-  itens (RN-19 da spec 003).
+  itens (RN-19 da spec 003). *(Emendado em 05/11/2026: o submenu ganha a seção
+  "Configurações Gerais", com o Tema, e entrar nele abre o Tema, e não mais o LM
+  Studio - RN-20 e RN-22 da spec 001.)*
 - RN-3: dentro do submenu, só um item fica marcado por vez, como no menu de sempre
-  (RN-2 da spec 001). Voltar não desliga nem muda nada.
+  (RN-2 da spec 001). Voltar não desliga nem muda nada. *(Desde 05/11/2026, vale
+  também para o Tema.)*
 
 ### Os destinos
 
@@ -383,9 +392,11 @@ branco.
 - Dado o programa aberto, então "Configurações de IA" está no fim da faixa, e o
   clique troca o menu por "LM Studio", "Servidor de IA Interno" e "Habilitar IA",
   com o "voltar". *(Emendado em 03/11/2026: o "acima da versão" saiu com a versão,
-  que subiu para o cabeçalho - emenda de mesma data da spec 001.)*
+  que subiu para o cabeçalho - emenda de mesma data da spec 001. E, desde
+  05/11/2026, o item é "Configurações", e o submenu tem também o Tema - emenda de
+  mesma data, abaixo.)*
 - Dada uma revisão não salva, quando a pessoa clica em "Configurações de IA", então
-  vem a pergunta de descartar.
+  vem a pergunta de descartar. *(Desde 05/11/2026, o clique é em "Configurações".)*
 - Dado o LM Studio ligado, quando a pessoa liga o switch do servidor e confirma,
   então o LM Studio desliga; e, ao religá-lo, a porta e os modelos voltam como
   estavam.
@@ -650,6 +661,58 @@ combinado: fecham buracos que deixariam dígito à vista ou o token sair sem avi
   também o faz falhar na conta. Liberado, ele fica na seção, para ser mascarado de novo.
   Vale só para o suspeito: o CPF válido que a IA nega fica onde está, porque soltar por uma
   frase o número que passa na conta é o risco maior.
+
+## Emenda de 05/11/2026 — "Configurações", com o Tema
+
+**Situação:** aprovada em 05/11/2026.
+
+Funcionalidade 10 do backlog. O submenu novo, a tela do Tema e os dois temas
+estão na emenda de mesma data da spec 001 (RN-16 a RN-26); aqui fica o que muda
+no que esta spec já combinou.
+
+### Escopo da emenda
+
+- O item da faixa passa a se chamar "Configurações", no mesmo lugar e com a
+  mesma engrenagem (RN-1).
+- As três opções da IA ficam debaixo do título de seção "Configurações de IA", com
+  os nomes e as telas de hoje. Entrar no submenu abre o Tema, e não mais o LM
+  Studio (RN-2).
+- As cinco frases do programa que mandam a pessoa a "Configurações de IA" passam
+  a dizer "Configurações", e nada mais muda nelas:
+
+| Onde aparece | Hoje | Passa a ser |
+| --- | --- | --- |
+| Na escolha do motor, embaixo de "IA local", com o motor ligado e o modelo reprovado no teste | O modelo do motor não passou no teste: veja em Configurações de IA. | O modelo do motor não passou no teste: veja em Configurações. |
+| Idem, com o motor ligado e sem modelo escolhido | Escolha o modelo do motor em Configurações de IA. | Escolha o modelo do motor em Configurações. |
+| Idem, com a IA desligada | Ligue em Configurações de IA, em "Habilitar IA". | Ligue em Configurações, em "Habilitar IA". |
+| Na falha da leitura pela IA, quando ela deixou de estar disponível | A IA local não está disponível: confira as Configurações de IA. | A IA local não está disponível: confira as Configurações. |
+| Na revisão do Anonimizar, ao lado de "Revisar com IA", com a IA desligada | Ligue em Configurações de IA, no fim do menu | Ligue em Configurações, no fim do menu |
+
+### Fora de escopo da emenda
+
+- Mudar qualquer outra coisa nas telas e nas regras da IA.
+- Os comentários e os nomes de dentro do código que dizem "Configurações de IA":
+  não aparecem para quem usa.
+
+### Regras de negócio da emenda
+
+As RN-1 a RN-3 ficam emendadas como indicado nelas. Nenhuma regra nova.
+
+### Critérios de aceite da emenda
+
+- Dada a IA desligada, então a frase embaixo de "IA local" é 'Ligue em
+  Configurações, em "Habilitar IA".', e a da revisão é "Ligue em Configurações,
+  no fim do menu"; e assim cada uma das cinco frases da tabela, no caso dela.
+- Dado o programa aberto, em qualquer tela, então o único texto visível com
+  "Configurações de IA" é o título de seção do submenu.
+- Dada uma revisão não salva, quando a pessoa clica em "Configurações", então vem
+  a pergunta de descartar, como antes.
+- Dados todos os critérios das seções anteriores, então eles continuam passando,
+  com o item chamado "Configurações".
+
+### Questões em aberto da emenda
+
+Nenhuma.
 
 ## Questões em aberto
 

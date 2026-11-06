@@ -349,6 +349,120 @@
   </div>
 </div>
 
+<h2>Emenda de 05/11/2026 — o tema claro e o menu Configurações</h2>
+<div style="background: rgba(217,164,65,0.10); border: 1px solid #d9a441; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovada em 05/11/2026.</strong> Funcionalidade 10 do backlog. A aparência já foi aprovada no
+  rascunho <code>mockups/janela/06-tema-claro-e-configuracoes.html</code>; esta página mostra o combinado: o que acontece,
+  em que ordem, e o que fica de fora. Vêm junto duas emendas pequenas: na spec 002, o tema guardado como o motor (RN-42),
+  e na spec 004, o nome "Configurações" nas cinco frases que apontam para ele.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>Dois temas, e só as cores mudam:</strong> o escuro de hoje continua o padrão, com os mesmos valores (RN-16).</li>
+    <li><strong>A janela nasce com um tema só:</strong> escolher outro vale ao reabrir (RN-17).</li>
+    <li><strong>No claro, toda letra se lê:</strong> contraste de pelo menos 4,5 para 1; o amarelo só pinta fundo, e a
+      letra de alerta é o âmbar escuro (RN-18).</li>
+    <li><strong>As marcas da revisão guardam o traço:</strong> reto, ondulado, traço-ponto, tracejado e pontilhado, nos
+      dois temas (RN-19).</li>
+    <li><strong>"Configurações", com duas seções:</strong> "Configurações Gerais" com o Tema, e "Configurações de IA" com
+      as três opções de hoje. O título de seção não se clica (RN-20). Cada opção tem o seu ícone, menos o "‹ Voltar" (RN-21).</li>
+    <li><strong>Entrar abre o Tema</strong>, e não mais o LM Studio (RN-22).</li>
+    <li><strong>A escolha é guardada no clique</strong>, e a frase com o "Reabrir agora" aparece só quando a escolha é
+      diferente do tema na tela (RN-23).</li>
+    <li><strong>"Reabrir agora" fecha e abre de novo</strong>, no tema marcado, mesmo sem ter conseguido guardar; a janela
+      velha só fecha depois que a nova começou a abrir (RN-24).</li>
+    <li><strong>Pergunta antes, quando há o que perder:</strong> leitura em andamento, texto lido e não salvo, revisão
+      não salva (RN-25).</li>
+    <li><strong>Toda cor vem do tema:</strong> nenhuma tela tem cor própria escrita dentro dela (RN-26).</li>
+  </ol>
+</div>
+
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminho normal — escolher o claro</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">A pessoa clica em "Configurações". O submenu aparece com "Tema" marcado, e o painel mostra a tela do Tema, com "Escuro" marcado.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Ela marca "Claro". A escolha fica guardada nessa hora, e aparecem a frase "O tema novo vale quando o programa abrir de novo." e o "Reabrir agora".</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">Ela clica em "Reabrir agora". A janela fecha e abre de novo, inteira no claro, no tamanho de antes, com o menu principal e nada marcado.</div></div>
+    <div class="passo"><div class="passo-numero">◦</div><div class="passo-texto"><strong>Sem pressa:</strong> sem clicar no botão, o claro vem na próxima vez que o programa abrir.</div></div>
+    <div class="passo"><div class="passo-numero">◦</div><div class="passo-texto"><strong>Mudou de ideia:</strong> marcar "Escuro" de novo faz a frase e o botão sumirem, e a escolha guardada volta a ser o escuro.</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminhos tortos — ao clicar em "Reabrir agora"</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto"><strong>Uma leitura em andamento</strong> no Gerar OCR ou no Anonimizar: a pergunta aparece na própria tela, com "Continuar a leitura" (o que não perde nada) e "Reabrir mesmo assim".</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto"><strong>Um texto lido e ainda não salvo:</strong> a mesma pergunta, com "Não reabrir" e "Reabrir mesmo assim". Havendo mais de uma coisa a perder, uma pergunta só cita todas.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto"><strong>Uma revisão não salva:</strong> a pergunta de quando se fecha a janela, no Anonimizar, com "Reabrir sem salvar". Na prática não se chega a ela.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto"><strong>Não dá para guardar a escolha:</strong> reabre no claro mesmo assim, sem aviso; fechando e abrindo por conta própria, volta o escuro guardado.</div></div>
+    <div class="passo"><div class="passo-numero">5</div><div class="passo-texto"><strong>A escolha guardada não se lê:</strong> abre no escuro, sem erro e sem aviso.</div></div>
+    <div class="passo"><div class="passo-numero">6</div><div class="passo-texto"><strong>O programa não consegue abrir de novo:</strong> a janela não fecha, e a tela diz "Não foi possível reabrir agora. O tema novo vale quando você fechar e abrir o programa."</div></div>
+  </div>
+</div>
+
+<h2 style="font-size: 17px; border-bottom: none; margin-top: 32px;">Os estados da tela do Tema</h2>
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho vazio">1 · O tema marcado é o da tela</div>
+    <div class="estado-corpo">Só as duas opções, nada embaixo. É o que vê quem entra pela primeira vez.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho selecionado">2 · O tema marcado é outro</div>
+    <div class="estado-corpo">Embaixo das opções, a frase e o "Reabrir agora".</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho" style="background: rgba(217,164,65,0.18); color: #d9a441;">3 · A pergunta antes de reabrir</div>
+    <div class="estado-corpo">No lugar da frase e do botão, a frase do que se perderia e as duas saídas, sem caixa por cima.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho" style="background: rgba(217,83,79,0.18); color: #f08a86;">4 · Não deu para reabrir</div>
+    <div class="estado-corpo">A janela continua de pé, e a frase diz que o tema vale ao fechar e abrir.</div>
+  </div>
+</div>
+<div class="estados">
+  <div class="nao-aplica">Carregando — não há tela de espera: a janela some e volta, e a espera é a do programa abrindo, como sempre.</div>
+  <div class="nao-aplica">Erro ao guardar — não aparece: a escolha vale até fechar (RN-39 da spec 002).</div>
+</div>
+
+<div style="background: rgba(59,110,165,0.10); border: 1px solid #3b6ea5; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Três suposições que apareceram ao escrever, aprovadas por você junto com a spec:</strong>
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>Depois de reabrir, a janela abre como sempre:</strong> no tamanho lembrado, no menu principal e com nada
+      marcado. Para ver a tela do Tema de novo, entra-se em Configurações.</li>
+    <li><strong>O texto lido e ainda não salvo também faz perguntar.</strong> Dá para ir às Configurações com um texto
+      conferido no Gerar OCR, ou um PDF na conferência do Anonimizar, e reabrir o perderia como perde uma leitura.
+      Fechar pelo X continua sem perguntar, como hoje.</li>
+    <li><strong>Só fecha depois que a nova abriu.</strong> Sem conseguir abrir de novo, o programa fica de pé e diz por quê,
+      em vez de fechar e não voltar.</li>
+  </ol>
+</div>
+
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Entra na emenda</div>
+    <ul class="escopo-lista dentro">
+      <li>O tema claro, ao lado do escuro, que continua o padrão</li>
+      <li>"Configurações" no lugar de "Configurações de IA", com as duas seções</li>
+      <li>Um ícone para Tema, LM Studio, Servidor de IA Interno e Habilitar IA</li>
+      <li>A tela do Tema, a frase e o "Reabrir agora"</li>
+      <li>A pergunta antes de reabrir, quando há o que perder</li>
+      <li>Todas as telas do programa nas cores do claro, com o contraste conferido</li>
+      <li>O tema lembrado no <code>preferencias.ini</code> (spec 002)</li>
+      <li>As cinco frases que apontam para "Configurações de IA" (spec 004)</li>
+      <li>O <code>CLAUDE.md</code> e a linha do tema na lista da próxima entrega</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Fora da emenda</div>
+    <ul class="escopo-lista fora">
+      <li>Trocar o tema na hora, sem reabrir</li>
+      <li>Seguir sozinho o tema do Windows</li>
+      <li>Mudar desenho, tamanho, espaço, fonte ou texto de qualquer tela</li>
+      <li>Um terceiro tema, ou escolher cor a cor</li>
+      <li>A barra de título, o ícone da janela e a marca definitiva</li>
+      <li>O arquivo <code>.md</code> gravado, que não tem cor</li>
+      <li>As páginas de documentação, que continuam escuras, e os rascunhos antigos</li>
+      <li>Fechar pelo X perguntar pelo texto não salvo: continua como hoje</li>
+      <li>Fechar a funcionalidade 9 e gerar instalador agora: um instalador só, no fim</li>
+    </ul>
+  </div>
+</div>
+
 <p class="rodape">
   Gerado pela <code>skill-07-designer-de-telas</code> a partir da spec 001. Mostra o
   combinado — não a aparência da tela. O rascunho visual (cores, botões,

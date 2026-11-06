@@ -34,6 +34,10 @@ da pessoa é outra categoria, e passa a ser lembrada. Levantamento em
 passa a acender com a chave, e o `.env` ganha a linha do token, a única que o
 programa grava. As RN-20, RN-21 e RN-25 e o fora de escopo da emenda de 28/10/2026
 trazem a remissão.
+**Emendada em:** 2026-11-05 (aprovada no mesmo dia) — o tema escolhido também é lembrado no
+`preferencias.ini` (funcionalidade 10 do backlog). Está na seção "Emenda de
+05/11/2026", no fim; a tela do Tema e o resto da funcionalidade estão na emenda de
+mesma data da spec 001.
 
 ## Objetivo
 
@@ -842,6 +846,61 @@ rascunho de tela.
   instalar uma versão nova por cima o mantém.
 - Dados todos os critérios das seções anteriores, então eles continuam passando,
   com a ressalva das RN-22 e RN-26 emendadas.
+
+### Questões em aberto da emenda
+
+Nenhuma.
+
+## Emenda de 05/11/2026 — o tema lembrado
+
+**Situação:** aprovada em 05/11/2026.
+
+Funcionalidade 10 do backlog. Levantamento em
+`mockups/requisitos/09-mapa-do-entendimento.html`. A tela do Tema, os dois temas
+e o "Reabrir agora" estão na emenda de mesma data da spec 001 (RN-16 a RN-26).
+
+### Escopo da emenda
+
+- O tema escolhido, escuro ou claro, é lembrado de um uso para o outro, no
+  mesmo `preferencias.ini` do motor e da janela.
+
+### Fora de escopo da emenda
+
+- Um tema por módulo: o tema é um só, da janela inteira.
+- Tudo o que a emenda de 28/10/2026 já deixa de fora, que continua de fora.
+
+### Premissas da emenda
+
+- premissa: o tema é escolha da pessoa, e não trabalho: guardá-lo não fere a
+  RN-40.
+- premissa: desinstalar apaga a escolha do tema, e atualizar a mantém (RN-41).
+
+### Dados da emenda
+
+| Informação | De onde vem | Observação |
+| --- | --- | --- |
+| tema lembrado | a pessoa, ao marcar na tela do Tema | `escuro` ou `claro`; sem ele, ou com outro valor, o escuro |
+
+### Regras de negócio da emenda
+
+- RN-42: **o tema marcado é lembrado de um uso para o outro.** Ele é guardado na
+  hora do clique, e valem para ele as RN-38 a RN-41, como para o motor: mora no
+  `preferencias.ini`; o que não dá para ler vale como escuro, sem erro e sem
+  aviso; a gravação que falha deixa a escolha valendo até fechar, e o "Reabrir
+  agora" a leva mesmo assim (RN-24 da spec 001); desinstalar apaga, e atualizar
+  mantém. Guardar o tema não mexe no que está guardado do motor e da janela.
+
+### Critérios de aceite da emenda
+
+- Dado um `preferencias.ini` com os motores e a janela, quando a pessoa marca
+  "Claro", então o arquivo passa a ter o tema `claro`, e os motores e a janela
+  continuam como estavam.
+- Dado o `.env` com comentários da TI, quando a pessoa marca um tema, reabre e
+  fecha o programa, então o `.env` continua idêntico, byte a byte.
+- Dados os testes automáticos, então nenhum deles lê ou grava o tema no
+  `preferencias.ini` da raiz do projeto.
+- Dado o instalador, então desinstalar apaga o tema junto com o resto do
+  `preferencias.ini`, e instalar uma versão nova por cima o mantém.
 
 ### Questões em aberto da emenda
 
