@@ -44,8 +44,8 @@ POR_TIPO = {
     cpf.PASSA_NA_CONTA: ComoAparece("CPF válido", "CPFs válidos",
                                     "COR_ERRO_TEXTO"),
     cpf.FALHA_NA_CONTA: ComoAparece("falha na conta", "falham na conta",
-                                    "COR_ALERTA_TEXTO"),
-    cpf.QUASE_CPF: ComoAparece("quase CPF", "quase CPF", "COR_ALERTA_TEXTO"),
+                                    "COR_SUSPEITO"),
+    cpf.QUASE_CPF: ComoAparece("quase CPF", "quase CPF", "COR_SUSPEITO"),
     cpf.MASCARADO_A_MAO: ComoAparece("mascarado à mão", "mascarados à mão",
                                      "COR_DESTAQUE_HOVER"),
 }
@@ -53,7 +53,7 @@ POR_TIPO = {
 # "Suspeito" não é um tipo: é o grupo que junta o que falha na conta e o "quase
 # CPF". Ele tem nome próprio na tela porque é assim que a pessoa pensa neles -
 # são os que pedem uma olhada.
-SUSPEITO = ComoAparece("suspeito", "suspeitos", "COR_ALERTA_TEXTO")
+SUSPEITO = ComoAparece("suspeito", "suspeitos", "COR_SUSPEITO")
 
 # Também não é tipo, e sim situação: o número que a pessoa soltou.
 LIBERADO = ComoAparece("liberado", "liberados", "COR_SUCESSO")

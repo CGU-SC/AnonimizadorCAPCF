@@ -464,3 +464,10 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   papel (`tipos_na_tela.py`, `pecas_da_ia.py`). O teste que monta a janela no claro
   e procura valor do escuro é o que pega a que escapar (etapa 1 da funcionalidade
   10, 06/11/2026).
+- **Página em `mockups/exemplos/` nunca entra no histórico, e o `git status` não
+  avisa.** A linha `Exemplos/` do `.gitignore` protege a pasta de documentos com CPF
+  real, e o git desta máquina não separa maiúscula de minúscula: ela pega também
+  qualquer pasta `exemplos`, em qualquer lugar. As duas comparações do âmbar nasceram
+  lá e só não se perderam porque o `git status` saiu sem elas. Não mexa na linha, que
+  é proteção: comparação de tela vai na pasta da área, como rascunho numerado
+  (`mockups/janela/08` e `09`, etapa 3 da funcionalidade 10, 06/11/2026).

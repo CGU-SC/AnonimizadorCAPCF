@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 61 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 61 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre o ajuste do âmbar e do vermelho do claro (acréscimo de 06/11/2026 da spec 001), em
+06/11/2026, depois de a solicitante conferir na tela, nos dois temas. A varredura levantou sete suspeitas; nenhuma virou
+achado.</p>
+
+<div class="achado"><h3>Nenhum achado da lente crítica</h3>
+  <p>A lente procura o que quebra o programa, perde dado ou dá resultado errado sem avisar. A troca é só de cor: nenhum
+  lugar do programa decide alguma coisa comparando cores, e cada item da lista continua sabendo se é suspeito pelo tipo
+  do número, e não pela cor dele. Os 1027 testes passam, três deles novos.</p>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li>Nada, nesta revisão: sem achado, sem conserto. Fica esta página.</li>
+</ul>
+
+<h2>O que foi levantado e não é da lente crítica</h2>
+<ul>
+  <li><b>Falta um teste do mínimo do suspeito contra o fundo.</b> Hoje ele é medido só contra a letra do texto; um amarelo
+    quase invisível passaria. E <b>a chave de cores não tem teste próprio</b> da cor nova. São da lente de critérios de
+    aceite.</li>
+  <li><b>A cor da barra do suspeito mora num lugar à parte</b> dos outros tipos, e <b>o fundo da caixa de erro continua
+    feito do vermelho de antes</b>, de propósito, mas sem dizer isso no código. São da lente de manutenção.</li>
+  <li><b>O aviso do trecho marcado, na revisão, fica num laranja perto do âmbar do suspeito.</b> É visual, e foi visto na
+    conferência na tela.</li>
+  <li><b>O 3,0 escrito para o suspeito é 2,96 arredondado.</b> É de clareza.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 06/11/2026.</p>
+</body>
+</html>

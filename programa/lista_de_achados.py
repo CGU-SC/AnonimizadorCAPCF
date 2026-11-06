@@ -420,6 +420,10 @@ def _cor_da_barra(ocorrencia):
         return estilo.COR_BORDA
     if ocorrencia.da_ia or ocorrencia.suspeito_que_a_ia_nega:
         return estilo.COR_IA
+    # No claro a barra do suspeito é um âmbar mais vivo que a etiqueta: ela não é
+    # letra, e marca o item de longe (RN-29 da spec 001).
+    if ocorrencia.suspeito:
+        return estilo.COR_SUSPEITO_BARRA
     return _cor_do_tipo(ocorrencia)
 
 

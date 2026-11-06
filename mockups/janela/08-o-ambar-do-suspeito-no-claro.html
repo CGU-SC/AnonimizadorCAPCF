@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 08 — o âmbar do suspeito no claro</title>
+<style>
+  /* A página é escura, como as de documentação; as amostras são do tema claro. */
+  :root {
+    --pg-fundo: #14171c; --pg-texto: #e8eaed; --pg-sec: #9aa1ac; --pg-borda: #383e47; --pg-alerta: #d9a441;
+    --fundo: #f2f4f7; --elev: #fbfcfd; --borda: #c9d0d8; --texto: #16202b; --sec: #4a5868;
+    --erro: #b3261e; --alerta: #c2aa07;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--pg-fundo); color: var(--pg-texto); font-family: var(--fonte-texto); font-size: 15px; padding: 32px; line-height: 1.45; }
+  h1 { font-size: 28px; margin: 0 0 8px 0; }
+  .subtitulo { color: var(--pg-sec); max-width: 1100px; margin: 0 0 20px 0; }
+  .subtitulo b { color: var(--pg-texto); }
+  .grade { display: grid; grid-template-columns: repeat(2, minmax(460px, 1fr)); gap: 20px; max-width: 1240px; }
+  .opcao { border: 1px solid var(--pg-borda); border-radius: var(--raio); padding: 16px; }
+  .opcao h2 { font-size: 17px; margin: 0 0 4px 0; }
+  .opcao .medida { color: var(--pg-sec); font-size: 13px; margin-bottom: 12px; }
+  .opcao .medida b { color: var(--pg-texto); font-weight: 600; }
+  .opcao .aviso-regra { color: var(--pg-alerta); font-size: 13px; margin-top: 10px; }
+
+  .tela { background: var(--fundo); border: 1px solid var(--borda); border-radius: var(--raio); padding: 14px; color: var(--texto); display: flex; flex-direction: column; gap: 12px; }
+  .texto-doc { background: var(--elev); border: 1px solid var(--borda); border-radius: var(--raio); padding: 12px 14px; font-family: var(--fonte-mono); font-size: 13.5px; line-height: 1.9; }
+  .m { text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+  .valido { color: var(--erro); text-decoration: underline solid var(--erro); }
+  .suspeito { color: var(--letra); text-decoration: underline wavy var(--traco); text-decoration-thickness: 1px; background: var(--fundo-marca, transparent); }
+  .item { background: var(--elev); border: 1px solid var(--borda); border-left: 3px solid var(--barra); border-radius: var(--raio); padding: 8px 12px; display: flex; flex-direction: column; gap: 3px; }
+  .etq { align-self: flex-start; font-size: 11px; font-weight: 600; color: var(--letra-etq); border: 1px solid var(--letra-etq); border-radius: 10px; padding: 0 7px; }
+  .num { font-family: var(--fonte-mono); font-size: 14px; }
+  .caixa { background: rgba(194, 170, 7, 0.15); border-left: 4px solid var(--alerta); border-radius: var(--raio); padding: 8px 12px; }
+  .caixa .t { font-weight: 600; color: var(--letra-etq); }
+  .caixa .s { font-size: 13px; color: var(--sec); }
+
+  /* Cada opção só troca as cores do suspeito e da letra de aviso. */
+  .hoje { --letra: #7a5c00; --traco: #7a5c00; --barra: #7a5c00; --letra-etq: #7a5c00; }
+  .pedida { --letra: #ec9c01; --traco: #ec9c01; --barra: #ec9c01; --letra-etq: #ec9c01; }
+  .laranja { --letra: #a85a00; --traco: #a85a00; --barra: #a85a00; --letra-etq: #a85a00; }
+  .marca-texto { --letra: #16202b; --traco: #a85a00; --fundo-marca: rgba(236, 156, 1, 0.30); --barra: #ec9c01; --letra-etq: #a85a00; }
+
+  .notas { margin-top: 32px; border-top: 1px solid var(--pg-borda); padding-top: 14px; color: var(--pg-sec); font-size: 13px; max-width: 1100px; }
+  .notas li { margin-bottom: 6px; }
+  .notas b { color: var(--pg-texto); }
+</style>
+</head>
+<body>
+<h1>Rascunho 08 — o âmbar do suspeito no claro</h1>
+<p class="subtitulo">Pedido na conferência da etapa 3 da funcionalidade 10, em 06/11/2026: no claro, o âmbar do
+suspeito (<code>#7a5c00</code>) se confunde com o preto do texto. As quatro opções abaixo mostram as mesmas peças — o
+texto da revisão com um <b>CPF válido</b> (vermelho, traço reto) e um <b>suspeito</b> (traço ondulado), o item dele na
+lista e a caixa de aviso de antes de gravar —, mudando só a cor do suspeito e da letra de aviso. <b>O escuro não muda
+em nenhuma delas.</b> A medida é o contraste contra o fundo dos quadros (o mínimo da spec para letra é 4,5 para 1) e
+contra o preto do texto (quanto maior, mais fácil de separar do texto comum).</p>
+
+<template id="pecas">
+  <div class="tela">
+    <div class="texto-doc">Bolsista inscrito no CPF <span class="m valido">XXX.111.111-XX</span>, conforme o termo. Coordenador
+      com o número <span class="m suspeito">XXX.222.222-XX</span> no cadastro, a conferir.</div>
+    <div class="item"><span class="etq">falha na conta</span><span class="num">222.222.222-23</span></div>
+    <div class="caixa"><div class="t">⚠ Este arquivo sai com os CPFs inteiros</div><div class="s">Este módulo lê e confere o texto; ele não mascara nada.</div></div>
+  </div>
+</template>
+
+<div class="grade">
+  <div class="opcao hoje">
+    <h2>1. Hoje — âmbar escuro <code>#7a5c00</code></h2>
+    <div class="medida">Contra o fundo: <b>6,1</b> · contra o preto do texto: <b>2,6</b></div>
+  </div>
+  <div class="opcao pedida">
+    <h2>2. A cor pedida — <code>#ec9c01</code> na letra</h2>
+    <div class="medida">Contra o fundo: <b>2,2</b> · contra o preto do texto: <b>7,3</b></div>
+  </div>
+  <div class="opcao laranja">
+    <h2>3. Um laranja que passa no mínimo — <code>#a85a00</code></h2>
+    <div class="medida">Contra o fundo: <b>4,95</b> · contra o preto do texto: <b>3,2</b> · longe do vermelho do CPF válido</div>
+  </div>
+  <div class="opcao marca-texto">
+    <h2>4. A cor pedida como marca-texto — <code>#ec9c01</code> atrás do número</h2>
+    <div class="medida">O número fica na letra do texto, com o fundo <code>#ec9c01</code> a 30% atrás e o traço ondulado no laranja da opção 3. Nas etiquetas e nos avisos, a letra é o laranja da opção 3. Letra sobre a marca: <b>cerca de 12</b></div>
+  </div>
+</div>
+
+<div class="notas">
+  <ul>
+    <li><b>Opção 2:</b> abaixo do mínimo de 4,5 para 1 — e abaixo até do texto apagado de propósito das opções desligadas (2,9). Para valer, a spec precisaria de uma exceção na RN-18, e o aviso "⚠ Este arquivo sai com os CPFs inteiros" passaria a ser a frase mais difícil de ler da tela.</li>
+    <li><b>Opção 3:</b> passa no mínimo. Um laranja ainda mais vivo, como o <code>#b45309</code>, também passaria, mas fica perto demais do vermelho do CPF válido — os dois números mais importantes da revisão passariam a se confundir.</li>
+    <li><b>Opção 4:</b> o suspeito passa a ser marcado como o número que a IA apontou já é, com fundo atrás. O traço ondulado continua separando o suspeito dos outros tipos para quem distingue mal as cores (RN-19).</li>
+    <li>Qualquer escolha diferente da 1 muda o valor do papel <code>alerta-texto</code> do claro no sistema de design, e a 2 e a 4 mudam também o combinado da spec.</li>
+  </ul>
+</div>
+
+<script>
+  // As mesmas peças em cada opção, para a comparação ser só de cor.
+  document.querySelectorAll(".opcao").forEach(function (opcao) {
+    var medida = opcao.querySelector(".medida");
+    medida.after(document.getElementById("pecas").content.cloneNode(true));
+  });
+</script>
+</body>
+</html>

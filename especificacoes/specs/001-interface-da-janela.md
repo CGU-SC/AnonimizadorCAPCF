@@ -728,3 +728,58 @@ pergunta some, e a leitura segue ou o texto continua lá.
 #### Questões em aberto
 
 Nenhuma.
+
+### Acréscimo de 06/11/2026 — o âmbar e o vermelho do claro
+
+**Situação:** aprovado em 06/11/2026.
+
+Pedido da solicitante na conferência da etapa 3 da funcionalidade 10: no claro,
+o âmbar escuro do suspeito (`#7a5c00`) ficava perto demais do preto do texto, e o
+número que pede conferência se perdia no meio do documento. As alternativas
+foram desenhadas em `mockups/janela/08-o-ambar-do-suspeito-no-claro.html` e
+`09-o-ambar-do-suspeito-ajustado.html`, e a escolhida, em 06/11/2026, foi a
+coluna A do rascunho 09. **Só o claro muda**; o escuro fica com os valores de
+hoje.
+
+| Onde aparece | Antes | Agora | Contraste no claro |
+| --- | --- | --- | --- |
+| O suspeito: o número no texto da revisão, com o traço ondulado; a chave de cores; o selo "N suspeitos"; e a etiqueta "falha na conta" ou "quase CPF" na lista | `#7a5c00` | `#c28102` | 3,0 sobre o fundo da janela e 3,2 sobre o dos quadros; 5,0 contra a letra do texto |
+| A barra à esquerda do item suspeito na lista | `#7a5c00` | `#ec9c01` | não é letra |
+| A letra de aviso: o título das caixas de aviso (como "⚠ Este arquivo sai com os CPFs inteiros"), o "não há" da ficha do PDF, o selo "LIDO PELO ...", a falta do motor e as outras frases de cuidado | `#7a5c00` | `#a85a00` | 4,6 sobre o fundo da janela e 5,0 sobre o dos quadros; de 4,1 a 4,5 dentro das caixas e dos selos amarelos |
+| O vermelho: o CPF válido (o número, o traço, a etiqueta e a barra), o título e a borda das caixas de erro, e os recados de erro | `#b3261e` | `#ae0202` | 6,8 sobre o fundo da janela e 7,3 sobre o dos quadros |
+
+O fundo das caixas de erro e o amarelo das caixas de aviso ficam como estão.
+
+#### Regras de negócio
+
+- RN-29: **no claro, o suspeito tem cor própria**, separada da letra de aviso:
+  um âmbar claro para o número, a etiqueta e o selo, e um mais vivo para a barra
+  do item na lista. Fica revogada a frase da RN-18 que dava ao suspeito o âmbar
+  escuro da letra de aviso. No escuro, os dois continuam no amarelo de sempre.
+- RN-30: **duas exceções novas ao mínimo de 4,5 para 1 da RN-18**, escolhidas de
+  propósito pela solicitante. A primeira: o suspeito, que perderia o que o faz
+  ser achado, a diferença para o preto do texto; o traço ondulado continua
+  separando-o dos outros tipos para quem distingue mal as cores (RN-19). A
+  segunda: a letra de aviso dentro das caixas e dos selos amarelos, que fica
+  entre 4,1 e 4,5; sobre o fundo da janela e o dos quadros ela passa.
+
+#### Critérios de aceite
+
+- Dados os valores do claro, então o suspeito é `#c28102`, a barra do item
+  suspeito é `#ec9c01`, a letra de aviso é `#a85a00`, e o vermelho de fundo e o
+  de letra são `#ae0202`; e o escuro tem cada papel no valor de antes deste
+  acréscimo.
+- Dados os valores do claro, então cada cor de letra tem pelo menos 4,5 para 1
+  sobre o fundo da janela e o dos quadros, menos o texto apagado e o suspeito; e
+  o suspeito tem pelo menos 4,5 para 1 contra a letra do texto.
+- Dada a revisão do Anonimizar no claro, com um CPF válido e um suspeito, então
+  o suspeito aparece no texto, na chave de cores, no selo e na etiqueta em
+  `#c28102`, com a barra do item em `#ec9c01`; e o CPF válido, no texto, na
+  etiqueta e na barra, em `#ae0202`.
+- Dado o programa no claro, quando a solicitante abre a revisão com um suspeito
+  e o aviso de antes de gravar, então o suspeito se separa do texto à primeira
+  vista, e o título da caixa de aviso se lê sem esforço.
+
+#### Questões em aberto
+
+Nenhuma.

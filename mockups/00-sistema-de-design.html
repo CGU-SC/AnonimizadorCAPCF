@@ -32,6 +32,8 @@
     --cor-sucesso: #4caf6d;
     --cor-alerta: #d9a441;
     --cor-alerta-texto: #d9a441;
+    --cor-suspeito: #d9a441;
+    --cor-suspeito-barra: #d9a441;
     --cor-erro: #d9534f;
     --cor-erro-texto: #f08a86;
     --cor-ia: #b39ddb;
@@ -52,9 +54,11 @@
     --cor-destaque-fraco: rgba(31, 78, 140, 0.10);
     --cor-sucesso: #1f7a3a;
     --cor-alerta: #c2aa07;
-    --cor-alerta-texto: #7a5c00;
-    --cor-erro: #b3261e;
-    --cor-erro-texto: #b3261e;
+    --cor-alerta-texto: #a85a00;
+    --cor-suspeito: #c28102;
+    --cor-suspeito-barra: #ec9c01;
+    --cor-erro: #ae0202;
+    --cor-erro-texto: #ae0202;
     --cor-ia: #7356c8;
     --selo-sucesso: rgba(31, 122, 58, 0.10);
     --selo-alerta: rgba(194, 170, 7, 0.14);
@@ -141,8 +145,9 @@
   .selos { display: flex; flex-wrap: wrap; gap: var(--espaco-2); margin-top: var(--espaco-3); }
   .selo { display: inline-flex; align-items: center; padding: 2px var(--espaco-2); border-radius: 12px; font-size: var(--texto-pequeno); font-weight: 600; }
   .selo-sucesso { background: var(--selo-sucesso); color: var(--cor-sucesso); }
-  /* Letra do suspeito no papel próprio: no claro o amarelo não serve de letra. */
-  .selo-alerta { background: var(--selo-alerta); color: var(--cor-alerta-texto); }
+  /* Letra do suspeito no papel próprio: no claro o amarelo não serve de letra, e o
+     âmbar da letra de aviso se confundia com o preto do texto (06/11/2026). */
+  .selo-alerta { background: var(--selo-alerta); color: var(--cor-suspeito); }
   .selo-erro { background: var(--selo-erro); color: var(--cor-erro-texto); }
   .selo-ia { background: var(--selo-ia); color: var(--cor-ia); }
 
@@ -185,7 +190,7 @@ está no rascunho <code>janela/06-tema-claro-e-configuracoes.html</code>.</p>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque)"></div><div class="cor-info"><div class="cor-nome">destaque</div><div class="cor-valor">#3b6ea5</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque-hover)"></div><div class="cor-info"><div class="cor-nome">destaque-hover</div><div class="cor-valor">#4f86bf</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-sucesso)"></div><div class="cor-info"><div class="cor-nome">sucesso</div><div class="cor-valor">#4caf6d</div></div></div>
-        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta)"></div><div class="cor-info"><div class="cor-nome">alerta e alerta-texto</div><div class="cor-valor">#d9a441</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta)"></div><div class="cor-info"><div class="cor-nome">alerta, alerta-texto e suspeito</div><div class="cor-valor">#d9a441</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro)"></div><div class="cor-info"><div class="cor-nome">erro</div><div class="cor-valor">#d9534f</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro-texto)"></div><div class="cor-info"><div class="cor-nome">erro-texto</div><div class="cor-valor">#f08a86</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-ia)"></div><div class="cor-info"><div class="cor-nome">ia</div><div class="cor-valor">#b39ddb</div></div></div>
@@ -203,11 +208,24 @@ está no rascunho <code>janela/06-tema-claro-e-configuracoes.html</code>.</p>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque-hover)"></div><div class="cor-info"><div class="cor-nome">destaque-hover</div><div class="cor-valor">#2a6fc9</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-sucesso)"></div><div class="cor-info"><div class="cor-nome">sucesso</div><div class="cor-valor">#1f7a3a</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta)"></div><div class="cor-info"><div class="cor-nome">alerta (só fundo)</div><div class="cor-valor">#c2aa07</div></div></div>
-        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta-texto)"></div><div class="cor-info"><div class="cor-nome">alerta-texto</div><div class="cor-valor">#7a5c00</div></div></div>
-        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro)"></div><div class="cor-info"><div class="cor-nome">erro e erro-texto</div><div class="cor-valor">#b3261e</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta-texto)"></div><div class="cor-info"><div class="cor-nome">alerta-texto</div><div class="cor-valor">#a85a00</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-suspeito)"></div><div class="cor-info"><div class="cor-nome">suspeito</div><div class="cor-valor">#c28102</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-suspeito-barra)"></div><div class="cor-info"><div class="cor-nome">suspeito-barra</div><div class="cor-valor">#ec9c01</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro)"></div><div class="cor-info"><div class="cor-nome">erro e erro-texto</div><div class="cor-valor">#ae0202</div></div></div>
         <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-ia)"></div><div class="cor-info"><div class="cor-nome">ia</div><div class="cor-valor">#7356c8</div></div></div>
       </div>
     </div>
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou de novo em 06/11/2026, na conferência da etapa 3 da funcionalidade 10:</strong> no claro, o
+    âmbar escuro <code>#7a5c00</code> do suspeito se confundia com o preto do texto. O suspeito ganha
+    <strong>dois papéis próprios</strong>: o <strong>suspeito</strong>, <code>#c28102</code>, no número, na chave
+    de cores, no selo e na etiqueta; e o <strong>suspeito-barra</strong>, <code>#ec9c01</code>, na barra do item
+    da lista. A <strong>letra de aviso</strong> passa a <code>#a85a00</code>, e o <strong>vermelho</strong> a
+    <code>#ae0202</code>. O suspeito fica abaixo do mínimo de letra de propósito (3 para 1 sobre o fundo, 5 para 1
+    contra o texto), e a letra de aviso fica entre 4,1 e 4,5 para 1 dentro das caixas amarelas: as duas exceções
+    da RN-30 da spec 001. Escolhido pela solicitante na coluna A de <code>janela/09-o-ambar-do-suspeito-ajustado.html</code>.
+    O escuro não muda.
   </div>
   <div class="mudanca-sistema">
     <strong>Mudou em 06/11/2026, na construção da funcionalidade 10:</strong> entram <strong>quinze papéis</strong>

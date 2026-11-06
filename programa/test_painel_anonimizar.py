@@ -59,7 +59,7 @@ def test_o_selo_dos_validos_conta_o_que_o_texto_marca_de_vermelho(aplicacao):
     revisao = painel.tela_revisao
     assert revisao.selo_validos.text() == "3 CPFs válidos"
     assert estilo.COR_ERRO_TEXTO in revisao.selo_validos.styleSheet()
-    assert estilo.COR_ALERTA in revisao.selo_suspeitos.styleSheet()
+    assert estilo.COR_SUSPEITO in revisao.selo_suspeitos.styleSheet()
 
     vermelhos = 0
     cursor = revisao.texto.textCursor()

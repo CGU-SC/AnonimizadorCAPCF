@@ -42,6 +42,10 @@ TEMAS = {
         # No escuro o amarelo de alerta serve de letra; no claro não, e por isso
         # a letra de aviso é um papel à parte, mesmo tendo aqui o mesmo valor.
         "COR_ALERTA_TEXTO": "#d9a441",
+        # O suspeito e a barra dele na lista: no escuro, o amarelo de sempre; no
+        # claro cada um tem o seu tom (RN-29 da spec 001).
+        "COR_SUSPEITO": "#d9a441",
+        "COR_SUSPEITO_BARRA": "#d9a441",
         "COR_ERRO": "#d9534f",
         # O vermelho de letra: o #d9534f sobre o fundo escuro tem contraste de
         # 4:1, abaixo do mínimo de leitura para letra pequena. Este tem 6,6:1. É
@@ -88,13 +92,21 @@ TEMAS = {
         "FORCA_DO_DESTAQUE_FRACO": 0.10,
         "COR_PASSAR_O_MOUSE": "rgba(22, 32, 43, 0.06)",
         "COR_SUCESSO": "#1f7a3a",
-        # O amarelo do claro tem 2,3:1 e só pinta fundo e borda; a letra de
-        # aviso é o âmbar escuro, 6,1:1 (RN-18).
+        # O amarelo do claro tem 2,3:1 e só pinta fundo e borda (RN-18).
         "COR_ALERTA": "#c2aa07",
-        "COR_ALERTA_TEXTO": "#7a5c00",
-        "COR_ERRO": "#b3261e",
-        # No claro o vermelho de fundo já tem contraste de letra.
-        "COR_ERRO_TEXTO": "#b3261e",
+        # A letra de aviso: 4,6:1 sobre a janela e 5,0:1 sobre os quadros. Dentro
+        # das caixas e dos selos amarelos fica entre 4,1 e 4,5, exceção escolhida
+        # pela solicitante (RN-30). O #7a5c00 de antes se confundia com o preto.
+        "COR_ALERTA_TEXTO": "#a85a00",
+        # O suspeito fica abaixo do mínimo de letra de propósito, 3,0:1 sobre a
+        # janela: o que faz ele ser achado é a diferença para o preto do texto
+        # (5,0:1), e o traço ondulado o separa para quem distingue mal as cores
+        # (RN-30). A barra do item é um âmbar mais vivo, porque não é letra.
+        "COR_SUSPEITO": "#c28102",
+        "COR_SUSPEITO_BARRA": "#ec9c01",
+        "COR_ERRO": "#ae0202",
+        # No claro o vermelho de fundo já tem contraste de letra: 6,8:1.
+        "COR_ERRO_TEXTO": "#ae0202",
         "COR_IA": "#7356c8",
         "COR_ATRAS_DO_PDF": "#c9d0d8",
         "COR_ERRO_FUNDO": "rgba(179, 38, 30, 18)",

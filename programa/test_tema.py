@@ -30,6 +30,9 @@ ESCURO_DE_ANTES = {
     "COR_SUCESSO": "#4caf6d",
     "COR_ALERTA": "#d9a441",
     "COR_ALERTA_TEXTO": "#d9a441",
+    # Papéis de 06/11/2026, com o amarelo que o suspeito sempre teve no escuro.
+    "COR_SUSPEITO": "#d9a441",
+    "COR_SUSPEITO_BARRA": "#d9a441",
     "COR_ERRO": "#d9534f",
     "COR_ERRO_TEXTO": "#f08a86",
     "COR_IA": "#b39ddb",
@@ -82,8 +85,18 @@ def test_o_claro_troca_os_valores():
     estilo.usar_tema(estilo.CLARO)
     assert estilo.TEMA == estilo.CLARO
     assert estilo.COR_FUNDO == "#f2f4f7"
-    assert estilo.COR_ALERTA_TEXTO == "#7a5c00"
+    assert estilo.COR_ALERTA_TEXTO == "#a85a00"
     assert estilo.COR_DESTAQUE_FRACO == "rgba(31, 78, 140, 0.1)"
+
+
+def test_o_ambar_e_o_vermelho_do_claro_sao_os_escolhidos():
+    # Coluna A do mockups/janela/09-o-ambar-do-suspeito-ajustado.html,
+    # acréscimo de 06/11/2026 da spec 001.
+    claro = estilo.TEMAS[estilo.CLARO]
+    assert claro["COR_SUSPEITO"] == "#c28102"
+    assert claro["COR_SUSPEITO_BARRA"] == "#ec9c01"
+    assert claro["COR_ALERTA_TEXTO"] == "#a85a00"
+    assert claro["COR_ERRO"] == claro["COR_ERRO_TEXTO"] == "#ae0202"
 
 
 def _cores_escritas_fora_do_estilo():
@@ -210,7 +223,7 @@ def test_os_tipos_da_revisao_seguem_o_tema():
     # As cores dos tipos são lidas na hora: guardadas ao carregar, ficariam as do
     # escuro também no claro (RN-17).
     estilo.usar_tema(estilo.CLARO)
-    assert tipos_na_tela.SUSPEITO.cor == "#7a5c00"
+    assert tipos_na_tela.SUSPEITO.cor == "#c28102"
     assert tipos_na_tela.DA_IA.cor == "#7356c8"
     estilo.usar_tema(estilo.ESCURO)
     assert tipos_na_tela.SUSPEITO.cor == "#d9a441"
@@ -229,8 +242,9 @@ def _contraste(cor_a, cor_b):
 
 
 # Os papéis que viram letra. Ficam de fora o texto apagado e as letras de peça
-# desligada, apagados de propósito (exceção da RN-18), e o amarelo de alerta,
-# que no claro só pinta fundo e borda.
+# desligada, apagados de propósito (exceção da RN-18); o suspeito, que no claro
+# fica abaixo do mínimo de propósito (exceção da RN-30), e tem teste próprio; e o
+# amarelo de alerta, que no claro só pinta fundo e borda.
 LETRAS = ("COR_TEXTO", "COR_TEXTO_SECUNDARIO", "COR_DESTAQUE", "COR_DESTAQUE_HOVER",
           "COR_SUCESSO", "COR_ALERTA_TEXTO", "COR_ERRO", "COR_ERRO_TEXTO", "COR_IA",
           "COR_DESTAQUE_SELO_TEXTO")
@@ -242,6 +256,38 @@ def test_no_claro_toda_letra_tem_contraste_de_quatro_e_meio():
         for fundo in ("COR_FUNDO", "COR_FUNDO_ELEVADO"):
             medido = _contraste(claro[papel], claro[fundo])
             assert medido >= 4.5, f"{papel} sobre {fundo}: {medido:.2f}"
+
+
+def test_no_claro_o_suspeito_se_separa_da_letra_do_texto():
+    # A razão da exceção da RN-30: o suspeito abre mão do contraste com o fundo
+    # para não se confundir com o preto do texto em volta dele.
+    claro = estilo.TEMAS[estilo.CLARO]
+    assert _contraste(claro["COR_SUSPEITO"], claro["COR_TEXTO"]) >= 4.5
+
+
+def test_no_claro_a_revisao_pinta_o_suspeito_e_o_valido_com_as_cores_novas(aplicacao):
+    import cpf
+    from PySide6.QtWidgets import QLabel
+    from tela_revisao import TelaRevisao
+
+    estilo.usar_tema(estilo.CLARO)
+    texto = "Bolsista no CPF 111.111.111-11 e coordenador no 777.777.777-78."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    achados = {o.original: o for o in tela._ocorrencias}
+    for original, letra, barra in (
+            ("111.111.111-11", "#ae0202", "#ae0202"),
+            ("777.777.777-78", "#c28102", "#ec9c01")):
+        ocorrencia = achados[original]
+        item = tela.lista._itens[id(ocorrencia)]
+        assert f"border-left: 3px solid {barra}" in item.styleSheet(), original
+        etiquetas = [r for r in item.findChildren(QLabel)
+                     if "border-radius: 8px" in r.styleSheet()]
+        assert etiquetas and all(letra in r.styleSheet() for r in etiquetas), original
+        cursor = tela.texto.textCursor()
+        cursor.setPosition(ocorrencia.inicio + 1)
+        assert cursor.charFormat().foreground().color().name() == letra, original
+    assert "#c28102" in tela.selo_suspeitos.styleSheet()
 
 
 def test_no_claro_o_amarelo_de_alerta_nao_e_letra():
