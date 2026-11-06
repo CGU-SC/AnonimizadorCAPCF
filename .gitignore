@@ -8,10 +8,16 @@
 # São material cedido a ela num curso, com o pedido de NÃO DISTRIBUIR: nunca
 # commitar, publicar em página ou mandar para fora o conteúdo deles. O
 # repositório é público, e o PR #1 ainda os mostrava em 29/10/2026 - pedido
-# de limpeza aberto no suporte do GitHub.
+# de limpeza aberto no suporte do GitHub; em 05/11/2026 foi autorizado apagar o PR.
 # A cerca do agente (.claude/settings.json) é do projeto, e continua.
 .claude/skills/
 .claude/mapa-das-skills.html
+
+# A página do PR #1 salva em PDF (conversa, commits e arquivos alterados) antes
+# de o suporte do GitHub apagá-lo, em 05/11/2026 - é o que sobra dele. Guarda
+# de quem mantém o projeto, e não do projeto: são 18 MB de página impressa, e o
+# código e os commits dela já estão na master reescrita.
+histórico Git/
 
 # As escolhas lembradas de quem usa o programa nesta máquina (o motor de cada
 # módulo, o tamanho da janela - funcionalidade 8). São do uso, e não do
