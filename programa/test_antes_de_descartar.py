@@ -214,6 +214,56 @@ def test_fechar_a_janela_pergunta_e_a_janela_fica_de_pe(tmp_path, aplicacao):
     assert segundo.isAccepted()
 
 
+def test_reabrir_com_revisao_nao_salva_pergunta_antes(tmp_path, aplicacao, monkeypatch):
+    """RN-25 e RN-28 da spec 001: a pergunta do fechar, com "Reabrir sem salvar", e
+    nada reabre antes da resposta."""
+    import main
+
+    pedidos = []
+    monkeypatch.setattr(main, "abrir_de_novo", lambda tema: pedidos.append(tema) or True)
+    janela = JanelaPrincipal()
+    janela.menu.botao_anonimizar.click()
+    janela.painel_anonimizar.receber_arquivo(_copia(tmp_path))
+
+    janela.reabrir("claro")
+
+    painel = janela.painel_anonimizar
+    assert pedidos == []
+    assert painel.telas.currentWidget() is painel.tela_descartar
+    assert janela.menu.botao_anonimizar.isChecked()
+    assert painel.tela_descartar.botao_descartar.text() == "Reabrir sem salvar"
+
+    painel.tela_descartar.botao_descartar.click()
+    assert pedidos == ["claro"]
+
+
+def test_reabrir_sem_salvar_que_falha_volta_ao_tema_e_diz_por_que(tmp_path, aplicacao,
+                                                                   monkeypatch):
+    """Revisão da etapa 4: depois da pergunta, a pessoa está longe da tela do Tema, e a
+    falha passava calada, com ela parada na tela de escolher arquivo."""
+    import main
+    from tela_do_tema import NAO_DEU_PARA_REABRIR
+
+    monkeypatch.setattr(main, "abrir_de_novo", lambda tema: False)
+    janela = JanelaPrincipal()
+    janela.show()
+    janela.menu.botao_anonimizar.click()
+    janela.painel_anonimizar.receber_arquivo(_copia(tmp_path))
+    tela = janela.painel_ia.tela_tema
+    tela.opcoes["claro"].click()
+
+    janela.reabrir("claro")
+    janela.painel_anonimizar.tela_descartar.botao_descartar.click()
+
+    assert janela.isVisible()
+    assert tela.aviso.isVisible()
+    assert janela.painel.currentWidget() is janela.painel_ia
+    assert janela.painel_ia.tela_atual() == "tema"
+    assert janela.menu.botao_tema.isChecked()
+    assert tela.aviso.frase.text() == NAO_DEU_PARA_REABRIR
+    assert tela.aviso.botao.isHidden()
+
+
 def test_fechar_a_janela_depois_de_salvar_nao_pergunta(tmp_path, aplicacao):
     from PySide6.QtGui import QCloseEvent
 

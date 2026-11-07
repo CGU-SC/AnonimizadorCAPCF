@@ -41,7 +41,7 @@ das cores e onde cada uma está escrita, mas quem diz se a tela ficou igual, leg
   <tr><td>1</td><td>Nada muda: o escuro igual, cor por cor</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
   <tr><td>2</td><td>O menu "Configurações", com as seções, os ícones e a tela do Tema</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
   <tr><td>3</td><td>O programa abre no tema guardado</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
-  <tr><td>4</td><td>O "Reabrir agora", sem nada a perder</td><td><span class="situacao">a fazer</span></td></tr>
+  <tr><td>4</td><td>O "Reabrir agora", sem nada a perder</td><td><span class="situacao feita">conferida em 07/11/2026</span></td></tr>
   <tr><td>5</td><td>O claro conferido tela por tela</td><td><span class="situacao">a fazer</span></td></tr>
   <tr><td>6</td><td>As perguntas antes de reabrir</td><td><span class="situacao">a fazer</span></td></tr>
 </table>
@@ -213,7 +213,34 @@ acréscimo de 06/11/2026 da spec 001 (RN-31).</p>
 </table>
 <p><strong>Conferida na tela em 06/11/2026.</strong> A lente crítica não achou defeito (revisão 62).</p>
 
-<p class="rodape">Gerada pela skill-07, a pedido da skill-08, em 06/11/2026. Os números de CPF dos documentos de
+<h2>Etapa 4 — o "Reabrir agora", sem nada a perder</h2>
+<h3>O que mudou</h3>
+<p>Na tela do Tema, ao lado da frase "O tema novo vale quando o programa abrir de novo.", aparece o botão
+<strong>"Reabrir agora"</strong> (RN-24 da spec 001). Clicado, o programa grava o tamanho da janela, abre uma cópia nova
+no tema marcado e só então fecha a velha. A nova volta no mesmo tamanho, maximizada ou não, com o menu principal e nada
+marcado. O tema vai junto com o pedido, e não só no arquivo de preferências: mesmo que o arquivo não aceite a gravação,
+a cópia nova abre no tema certo.</p>
+<p>O caminho torto: se o Windows não deixar abrir a cópia nova, a janela fica de pé, e a frase e o botão dão lugar a
+"Não foi possível reabrir agora. O tema novo vale quando você fechar e abrir o programa." Com uma revisão não salva, vem
+antes a pergunta do fechar, com o botão "Reabrir sem salvar".</p>
+<p>O que ainda não pergunta: uma leitura em andamento e um texto lido e não salvo se perdem ao reabrir. As perguntas
+deles são a etapa 6. Para ver a falha na tela sem bloquear nada de verdade, há o atalho
+<code>abrir\abrir-sem-reabrir.bat</code>.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O botão</td><td>Aparece ao lado da frase quando o tema marcado é outro, e cabe inteiro, com a frase, na janela mínima</td></tr>
+  <tr><td>Reabrir</td><td>O pedido leva o tema marcado e a janela fecha; o tamanho já está gravado quando a cópia nova começa; sem poder gravar, o tema vai mesmo assim</td></tr>
+  <tr><td>A falha</td><td>A janela fica, a frase da falha aparece e o botão some; marcar o outro tema e voltar devolve a frase e o botão</td></tr>
+  <tr><td>O comando</td><td>Em desenvolvimento, o Python reabre o programa; instalado, o próprio programa se reabre; o tema pedido só vale se for escuro ou claro, e vale mais que o guardado</td></tr>
+  <tr><td>A revisão não salva</td><td>A pergunta vem com "Reabrir sem salvar", e nada reabre antes da resposta</td></tr>
+  <tr><td>A falha depois da pergunta</td><td>Respondida a pergunta e recusada a cópia nova, a pessoa volta para a tela do Tema e lê a frase da falha. Entrou na revisão pela lente crítica (revisão 63): antes, ela ficava parada no Anonimizar, sem resposta</td></tr>
+  <tr><td>A lista inteira</td><td>1.046 testes passando: os 1.028 de antes e 18 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 07/11/2026.</strong> A lente crítica achou um defeito e ele foi consertado (revisão 63).</p>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-08, em 07/11/2026. Os números de CPF dos documentos de
 exemplo são inventados.</p>
 </body>
 </html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 63 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro: #e05d5d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lado { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .caixa { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 12px 16px; }
+  .caixa.antes { border-top: 3px solid var(--cor-erro); }
+  .caixa.depois { border-top: 3px solid var(--cor-sucesso); }
+  .caixa b.rotulo { display: block; font-size: 13px; color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  ol { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 63 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre o "Reabrir agora" sem nada a perder (etapa 4 da funcionalidade 10, RN-24 da
+spec 001), em 07/11/2026, depois de a solicitante conferir na tela. A varredura levantou oito suspeitas; uma virou achado
+e foi consertada.</p>
+
+<div class="achado"><h3>A falha ao reabrir, depois da pergunta "Reabrir sem salvar", passava calada</h3>
+  <div class="lado">
+    <div class="caixa antes"><b class="rotulo">Antes</b>
+      <ol>
+        <li>Com uma revisão não salva, o "Reabrir agora" faz a pergunta, e a pessoa escolhe "Reabrir sem salvar".</li>
+        <li>A revisão sai, como ela pediu, e o Windows recusa abrir a cópia nova.</li>
+        <li>Ela fica na tela de escolher arquivo do Anonimizar, sem nenhuma frase: clicou para reabrir e nada
+          aconteceu.</li>
+      </ol>
+    </div>
+    <div class="caixa depois"><b class="rotulo">Depois</b>
+      <ol>
+        <li>A mesma pergunta, a mesma escolha.</li>
+        <li>O Windows recusa abrir a cópia nova.</li>
+        <li>O programa leva a pessoa para Configurações → Tema, e lá está a frase "Não foi possível reabrir agora. O tema
+          novo vale quando você fechar e abrir o programa."</li>
+      </ol>
+    </div>
+  </div>
+  <p><b>Até onde isso alcança hoje:</b> pelos cliques, a pessoa não chega à tela do Tema com uma revisão não salva,
+  porque sair do Anonimizar já pergunta antes. O caminho vale desde já para quem pedir o reabrir com a revisão aberta, e
+  passa a ser o de todo dia na etapa 6, quando a leitura em andamento e o texto lido e não salvo ganharem a mesma
+  pergunta.</p>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li><code>programa/main.py</code>: a nova tentativa, depois da pergunta, passa por um passo que, não abrindo, volta
+    para o Tema e mostra a frase da falha.</li>
+  <li><code>programa/tela_do_tema.py</code>: a tela ganhou o "diga que não deu", usado pelo botão e pela janela.</li>
+  <li><code>programa/test_antes_de_descartar.py</code>: um teste novo, com a revisão aberta, a pergunta respondida e o
+    Windows recusando, que confere a tela do Tema na frente e a frase da falha no lugar do botão.</li>
+</ul>
+
+<h2>O que foi levantado e não virou achado</h2>
+<ul>
+  <li><b>Uma leitura em andamento ou um texto lido e não salvo se perdem sem pergunta</b>: é a etapa 6, como combinado.</li>
+  <li><b>A cópia nova abre enquanto a velha ainda espera uma leitura terminar</b>: também só com leitura rodando. Fica
+    para a etapa 6: parar a leitura antes de abrir a cópia nova.</li>
+  <li><b>O tamanho da janela é gravado duas vezes</b>, com os mesmos valores. Não estraga nada.</li>
+  <li><b>O botão não faria nada se a janela não se ligasse a ele</b>, e <b>o jeito de a tela do Tema falar com a
+    janela</b> é diferente das outras telas. São da lente de manutenção.</li>
+  <li><b>Em desenvolvimento, o reabrir perde a simulação</b> de quem abriu por um atalho como o
+    <code>abrir-sem-paddleocr.bat</code>: a cópia nova abre normal. Não afeta o programa instalado.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 07/11/2026.</p>
+</body>
+</html>

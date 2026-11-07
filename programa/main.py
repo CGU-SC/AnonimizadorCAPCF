@@ -1,7 +1,8 @@
 # Ponto de entrada do Anonimizador CAPCF: abre a janela do programa.
+import os
 import sys
 
-from PySide6.QtCore import QRect, QSize, Qt
+from PySide6.QtCore import QProcess, QRect, QSize, Qt
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -352,6 +353,7 @@ class JanelaPrincipal(QMainWindow):
         )
         self.painel_ia = PainelIa()
         self.painel.addWidget(self.painel_ia)
+        self.painel_ia.tela_tema.ao_reabrir = self.reabrir
         self.menu.botao_config_ia.clicked.connect(self._abrir_configuracoes_de_ia)
         self.menu.botao_voltar_ia.clicked.connect(self._fechar_configuracoes_de_ia)
         for item, nome in zip(self.menu.itens_do_submenu,
@@ -432,6 +434,38 @@ class JanelaPrincipal(QMainWindow):
         # porque a pessoa voltou para salvar ainda não fechou.
         self._lembrar_como_foi_fechada()
         super().closeEvent(evento)
+
+    def reabrir(self, tema):
+        """Fecha o programa e abre de novo, no tema dado (RN-24 da spec 001).
+
+        Devolve se a janela nova começou a abrir. Não começando, a velha fica de pé,
+        e quem chamou diz por quê.
+        """
+        # Uma revisão não salva passa pela pergunta do fechar, com a palavra do que a
+        # pessoa pediu; escolhendo reabrir sem salvar, a revisão sai e o pedido volta
+        # para cá (RN-25 e RN-28).
+        if self.painel_anonimizar.perguntar_antes_de_descartar(
+                lambda: self._reabrir_depois_da_pergunta(tema),
+                rotulo_descartar="Reabrir sem salvar"):
+            self._ir_para_o_anonimizar()
+            return True
+        # O tamanho é gravado antes de abrir a nova, e não só ao fechar: a nova lê o
+        # preferencias.ini assim que começa, e a velha ainda não teria fechado.
+        self._lembrar_como_foi_fechada()
+        if not abrir_de_novo(tema):
+            return False
+        # A velha só fecha depois de a nova começar a abrir; sem nada a perder, o
+        # fechar não pergunta nada e só para o que estiver rodando.
+        self.close()
+        return True
+
+    def _reabrir_depois_da_pergunta(self, tema):
+        # Vindo da pergunta, a pessoa está no Anonimizar, longe da tela do Tema, e
+        # ninguém ouve o que o reabrir devolve. Não abrindo, ela volta para o Tema e
+        # lê lá por quê, em vez de ficar sem resposta (revisão da etapa 4).
+        if not self.reabrir(tema):
+            self._entrar_nas_configuracoes_de_ia()
+            self.painel_ia.tela_tema.dizer_que_nao_deu()
 
     def _seguir_para_anonimizar(self, caminho, paginas):
         """O texto conferido no Gerar OCR segue para a revisão (RN-16).
@@ -525,14 +559,51 @@ class JanelaPrincipal(QMainWindow):
         self.painel.setCurrentWidget(destino)
 
 
-def usar_o_tema_lembrado(aplicacao):
+PEDIR_O_TEMA = "--tema"
+
+
+def comando_para_reabrir(tema):
+    """O programa a chamar e o que dizer a ele, para abrir de novo no tema dado.
+
+    Instalado, o programa é um executável só, montado pelo PyInstaller; em
+    desenvolvimento, é o Python rodando este arquivo.
+    """
+    pedido = [PEDIR_O_TEMA, tema]
+    if getattr(sys, "frozen", False):
+        return sys.executable, pedido
+    return sys.executable, [os.path.abspath(__file__), *pedido]
+
+
+def abrir_de_novo(tema):
+    """Abre outra cópia do programa, no tema dado, e devolve se ela começou."""
+    programa, argumentos = comando_para_reabrir(tema)
+    # Solta: a cópia nova não morre quando esta fechar, logo depois.
+    iniciou, _ = QProcess.startDetached(programa, argumentos, os.getcwd())
+    return iniciou
+
+
+def tema_pedido(argumentos):
+    """O tema que veio de quem abriu o programa, ou None.
+
+    É o caminho do "Reabrir agora": o tema marcado chega por aqui, e não só pelo
+    preferencias.ini, que pode não ter aceitado a gravação (RN-24 da spec 001).
+    """
+    if PEDIR_O_TEMA in argumentos:
+        posicao = argumentos.index(PEDIR_O_TEMA) + 1
+        if posicao < len(argumentos) and argumentos[posicao] in estilo.TEMAS:
+            return argumentos[posicao]
+    return None
+
+
+def usar_o_tema_lembrado(aplicacao, pedido=None):
     """Escolhe o tema do programa inteiro, antes de a janela ser montada.
 
     Tem de vir antes: cada peça põe as cores quando nasce, e a janela nasce com
-    um tema só (RN-17 da spec 001). Sem tema guardado, ou com um que não dá para
-    ler, vale o escuro, sem erro e sem aviso (RN-42 da spec 002).
+    um tema só (RN-17 da spec 001). O tema pedido por quem abriu vem primeiro; sem
+    ele, o guardado; sem tema guardado, ou com um que não dá para ler, vale o
+    escuro, sem erro e sem aviso (RN-42 da spec 002).
     """
-    estilo.usar_tema(lembrado() or estilo.ESCURO)
+    estilo.usar_tema(pedido or lembrado() or estilo.ESCURO)
     if estilo.TEMA == estilo.CLARO:
         # As peças que o Windows desenha, e não o programa - a barra de rolagem, o
         # menu do botão direito, a dica do mouse - seguem o modo do Windows; com o
@@ -544,7 +615,7 @@ def usar_o_tema_lembrado(aplicacao):
 
 def main():
     app = QApplication(sys.argv)
-    usar_o_tema_lembrado(app)
+    usar_o_tema_lembrado(app, tema_pedido(sys.argv))
     janela = JanelaPrincipal()
     janela.abrir()
     sys.exit(app.exec())

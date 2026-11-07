@@ -308,7 +308,8 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   programa aberto. Para ver a IA sem um modelo, `abrir\servidor-de-ia-de-mentira.bat`
   sobe um servidor de mentira na porta do LM Studio, e
   `abrir\servidor-de-mentira-que-cai.bat` faz a revisão parar no meio; os dois com o
-  documento `dados-exemplo\30-revisao-por-ia.md`.
+  documento `dados-exemplo\30-revisao-por-ia.md`. Para ver o "Reabrir agora" falhar,
+  `abrir\abrir-sem-reabrir.bat` finge que o Windows recusou abrir a cópia nova.
   Instalado sem o português, o Tesseract não serve — toda leitura falharia —,
   e o programa o trata como motor faltando. No dia da entrega, o instalador do
   Tesseract vai na pasta `instaladores`, ao lado do `.exe` — sem ele, o botão
@@ -443,7 +444,9 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   `sed -i` gravaram o arquivo inteiro com a do Linux, calado - o `git diff` não
   acusa, porque o git converte na entrada. Em arquivo do projeto, troque texto pela
   ferramenta de editar, ou por script Python que abre com `newline=""`, e confira
-  a quebra no fim (etapas 1 e 2 da funcionalidade 10, 06/11/2026).
+  a quebra no fim (etapas 1 e 2 da funcionalidade 10, 06/11/2026). E confira com o
+  Python, contando `\r\n` nos bytes do arquivo: o `grep -c $'\r$'` do Git Bash conta
+  toda linha como do Windows, também num arquivo todo do Linux (etapa 4, 07/11/2026).
 - **Texto com barra invertida mandado pelo terminal do Bash chega trocado.**
   Um script ou um trecho de código com `\r`, `\n` ou `\x89` escrito,
   passado pelo Bash (num `<<'EOF'` ou num `python -c`), foi gravado com a
