@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa do entendimento — Abrir documento do Word</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 900px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .contagens { display: flex; gap: var(--espaco-3); margin-bottom: var(--espaco-5); flex-wrap: wrap; }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 140px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-inferido .contagem-numero { color: var(--cor-alerta); }
+  .c-respondido .contagem-numero { color: var(--cor-sucesso); }
+  .c-aberto .contagem-numero { color: var(--cor-texto-secundario); }
+
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .explica-secao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: calc(-1 * var(--espaco-2)) 0 var(--espaco-3) 0; }
+  .marca { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .marca-inferido { background: var(--cor-alerta); }
+  .marca-respondido { background: var(--cor-sucesso); }
+  .marca-aberto { background: var(--cor-texto-secundario); }
+
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao.inferido { border-left-color: var(--cor-alerta); }
+  .cartao.aberto { border-left-color: var(--cor-texto-secundario); }
+  .cartao-titulo { font-weight: 600; margin-bottom: var(--espaco-2); display: flex; align-items: baseline; gap: var(--espaco-2); flex-wrap: wrap; }
+  .numero { font-family: var(--fonte-mono); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); font-weight: 400; }
+  .dimensao { margin-left: auto; font-size: var(--texto-pequeno); font-weight: 400; color: var(--cor-texto-secundario); white-space: nowrap; }
+  .cartao-texto { color: var(--cor-texto); }
+  .selo-premissa {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(217,164,65,0.15); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+
+  /* a tabela de exemplos: como o número está escrito e como sai */
+  table.exemplos { border-collapse: collapse; margin-top: var(--espaco-3); width: 100%; font-size: var(--texto-pequeno); }
+  table.exemplos th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: var(--espaco-1) var(--espaco-3) var(--espaco-1) 0; border-bottom: 1px solid var(--cor-borda); }
+  table.exemplos td { padding: var(--espaco-2) var(--espaco-3) var(--espaco-2) 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  table.exemplos td.mono { font-family: var(--fonte-mono); white-space: pre; }
+  .nota-exemplo { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: var(--espaco-2); }
+
+  /* a linha da lista da revisão, com a etiqueta nova ao lado */
+  .linha-lista {
+    margin-top: var(--espaco-3);
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2); flex-wrap: wrap;
+  }
+  .linha-lista .num { font-family: var(--fonte-mono); color: var(--cor-erro-texto); text-decoration: underline; text-underline-offset: 3px; }
+  .etiqueta {
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 1px 8px; border-radius: 10px;
+    color: var(--cor-erro-texto); background: rgba(240,138,134,0.13);
+  }
+  .etiqueta.nova { outline: 1px dashed var(--cor-erro-texto); }
+
+  .medicao { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--espaco-2); margin-top: var(--espaco-3); }
+  .medida { background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .medida strong { display: block; font-size: var(--texto-grande); color: var(--cor-texto); }
+
+  .fora { margin-top: var(--espaco-5); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+  .fora h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .fora ul { margin: 0; padding-left: 20px; color: var(--cor-texto-secundario); }
+  .fora li { margin-bottom: var(--espaco-1); }
+  .rodape { margin-top: var(--espaco-4); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+
+  /* o pedaço do .md gerado, como texto de largura fixa */
+  pre.md {
+    margin: var(--espaco-3) 0 0 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    font-family: var(--fonte-mono); font-size: var(--texto-pequeno);
+    white-space: pre; overflow-x: auto;
+  }
+  /* a faixa dos avisos na revisão: amarela, porque nada falhou */
+  .faixa {
+    margin-top: var(--espaco-3);
+    border: 1px solid var(--cor-alerta);
+    background: rgba(217,164,65,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .faixa div + div { margin-top: var(--espaco-1); }
+  .cartao-texto ul { margin: var(--espaco-2) 0 0 0; padding-left: 20px; }
+  .cartao-texto li + li { margin-top: var(--espaco-1); }
+  @media (max-width: 600px) {
+    body { padding: var(--espaco-3); }
+    .dimensao { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Mapa do entendimento — Abrir documento do Word</h1>
+<p class="subtitulo">Funcionalidade 5 do backlog: levantamento fechado em 22/10/2026, no nível detalhado. Vira a décima
+emenda da spec 003. Ainda não foi escrita nem construída, então o que está aqui ainda se corrige de graça.</p>
+
+<div class="contagens">
+  <div class="contagem-item c-inferido">
+    <div class="contagem-numero">12</div>
+    <div class="contagem-label">inferido por mim: vira premissa se você não derrubar</div>
+  </div>
+  <div class="contagem-item c-respondido">
+    <div class="contagem-numero">12</div>
+    <div class="contagem-label">respondido por você</div>
+  </div>
+  <div class="contagem-item c-aberto">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">em aberto, e nenhum muda o que o programa faz</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Inferido por mim: confirme ou derrube</h2>
+<p class="explica-secao">Ninguém perguntou estes. Eu deduzi do que você respondeu, da spec 003 ou do código de
+hoje. Diga o número de qualquer um que não seja assim.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-1</span> Do Word direto para a revisão, sem conferência <span class="dimensao">fluxo</span></div>
+    <div class="cartao-texto">O texto do <code>.docx</code> é texto de verdade, e não leitura de imagem: ninguém precisa conferir se o programa leu certo. Ele vai direto para a revisão, como o <code>.md</code> e o <code>.txt</code>. A revisão, a máscara, a dupla conferência e o salvar são os de hoje.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-2</span> Os arquivos que não abrem: erro e volta à escolha <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Cada um com a sua frase, como já acontece com o <code>.md</code> e o <code>.txt</code> que não servem: o <code>.docx</code> <strong>protegido por senha</strong> (abra no Word, tire a senha e salve de novo); o <strong><code>.doc</code> antigo com o nome trocado</strong> para <code>.docx</code> (abra no Word e salve como <code>.docx</code>); o <strong>arquivo estragado</strong>; e o <strong>vazio</strong>, sem texto e sem imagem.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-3</span> Só no Anonimizar <span class="dimensao">navegação</span></div>
+    <div class="cartao-texto">O Gerar OCR continua abrindo só PDF: o trabalho dele é ler imagem, e o Word já tem o texto pronto.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-4</span> O arquivo gerado e o original, como hoje <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto"><code>relatorio.docx</code> sugere <code>relatorio - sem CPF.md</code>, na mesma pasta, com o caminho editável e a pergunta antes de escrever por cima (RN-13). O <code>.docx</code> original nunca é alterado nem apagado (RN-14), e a tela de "gravado" lembra que ele continua lá com os CPFs inteiros.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-5</span> Campo automático: entra o que aparece <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">Número de página, data automática, campo de mala direta: vai para o <code>.md</code> o que o Word mostra no documento, e não a fórmula escondida por trás do campo.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-6</span> Link: só o texto que aparece <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">Num link, vai o texto azul que a pessoa lê. O endereço de internet por trás dele não vai: ele não aparece na impressão, e pode carregar número de pessoa dentro (um endereço de sistema com o CPF no fim, por exemplo).</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-7</span> A descrição escondida da imagem não vai <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">O Word guarda, junto de cada imagem, uma descrição para leitor de tela ("texto alternativo"). Ela não aparece na impressão e fica de fora, como a imagem. A imagem conta no aviso da faixa (R-4).</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-8</span> Um tamanho máximo <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Por dentro, o <code>.docx</code> é um pacote compactado, e um pacote pequeno pode esconder um conteúdo enorme, feito para travar quem o abre. Acima de um limite, bem maior que qualquer documento de prestação de contas, o programa recusa com uma frase, em vez de travar. O número sai na spec.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-9</span> A massa de teste ganha um Word inventado <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">Gerado por script, em <code>dados-exemplo/</code>, com uma de cada coisa: tabela com célula mesclada e com dois parágrafos, cabeçalho, rodapé, nota, caixa de texto, comentário, alteração controlada, texto oculto, imagem e link. Mais um <code>.docx</code> só de imagem, um protegido e um <code>.doc</code> renomeado. Os CPFs que passam na conta são só de dígitos repetidos, e os curtos só de zeros (RN-22).</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-10</span> A tela de escolher passa a citar o Word <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">A linha dos tipos vira "PDF, .docx, .md ou .txt", a janela de procurar arquivo mostra o <code>.docx</code>, e a frase de "outro tipo" passa a listá-lo. Sem o motor de leitura, o <code>.docx</code> aparece com ✓ na lista do que dá para anonimizar agora: ele não precisa de motor.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-11</span> Quebra de página e listas de vários níveis <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">Quebra de página e de seção não deixam marca no <code>.md</code>, só separam os parágrafos. A lista com subitens sai com recuo, um nível por vez. A lista numerada sai com os números que o Word mostra.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-12</span> O teste que proibia o Word muda de sentido <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">O teste que dizia que Word "não entra nesta versão nem nas seguintes" passa a usar outro tipo de fora (uma planilha <code>.xlsx</code>), e o <code>.docx</code> ganha os testes dele.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+</div>
+
+<h2><span class="marca marca-respondido"></span>Respondido por você</h2>
+<div class="cartoes">
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-1</span> O pedido <span class="dimensao">propósito</span></div>
+    <div class="cartao-texto">O Anonimizar passa a aceitar documento do Word (<code>.docx</code>), tirando o texto e as tabelas de dentro dele, sem instalar nada a mais nas máquinas do núcleo. O <code>.doc</code> antigo fica de fora: exigiria o Word instalado ou um programa a mais. Foi pedido em 16/09/2026, na conferência da etapa 2 do Anonimizar.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-2</span> Vai tudo o que aparece no documento impresso <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">O corpo, as tabelas, o cabeçalho e o rodapé, as notas de rodapé e de fim, e as caixas de texto. O que o programa lê passa pela busca e pela máscara; o que ele não lê não vai para o assistente.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-3</span> O que não imprime: o documento como ficaria com tudo aceito <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Nas alterações controladas, o trecho novo entra e o apagado sai. Comentários e texto oculto ficam de fora. Havendo algum desses, a revisão avisa, só na tela, e nada é escrito no <code>.md</code>.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-4</span> Imagem colada: aviso, e ler o texto dela fica para depois <span class="dimensao">fora de escopo</span></div>
+    <div class="cartao-texto">A imagem não vai para o <code>.md</code>, e a revisão avisa quantas ficaram de fora. Ler o que está escrito dentro das imagens entra no backlog como melhoria futura. Até lá, quem precisar salva o documento como PDF pelo Word e usa o caminho do PDF, que lê imagens.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-5</span> A tabela sai com barras e colunas alinhadas <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">É o formato de tabela do próprio <code>.md</code>. O assistente a reconhece com certeza, e quem abre o arquivo num visualizador vê uma tabela.
+<pre class="md">| Nome             | CPF            | Valor       |
+| ---------------- | -------------- | ----------- |
+| Fulano de Tal    | XXX.111.111-XX | R$ 1.500,00 |
+| Beltrana Exemplo | XXX000000XX    | R$ 900,00   |</pre>
+      <div class="nota-exemplo">Nomes e números inventados. O CPF sem o zero da frente continua com a coluna reta, como na funcionalidade 6.</div>
+    </div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-6</span> A célula difícil: cada texto aparece uma vez, no seu lugar <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">A célula <strong>mesclada</strong> põe o texto na primeira posição que ocupa, e as outras ficam vazias. Os <strong>parágrafos</strong> de uma célula ficam na mesma linha, separados por <code> / </code>, com espaço dos dois lados para não grudar no número. A <strong>tabela de dentro de outra</strong> vira texto corrido na célula dela. Cada número aparece no <code>.md</code> tantas vezes quantas aparece no Word.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-7</span> Títulos e listas sim; negrito e itálico não <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">Os títulos do Word ("Título 1", "Título 2"…) viram títulos do <code>.md</code>, e as listas viram listas. Negrito e itálico ficam de fora: acrescentariam asteriscos no meio do texto sem ajudar a ler.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-8</span> Cada parte no lugar dela, sem rótulo do programa <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">O cabeçalho abre o <code>.md</code> e o rodapé fecha, uma vez cada (cada cabeçalho diferente aparece uma vez). A caixa de texto entra onde está presa no texto. As notas vão para o fim, numeradas, com a marca no ponto onde são chamadas. O programa não escreve "Cabeçalho:" nem "Notas:": a RN-12 continua intacta.
+<pre class="md">FUNDAÇÃO EXEMPLO DE APOIO — Processo 23000.000000/2026-00
+
+# Relatório de execução
+
+O bolsista XXX.222.222-XX recebeu as parcelas previstas.[^1]
+
+Página 1 de 3
+
+[^1]: Conforme o plano de trabalho aprovado.</pre>
+      <div class="nota-exemplo">Exemplo inventado: o cabeçalho, o título, uma frase com a chamada da nota, o rodapé e a nota no fim.</div>
+    </div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-9</span> Só o <code>.docx</code> <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">O documento com macros (<code>.docm</code>) e o modelo (<code>.dotx</code>) recebem a frase de "outro tipo", que diz qual é o aceito. Quem tiver um deles abre no Word e salva como <code>.docx</code>.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-10</span> Word só com imagens: erro, com o caminho dito <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">"O relatorio.docx não tem texto, só imagens. Salve-o como PDF pelo Word e escolha o PDF: o programa lê as imagens e você confere." A pessoa nunca chega a uma revisão vazia dizendo "nenhum CPF encontrado".</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-11</span> Uma faixa só, no alto da revisão <span class="dimensao">estados da interface</span></div>
+    <div class="cartao-texto">Uma linha por aviso, à vista o tempo todo da revisão, sem botão de fechar. Só aparece quando o documento tem algum desses casos: o <code>.docx</code> sem nada disso abre a revisão igual à de hoje.
+      <div class="faixa">
+        <div>Ficou fora do arquivo: 3 comentários · 2 imagens (o programa não lê o que está escrito nelas).</div>
+        <div>As alterações controladas saíram aceitas, como o documento ficaria no fim.</div>
+      </div>
+      <div class="nota-exemplo">Só a ideia, ainda não é o desenho: a faixa de verdade sai no rascunho de tela (A-2).</div>
+    </div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-12</span> Sem Word mascarado: sai só o <code>.md</code> <span class="dimensao">fora de escopo</span></div>
+    <div class="cartao-texto">Perguntado em 23/10/2026 se o programa poderia devolver o mesmo Word, com os CPFs mascarados. A decisão foi não fazer, nem agora nem depois, e não vai para o backlog. Os motivos:
+      <ul>
+        <li><strong>O CPF vem picado por dentro do arquivo.</strong> O Word guarda o texto em pedaços cortados onde ele quiser (uma mudança de fonte, a correção ortográfica, uma edição antiga), e <code>123.456</code> pode estar num pedaço e <code>.789-10</code> no seguinte. Mascarar ali é trocar dígito dentro de cada pedaço sem estragar o resto.</li>
+        <li><strong>Cada decisão da revisão teria de voltar para o Word.</strong> A máscara à mão, o número liberado e a coluna compensada do CPF curto são feitos sobre o texto do <code>.md</code>, e teriam de ser levados de volta à posição exata dentro do Word.</li>
+        <li><strong>No Word, o escondido vai junto.</strong> O <code>.md</code> só leva o que o programa leu. O Word leva o arquivo inteiro, e o CPF teria de sair também dos comentários, do trecho apagado das alterações, do texto oculto, do endereço dos links, das propriedades do arquivo, da miniatura da primeira página, da planilha colada dentro do documento. O que faltasse escaparia calado.</li>
+        <li><strong>O CPF numa imagem não se reescreve.</strong> Pela regra "tarja nunca substitui remoção", a imagem teria de sair do arquivo, ou o arquivo ser recusado.</li>
+        <li><strong>O custo.</strong> Somaria umas cinco ou seis etapas às do <code>.md</code>, e seria a parte com mais chance de vazar sem ninguém ver.</li>
+      </ul>
+    </div></div>
+</div>
+
+<h2><span class="marca marca-aberto"></span>Em aberto, e nenhum muda o que o programa faz</h2>
+<div class="cartoes">
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-1</span> Com que peça o programa lê o Word <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">A biblioteca de PDF que o programa já usa não abre <code>.docx</code> (só a versão paga dela abre). Os dois caminhos são ler com o que o Python já traz, sem nada a mais no instalador, ou com a biblioteca python-docx, que não alcança a caixa de texto nem a nota. A decisão é da skill-03-arquiteto-de-solucao, antes da spec.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-2</span> O desenho da faixa <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Onde a faixa fica na revisão, na janela mínima de 900 px, sem tirar espaço do texto nem da lista. Sai no rascunho de tela, que você aprova antes do código.</div></div>
+</div>
+
+<div class="fora">
+  <h3>Fora de escopo desta funcionalidade</h3>
+  <ul>
+    <li>O <code>.doc</code> antigo, o <code>.docm</code> e o <code>.dotx</code> (R-1 e R-9).</li>
+    <li>Ler o texto de dentro das imagens coladas: vira melhoria futura no backlog (R-4).</li>
+    <li>Comentários, texto oculto e o trecho apagado das alterações controladas (R-3).</li>
+    <li>Negrito, itálico, cor, fonte e qualquer outra formatação além de títulos e listas (R-7).</li>
+    <li>Planilha (<code>.xlsx</code>) e apresentação (<code>.pptx</code>).</li>
+    <li>Devolver o próprio Word com os CPFs mascarados: o arquivo gerado continua sendo só <code>.md</code>, e os motivos estão no R-12.</li>
+    <li>Qualquer dado sensível além do CPF.</li>
+    <li>Os roteiros "Como instalar" e "Como usar": são refeitos na próxima entrega, num prompt próprio.</li>
+  </ul>
+</div>
+
+<p class="rodape">Página gerada em 22/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-02-analista-de-requisitos. Todos os nomes, números e o processo dos exemplos são inventados.</p>
+</body>
+</html>

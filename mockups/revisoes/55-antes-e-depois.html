@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 55 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 55 — antes e depois</h1>
+<p class="subtitulo">Lente de clareza sobre o que seria gravado, em 02/11/2026. Quatro achados, os quatro aprovados pela solicitante e consertados. Nada muda na tela do programa: é só nome, comentário e a separação de uma regra.</p>
+
+<div class="achado"><h3>Quando a IA fala sobre um número da lista</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A regra ficava no meio de um trecho maior, com três níveis de condição, e o comentário dizia "Comentário, e nada mais", o que já não era verdade.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Uma função própria, <code>_opinar_sobre_o_listado</code>, com o caso do suspeito e o de quem discorda explicados por extenso.</div></div></div>
+<div class="achado"><h3>Quem pede a dupla conferência</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Duas explicações no código diziam que só quem passa na conta pedia.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>As duas citam também o suspeito que a IA confirmou.</div></div></div>
+<div class="achado"><h3>O nome do teste</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div><code>_testar_de_novo</code>, que também faz o primeiro teste.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div><code>_testar_conexao</code>, como o botão.</div></div></div>
+<div class="achado"><h3>Por que existe uma porta além do endereço</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Nada explicava, e nenhuma tela grava mais a porta.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Um comentário diz que ela compõe o endereço de costume e serve a quem ainda a tem guardada.</div></div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul><li>Só <code>revisao_ia.py</code>, <code>tela_revisao.py</code>, <code>dupla_conferencia.py</code>, <code>painel_ia.py</code> e <code>config_ia.py</code>. Nenhum arquivo criado, apagado ou movido além desta página.</li></ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul><li>Nada desta lente ficou de fora.</li></ul>
+<p class="rodape">Gerada em 02/11/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

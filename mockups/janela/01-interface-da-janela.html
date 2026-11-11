@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 01 — Interface da janela</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #14171c;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 700px; }
+
+  .rotulo-estado {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    margin: var(--espaco-5) 0 var(--espaco-2) 0;
+  }
+
+  /* janela simulada do programa */
+  .janela {
+    display: flex;
+    width: 100%;
+    max-width: 900px;
+    height: 520px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .barra-titulo {
+    position: absolute;
+  }
+  .menu-lateral {
+    width: 220px;
+    flex: 0 0 220px;
+    background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda);
+    padding: var(--espaco-4) 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-nome-programa {
+    padding: 0 var(--espaco-3) var(--espaco-4) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: var(--espaco-3);
+  }
+  .menu-item {
+    padding: var(--espaco-3);
+    margin: 0 var(--espaco-2);
+    border-radius: var(--raio);
+    color: var(--cor-texto-secundario);
+    cursor: default;
+    font-size: var(--texto-base);
+  }
+  .menu-item.ativo {
+    background: var(--cor-destaque);
+    color: #fff;
+    font-weight: 600;
+  }
+  .painel-principal {
+    flex: 1;
+    background: var(--cor-fundo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--espaco-5);
+  }
+
+  .painel-vazio {
+    text-align: center;
+    color: var(--cor-texto-secundario);
+    max-width: 360px;
+  }
+  .painel-vazio .icone {
+    font-size: 40px;
+    margin-bottom: var(--espaco-3);
+    opacity: 0.6;
+  }
+  .painel-vazio .texto {
+    font-size: var(--texto-grande);
+    color: var(--cor-texto);
+    margin-bottom: var(--espaco-2);
+  }
+
+  .painel-aviso {
+    text-align: center;
+    max-width: 360px;
+  }
+  .painel-aviso .selo {
+    display: inline-block;
+    background: rgba(217,164,65,0.15);
+    color: var(--cor-alerta);
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 10px;
+    margin-bottom: var(--espaco-3);
+  }
+  .painel-aviso .titulo {
+    font-size: var(--texto-grande);
+    font-weight: 600;
+    margin-bottom: var(--espaco-2);
+  }
+  .painel-aviso .texto {
+    color: var(--cor-texto-secundario);
+  }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+    max-width: 700px;
+  }
+  .rodape code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo-elevado);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 01 — Interface da janela</h1>
+<p class="subtitulo">
+  Como a janela do AnomizadorCAPCF aparece nos dois estados previstos na spec
+  001. Menu lateral fixo à esquerda, painel principal à direita — como já
+  registrado no sistema de design.
+</p>
+
+<div class="rotulo-estado">Estado 1 — vazio, ao abrir o programa</div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="painel-vazio">
+      <div class="icone">◧</div>
+      <div class="texto">Escolha um módulo para começar</div>
+      <div>Clique em "Gerar OCR" ou "Anonimizar" no menu ao lado.</div>
+    </div>
+  </div>
+</div>
+
+<div class="rotulo-estado">Estado 2 — com módulo selecionado (Gerar OCR)</div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="painel-aviso">
+      <div class="selo">Ainda não construído</div>
+      <div class="titulo">Gerar OCR</div>
+      <div class="texto">Este módulo entra numa próxima etapa do projeto.</div>
+    </div>
+  </div>
+</div>
+
+<p class="rodape">
+  Os estados "carregando" e "erro" não aparecem aqui porque a spec 001 diz que
+  não se aplicam a esta tela — abrir a janela e trocar o painel é instantâneo,
+  e não há nenhuma operação que possa falhar nesta funcionalidade.
+  Combinado por trás deste desenho: <code>especificacoes/specs/001-interface-da-janela.md</code>
+</p>
+
+</body>
+</html>

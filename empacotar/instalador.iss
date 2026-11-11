@@ -1,0 +1,96 @@
+﻿; Receita do instalador, para o Inno Setup.
+;
+; Gera-se pelo empacotar\gerar-entrega.bat, que passa o número da versão lido
+; de programa\versao.py - ele não se escreve aqui, para o instalador e a tela
+; nunca dizerem versões diferentes. Rodado sem ele, o instalador nem é gerado.
+
+#ifndef Versao
+  #error Gere pelo empacotar\gerar-entrega.bat: ele passa o numero da versao.
+#endif
+
+#define Nome "Anonimizador CAPCF"
+#define Executavel "Anonimizador CAPCF.exe"
+
+[Setup]
+; A identidade do programa para o Windows. NUNCA mude este número: é por ele
+; que a versão seguinte se reconhece como atualização desta, e não como um
+; segundo programa instalado ao lado.
+AppId={{3825E2BD-0F1E-4D71-9CAB-F8994F19CC8F}
+AppName={#Nome}
+AppVersion={#Versao}
+AppVerName={#Nome} {#Versao}
+; Curto, porque o Windows mostra o editor numa coluna estreita da lista de
+; aplicativos; a frase inteira vai no comentário, que aparece nos detalhes.
+AppPublisher=CGU
+AppComments=O programa foi desenvolvido pela CGU no âmbito da consultoria realizada à UFSC em 2026.
+VersionInfoVersion={#Versao}
+
+; Instala só para quem está usando, na pasta de programas pessoal, sem pedir
+; administrador (plano de entrega, 23/09/2026). O programa grava ao lado de
+; si as escolhas de quem usa (o preferencias.ini, funcionalidade 8), e a
+; funcionalidade 4 vai gravar ali a configuração da IA local; em Program Files
+; cada gravação pediria a confirmação do Windows. Mudar de lugar depois custaria uma volta em cada
+; máquina do núcleo.
+PrivilegesRequired=lowest
+DefaultDirName={autopf}\{#Nome}
+DisableProgramGroupPage=yes
+DisableDirPage=yes
+
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+
+OutputDir=..\builds\instalador
+OutputBaseFilename=Anonimizador-CAPCF-{#Versao}-instalador
+Compression=lzma2
+SolidCompression=yes
+WizardStyle=modern
+UninstallDisplayName={#Nome}
+UninstallDisplayIcon={app}\{#Executavel}
+
+[Languages]
+Name: "portugues"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+
+[Tasks]
+Name: "atalho_na_area_de_trabalho"; Description: "Criar um atalho na área de trabalho"; Flags: unchecked
+
+[Files]
+; A pasta montada entra inteira, menos as escolhas de quem usa: aberto ali
+; mesmo para testar, o programa cria o preferencias.ini dele, e o .env, com o token
+; de quem testou, que iriam dentro
+; do instalador e passaria por cima da escolha de quem atualiza (RN-41).
+Source: "..\builds\programa\{#Nome}\*"; DestDir: "{app}"; Excludes: "preferencias.ini,preferencias.ini.*.gravando,.env,.env.*.gravando"; Flags: ignoreversion recursesubdirs createallsubdirs
+; O instalador do Tesseract vai na pasta "instaladores", ao lado do programa: é
+; lá que o botão "instalar agora" o procura (spec 002). Sem ele, o botão nasce
+; apagado e a pessoa fica sem saída na primeira leitura.
+Source: "..\instaladores\tesseract-ocr-w64-setup-*.exe"; DestDir: "{app}\instaladores"; Flags: ignoreversion
+; O .env desta instalação já nasce com o nome certo, em branco, para a TI só
+; abrir e preencher. Criado à mão no Bloco de Notas, ele sai ".env.txt" - o
+; Windows esconde o ".txt", e o programa ignora o arquivo em silêncio (teste
+; da entrega, 25/09/2026). Nunca é o .env desta máquina de desenvolvimento: é
+; o modelo em branco de empacotar\. Numa instalação por cima, o que a TI já
+; preencheu fica como está.
+Source: "modelo.env"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist
+
+[UninstallDelete]
+; As escolhas lembradas de quem usa (o motor de cada módulo, o tamanho da
+; janela) moram ao lado do programa, no preferencias.ini, que o próprio
+; programa cria. O desinstalador só apaga o que o instalador pôs, então ele
+; precisa ser avisado: quem desinstala e instala de novo começa do padrão
+; (RN-41 da spec 002). O ".gravando" é o provisório de uma gravação cortada.
+; Atualizar mantém o arquivo: o instalador não o traz, e não o apaga.
+Type: files; Name: "{app}\preferencias.ini"
+Type: files; Name: "{app}\preferencias.ini.*.gravando"
+; O .env pode ter o token do servidor de IA, e quem desinstala não deixa senha para
+; trás (RN-14 da spec 004). Vai inteiro, e não só a linha: instalando de novo, a pasta
+; do Tesseract, se a TI a tiver escrito, precisa ser escrita outra vez. Atualizar não
+; passa aqui, e o .env fica como está. O ".gravando" é o provisório de uma gravação
+; cortada, que pode ter o token dentro.
+Type: files; Name: "{app}\.env"
+Type: files; Name: "{app}\.env.*.gravando"
+
+[Icons]
+Name: "{autoprograms}\{#Nome}"; Filename: "{app}\{#Executavel}"
+Name: "{autodesktop}\{#Nome}"; Filename: "{app}\{#Executavel}"; Tasks: atalho_na_area_de_trabalho
+
+[Run]
+Filename: "{app}\{#Executavel}"; Description: "Abrir o {#Nome} agora"; Flags: nowait postinstall skipifsilent

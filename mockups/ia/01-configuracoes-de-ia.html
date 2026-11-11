@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rascunho 01 — Configurações de IA</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #15181d;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.5;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 900px; }
+  h2 { font-size: var(--texto-grande); margin: var(--espaco-5) 0 var(--espaco-2) 0; }
+  .explica { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: 0 0 var(--espaco-3) 0; max-width: 900px; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  .quadro-titulo { font-size: var(--texto-pequeno); text-transform: uppercase; letter-spacing: 0.05em; color: var(--cor-texto-secundario); font-weight: 700; margin: var(--espaco-4) 0 var(--espaco-2) 0; }
+
+  /* a janela do programa, na largura mínima */
+  .janela {
+    width: 900px; min-height: 560px;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    display: flex; overflow: hidden;
+  }
+  .menu { width: 220px; background: var(--cor-fundo-elevado); border-right: 1px solid var(--cor-borda); padding: var(--espaco-3) var(--espaco-2); flex-shrink: 0; display: flex; flex-direction: column; gap: var(--espaco-1); }
+  .menu .nome { font-weight: 700; font-size: var(--texto-grande); line-height: 1.2; padding: 0 var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); margin-bottom: var(--espaco-2); }
+  .menu .titulo-sub { font-weight: 600; padding: var(--espaco-1) var(--espaco-2) var(--espaco-2); }
+  .item-menu { padding: 10px 12px; border-radius: var(--raio); color: var(--cor-texto-secundario); }
+  .item-menu.ativo { background: var(--cor-destaque); color: #fff; font-weight: 600; }
+  .item-menu.voltar { font-size: var(--texto-pequeno); }
+  .item-menu.novo, .novo-tela { box-shadow: 0 0 0 3px rgba(240,138,134,0.28); }
+  .estica { flex: 1; }
+  .versao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); padding: var(--espaco-2) var(--espaco-2) 0; }
+  .painel { flex: 1; padding: var(--espaco-4); display: flex; flex-direction: column; gap: var(--espaco-3); min-width: 0; }
+  .painel .t { font-size: var(--texto-grande); font-weight: 600; }
+  .painel .l { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: calc(-1 * var(--espaco-3) + 4px); }
+  .boas { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--cor-texto-secundario); gap: var(--espaco-2); }
+  .boas .g { font-size: var(--texto-grande); color: var(--cor-texto); }
+
+  .linha-switch { display: flex; align-items: center; gap: var(--espaco-2); font-weight: 600; }
+  .sw { width: 36px; height: 20px; border-radius: 10px; background: var(--cor-borda); position: relative; flex-shrink: 0; }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--cor-texto-secundario); }
+  .sw.on { background: var(--cor-destaque); }
+  .sw.on::after { left: 18px; background: #fff; }
+  .sw.apagado { opacity: 0.45; }
+  .linha-switch.apagada { color: var(--cor-texto-secundario); font-weight: 400; }
+  .recuo { margin-left: 44px; }
+  .apoio { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .campo-rotulo { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); margin-bottom: 2px; }
+  .campo { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 6px 10px; font-family: var(--fonte-mono); font-size: var(--texto-pequeno); min-height: 32px; }
+  .campo.vazio { color: var(--cor-texto-secundario); font-family: var(--fonte-texto); }
+  .campo.seta::after { content: "▾"; float: right; color: var(--cor-texto-secundario); }
+  .linha { display: flex; gap: var(--espaco-2); align-items: center; flex-wrap: wrap; }
+  .botao { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 6px 14px; font-size: var(--texto-pequeno); display: inline-block; }
+  .botao.principal { background: var(--cor-destaque); border-color: var(--cor-destaque); color: #fff; }
+  .botao.apagado { color: var(--cor-texto-secundario); opacity: 0.55; }
+  .situacao { font-size: var(--texto-pequeno); display: flex; align-items: center; gap: 6px; }
+  .bola { width: 9px; height: 9px; border-radius: 50%; background: var(--cor-texto-secundario); }
+  .bola.ok { background: var(--cor-sucesso); }
+  .faixa-erro { background: rgba(217,83,79,0.10); border-left: 4px solid var(--cor-erro); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno); }
+  .faixa-alerta { background: rgba(217,164,65,0.10); border-left: 4px solid var(--cor-alerta); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno); }
+  .faixa-info { background: var(--cor-fundo-elevado); border-left: 4px solid var(--cor-destaque); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno); }
+
+  .dialogo { width: 568px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-4); display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .caixa { border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .caixa.alerta { background: rgba(217,164,65,0.10); border-left: 4px solid var(--cor-alerta); }
+  .caixa.perigo { background: rgba(217,83,79,0.10); border-left: 4px solid var(--cor-erro); }
+  .caixa .tt { font-weight: 600; }
+  .caixa .e { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .caixa .n { font-family: var(--fonte-mono); }
+  .acoes { display: flex; gap: var(--espaco-3); justify-content: center; }
+  .botao.escolhido { background: var(--cor-destaque); border-color: var(--cor-destaque); color: #fff; outline: 2px solid #8fb6de; outline-offset: 2px; }
+  .quadros { display: flex; gap: var(--espaco-4); flex-wrap: wrap; align-items: flex-start; }
+
+  .notas { max-width: 900px; margin-top: var(--espaco-4); background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); }
+  .notas li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 900px; }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 01 — Configurações de IA</h1>
+<p class="subtitulo">Spec 004 · 31/10/2026 · <strong>aprovado em 31/10/2026</strong>. As janelas estão na largura mínima do
+programa, 900 px. Endereços e nomes de modelo são inventados. O realce rosado marca o que é novo no menu: ele não existe na
+tela de verdade.</p>
+
+<h2>1 · O menu, e o submenu no lugar dele</h2>
+<p class="explica">"Configurações de IA" fica no fim da faixa, logo acima da versão. O clique troca o menu inteiro. Com uma
+revisão não salva aberta, vem antes a pergunta de descartar. "Voltar" fica em cima, por onde a pessoa entrou com o olhar, e
+não desliga nada.</p>
+<div class="quadros">
+  <div class="janela" style="width:440px">
+    <div class="menu">
+      <div class="nome">Anonimizador<br>CAPCF</div>
+      <div class="item-menu">Gerar OCR</div>
+      <div class="item-menu">Anonimizar</div>
+      <div class="estica"></div>
+      <div class="item-menu novo">Configurações de IA</div>
+      <div class="versao">versão 0.1.0</div>
+    </div>
+    <div class="painel"><div class="boas"><div class="g">Escolha um módulo</div><div class="apoio">o painel de hoje</div></div></div>
+  </div>
+  <div class="janela" style="width:440px">
+    <div class="menu">
+      <div class="nome">Anonimizador<br>CAPCF</div>
+      <div class="item-menu voltar">‹ Voltar</div>
+      <div class="titulo-sub">Configurações de IA</div>
+      <div class="item-menu ativo">LM Studio</div>
+      <div class="item-menu">Servidor de IA Interno</div>
+      <div class="item-menu">Habilitar IA</div>
+      <div class="estica"></div>
+      <div class="versao">versão 0.1.0</div>
+    </div>
+    <div class="painel"><div class="boas"><div class="apoio">a tela do item marcado</div></div></div>
+  </div>
+</div>
+
+<h2>2 · LM Studio</h2>
+<p class="explica">Os estados, um abaixo do outro. A tela não liga o LM Studio nem carrega modelo: isso fica nele.</p>
+
+<div class="quadro-titulo">Vazio: primeiro uso</div>
+<div class="janela" style="min-height:0">
+  <div class="menu" style="justify-content:flex-start"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu ativo">LM Studio</div><div class="item-menu">Servidor de IA Interno</div><div class="item-menu">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">LM Studio</div>
+    <div class="l">A IA roda nesta máquina, e o documento não sai dela.</div>
+    <div class="linha-switch"><span class="sw"></span>Habilitar LM Studio</div>
+    <div class="faixa-info">Antes de ligar: abra o LM Studio, carregue um modelo e ligue o servidor local dele.</div>
+    <div style="width:140px"><div class="campo-rotulo">Porta</div><div class="campo">1234</div></div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Carregando: testando ao ligar</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu ativo">LM Studio</div><div class="item-menu">Servidor de IA Interno</div><div class="item-menu">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">LM Studio</div>
+    <div class="linha-switch"><span class="sw on"></span>Habilitar LM Studio</div>
+    <div class="situacao"><span class="bola"></span>Testando a conexão...</div>
+    <div class="apoio">O teste manda uma frase inventada, sem nenhum dado do documento.</div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Com dados: respondendo</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu ativo">LM Studio</div><div class="item-menu">Servidor de IA Interno</div><div class="item-menu">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">LM Studio</div>
+    <div class="linha-switch"><span class="sw on"></span>Habilitar LM Studio</div>
+    <div class="situacao"><span class="bola ok"></span>Respondendo agora. Isso diz que o modelo respondeu, e não como ele revisa.</div>
+    <div class="linha">
+      <div style="width:140px"><div class="campo-rotulo">Porta</div><div class="campo">1234</div></div>
+      <div style="flex:1;min-width:280px"><div class="campo-rotulo">Modelo da revisora</div><div class="campo seta">modelo-exemplo-texto-8b (5,1 GB, carregado)</div></div>
+    </div>
+    <div class="linha"><span class="botao">Testar de novo</span></div>
+    <div class="apoio">Com "IA como motor de leitura" ligada, aparece embaixo o seletor do motor:</div>
+    <div><div class="campo-rotulo">Modelo do motor de leitura (só os que leem imagem)</div><div class="campo seta vazio">Escolha um modelo</div></div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Erro: o LM Studio está fechado</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu ativo">LM Studio</div><div class="item-menu">Servidor de IA Interno</div><div class="item-menu">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">LM Studio</div>
+    <div class="linha-switch"><span class="sw"></span>Habilitar LM Studio</div>
+    <div class="faixa-erro"><strong>O LM Studio não respondeu.</strong> Abra o LM Studio e ligue o servidor local, e ligue este switch de novo. A porta e o modelo ficaram guardados.</div>
+    <div class="linha">
+      <div style="width:140px"><div class="campo-rotulo">Porta</div><div class="campo">1234</div></div>
+      <div style="flex:1;min-width:280px"><div class="campo-rotulo">Modelo da revisora</div><div class="campo seta">modelo-exemplo-texto-8b</div></div>
+    </div>
+  </div>
+</div>
+
+<h2>3 · Servidor de IA Interno</h2>
+<p class="explica">O endereço e o token vêm da TI, e são salvos antes de ligar o switch. O teste vem ao ligar.</p>
+
+<div class="quadro-titulo">Vazio: primeiro uso</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu">LM Studio</div><div class="item-menu ativo">Servidor de IA Interno</div><div class="item-menu">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">Servidor de IA Interno</div>
+    <div class="l">A IA roda num servidor da instituição. O texto do documento viaja até lá, com os CPFs inteiros.</div>
+    <div class="linha-switch apagada"><span class="sw apagado"></span>Habilitar Servidor de IA Interno</div>
+    <div class="recuo apoio" style="margin-left:0">Salve o endereço para poder ligar.</div>
+    <div><div class="campo-rotulo">Endereço, que a TI informa</div><div class="campo vazio">&nbsp;</div></div>
+    <div><div class="campo-rotulo">Token, que a TI informa (deixe em branco se o servidor não pedir)</div><div class="campo vazio">&nbsp;</div></div>
+    <div class="linha"><span class="botao principal">Salvar</span></div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Com dados: ligado e respondendo</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu">LM Studio</div><div class="item-menu ativo">Servidor de IA Interno</div><div class="item-menu">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">Servidor de IA Interno</div>
+    <div class="linha-switch"><span class="sw on"></span>Habilitar Servidor de IA Interno</div>
+    <div class="situacao"><span class="bola ok"></span>Respondendo agora. Isso diz que o modelo respondeu, e não como ele revisa.</div>
+    <div><div class="campo-rotulo">Endereço</div><div class="campo">http://10.20.30.40:8000</div></div>
+    <div class="apoio">Reconhecido como rede interna. Isso não prova que é a UFSC: na rede de casa, um número assim também aparece.</div>
+    <div class="linha" style="align-items:flex-end">
+      <div style="flex:1;min-width:220px"><div class="campo-rotulo">Token</div><div class="campo vazio" style="color:var(--cor-sucesso)">token salvo</div></div>
+      <span class="botao">Substituir</span><span class="botao">Apagar</span>
+    </div>
+    <div><div class="campo-rotulo">Modelo da revisora</div><div class="campo seta">modelo-exemplo-texto-8b</div></div>
+    <div class="linha"><span class="botao">Testar de novo</span><span class="apoio">Este servidor não lista os modelos? O seletor vira um campo para digitar o nome.</span></div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Erro: o servidor não respondeu</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu">LM Studio</div><div class="item-menu ativo">Servidor de IA Interno</div><div class="item-menu">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">Servidor de IA Interno</div>
+    <div class="linha-switch"><span class="sw"></span>Habilitar Servidor de IA Interno</div>
+    <div class="faixa-erro"><strong>O servidor não respondeu.</strong> Confira o endereço, ou veja com a TI se ele está no ar. O endereço e o token ficaram guardados.</div>
+  </div>
+</div>
+
+<h2>4 · Habilitar IA</h2>
+
+<div class="quadro-titulo">Vazio: nenhum destino configurado</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu">LM Studio</div><div class="item-menu">Servidor de IA Interno</div><div class="item-menu ativo">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">Habilitar IA</div>
+    <div class="linha-switch apagada"><span class="sw apagado"></span>Habilitar IA</div>
+    <div class="faixa-info">Configure primeiro o LM Studio ou o Servidor de IA Interno, nos itens ao lado.</div>
+    <div class="linha-switch apagada recuo"><span class="sw apagado"></span>IA revisora</div>
+    <div class="linha-switch apagada recuo"><span class="sw apagado"></span>IA como motor de leitura</div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Com dados: acabou de ligar. A revisora liga junto, e o motor não</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu">LM Studio</div><div class="item-menu">Servidor de IA Interno</div><div class="item-menu ativo">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">Habilitar IA</div>
+    <div class="l">Destino em uso: LM Studio, modelo-exemplo-texto-8b</div>
+    <div class="linha-switch"><span class="sw on"></span>Habilitar IA</div>
+    <div class="linha-switch recuo"><span class="sw on"></span>IA revisora</div>
+    <div class="recuo" style="margin-left:88px">
+      <div class="apoio" style="margin-bottom:4px">Um segundo par de olhos na revisão do Anonimizar. Ela lê só o texto, e não compara com a página original.</div>
+      <div class="campo-rotulo">A revisão por IA começa</div>
+      <div>◉ ao clicar no botão "Revisar com IA"<br>○ sozinha, ao abrir a revisão</div>
+    </div>
+    <div class="linha-switch recuo"><span class="sw"></span>IA como motor de leitura</div>
+    <div class="recuo faixa-alerta" style="margin-left:88px"><strong>Ressalva, de 31/10/2026.</strong> Até a criação deste programa, os modelos de IA locais eram muito inferiores ao PaddleOCR e ao Tesseract na leitura. O uso indicado da IA é como revisora.<br>Como motor, a IA recebe a imagem da página com os CPFs inteiros, e o texto do documento passa a ser o que ela escrever.</div>
+  </div>
+</div>
+
+<div class="quadro-titulo">Erro: o destino em uso foi desligado</div>
+<div class="janela" style="min-height:0">
+  <div class="menu"><div class="item-menu voltar">‹ Voltar</div><div class="item-menu">LM Studio</div><div class="item-menu">Servidor de IA Interno</div><div class="item-menu ativo">Habilitar IA</div></div>
+  <div class="painel">
+    <div class="t">Habilitar IA</div>
+    <div class="linha-switch apagada"><span class="sw apagado"></span>Habilitar IA</div>
+    <div class="faixa-alerta">A IA foi desligada porque nenhum destino está habilitado. Ao religar um destino e este switch, tudo volta como estava.</div>
+  </div>
+</div>
+
+<h2>5 · Os dois avisos</h2>
+<p class="explica">Nos dois, o botão já escolhido é o que não muda nada, de modo que Enter ou Esc não confirmam. O do endereço é
+vermelho porque é o momento de risco, como na dupla conferência. O da troca é amarelo, porque não há dado em jogo.</p>
+<div class="quadros">
+  <div>
+    <div class="quadro-titulo">Trocar de destino, ao ligar o outro switch</div>
+    <div class="dialogo">
+      <div class="caixa alerta">
+        <div class="tt">O LM Studio será desligado</div>
+        <div class="e">Só um destino de IA fica ligado por vez. As escolhas do LM Studio ficam guardadas, e voltam quando ele for religado.</div>
+      </div>
+      <div class="acoes"><span class="botao">Desligar e ligar este</span><span class="botao escolhido">Manter como está</span></div>
+    </div>
+  </div>
+  <div>
+    <div class="quadro-titulo">Endereço não reconhecido</div>
+    <div class="dialogo">
+      <div class="caixa perigo">
+        <div class="tt">Este endereço pode ser externo</div>
+        <div class="n">http://ia.instituicao.exemplo:8998</div>
+        <div class="e">O programa não reconheceu este endereço como da própria máquina ou da rede interna. O texto do documento irá para lá com os CPFs inteiros, e enviar dados pessoais a um servidor externo traz riscos. Só confirme se a TI informou este endereço.</div>
+        <div class="e" style="color:var(--cor-texto)">Este endereço começa com <code>http://</code>: o texto e o token viajam sem cifra.</div>
+      </div>
+      <div class="acoes"><span class="botao">Usar mesmo assim</span><span class="botao escolhido">Não enviar</span></div>
+    </div>
+    <p class="explica" style="max-width:568px;margin-top:8px">A última frase só aparece em <code>http://</code>. O aviso volta no primeiro uso a cada abertura do programa, e a TI pode dispensá-lo com a lista de endereços locais do <code>.env</code>.</p>
+  </div>
+</div>
+
+<div class="notas">
+  <strong>Três decisões deste desenho, para você olhar</strong>
+  <ul>
+    <li><strong>Mudança de nome na tela:</strong> no submenu, o switch diz "IA revisora" e "IA como motor de leitura", sem "habilitar" em cada linha, porque a frase ficava repetida três vezes um embaixo do outro.</li>
+    <li><strong>Sem o aviso de endereço no vazio:</strong> ele só abre ao salvar um endereço que não se reconhece. Quem usa o servidor certo nunca o vê.</li>
+    <li><strong>Em janela pequena, a tela rola para baixo:</strong> com "IA como motor" ligada, o conteúdo pode passar da altura de 560 px, e o painel rola, em vez de cortar. O submenu fica parado.</li>
+  </ul>
+</div>
+
+<p class="rodape">Rascunho gerado em 31/10/2026 pela skill-07-designer-de-telas, a partir da spec 004. Parte do menu do
+programa de hoje (<code>programa/main.py</code>) e do sistema de design.</p>
+</body>
+</html>

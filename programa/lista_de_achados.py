@@ -1,0 +1,493 @@
+"""A lista do que o programa achou, ao lado do texto da revisão.
+
+Os suspeitos vêm primeiro, porque são eles que pedem o olho da pessoa: o
+programa não tem como saber se aquele número é CPF, e é olhando o original e as
+palavras antes dele que se decide.
+
+A lista mostra o número **como estava escrito**, e não mascarado. Sem isso não
+há como decidir - e é só aqui que ele aparece: o arquivo gravado leva a máscara.
+
+Segue os rascunhos aprovados mockups/anonimizar/01-revisar-antes-de-salvar.html
+(a lista em seções, o jeito A) e 08-escolher-e-salvar.html.
+"""
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
+
+import cpf
+import estilo
+import tipos_na_tela
+from pecas_da_ia import Frase
+
+LARGURA = 330
+
+# O que sobra dentro de um item para as etiquetas: a coluna, menos a barra de
+# rolagem (10), a folga da direita, os respiros do próprio item e as bordas dele.
+LARGURA_UTIL_DO_ITEM = LARGURA - 10 - estilo.ESPACO_2 - 2 * estilo.ESPACO_3 - 4
+
+# Quantas letras do texto antes do número entram no item. Curto o bastante para
+# caber numa linha, e longo o bastante para mostrar a palavra que denuncia o que
+# o número é - "Termo de outorga nº" diz que aquilo não é CPF de ninguém.
+LETRAS_DE_CONTEXTO = 38
+
+
+class ListaDeAchados(QScrollArea):
+    """A coluna da direita: as seções, os itens e os botões de cada um."""
+
+    def __init__(self, ao_ir_para, ao_liberar, ao_mascarar_de_novo):
+        super().__init__()
+        self._ao_ir_para = ao_ir_para
+        self._ao_liberar = ao_liberar
+        self._ao_mascarar_de_novo = ao_mascarar_de_novo
+        self._itens = {}
+
+        self.setFixedWidth(LARGURA)
+        self.setWidgetResizable(True)
+        self.setFrameShape(QFrame.NoFrame)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setStyleSheet(
+            f"""
+            QScrollArea {{ background: transparent; border: none; }}
+            QScrollBar:vertical {{ background: transparent; width: 10px; margin: 0; }}
+            QScrollBar::handle:vertical {{
+                background: {estilo.COR_BORDA}; border-radius: 5px; min-height: 30px;
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
+            """
+        )
+
+        self._dentro = QWidget()
+        self._layout = QVBoxLayout(self._dentro)
+        self._layout.setContentsMargins(0, 0, estilo.ESPACO_2, 0)
+        self._layout.setSpacing(estilo.ESPACO_2)
+        self.setWidget(self._dentro)
+
+    def mostrar(self, texto, ocorrencias, trechos=()):
+        """Monta a lista inteira de novo, na ordem das seções."""
+        self._limpar()
+        self._itens = {}
+
+        # O liberado que a IA acha que é CPF sai da seção dele e vai para o topo: no lugar
+        # de sempre, no fim da lista, quem não rolasse até lá não o via (RN-69).
+        a_revisar = [o for o in ocorrencias if o.liberacao_para_revisar]
+        resto = [o for o in ocorrencias if not o.liberacao_para_revisar]
+        # O número da IA fica só na seção dela, e cada número aparece uma vez só.
+        da_ia = [o for o in resto if o.da_ia]
+        do_programa = [o for o in resto if not o.da_ia]
+        suspeitos = [o for o in do_programa if o.suspeito and not o.suspeito_que_a_ia_nega]
+        # Separados dos outros suspeitos: entre eles, com a frase da IA numa linha do item,
+        # pareciam olhados por ela e mantidos (RN-70).
+        ia_nega = [o for o in do_programa if o.suspeito_que_a_ia_nega]
+        validos = [o for o in do_programa if o.tipo == cpf.PASSA_NA_CONTA]
+        a_mao = [o for o in do_programa if o.tipo == cpf.MASCARADO_A_MAO]
+
+        self._layout.addWidget(_titulo_da_lista("O que o programa achou"))
+        if not ocorrencias and not trechos:
+            self._layout.addWidget(_nada_para_olhar())
+        # O número do título conta o que continua mascarado, igual ao selo do
+        # alto; o item liberado continua listado no mesmo lugar, para ser
+        # mascarado de novo com um clique (conferência da etapa 3, 17/09/2026).
+        # Os suspeitos vêm primeiro, sempre: são os que pedem decisão. Só a liberação para
+        # revisar vem antes deles, porque ela é o CPF que vai sair inteiro. O número dela
+        # conta todos, e não só os mascarados: ali nenhum está.
+        self._montar_secao(
+            f"{tipos_na_tela.TITULO_DA_SECAO_DE_REVISAR} {len(a_revisar)}", a_revisar, texto,
+            cor=tipos_na_tela.LIBERACAO_PARA_REVISAR.cor)
+        self._montar_secao(
+            f"{tipos_na_tela.SUSPEITO.plural.capitalize()} — olhe estes "
+            f"{_ainda_mascarados(suspeitos)}", suspeitos, texto)
+        # Só a primeira letra sobe: o `capitalize()` faria "IA" virar "ia".
+        nome_da_ia_nega = tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.plural
+        self._montar_secao(
+            f"{nome_da_ia_nega[0].upper()}{nome_da_ia_nega[1:]} "
+            f"{_ainda_mascarados(ia_nega)}", ia_nega, texto,
+            cor=tipos_na_tela.SUSPEITO_QUE_A_IA_NEGA.cor)
+        self._montar_secao_da_ia(da_ia, trechos, texto)
+        self._montar_secao(
+            f"{tipos_na_tela.POR_TIPO[cpf.PASSA_NA_CONTA].nome} "
+            f"{_ainda_mascarados(validos)}", validos, texto)
+        self._montar_secao(
+            f"{tipos_na_tela.POR_TIPO[cpf.MASCARADO_A_MAO].plural.capitalize()} "
+            f"{_ainda_mascarados(a_mao)}", a_mao, texto)
+        self._layout.addStretch()
+
+    def marcar(self, ocorrencia):
+        """Destaca o item do número que está sendo olhado, e rola a lista até ele.
+
+        A comparação é por igualdade (`==`), e não por identidade (`is`): a
+        chave é um número, e dois números iguais nem sempre são o mesmo objeto
+        para o Python. Com `is`, nenhum item acendia nunca - defeito achado na
+        conferência da etapa 3.
+        """
+        for chave, item in self._itens.items():
+            marcado = chave == id(ocorrencia)
+            item.marcar(marcado)
+            if marcado:
+                self._rolar_ate(item)
+
+    def _rolar_ate(self, item):
+        """Rola a lista até o item - só para cima e para baixo.
+
+        Sem rolar, o item acende lá embaixo, fora da vista, e para quem olha é
+        como se nada tivesse acontecido. Mas a rolagem é só na vertical: um
+        item com etiqueta comprida fica um pouco mais largo que a coluna, e a
+        rolagem para os lados cortava a primeira letra dos títulos da lista
+        (conferência da etapa 3, com a imagem da tela).
+        """
+        # A lista pode ter acabado de ser remontada; sem esta conta, o item novo
+        # ainda não tem lugar na tela, e a rolagem não saberia para onde ir.
+        self._layout.activate()
+        meio = item.height() // 2
+        self.ensureVisible(0, item.y() + meio, 0, meio + estilo.ESPACO_2)
+        self.horizontalScrollBar().setValue(0)
+
+    # -------------------------------------------------------------- por dentro
+
+    def _montar_secao(self, titulo, ocorrencias, texto, cor=None):
+        if not ocorrencias:
+            return
+        self._layout.addSpacing(estilo.ESPACO_2)
+        self._layout.addWidget(_titulo_de_secao(titulo, cor=cor))
+        for ocorrencia in ocorrencias:
+            item = _Item(
+                ocorrencia,
+                texto,
+                ao_clicar=self._ao_ir_para,
+                ao_liberar=self._ao_liberar,
+                ao_mascarar_de_novo=self._ao_mascarar_de_novo,
+            )
+            self._itens[id(ocorrencia)] = item
+            self._layout.addWidget(item)
+
+    def _montar_secao_da_ia(self, numeros, trechos, texto):
+        """Abaixo dos suspeitos e acima dos CPFs válidos (rascunho 11)."""
+        if not numeros and not trechos:
+            return
+        self._layout.addSpacing(estilo.ESPACO_2)
+        self._layout.addWidget(_titulo_de_secao(
+            f"{tipos_na_tela.TITULO_DA_SECAO_DA_IA} "
+            f"{_ainda_mascarados(numeros) + len(trechos)}", cor=estilo.COR_IA))
+        for item_da_ia in sorted(list(numeros) + list(trechos), key=lambda i: i.inicio):
+            if isinstance(item_da_ia, cpf.Ocorrencia):
+                item = _Item(item_da_ia, texto, ao_clicar=self._ao_ir_para,
+                             ao_liberar=self._ao_liberar,
+                             ao_mascarar_de_novo=self._ao_mascarar_de_novo)
+            else:
+                item = _ItemDeTrecho(item_da_ia, ao_clicar=self._ao_ir_para)
+            self._itens[id(item_da_ia)] = item
+            self._layout.addWidget(item)
+
+    def _limpar(self):
+        while self._layout.count():
+            peca = self._layout.takeAt(0)
+            if peca.widget() is not None:
+                peca.widget().deleteLater()
+
+
+class _Item(QFrame):
+    """Um número da lista: o que ele é, como estava escrito, e o que dá para fazer."""
+
+    def __init__(self, ocorrencia, texto, ao_clicar, ao_liberar, ao_mascarar_de_novo):
+        super().__init__()
+        self._ocorrencia = ocorrencia
+        self._ao_clicar = ao_clicar
+        self.setObjectName("item")
+        self.setCursor(Qt.PointingHandCursor)
+        self.marcar(False)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(estilo.ESPACO_3, estilo.ESPACO_2,
+                                  estilo.ESPACO_3, estilo.ESPACO_2)
+        layout.setSpacing(estilo.ESPACO_1)
+
+        pecas = [_etiqueta(texto_da_etiqueta, cor)
+                 for texto_da_etiqueta, cor in _etiquetas(ocorrencia)]
+        for peca in pecas:
+            peca.ensurePolished()
+        # A etiqueta que não cabe na linha desce para a de baixo. Lado a lado à
+        # força, o item ficava mais largo que a coluna, a lista deslizava para o
+        # lado e cortava a primeira letra dos títulos ("uspeitos — olhe estes
+        # 9", conferência da etapa 3). Desce só o que não cabe, e não todas: o
+        # CPF sem o zero da frente liberado tem três etiquetas, e uma por linha
+        # deixaria o item com três linhas só delas (rascunho 09).
+        linhas_de_etiquetas = [[]]
+        largura_da_linha = 0
+        for peca in pecas:
+            largura = peca.sizeHint().width()
+            if (linhas_de_etiquetas[-1] and largura_da_linha + estilo.ESPACO_1
+                    + largura > LARGURA_UTIL_DO_ITEM):
+                linhas_de_etiquetas.append([])
+                largura_da_linha = 0
+            if linhas_de_etiquetas[-1]:
+                largura_da_linha += estilo.ESPACO_1
+            largura_da_linha += largura
+            linhas_de_etiquetas[-1].append(peca)
+        for pecas_da_linha in linhas_de_etiquetas:
+            etiquetas = QHBoxLayout()
+            etiquetas.setSpacing(estilo.ESPACO_1)
+            for peca in pecas_da_linha:
+                etiquetas.addWidget(peca)
+            etiquetas.addStretch()
+            layout.addLayout(etiquetas)
+
+        # O número como está escrito no texto, e não mascarado: é olhando o
+        # original que se decide se aquilo é CPF (regra RN-10). A quebra de
+        # linha vira uma seta, senão o item cresceria uma linha por número
+        # partido.
+        numero = QLabel(ocorrencia.original.replace("\n", " ↵ "))
+        numero.setStyleSheet(
+            f"font-family: {estilo.FONTE_MONO};"
+            f"font-size: {estilo.TEXTO_BASE}px; color: {estilo.COR_TEXTO};"
+            "border: none; background: transparent;"
+        )
+        layout.addWidget(numero)
+
+        ao_redor = QLabel(contexto(texto, ocorrencia))
+        ao_redor.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+            "border: none; background: transparent;"
+        )
+        layout.addWidget(ao_redor)
+        if ocorrencia.da_ia:
+            if ocorrencia.motivo_da_origem:
+                layout.addWidget(_frase_do_item(ocorrencia.motivo_da_origem, estilo.COR_TEXTO))
+            layout.addWidget(_frase_do_item(ocorrencia.origem, estilo.COR_IA))
+        if ocorrencia.comentario:
+            layout.addWidget(_frase_do_item(f"IA: {ocorrencia.comentario}", estilo.COR_IA))
+
+        self.botao = QPushButton(_nome_do_botao(ocorrencia))
+        self.botao.setCursor(Qt.PointingHandCursor)
+        self.botao.setStyleSheet(estilo.estilo_botao(principal=False, pequeno=True))
+        if ocorrencia.situacao == cpf.LIBERADO:
+            self.botao.clicked.connect(lambda: ao_mascarar_de_novo(ocorrencia))
+        else:
+            self.botao.clicked.connect(lambda: ao_liberar(ocorrencia))
+
+        linha = QHBoxLayout()
+        linha.addWidget(self.botao)
+        linha.addStretch()
+        layout.addLayout(linha)
+
+    def marcar(self, marcado):
+        """O item do número que está sendo olhado ganha a borda e o fundo azuis.
+
+        Só a borda era pouco: numa lista de doze itens parecidos, uma linha fina
+        mudando de cor passa despercebida. O fundo levemente azul é o mesmo tom
+        da faixa de aviso do programa.
+        """
+        self.marcado = marcado
+        borda = estilo.COR_DESTAQUE if marcado else estilo.COR_BORDA
+        fundo = estilo.COR_DESTAQUE_NA_LISTA if marcado else estilo.COR_FUNDO_ELEVADO
+        self.setStyleSheet(
+            f"""
+            QFrame#item {{
+                background-color: {fundo};
+                border: 1px solid {borda};
+                border-left: 3px solid {_cor_da_barra(self._ocorrencia)};
+                border-radius: {estilo.RAIO}px;
+            }}
+            """
+        )
+
+    def mousePressEvent(self, evento):
+        self._ao_clicar(self._ocorrencia)
+        super().mousePressEvent(evento)
+
+
+class _ItemDeTrecho(QFrame):
+    """Um possível CPF que o programa não sabe mascarar: só é apontado (RN-57)."""
+
+    def __init__(self, trecho, ao_clicar):
+        super().__init__()
+        self._trecho = trecho
+        self._ao_clicar = ao_clicar
+        self.setObjectName("item")
+        self.setCursor(Qt.PointingHandCursor)
+        self.marcar(False)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(estilo.ESPACO_3, estilo.ESPACO_2,
+                                  estilo.ESPACO_3, estilo.ESPACO_2)
+        layout.setSpacing(estilo.ESPACO_1)
+        etiquetas = QHBoxLayout()
+        etiquetas.addWidget(_etiqueta(tipos_na_tela.NUMERO_PARA_OLHAR, estilo.COR_IA))
+        etiquetas.addStretch()
+        layout.addLayout(etiquetas)
+        layout.addWidget(_frase_do_item(" ".join(trecho.citacao.split()),
+                                        estilo.COR_TEXTO_SECUNDARIO))
+        if trecho.motivo:
+            layout.addWidget(_frase_do_item(trecho.motivo, estilo.COR_TEXTO))
+        layout.addWidget(_frase_do_item(trecho.origem, estilo.COR_IA))
+        self.botao = QPushButton("Ir para o número")
+        self.botao.setCursor(Qt.PointingHandCursor)
+        self.botao.setStyleSheet(estilo.estilo_botao(principal=False, pequeno=True))
+        self.botao.clicked.connect(lambda: ao_clicar(trecho))
+        linha = QHBoxLayout()
+        linha.addWidget(self.botao)
+        linha.addStretch()
+        layout.addLayout(linha)
+
+    def marcar(self, marcado):
+        self.marcado = marcado
+        borda = estilo.COR_DESTAQUE if marcado else estilo.COR_BORDA
+        fundo = estilo.COR_DESTAQUE_NA_LISTA if marcado else estilo.COR_FUNDO_ELEVADO
+        self.setStyleSheet(
+            f"""
+            QFrame#item {{
+                background-color: {fundo};
+                border: 1px solid {borda};
+                border-left: 3px solid {estilo.COR_IA};
+                border-radius: {estilo.RAIO}px;
+            }}
+            """
+        )
+
+    def mousePressEvent(self, evento):
+        self._ao_clicar(self._trecho)
+        super().mousePressEvent(evento)
+
+
+def _frase_do_item(texto, cor):
+    # O motivo vem da IA e pode ser comprido: com a largura do item, ele desce de linha
+    # em vez de empurrar a lista para o lado ("O que já nos mordeu").
+    return Frase(texto, largura=LARGURA_UTIL_DO_ITEM, cor=cor)
+
+
+def _ainda_mascarados(ocorrencias):
+    return sum(1 for o in ocorrencias if o.situacao == cpf.MASCARADO)
+
+
+def _etiquetas(ocorrencia):
+    """O que o item diz que o número é, em uma a três etiquetas."""
+    if ocorrencia.situacao == cpf.LIBERADO:
+        # Liberado, o item continua no mesmo lugar da lista: arrependimento
+        # custa um clique. O que muda é a etiqueta e o botão.
+        # A etiqueta "liberado" é verde, como o selo do alto e o número no
+        # texto: numa lista longa, é o que deixa achar de relance o que foi
+        # solto (pedido na conferência da etapa 3, em 17/09/2026).
+        # O "sem o zero da frente" continua, em cinza como o tipo: é ele que
+        # lembra por que aquele número de 10 dígitos foi solto (rascunho 09).
+        etiquetas = [(_nome_do_tipo(ocorrencia), estilo.COR_TEXTO_SECUNDARIO)]
+        if ocorrencia.sem_zero:
+            etiquetas.append((tipos_na_tela.SEM_ZERO[ocorrencia.sem_zero].nome,
+                              estilo.COR_TEXTO_SECUNDARIO))
+        etiquetas.append((tipos_na_tela.LIBERADO.nome, tipos_na_tela.LIBERADO.cor))
+        return etiquetas
+    etiquetas = [(_nome_do_tipo(ocorrencia), _cor_do_tipo(ocorrencia))]
+    if ocorrencia.da_ia:
+        etiquetas.append((tipos_na_tela.NUMERO_NOVO, estilo.COR_IA))
+    if ocorrencia.sem_zero:
+        sem_zero = tipos_na_tela.SEM_ZERO[ocorrencia.sem_zero]
+        etiquetas.append((sem_zero.nome, sem_zero.cor))
+    # O "quase CPF" que passa na conta leva as duas: ele continua suspeito, e
+    # também é um número que quase certamente é o CPF de alguém (RN-2).
+    #
+    # A etiqueta não diz "CPF válido", que é o nome da seção de cima: com o
+    # mesmo nome nos dois lugares, ficava confuso saber se aquilo era o número
+    # que a leitura pegou certinho ou o que só fecha a conta depois de
+    # corrigido (conferência da etapa 3, 17/09/2026).
+    if ocorrencia.tipo == cpf.QUASE_CPF and ocorrencia.passa_na_conta:
+        etiquetas.append((tipos_na_tela.VALIDO_SE_CORRIGIDO.nome,
+                          tipos_na_tela.VALIDO_SE_CORRIGIDO.cor))
+    return etiquetas
+
+
+def _nome_do_tipo(ocorrencia):
+    nome = tipos_na_tela.POR_TIPO[ocorrencia.tipo].nome
+    # Só o "quase CPF" leva o motivo junto: é o que explica o que a leitura
+    # estragou naquele número.
+    if ocorrencia.tipo == cpf.QUASE_CPF:
+        return f"{nome} · {ocorrencia.motivo}"
+    return nome
+
+
+def _cor_do_tipo(ocorrencia):
+    return tipos_na_tela.POR_TIPO[ocorrencia.tipo].cor
+
+
+def _cor_da_barra(ocorrencia):
+    if ocorrencia.liberacao_para_revisar:
+        return estilo.COR_ERRO
+    if ocorrencia.situacao == cpf.LIBERADO:
+        return estilo.COR_BORDA
+    if ocorrencia.da_ia or ocorrencia.suspeito_que_a_ia_nega:
+        return estilo.COR_IA
+    # No claro a barra do suspeito é um âmbar mais vivo que a etiqueta: ela não é
+    # letra, e marca o item de longe (RN-29 da spec 001).
+    if ocorrencia.suspeito:
+        return estilo.COR_SUSPEITO_BARRA
+    return _cor_do_tipo(ocorrencia)
+
+
+def _nome_do_botao(ocorrencia):
+    if ocorrencia.situacao == cpf.LIBERADO:
+        return "Mascarar de novo"
+    # Os três pontos avisam que vem uma pergunta antes - é o mesmo sinal que o
+    # resto do programa usa.
+    return "Desfazer…" if ocorrencia.pede_dupla_conferencia else "Desfazer"
+
+
+def contexto(texto, ocorrencia):
+    """As palavras que vêm antes do número, que são o que ajuda a decidir."""
+    antes = texto[max(0, ocorrencia.inicio - LETRAS_DE_CONTEXTO):ocorrencia.inicio]
+    antes = " ".join(antes.split())
+    return f"…{antes}" if antes else "no começo do texto"
+
+
+def _etiqueta(texto, cor):
+    rotulo = QLabel(texto)
+    rotulo.setStyleSheet(
+        f"font-size: 11px; font-weight: 600; color: {cor};"
+        f"border: 1px solid {cor}; border-radius: 8px; padding: 0 6px;"
+        "background: transparent;"
+    )
+    return rotulo
+
+
+def _titulo_da_lista(texto):
+    rotulo = QLabel(texto)
+    rotulo.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 700;"
+        f"color: {estilo.COR_TEXTO_SECUNDARIO}; letter-spacing: 1px;"
+    )
+    return rotulo
+
+
+def _titulo_de_secao(texto, cor=None):
+    # A cor de sempre é lida aqui dentro, na hora de montar, e não como valor
+    # padrão na linha de cima: o valor padrão é lido quando o programa carrega,
+    # antes de o tema ser escolhido, e no claro o título saía na letra quase
+    # branca do escuro (lente crítica da etapa 1 da funcionalidade 10).
+    cor = cor or estilo.COR_TEXTO
+    rotulo = QLabel(texto)
+    rotulo.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 600;"
+        f"color: {cor};"
+    )
+    return rotulo
+
+
+def _nada_para_olhar():
+    rotulo = QLabel(
+        "Nada para olhar aqui. Cada número que o programa mascarar — ou que "
+        "você mascarar à mão — aparece nesta lista."
+    )
+    rotulo.setWordWrap(True)
+    rotulo.setFixedWidth(LARGURA - estilo.ESPACO_4)
+    rotulo.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px;"
+        f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+    )
+    # Medir só depois de o Qt aplicar o estilo, senão a conta sai com a fonte
+    # errada e a última linha da frase é cortada.
+    rotulo.ensurePolished()
+    rotulo.setMinimumHeight(rotulo.heightForWidth(LARGURA - estilo.ESPACO_4))
+    return rotulo

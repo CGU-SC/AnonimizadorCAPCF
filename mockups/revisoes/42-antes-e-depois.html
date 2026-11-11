@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 42 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .intro-secao { color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0; }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+  a { color: #7fb1e8; }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .lado-corpo {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .lado-corpo .numero-grande { font-family: var(--fonte-mono); font-size: var(--texto-grande); display: block; margin-bottom: var(--espaco-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .omitido { color: var(--cor-texto-secundario); font-style: italic; }
+  .rolar { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: var(--texto-pequeno); }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { color: var(--cor-texto-secundario); font-weight: 600; }
+  .fora-lista { margin: 0; padding-left: 20px; }
+  .fora-lista li { margin-bottom: var(--espaco-2); }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+<h1>Revisão 42 — antes e depois</h1>
+<p class="subtitulo">26/10/2026 — a etapa 6 da funcionalidade 5 (a lista numerada como o Word mostra) pela lente crítica, antes do commit</p>
+
+<div class="lente">
+  <div class="rotulo">Lente: crítica</div>
+  Quebra, perda de dado, resultado errado em silêncio, vazamento de recurso. A varredura mecânica levantou 10
+  suspeitas; 3 resistiram à tentativa de derrubada — todas mudavam o número que o assistente lê —, e uma quarta,
+  não crítica, mudava só como o visualizador mostra o <code>.md</code>. As quatro foram consertadas com o ok da
+  solicitante, com testes. O Word de teste não muda; a conferência 04 passa a mostrar os subitens com o recuo novo.
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado"><div class="contagem-numero">4</div><div class="contagem-label">achados apresentados (3 críticos)</div></div>
+  <div class="contagem-item c-consertado"><div class="contagem-numero">4</div><div class="contagem-label">consertados</div></div>
+  <div class="contagem-item c-recusado"><div class="contagem-numero">6</div><div class="contagem-label">suspeitas raras ou de outra lente</div></div>
+  <div class="contagem-item c-fora"><div class="contagem-numero">0</div><div class="contagem-label">pontos para a conferência na tela</div></div>
+</div>
+
+<h2>O que mudou</h2>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_word.py — o título numerado</div>
+  <div class="explicacao"><strong>O título "1 OBJETO" perdia o número, e as cláusulas saíam erradas.</strong> No jeito
+  comum dos termos e contratos, o título e as cláusulas usam a mesma lista. O título não era contado, e as cláusulas
+  saíam "1.1, 1.2" debaixo de todo título — "conforme a cláusula 2.1" apontaria para o lugar errado, sem aviso. Agora
+  o título leva o número e entra na conta.</div>
+  <div class="lado-a-lado">
+    <div class="lado"><div class="lado-titulo antes">Antes</div><div class="lado-corpo"><span class="numero-grande"># OBJETO
+- 1.1 Primeira
+# OBRIGAÇÕES
+- 1.1 Segunda</span></div></div>
+    <div class="lado"><div class="lado-titulo depois">Depois</div><div class="lado-corpo"><span class="numero-grande"># 1 OBJETO
+    - 1.1 Primeira
+# 2 OBRIGAÇÕES
+    - 2.1 Segunda</span></div></div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_word.py — o item numerado vazio</div>
+  <div class="explicacao"><strong>O item vazio (ou só com uma imagem) não era contado.</strong> O Word mostra e conta o
+  número dele; o <code>.md</code> saía com um a menos dali em diante. Agora ele é contado antes de ver se tem texto.</div>
+  <div class="lado-a-lado">
+    <div class="lado"><div class="lado-titulo antes">Antes — "a", um item vazio, "b"</div><div class="lado-corpo"><span class="numero-grande">1. a
+2. b</span></div></div>
+    <div class="lado"><div class="lado-titulo depois">Depois</div><div class="lado-corpo"><span class="numero-grande">1. a
+3. b</span>Como o Word mostra.</div></div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_word.py — o item numerado dentro de uma célula</div>
+  <div class="explicacao"><strong>Na tabela, o item ficava sem número e a lista seguia errada depois dela.</strong> Agora
+  o item da célula leva o número na frente e entra na conta.</div>
+  <div class="lado-a-lado">
+    <div class="lado"><div class="lado-titulo antes">Antes</div><div class="lado-corpo"><span class="numero-grande">1. a
+| b | c |
+2. d</span></div></div>
+    <div class="lado"><div class="lado-titulo depois">Depois</div><div class="lado-corpo"><span class="numero-grande">1. a
+| 2. b | 3. c |
+4. d</span></div></div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">programa/arquivo_word.py — o recuo do subitem (não crítico)</div>
+  <div class="explicacao"><strong>O subitem de um item numerado aparecia solto no visualizador.</strong> Debaixo de
+  "1. ", o recuo de 2 espaços é pouco para o <code>.md</code>, que mostrava os subitens como outra lista. O texto e os
+  números não mudavam. Agora o recuo é de 4 espaços por nível, em toda lista.</div>
+  <div class="lado-a-lado">
+    <div class="lado"><div class="lado-titulo antes">Antes</div><div class="lado-corpo"><span class="numero-grande">1. Enviar o relatório
+  - a) com os anexos</span></div></div>
+    <div class="lado"><div class="lado-titulo depois">Depois</div><div class="lado-corpo"><span class="numero-grande">1. Enviar o relatório
+    - a) com os anexos</span></div></div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul class="fora-lista"><li>Nenhum arquivo criado, apagado ou movido pela revisão. Entraram três testes de regressão em <code>programa/test_arquivo_word.py</code>, e os testes de lista passaram ao recuo de 4 espaços.</li></ul>
+
+<h2>O que foi achado e não consertado aqui</h2>
+<ul class="fora-lista">
+  <li><strong>Raros na numeração</strong>: o recomeço marcado num subnível (e não no primeiro nível) se perde; a numeração "estilo jurídico" do Word (o número romano de cima virando 1 nos subníveis) e o subnível que não recomeça a cada item de cima não são seguidos; a lista com letra ou romano que começa em zero sai sem rótulo; e o nível com rótulo vazio sai com marcador. Em todos, o texto e os CPFs não mudam: só o rótulo de alguns itens.</li>
+  <li><strong>Rara</strong>: uma lista numerada no cabeçalho continua a contagem do corpo.</li>
+  <li><strong>Para a lente de manutenção</strong>: a contagem das listas é recomeçada à mão entre as duas passadas pelo corpo; uma terceira passada, ou uma ordem diferente de leitura, mudaria os números sem avisar.</li>
+</ul>
+
+<p class="rodape">Página gerada em 26/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-09-revisor-de-codigo.</p>
+</body>
+</html>

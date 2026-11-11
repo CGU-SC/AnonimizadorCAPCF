@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 64 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro: #e05d5d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lado { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .caixa { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 12px 16px; }
+  .caixa.antes { border-top: 3px solid var(--cor-erro); }
+  .caixa.depois { border-top: 3px solid var(--cor-sucesso); }
+  .caixa b.rotulo { display: block; font-size: 13px; color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  ol { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 64 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre as perguntas antes de reabrir (etapa 6 da funcionalidade 10, RN-25, RN-27 e
+RN-28 da spec 001), em 07/11/2026, depois de a solicitante conferir na tela. A varredura levantou sete suspeitas; uma
+virou achado e foi consertada.</p>
+
+<div class="achado"><h3>A pergunta velha ficava na tela, e o "Reabrir mesmo assim" perdia o trabalho de outro documento</h3>
+  <div class="lado">
+    <div class="caixa antes"><b class="rotulo">Antes</b>
+      <ol>
+        <li>Com um PDF na conferência do Anonimizar, o "Reabrir agora" pergunta: "Há um texto lido e ainda não salvo no
+          Anonimizar".</li>
+        <li>Sem responder, a pessoa vai ao Anonimizar, descarta esse documento, lê outro PDF e corrige o texto dele à
+          mão.</li>
+        <li>Volta a Configurações: a pergunta velha continua lá. "Reabrir mesmo assim" reabre sem perguntar, e as
+          correções do segundo documento se perdem.</li>
+      </ol>
+    </div>
+    <div class="caixa depois"><b class="rotulo">Depois</b>
+      <ol>
+        <li>A mesma pergunta.</li>
+        <li>A pessoa sai da tela do Tema: a pergunta sai junto, e a frase com o "Reabrir agora" volta.</li>
+        <li>Voltando e clicando de novo, a pergunta é feita com o que vale naquela hora, e o que se perde é o que ela
+          diz.</li>
+      </ol>
+    </div>
+  </div>
+  <p>Minimizar a janela não conta como sair: a pergunta continua lá quando a janela volta.</p>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li><code>programa/tela_do_tema.py</code>: ao sair da tela, a pergunta que estiver aberta some, e a tela volta à
+    frase e ao botão.</li>
+  <li><code>programa/test_perguntas_antes_de_reabrir.py</code>: dois testes novos, um que sai pelo menu e volta, e um
+    que troca de opção nas Configurações. Os dois falham sem o conserto.</li>
+</ul>
+
+<h2>O que foi levantado e não virou achado</h2>
+<ul>
+  <li><b>A janela velha fica parada uns segundos depois do "Reabrir mesmo assim"</b>, ao lado da nova, enquanto a
+    página em leitura termina. Não perde nada e passa sozinha. Esconder a janela antes arrisca o programa não terminar
+    de fechar.</li>
+  <li><b>Com uma revisão não salva e uma leitura, a revisão sai antes da pergunta da leitura</b>, e "Continuar a
+    leitura" não a traz de volta. A ordem é a da spec (RN-28), e hoje ninguém chega a esse caso.</li>
+  <li><b>A faixa amarela repete a das telas da IA</b>, e <b>os dois módulos leem duas palavras de dentro da tela do
+    Tema</b>. São da lente de manutenção.</li>
+  <li><b>A faixa da pergunta é 2 pixels mais larga</b> que a do "Reabrir agora". Conferida na tela, sem incômodo.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 07/11/2026.</p>
+</body>
+</html>

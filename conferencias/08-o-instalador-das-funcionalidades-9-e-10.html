@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 08 — o instalador de teste das funcionalidades 9 e 10</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5; --cor-alerta: #d9a441; --cor-sucesso: #4caf6d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 980px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--cor-borda); }
+  h3 { font-size: 16px; margin: 24px 0 8px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--cor-borda); }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  ol { padding-left: 24px; }
+  li { margin-bottom: 12px; }
+  .ve { color: var(--cor-texto-secundario); display: block; font-size: 14px; }
+  .torto { color: var(--cor-alerta); font-weight: 600; }
+  .aviso { border: 1px solid var(--cor-alerta); background: rgba(217,164,65,.10); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .criterio { border-left: 3px solid var(--cor-destaque); background: var(--cor-fundo-elevado); padding: 10px 16px; margin: 8px 0; border-radius: 0 var(--raio) var(--raio) 0; }
+  .criterio small { color: var(--cor-texto-secundario); display: block; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Conferência 08 — o instalador de teste das funcionalidades 9 e 10</h1>
+<p class="subtitulo">Etapa 5 da funcionalidade 9 (ajustes de design do menu) e último critério da funcionalidade 10 (tema
+claro e menu Configurações), 09/11/2026. As duas mexem na faixa da esquerda, e por isso o programa instalado é testado
+uma vez só, com as duas juntas.</p>
+
+<div class="aviso"><strong>O que os testes automáticos não provam:</strong> o programa instalado. Eles rodam o código do
+jeito de desenvolvimento, com o Python por trás. Instalado, o programa é outro arquivo, montado pelo empacotador, e só
+abrindo ele se vê que os desenhos, o tema claro e o "Reabrir agora" chegaram até lá.</div>
+
+<h2>O que ficou pronto</h2>
+<ul>
+  <li><strong>Um instalador de teste</strong>, numa pasta só dele, com "teste" no nome:
+    <code>builds\teste-010\Anonimizador-CAPCF-0.2.0-teste.exe</code> (179 MB). O instalador da 0.1.0, que foi para o
+    núcleo, continua intocado em <code>builds\instalador</code> e em <code>builds\entrega-0.1.0</code>.</li>
+  <li><strong>A versão passou a 0.2.0</strong>, por escolha da solicitante em 09/11/2026. É o número que aparece no alto
+    da faixa e no instalador, e o da próxima entrega ao núcleo.</li>
+  <li><strong>O <code>CLAUDE.md</code></strong> diz que a versão aparece no alto da faixa, embaixo do nome, e não mais
+    no pé; e a lista do que os roteiros da próxima entrega precisam ganhar tem agora a faixa nova da funcionalidade 9 e
+    o número 0.2.0.</li>
+</ul>
+
+<h2>O que já está provado, antes de você instalar</h2>
+<table>
+  <tr><th>Conferência</th><th>O resultado</th></tr>
+  <tr><td>A lista inteira de testes</td><td>1.072 testes passando, antes de montar o programa</td></tr>
+  <tr><td>As receitas do instalador</td><td>Nenhuma mudou nas funcionalidades 9 e 10: a última mudança foi em 01/11/2026,
+    na funcionalidade 4. Os desenhos da faixa e as cores dos dois temas são feitos pelo próprio programa, e não por
+    arquivos</td></tr>
+  <tr><td>A pasta do programa, comparada com a de 29/10</td><td>A pasta montada agora tem os mesmos 267 arquivos da
+    montada para o teste da funcionalidade 8, em 29/10/2026: nenhum entrou, nenhum saiu. Nenhum dos 267 é imagem,
+    fonte ou folha de cores</td></tr>
+  <tr><td>Os modelos do PaddleOCR</td><td>Os três estão dentro da pasta montada: o programa instalado lê sem buscar nada
+    na internet</td></tr>
+</table>
+
+<h3>Os dois critérios que só o programa instalado prova</h3>
+<div class="criterio">Dado o programa instalado e aberto sem rede, então o símbolo e os ícones aparecem, e a receita do
+  PyInstaller não ganhou nenhum arquivo de imagem.
+  <small>Funcionalidade 9 — spec 001, emenda de 03/11/2026. Passos 2, 3 e 6 do roteiro.</small></div>
+<div class="criterio">Dado o programa instalado e aberto sem rede, então o claro funciona, e a receita do instalador não
+  ganhou nenhum arquivo de imagem, de fonte ou de cor.
+  <small>Funcionalidade 10 — spec 001, emenda de 05/11/2026. O 39º critério. Passos 4 a 11 do roteiro.</small></div>
+<p>A metade "a receita não ganhou nenhum arquivo" já está provada na tabela acima. O que falta é a metade que se vê.</p>
+
+<h2>Antes de começar</h2>
+<div class="aviso">
+<ul>
+  <li><strong>O instalador de teste substitui a instalação desta máquina</strong>, que hoje é o de teste da
+    funcionalidade 8, de 29/10. Para o Windows ele é o mesmo programa, só que mais novo. Ele roda só nesta máquina, e
+    nunca numa do núcleo.</li>
+  <li><strong>Desinstalar, no passo 12, apaga o <code>.env</code> da instalação inteiro.</strong> Se você ou a TI
+    escreveram alguma coisa nele (a pasta do Tesseract ou o token do servidor de IA), copie antes. Instalar por cima
+    não mexe nele.</li>
+  <li><strong>Feche o programa</strong>, o de desenvolvimento e o instalado, antes de cada instalação e antes de
+    desinstalar.</li>
+  <li><strong>Desligue a internet</strong> antes do passo 1: o Wi-Fi pela barra de tarefas, ou o cabo. O instalador
+    não precisa dela, e o programa também não.</li>
+</ul>
+</div>
+
+<h2>Roteiro na tela</h2>
+<ol>
+  <li><strong>Instalar por cima.</strong> Dois cliques em <code>builds\teste-010\Anonimizador-CAPCF-0.2.0-teste.exe</code>.
+    Siga o instalador e, no fim, deixe marcado "Abrir o Anonimizador CAPCF agora" e clique em Concluir.
+    <span class="ve">Você deve ver: o instalador dizendo "Anonimizador CAPCF 0.2.0", sem pedir senha de administrador.
+    Se o Windows mostrar "O Windows protegeu o computador", clique em "Mais informações" e em "Executar assim mesmo":
+    o instalador de teste não tem assinatura.</span></li>
+  <li><strong>O cabeçalho, no escuro.</strong> Olhe o alto da faixa da esquerda.
+    <span class="ve">Você deve ver: o programa no escuro, no tamanho em que ele foi fechado da última vez. No alto, o
+    símbolo azul com a página e a linha tarjada e, ao lado, "Anonimizador" e, embaixo, "CAPCF · versão 0.2.0". No pé
+    da faixa, nenhuma versão. Os itens com os seus desenhos: a lupa em "Gerar OCR", o cadeado em "Anonimizar" e a
+    engrenagem em "Configurações". Nenhum marcado.</span></li>
+  <li><strong>O item marcado e o título, no escuro.</strong> Clique em "Gerar OCR" e depois em "Anonimizar".
+    <span class="ve">Você deve ver: o item clicado com um fundo azul fraco e um filete à esquerda, com o desenho e o
+    texto claros, e os outros dois cinza. À direita, o título da tela com a lupa (ou o cadeado) num quadrado azul fraco,
+    e uma linha fina embaixo.</span></li>
+  <li><strong>Escolher o claro.</strong> Clique em "Configurações" e marque "Claro".
+    <span class="ve">Você deve ver: o submenu com "‹ Voltar", "Configurações Gerais", "Tema" marcado, "Configurações de
+    IA", "LM Studio", "Servidor de IA Interno" e "Habilitar IA", cada opção com o seu desenho. Ao marcar "Claro", a
+    frase "O tema novo vale quando o programa abrir de novo." e o botão "Reabrir agora".</span></li>
+  <li><strong>Reabrir, no programa instalado.</strong> Clique em "Reabrir agora".
+    <span class="ve">Você deve ver: a janela fechar e voltar em um ou dois segundos, inteira no claro, no mesmo
+    tamanho, com o menu principal e nada marcado. É a primeira vez que o programa instalado abre a si mesmo: em
+    desenvolvimento quem abria era o Python.</span>
+    <span class="ve"><span class="torto">Se aparecer</span> "Não foi possível reabrir agora", a janela não fechou: me
+    diga, porque é exatamente o que este passo existe para pegar.</span></li>
+  <li><strong>O cabeçalho, os ícones e o título, no claro.</strong> Repita o passo 3: clique em "Gerar OCR" e em
+    "Anonimizar".
+    <span class="ve">Você deve ver: o símbolo azul-marinho, "CAPCF · versão 0.2.0", os três desenhos, o item marcado com
+    o fundo azul fraco e o filete, e o título com o quadrado e a linha — tudo nas cores do claro, nada escuro sobrando,
+    nada cortado.</span></li>
+  <li><strong>Ler um PDF no claro, sem internet.</strong> No Gerar OCR, escolha
+    <code>dados-exemplo\03-conteudo-girado.pdf</code> e mande ler com o PaddleOCR (se o Tesseract estiver marcado, lembrado
+    de um teste anterior, marque o PaddleOCR).
+    <span class="ve">Você deve ver: a leitura da página, com a barra correndo, e a conferência no claro, com a folha
+    branca sobre um cinza mais escuro e o texto lido ao lado.</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>um PDF estragado, no claro.</strong> No Anonimizar, escolha
+    <code>dados-exemplo\05-corrompido.pdf</code>.
+    <span class="ve">Você deve ver: o aviso de que o documento não abre, com o fundo avermelhado do claro, legível, e o
+    programa de pé.</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>reabrir no meio de uma leitura.</strong> No Anonimizar, escolha
+    <code>dados-exemplo\02-imprimir-para-pdf.pdf</code> e mande ler (são 12 páginas: dá tempo). Enquanto ele lê, vá a
+    Configurações, marque "Escuro", clique em "Reabrir agora" e, na pergunta, em "Reabrir mesmo assim".
+    <span class="ve">Você deve ver: a faixa amarela com "Há uma leitura em andamento no Anonimizar." antes. Depois, o
+    programa fechar e voltar no escuro, <strong>sem</strong> a caixa do Windows de "o programa parou de
+    funcionar".</span></li>
+  <li><strong>Abrir pelo menu Iniciar.</strong> Vá a Configurações, marque "Claro" e feche a janela pelo X, sem
+    reabrir. Abra o programa pelo menu Iniciar, em "Anonimizador CAPCF".
+    <span class="ve">Você deve ver: o programa no claro, e em Configurações "Claro" marcado, sem nada embaixo.</span></li>
+  <li><strong>Instalar de novo por cima.</strong> Feche o programa. Rode o mesmo instalador do passo 1 de novo, com
+    "Abrir agora" marcado.
+    <span class="ve">Você deve ver: o programa abrir no claro e no mesmo tamanho. Atualizar mantém o tema escolhido.</span></li>
+  <li><strong>Desinstalar.</strong> Feche o programa. Desinstale pelo Windows (Configurações › Aplicativos ›
+    Aplicativos instalados › Anonimizador CAPCF › Desinstalar). Depois abra esta pasta no Explorador de Arquivos:
+    <code>%LOCALAPPDATA%\Programs\Anonimizador CAPCF</code>
+    <span class="ve">Você deve ver: a pasta não existir mais, ou existir sem o <code>preferencias.ini</code> e sem o
+    <code>.env</code>.</span></li>
+  <li><strong>Instalar mais uma vez, para ficar com o programa.</strong> Rode o mesmo instalador e abra.
+    <span class="ve">Você deve ver: o programa no escuro e maximizado. Ele começou do padrão, porque o tema e o tamanho
+    foram apagados junto com a desinstalação. Pode religar a internet.</span></li>
+</ol>
+<p><strong>Conferida na tela em 09/11/2026:</strong> os 13 passos, com a internet desligada, todos como esperado. Com
+isso, a funcionalidade 9 fica construída, e a 10 com os 39 critérios.</p>
+
+<p class="rodape">Escrita a pedido da skill-08, no modelo da conferência 07, em 09/11/2026. Os números de CPF dos
+documentos de exemplo são inventados.</p>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rascunho 11 — A escolha com três motores</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #14171c;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 760px; }
+
+  .rotulo-estado {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    margin: var(--espaco-5) 0 var(--espaco-2) 0;
+  }
+  .rotulo-estado .quando {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--cor-texto-secundario);
+  }
+  .rotulo-estado .depois {
+    display: inline-block;
+    background: rgba(217,164,65,0.15);
+    color: var(--cor-alerta);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: var(--espaco-2);
+    font-weight: 700;
+  }
+  .nota {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    max-width: 900px;
+    margin-top: var(--espaco-2);
+  }
+
+  /* janela simulada do programa */
+  .janela {
+    display: flex;
+    width: 100%;
+    max-width: 900px;
+    height: 520px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .menu-lateral {
+    width: 220px;
+    flex: 0 0 220px;
+    background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda);
+    padding: var(--espaco-4) 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-nome-programa {
+    padding: 0 var(--espaco-3) var(--espaco-4) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: var(--espaco-3);
+  }
+  .menu-item {
+    padding: var(--espaco-3);
+    margin: 0 var(--espaco-2);
+    border-radius: var(--raio);
+    color: var(--cor-texto-secundario);
+    cursor: default;
+    font-size: var(--texto-base);
+  }
+  .menu-item.ativo {
+    background: var(--cor-destaque);
+    color: #fff;
+    font-weight: 600;
+  }
+  .painel-principal {
+    flex: 1;
+    background: var(--cor-fundo);
+    padding: var(--espaco-4) var(--espaco-5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .painel-centrado {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .titulo-modulo {
+    font-size: var(--texto-grande);
+    font-weight: 600;
+    margin-bottom: var(--espaco-1);
+  }
+  .legenda-modulo {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-4);
+  }
+
+  /* area de largar o arquivo */
+  .area-arrastar {
+    border: 2px dashed var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-5) var(--espaco-4);
+    text-align: center;
+    background: rgba(255,255,255,0.015);
+  }
+  .area-arrastar .icone { font-size: 34px; opacity: 0.5; margin-bottom: var(--espaco-2); }
+  .area-arrastar .chamada { font-size: var(--texto-grande); margin-bottom: var(--espaco-1); }
+  .area-arrastar .ou {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin: var(--espaco-3) 0;
+  }
+
+  .botao {
+    display: inline-block;
+    background: var(--cor-destaque);
+    color: #fff;
+    border: none;
+    border-radius: var(--raio);
+    padding: 10px 18px;
+    font-size: var(--texto-base);
+    font-family: inherit;
+    font-weight: 600;
+    cursor: default;
+  }
+  .botao.secundario {
+    background: transparent;
+    color: var(--cor-texto-secundario);
+    border: 1px solid var(--cor-borda);
+    font-weight: 400;
+  }
+  .botao.apagado {
+    background: var(--cor-fundo-elevado);
+    color: #5d646e;
+    border: 1px solid var(--cor-borda);
+    font-weight: 400;
+  }
+
+  /* escolha do motor */
+  .motor { margin-top: var(--espaco-4); }
+  .motor-titulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+    margin-bottom: var(--espaco-2);
+  }
+  .motor-opcao {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--espaco-2);
+    padding: var(--espaco-2) 0;
+  }
+  .bolinha {
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    border: 2px solid var(--cor-texto-secundario);
+    flex: 0 0 15px;
+    margin-top: 3px;
+  }
+  .bolinha.marcada {
+    border-color: var(--cor-destaque);
+    background:
+      radial-gradient(circle, var(--cor-destaque) 0 4px, transparent 5px);
+  }
+  .bolinha.apagada { border-color: #4a5058; }
+  .motor-opcao .rotulo { font-size: var(--texto-base); }
+  .motor-opcao.desligada .rotulo { color: #6c737d; }
+  .motor-opcao .explica {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-top: 2px;
+  }
+
+  /* ficha do documento escolhido */
+  .ficha {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .ficha .nome-arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-base);
+    margin-bottom: var(--espaco-3);
+    word-break: break-all;
+  }
+  .ficha-linha {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--espaco-2) 0;
+    border-top: 1px solid var(--cor-borda);
+    font-size: var(--texto-pequeno);
+  }
+  .ficha-linha .chave { color: var(--cor-texto-secundario); }
+  .ficha-linha .valor { font-weight: 600; }
+  .valor.alerta { color: var(--cor-alerta); }
+  .valor.sucesso { color: var(--cor-sucesso); }
+
+  .acoes { display: flex; gap: var(--espaco-3); align-items: center; }
+
+  /* carregando */
+  .barra-fina {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--cor-borda);
+    overflow: hidden;
+    margin-top: var(--espaco-3);
+    width: 260px;
+  }
+  .barra-fina .pedaco {
+    width: 40%;
+    height: 100%;
+    background: var(--cor-destaque);
+    border-radius: 2px;
+  }
+
+  /* erro */
+  .caixa-erro {
+    border-left: 4px solid var(--cor-erro);
+    background: rgba(217,83,79,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    text-align: left;
+    max-width: 460px;
+    margin-bottom: var(--espaco-4);
+  }
+  .caixa-erro .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .caixa-erro .texto { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+
+  /* aviso de motor faltando, no alto do painel */
+  .faixa-aviso {
+    border: 1px solid var(--cor-alerta);
+    background: rgba(217,164,65,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    margin-bottom: var(--espaco-4);
+  }
+  .faixa-aviso .titulo {
+    font-weight: 600;
+    color: var(--cor-alerta);
+    margin-bottom: var(--espaco-1);
+    font-size: var(--texto-pequeno);
+  }
+  .faixa-aviso .texto {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-3);
+  }
+  .faixa-aviso .acoes { gap: var(--espaco-2); }
+  .faixa-aviso .botao { padding: 6px 12px; font-size: var(--texto-pequeno); }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+    max-width: 900px;
+  }
+  .rodape code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo-elevado);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  /* acréscimos do rascunho 11: o resumo, a linha apagada com saídas, e a conferência */
+  .janela.baixa { height: 560px; }
+  .painel-principal.rola { overflow-y: auto; }
+  .motor-opcao .resumo {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-top: 2px;
+  }
+  .motor-opcao .resumo .tempo { color: var(--cor-texto); white-space: nowrap; }
+  .motor-opcao .falta {
+    color: var(--cor-alerta);
+    font-size: var(--texto-pequeno);
+    margin-top: 2px;
+  }
+  .motor-opcao .saidas { display: flex; gap: var(--espaco-2); margin-top: var(--espaco-2); flex-wrap: wrap; }
+  .motor-opcao .saidas .botao { padding: 5px 10px; font-size: var(--texto-pequeno); }
+  .medida {
+    display: inline-block;
+    font-family: var(--fonte-mono);
+    font-size: 11px;
+    color: #7fb1e8;
+    border: 1px dashed #3b6ea5;
+    border-radius: 4px;
+    padding: 0 6px;
+    margin-left: var(--espaco-2);
+    vertical-align: middle;
+  }
+  .ficha-ler { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-4); }
+  .conferencia-topo { display: flex; align-items: center; gap: var(--espaco-3); margin-bottom: var(--espaco-3); }
+  .selo { font-size: var(--texto-pequeno); font-weight: 700; border-radius: 10px; padding: 3px 10px; }
+  .selo.ocr { color: var(--cor-alerta); background: rgba(217,164,65,0.15); }
+  .faixa-orientacao {
+    border-left: 3px solid var(--cor-alerta);
+    background: rgba(217,164,65,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-3);
+  }
+  .metades { display: flex; gap: var(--espaco-3); flex: 1; min-height: 0; }
+  .metade {
+    flex: 1;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background: var(--cor-fundo-elevado);
+    padding: var(--espaco-3);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    overflow: hidden;
+  }
+  .metade.texto { font-family: var(--fonte-mono); color: var(--cor-texto); white-space: pre; font-size: 12px; }
+  .folha { background: #f3f1ea; height: 100%; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 11 — A escolha com três motores</h1>
+<p class="subtitulo">Funcionalidade 7 (emenda de 18/10/2026 da spec 002). Parte do rascunho 03 (escolher o
+documento), do 10 (falta o motor) e do 08 do Anonimizar (a tela de ler). Tudo desenhado na
+<strong>janela mínima, de 900 × 560</strong>: o que cabe aqui cabe na de 1000 em que o programa
+abre. Os retângulos azuis tracejados são medidas, não fazem parte da tela.</p>
+
+<!-- ============================================================ -->
+<div class="rotulo-estado">Estado 1 — Gerar OCR, tudo funcionando <span class="quando">· o que quase todo mundo vai ver</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">Anonimizador CAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal rola">
+    <div class="titulo-modulo">Gerar OCR</div>
+    <div class="legenda-modulo">Converte documento digitalizado em texto para conferência.</div>
+
+    <div class="area-arrastar">
+      <div class="icone">📄</div>
+      <div class="chamada">Arraste o PDF aqui</div>
+      <div class="ou">ou</div>
+      <button class="botao">Escolher arquivo…</button>
+    </div>
+
+    <div class="motor">
+      <div class="motor-titulo">Motor de leitura</div>
+      <div class="motor-opcao">
+        <div class="bolinha marcada"></div>
+        <div>
+          <div class="rotulo">PaddleOCR (nesta máquina)</div>
+          <div class="resumo">Melhor resultado, inclusive em tabela e página escaneada ruim · <span class="tempo">cerca de 2 segundos por página</span></div>
+        </div>
+      </div>
+      <div class="motor-opcao">
+        <div class="bolinha"></div>
+        <div>
+          <div class="rotulo">Tesseract (nesta máquina)</div>
+          <div class="resumo">Pode pular tabela com grade · <span class="tempo">cerca de 3 segundos por página</span></div>
+        </div>
+      </div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">IA local</div>
+          <div class="explica">Funcionalidade a ser implementada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  O resumo fica <strong>embaixo</strong> do nome, e não ao lado: na janela de 900, a linha do PaddleOCR
+  ocupa quase toda a largura que sobra ao lado do menu (cerca de 600 px), e ao lado do nome ela não
+  caberia. O tempo vem em branco, para o olho achar o número sem ler a frase inteira. A tela já tem
+  rolagem para baixo, como hoje: o que não couber na janela mínima desce, e nada é espremido.
+</p>
+
+<!-- ============================================================ -->
+<div class="rotulo-estado">Estado 2 — falta o Tesseract, e o PaddleOCR funciona <span class="quando">· RN-30: sem aviso no alto</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">Anonimizador CAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal rola">
+    <div class="titulo-modulo">Gerar OCR</div>
+    <div class="legenda-modulo">Converte documento digitalizado em texto para conferência.</div>
+
+    <div class="area-arrastar">
+      <div class="icone">📄</div>
+      <div class="chamada">Arraste o PDF aqui</div>
+      <div class="ou">ou</div>
+      <button class="botao">Escolher arquivo…</button>
+    </div>
+
+    <div class="motor">
+      <div class="motor-titulo">Motor de leitura</div>
+      <div class="motor-opcao">
+        <div class="bolinha marcada"></div>
+        <div>
+          <div class="rotulo">PaddleOCR (nesta máquina)</div>
+          <div class="resumo">Melhor resultado, inclusive em tabela e página escaneada ruim · <span class="tempo">cerca de 2 segundos por página</span></div>
+        </div>
+      </div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">Tesseract (nesta máquina)</div>
+          <div class="falta">Não encontrado nesta máquina — sem ele, página deitada não é endireitada.</div>
+          <div class="saidas">
+            <button class="botao">Instalar agora</button>
+            <button class="botao secundario">Conferir de novo</button>
+            <button class="botao secundario">Apontar a pasta…</button>
+            <span class="medida">~390 px</span>
+          </div>
+        </div>
+      </div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">IA local</div>
+          <div class="explica">Funcionalidade a ser implementada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  As três saídas são as mesmas de hoje, só que menores e coladas na linha do motor a que elas
+  servem. Os três botões juntos ocupam cerca de 390 px e cabem numa linha na janela de 900; se a
+  medida feita no programa de verdade disser outra coisa, eles descem de linha
+  (<code>linha_que_desce.py</code>), sem cortar o texto. Sem o instalador do Tesseract ao lado do
+  programa, o "Instalar agora" fica apagado, como hoje. Escolhido um PDF escaneado, a leitura segue
+  com o PaddleOCR — não aparece a tela cheia de motor faltando.
+</p>
+
+<!-- ============================================================ -->
+<div class="rotulo-estado">Estado 3 — falta o PaddleOCR <span class="quando">· RN-29: instalação estragada</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">Anonimizador CAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal rola">
+    <div class="titulo-modulo">Gerar OCR</div>
+    <div class="legenda-modulo">Converte documento digitalizado em texto para conferência.</div>
+
+    <div class="area-arrastar">
+      <div class="icone">📄</div>
+      <div class="chamada">Arraste o PDF aqui</div>
+      <div class="ou">ou</div>
+      <button class="botao">Escolher arquivo…</button>
+    </div>
+
+    <div class="motor">
+      <div class="motor-titulo">Motor de leitura</div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">PaddleOCR (nesta máquina)</div>
+          <div class="falta">Esta instalação está incompleta — reinstale o programa.</div>
+        </div>
+      </div>
+      <div class="motor-opcao">
+        <div class="bolinha marcada"></div>
+        <div>
+          <div class="rotulo">Tesseract (nesta máquina)</div>
+          <div class="resumo">Pode pular tabela com grade · <span class="tempo">cerca de 3 segundos por página</span></div>
+        </div>
+      </div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">IA local</div>
+          <div class="explica">Funcionalidade a ser implementada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  O Tesseract vem marcado porque é o único que lê — e a linha apagada do PaddleOCR diz por quê. Não
+  há botão de "instalar o PaddleOCR": ele vai dentro do programa, e o remédio é reinstalar o
+  programa inteiro, com o instalador que veio do núcleo.
+</p>
+
+<!-- ============================================================ -->
+<div class="rotulo-estado">Estado 4 — não funciona nenhum dos dois <span class="quando">· o único caso do aviso no alto</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">Anonimizador CAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal rola">
+    <div class="titulo-modulo">Gerar OCR</div>
+    <div class="legenda-modulo">Converte documento digitalizado em texto para conferência.</div>
+    <div class="faixa-aviso">
+      <div class="titulo">O motor de leitura não foi encontrado nesta máquina</div>
+      <div class="texto">
+        Documento escaneado não vai funcionar até isto ser resolvido. Documento
+        que já tem texto por dentro continua funcionando normalmente.
+      </div>
+      <div class="acoes">
+        <button class="botao">Instalar agora</button>
+        <button class="botao secundario">Conferir de novo</button>
+        <button class="botao secundario">Apontar a pasta…</button>
+      </div>
+    </div>
+
+    <div class="area-arrastar">
+      <div class="icone">📄</div>
+      <div class="chamada">Arraste o PDF aqui</div>
+      <div class="ou">ou</div>
+      <button class="botao">Escolher arquivo…</button>
+    </div>
+
+    <div class="motor">
+      <div class="motor-titulo">Motor de leitura</div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">PaddleOCR (nesta máquina)</div>
+          <div class="falta">Esta instalação está incompleta — reinstale o programa.</div>
+        </div>
+      </div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">Tesseract (nesta máquina)</div>
+          <div class="falta">Não encontrado nesta máquina.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  É o aviso de hoje, igual (rascunho 10). As três saídas ficam só no aviso do alto, e não repetidas
+  na linha do Tesseract: duas vezes os mesmos botões, um embaixo do outro, só confundiriam. Escolhido
+  um PDF escaneado, aparece a tela cheia de motor faltando, igual à de hoje.
+</p>
+
+<!-- ============================================================ -->
+<div class="rotulo-estado">Estado 5 — Anonimizar, na hora de ler um PDF como imagem <span class="quando">· a tela de ler do rascunho 08, com os três motores</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">Anonimizador CAPCF</div>
+    <div class="menu-item">Gerar OCR</div>
+    <div class="menu-item ativo">Anonimizar</div>
+  </div>
+  <div class="painel-principal rola">
+    <div class="titulo-modulo">Este documento precisa ser lido</div>
+    <div class="ficha-ler">02-imprimir-para-pdf.pdf — 12 páginas, sem texto por dentro: cada página será lida como imagem.</div>
+
+    <div class="motor" style="margin-top:0">
+      <div class="motor-titulo">Ler com</div>
+      <div class="motor-opcao">
+        <div class="bolinha marcada"></div>
+        <div>
+          <div class="rotulo">PaddleOCR (nesta máquina)</div>
+          <div class="resumo">Melhor resultado, inclusive em tabela e página escaneada ruim · <span class="tempo">cerca de 2 segundos por página</span></div>
+        </div>
+      </div>
+      <div class="motor-opcao">
+        <div class="bolinha"></div>
+        <div>
+          <div class="rotulo">Tesseract (nesta máquina)</div>
+          <div class="resumo">Pode pular tabela com grade · <span class="tempo">cerca de 3 segundos por página</span></div>
+        </div>
+      </div>
+      <div class="motor-opcao desligada">
+        <div class="bolinha apagada"></div>
+        <div>
+          <div class="rotulo">IA local</div>
+          <div class="explica">Funcionalidade a ser implementada</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin-top: var(--espaco-4)">
+      <button class="botao">Ler as 12 páginas</button>
+      <button class="botao secundario">Escolher outro arquivo</button>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  A mesma escolha, montada no mesmo lugar do código — o que muda é só o título ("Ler com"), como hoje.
+  Cada módulo tem a sua: marcar o Tesseract aqui não muda o Gerar OCR. Na tela de decidir sobre o
+  texto que já estava no PDF, a frase de quanto a leitura deve levar passa a usar o motor marcado:
+  "uns 24 segundos" com o PaddleOCR, "uns 36 segundos" com o Tesseract, para 12 páginas.
+</p>
+
+<!-- ============================================================ -->
+<div class="rotulo-estado">Estado 6 — a conferência, lida pelo PaddleOCR sem o Tesseract na máquina <span class="quando">· RN-28 e RN-32</span></div>
+<div class="janela baixa">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">Anonimizador CAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="conferencia-topo">
+      <div class="titulo-modulo" style="margin:0">Conferir o texto</div>
+      <span class="selo ocr">LIDO PELO PADDLEOCR</span>
+    </div>
+    <div class="faixa-orientacao">A orientação das páginas não pôde ser conferida — falta o Tesseract nesta máquina. Página deitada sai mal lida: confira com a imagem ao lado.</div>
+    <div class="metades">
+      <div class="metade"><div class="folha"></div></div>
+      <div class="metade texto">UNIVERSIDADE FEDERAL DE SANTA CATARINA
+Coordenadoria de Análise de Prestações
+
+Nome                   CPF
+Ana Beatriz Moreira    111.111.111-11
+Bruno César Lima       222.222.222-22
+Cláudia Exemplo Souza  444.444.444-44</div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  O selo que hoje diz "VEIO DO OCR" passa a dizer qual motor leu: "LIDO PELO PADDLEOCR" ou "LIDO PELO
+  TESSERACT" — mesma cor, mesmo lugar. A faixa da orientação aparece <strong>uma vez</strong>, no alto, e
+  só quando o PaddleOCR leu sem o Tesseract na máquina. Com o Tesseract instalado, ela não existe.
+  Nenhuma das duas vai para o arquivo salvo (RN-11). O resto da conferência não muda.
+</p>
+
+<p class="rodape">
+  Rascunho gerado pela skill-07-designer-de-telas em 18/10/2026, a partir dos rascunhos aprovados
+  <code>mockups/ocr/03-escolher-o-documento.html</code>, <code>mockups/ocr/10-falta-o-motor.html</code> e
+  <code>mockups/anonimizar/08-escolher-e-salvar.html</code>, e do <code>mockups/sistema-de-design.md</code>. Tema
+  escuro, o único do projeto. Nomes e números inventados, da massa de <code>dados-exemplo/</code>.
+  Combinado que ele desenha: spec 002, emenda de 18/10/2026 (RN-25 a RN-33).
+</p>
+
+</body>
+</html>

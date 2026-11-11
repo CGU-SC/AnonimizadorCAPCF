@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa do entendimento — Tema claro e menu Configurações</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 900px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .contagens { display: flex; gap: var(--espaco-3); margin-bottom: var(--espaco-5); flex-wrap: wrap; }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 140px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-inferido .contagem-numero { color: var(--cor-alerta); }
+  .c-respondido .contagem-numero { color: var(--cor-sucesso); }
+  .c-aberto .contagem-numero { color: var(--cor-texto-secundario); }
+
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .explica-secao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: calc(-1 * var(--espaco-2)) 0 var(--espaco-3) 0; }
+  .marca { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .marca-inferido { background: var(--cor-alerta); }
+  .marca-respondido { background: var(--cor-sucesso); }
+  .marca-aberto { background: var(--cor-texto-secundario); }
+
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao.inferido { border-left-color: var(--cor-alerta); }
+  .cartao.aberto { border-left-color: var(--cor-texto-secundario); }
+  .cartao-titulo { font-weight: 600; margin-bottom: var(--espaco-2); display: flex; align-items: baseline; gap: var(--espaco-2); flex-wrap: wrap; }
+  .numero { font-family: var(--fonte-mono); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); font-weight: 400; }
+  .dimensao { margin-left: auto; font-size: var(--texto-pequeno); font-weight: 400; color: var(--cor-texto-secundario); white-space: nowrap; }
+  .cartao-texto { color: var(--cor-texto); }
+  .selo-premissa {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(217,164,65,0.15); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .amostra { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin: 0 2px; border: 1px solid rgba(255,255,255,0.25); }
+
+  /* o que muda em regra já escrita: amarelo, porque é decisão, e não defeito */
+  .regras {
+    margin-bottom: var(--espaco-4);
+    border: 1px solid var(--cor-alerta);
+    background: rgba(217,164,65,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .regras h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .regras ul { margin: 0; padding-left: 20px; }
+  .regras li + li { margin-top: var(--espaco-2); }
+
+  .fora { margin-top: var(--espaco-5); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+  .fora h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .fora ul { margin: 0; padding-left: 20px; color: var(--cor-texto-secundario); }
+  .fora li { margin-bottom: var(--espaco-1); }
+  .rodape { margin-top: var(--espaco-4); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  @media (max-width: 600px) {
+    body { padding: var(--espaco-3); }
+    .dimensao { margin-left: 0; white-space: normal; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Mapa do entendimento — Tema claro e menu Configurações</h1>
+<p class="subtitulo">Funcionalidade 10 do backlog: levantamento feito em 05/11/2026, no nível detalhado. Vira emendas
+nas specs 001, 002 e 004. Nada foi escrito nem construído ainda, então o que está aqui ainda se corrige de graça.</p>
+
+<div class="contagens">
+  <div class="contagem-item c-inferido">
+    <div class="contagem-numero">10</div>
+    <div class="contagem-label">inferido por mim: 3 novos para você ler agora, e 7 que você já leu e não derrubou</div>
+  </div>
+  <div class="contagem-item c-respondido">
+    <div class="contagem-numero">11</div>
+    <div class="contagem-label">respondido por você</div>
+  </div>
+  <div class="contagem-item c-aberto">
+    <div class="contagem-numero">3</div>
+    <div class="contagem-label">em aberto, a resolver no rascunho de tela ou na conferência</div>
+  </div>
+</div>
+
+<div class="regras">
+  <h3>Quatro regras escritas que suas respostas mudam</h3>
+  <ul>
+    <li><strong>"Os itens do submenu continuam só texto"</strong> (emenda de 03/11/2026 da spec 001). Cada opção passa a
+    ter o seu ícone em traço (R-6). O "‹ Voltar" continua sem.</li>
+    <li><strong>"Configurações de IA" no fim da faixa</strong> (RN-1 da spec 004). O item vira "Configurações", e o
+    submenu ganha duas seções com título (R-1).</li>
+    <li><strong>Entrar no submenu abre o LM Studio</strong> (o que o programa faz hoje, nas RN-2 e RN-3 da spec 004).
+    Passa a abrir o Tema, a primeira opção da lista (R-7).</li>
+    <li><strong>"Só escuro por enquanto"</strong> (sistema de design, desde 03/09/2026). Passam a ser dois temas, e cada
+    papel de cor ganha um segundo valor. Um papel novo nasce: a letra de alerta, porque no claro o amarelo de fundo
+    não serve de letra (R-5).</li>
+  </ul>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Inferido por mim, e ainda não lido: confirme ou derrube</h2>
+<p class="explica-secao">Apareceram agora, ao juntar tudo. Diga o número de qualquer um que não seja assim.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-1</span> Os títulos das seções levam um filete fino ao lado <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Como no desenho que veio no pedido ("── Configurações Gerais ──"). O rascunho 06 mostra
+    como fica na faixa de 220 px.</div>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-2</span> Desinstalar apaga a escolha do tema; atualizar a mantém <span class="dimensao">retenção</span></div>
+    <div class="cartao-texto">É a regra das outras escolhas lembradas (RN-41 da spec 002): o tema mora no mesmo
+    <code>preferencias.ini</code>.</div>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-3</span> O roteiro de uso ganha uma linha sobre o tema <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">Na próxima entrega, junto das linhas já combinadas das funcionalidades 8 e 4: onde se
+    escolhe o tema, e que ele vale ao reabrir.</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Premissas: você leu e não derrubou</h2>
+<p class="explica-secao">Eram inferências, e passaram a valer como respondidas. Caindo uma, o entendimento reabre naquele
+ponto.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-4</span> O escuro é o tema de quem nunca escolheu <span class="dimensao">estados</span></div>
+    <div class="cartao-texto">Vale também quando a escolha guardada não dá para ler. Quem usa hoje não vê nada mudar
+    ao atualizar.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-5</span> As três opções da IA não mudam <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">"LM Studio", "Servidor de IA Interno" e "Habilitar IA" mantêm os nomes e as telas. Só passam
+    a ficar debaixo do título "Configurações de IA".</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-6</span> O "‹ Voltar" fica sem ícone <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">A seta escrita já é o desenho dele.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-7</span> Os títulos das seções não se clicam <span class="dimensao">navegação</span></div>
+    <div class="cartao-texto">São só texto, como o título "Configurações de IA" de hoje.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-8</span> A barra de título é a do Windows <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">O nome no alto e o botão de fechar não são pintados pelo programa, em nenhum dos dois
+    temas.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-9</span> Atrás da página do PDF, um cinza mais escuro que o fundo <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Na conferência, para a folha branca se destacar, como hoje no escuro.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-10</span> Todo rascunho de tela nasce nos dois temas, daqui em diante <span class="dimensao">processo</span></div>
+    <div class="cartao-texto">Como o backlog já previa. As páginas de documentação, como esta, continuam escuras.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+</div>
+
+<h2><span class="marca marca-respondido"></span>Respondido por você</h2>
+<div class="cartoes">
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-1</span> "Configurações", com duas seções <span class="dimensao">propósito</span></div>
+    <div class="cartao-texto">O item da faixa, com a engrenagem, abre "‹ Voltar", a seção "Configurações Gerais" com
+    "Tema" e a seção "Configurações de IA" com as três opções de hoje. Validado no pedido da sessão.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-2</span> O claro muda só as cores <span class="dimensao">limites</span></div>
+    <div class="cartao-texto">Desenho das telas, tamanhos, espaços e jeito de cada peça ficam iguais aos do escuro.
+    Nada baixado, nenhuma fonte nova.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-3</span> A troca vale ao reabrir, com o botão "Reabrir agora" <span class="dimensao">fluxos</span></div>
+    <div class="cartao-texto">A frase "O tema novo vale quando o programa abrir de novo" e o botão aparecem só quando a
+    escolha é diferente do tema que está na tela. A janela inteira nasce com um tema só.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-4</span> As cores vêm do Gerencial <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Leitura autorizada só para esta tarefa. Daqui, só os valores de cor entram no histórico, como
+    o fundo <span class="amostra" style="background:#f2f4f7"></span><code>#f2f4f7</code>, o dos quadros
+    <span class="amostra" style="background:#fbfcfd"></span><code>#fbfcfd</code>, o texto
+    <span class="amostra" style="background:#16202b"></span><code>#16202b</code>, o destaque
+    <span class="amostra" style="background:#1f4e8c"></span><code>#1f4e8c</code> e as de significado.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-5</span> O suspeito, no claro, em âmbar escuro <span class="dimensao">regra visual</span></div>
+    <div class="cartao-texto"><span class="amostra" style="background:#7a5c00"></span><code>#7a5c00</code>, 6,1 para 1, na
+    letra e no traço ondulado, no mesmo jeito do escuro. O amarelo do Gerencial
+    (<span class="amostra" style="background:#c2aa07"></span><code>#c2aa07</code>, 2,3 para 1) fica só nos fundos de
+    aviso, porque não serve de letra.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-6</span> Um ícone em traço para cada opção <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Propostos: círculo metade cheio (Tema), tela de computador (LM Studio), servidor
+    empilhado (Servidor de IA Interno), chave de ligar (Habilitar IA). O rascunho traz uma segunda opção para cada um.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-7</span> Entrar em "Configurações" abre o Tema <span class="dimensao">navegação</span></div>
+    <div class="cartao-texto">A regra fica "abre a primeira opção", como hoje. Quem entra só para olhar não cai numa tela
+    da IA.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-8</span> Duas opções de marcar, gravadas no clique <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">"Escuro" e "Claro", uma embaixo da outra, cada uma com uma linha de explicação, com a peça
+    de marcar que a tela da IA já usa.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-9</span> Sem conseguir guardar, o botão leva o tema mesmo assim <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">O "Reabrir agora" abre a janela nova no tema escolhido, sem aviso. Fechando e abrindo por
+    conta própria, volta o que estava guardado. É a regra de "vale até fechar" (RN-39 da spec 002).</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-10</span> Reabrir pergunta antes, quando há o que perder <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Com uma leitura de PDF em andamento: "Há uma leitura em andamento no Gerar OCR. Reabrir
+    agora a interrompe.", com "Reabrir mesmo assim" e "Continuar a leitura". Com uma revisão não salva, a mesma pergunta
+    de quando se fecha a janela.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-11</span> Instalador só no fim, junto da funcionalidade 9 <span class="dimensao">limites</span></div>
+    <div class="cartao-texto">A etapa 5 da funcionalidade 9 continua parada. O instalador de teste é um só, com as duas.</div></div>
+</div>
+
+<h2><span class="marca marca-aberto"></span>Em aberto: nada aqui muda a estrutura</h2>
+<p class="explica-secao">Dependem de olhar o desenho ou a tela de verdade.</p>
+<div class="cartoes">
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-1</span> O desenho final de cada ícone <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Escolhido no rascunho 06, entre a proposta e a segunda opção de cada um.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-2</span> O tom de cada cinza da faixa e das bordas no claro <span class="dimensao">paleta</span></div>
+    <div class="cartao-texto">A borda, o texto apagado, o passar o mouse e o fundo atrás do PDF. O Gerencial não tem
+    esses papéis, então esses tons são escolhidos aqui, a partir dos cinzas dele, e conferidos no rascunho.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-3</span> As peças que o programa não pinta <span class="dimensao">estados da interface</span></div>
+    <div class="cartao-texto">A barra de rolagem, as caixas de escolher arquivo e de mensagem do Windows. Hoje o escuro
+    vem todo das regras de cada tela, e o programa não define as cores de base. Confiro na primeira etapa construída
+    o que aparece no claro, e o que destoar volta para você.</div></div>
+</div>
+
+<div class="fora">
+  <h3>Fora de escopo desta funcionalidade</h3>
+  <ul>
+    <li>Trocar o tema na hora, sem reabrir (R-3).</li>
+    <li>Seguir sozinho o tema claro ou escuro do Windows.</li>
+    <li>Mudar desenho, tamanho, espaço ou fonte de qualquer tela; a fonte do Gerencial não vem junto (R-2).</li>
+    <li>Um terceiro tema, ou escolher cor a cor.</li>
+    <li>Pintar a barra de título do Windows (I-8).</li>
+    <li>O arquivo <code>.md</code> que o programa grava: não tem cor, e não muda.</li>
+    <li>As páginas de documentação do projeto, que continuam escuras (I-10).</li>
+    <li>Fechar a funcionalidade 9 e gerar instalador nesta sessão (R-11).</li>
+  </ul>
+</div>
+
+<p class="rodape">Página gerada em 05/11/2026 pela skill-07-designer-de-telas, a pedido da
+skill-02-analista-de-requisitos.</p>
+</body>
+</html>

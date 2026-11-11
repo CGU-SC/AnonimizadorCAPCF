@@ -1,0 +1,1155 @@
+"""O caminho do PDF: do arquivo escolhido ao texto conferido.
+
+Esta peça é a máquina que os dois módulos usam. Ela confere o documento, mostra
+o cartão do que descobriu, deixa a pessoa decidir sobre a camada de texto quando
+há uma, roda a leitura ao lado da janela com contagem de páginas e cancelar, e
+abre a conferência. Quando a pessoa clica em "Conferido", ela devolve o texto a
+quem a está usando — e é só aí que os dois módulos se separam: o "Gerar OCR"
+oferece as duas saídas, e o "Anonimizar" vai direto para a revisão.
+
+Ela nasceu em 18/09/2026, na etapa 7 do Anonimizador, tirada de dentro do
+`painel_ocr.py`. A decisão de extrair em vez de copiar está registrada no
+CLAUDE.md: copiada, seriam duas cópias de umas seiscentas linhas, que divergem
+na primeira correção - foi o que quase aconteceu no mesmo dia, quando a janela
+do Windows precisou do mesmo conserto nos dois módulos.
+
+As telas são criadas aqui e entram na pilha de telas de quem usa a peça. Assim o
+painel continua sendo quem troca de tela, e a árvore de telas não muda de forma
+por causa da extração.
+"""
+import time
+from pathlib import Path
+
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QVBoxLayout,
+    QWidget,
+)
+
+import avisos_da_ia
+import config_ia
+import estilo
+from cabecalho_da_tela import CabecalhoDaTela
+from documento import DocumentoNaoAbre, conferir, texto_da_camada
+from leitura import MOTOR_IA, MOTOR_PADDLEOCR, MOTOR_TESSERACT, orientacao_conferida
+from pecas_da_ia import Frase, estilo_do_radio
+from leitura_em_segundo_plano import LeituraEmSegundoPlano
+from tela_conferencia import ORIGEM_CAMADA_DO_PDF, TelaConferencia
+from tela_decisao import TelaDecisao
+
+NAO_ABRE = (
+    "O documento não pôde ser lido até o fim. Ele pode estar danificado por "
+    "dentro."
+)
+
+
+class CaminhoDoPdf:
+    """A máquina do caminho do PDF, usada pelos dois módulos.
+
+    `titulo` e `legenda` são o cabeçalho do cartão do que o programa descobriu;
+    `o_que_vai_acontecer` diz, em uma frase, o que vem depois - e no Anonimizar
+    essa frase termina na revisão, e não no salvar do outro módulo (oitava
+    emenda da spec 003). `desenho` é o ícone do módulo que usa a peça, posto no
+    título das telas daqui: a pessoa continua no módulo por onde entrou (RN-14
+    da spec 001).
+
+    Os avisos de volta são todos do mesmo tipo: a peça faz o trabalho e chama
+    quem a usa quando a decisão é de lá.
+    """
+
+    def __init__(self, pilha, ao_conferir, ao_escolher_outro, ao_cancelar,
+                 titulo="", legenda="", o_que_vai_acontecer=None,
+                 com_cartao=True, ao_abrir_conferencia=None,
+                 tem_motor=None, ao_faltar_motor=None,
+                 rotulo_de_outro="Escolher outro documento",
+                 motor_escolhido=None, lembranca_do_motor=None, desenho="lupa"):
+        self._pilha = pilha
+        # O Gerar OCR mostra o cartão do que o programa descobriu antes de
+        # tudo. O Anonimizar não: o PDF sem texto vai para a tela de ler, que
+        # já traz nome, páginas e a escolha do motor, e o PDF com texto vai
+        # direto para a decisão (rascunho 08, estados 3a e 3b; oitava emenda).
+        self._com_cartao = com_cartao
+        self._o_que_vai_acontecer = o_que_vai_acontecer
+        self._ao_conferir = ao_conferir
+        self._ao_escolher_outro = ao_escolher_outro
+        self._ao_cancelar = ao_cancelar
+        # Avisa quem usa a peça de que a conferência começou: é a partir daí que
+        # existe texto para perder, e é isso que a pergunta antes de descartar
+        # precisa saber.
+        self._ao_abrir_conferencia = ao_abrir_conferencia or (lambda: None)
+        # O motor é procurado por quem usa a peça: é lá que mora o aviso do alto
+        # e a tela de motor faltando, que têm as saídas do módulo.
+        self._tem_motor = tem_motor or (lambda: True)
+        self._ao_faltar_motor = ao_faltar_motor or (lambda ficha: None)
+
+        # Enquanto a leitura roda, é esta peça que segura o trabalho acontecendo
+        # ao lado da janela. Fica guardada para poder ser cancelada.
+        self.leitura = None
+        # O documento em uso agora. É o que permite tentar de novo depois de
+        # uma falha, sem a pessoa ter que escolher o arquivo outra vez.
+        self.ficha_atual = None
+
+        self.tela_verificando = _montar_tela_verificando()
+        self.tela_ficha = _TelaFicha(
+            titulo=titulo,
+            legenda=legenda,
+            desenho=desenho,
+            rotulo_de_outro=rotulo_de_outro,
+            ao_escolher_outro=self._escolher_outro,
+            ao_ler=self.seguir_a_partir_da_ficha,
+        )
+        self.tela_lendo = _TelaLendo(ao_cancelar=self.cancelar_leitura)
+        self.tela_decisao = TelaDecisao(
+            desenho=desenho,
+            ao_aproveitar=self.aproveitar_o_texto_existente,
+            ao_ignorar=self._ignorar_o_texto_existente,
+            ao_escolher_outro=self._escolher_outro,
+        )
+        # A escolha da tela de ler só é lembrada por quem a mostra (o
+        # Anonimizar). O Gerar OCR monta esta tela sem usá-la, e lembrar por
+        # ela misturaria a escolha dele com a escondida (RN-36).
+        self.tela_de_ler = _TelaDeLer(
+            desenho=desenho,
+            ao_ler=self.comecar_a_ler,
+            ao_escolher_outro=self._escolher_outro,
+            ao_voltar_a_decisao=self.decidir_sobre_o_texto_existente,
+            lembranca_do_motor=lembranca_do_motor,
+        )
+        self.tela_conferencia = TelaConferencia(
+            ao_processar_outro=self._escolher_outro,
+            ao_conferir=self._conferiu,
+        )
+        # Qual motor lê é perguntado a quem tem a escolha na tela: no Gerar OCR
+        # ela fica na tela de escolher o documento, que é do painel; no
+        # Anonimizar, na tela de ler, que é desta peça.
+        self._motor_escolhido = (motor_escolhido
+                                 or self.tela_de_ler.escolha_do_motor.marcado)
+        self.tela_erro = _TelaErro(
+            ao_escolher_outro=self._escolher_outro,
+            ao_tentar_de_novo=self.tentar_ler_de_novo,
+        )
+        for tela in self.telas():
+            pilha.addWidget(tela)
+
+    def telas(self):
+        """As telas desta peça, na ordem em que a pessoa as encontra."""
+        return (self.tela_verificando, self.tela_ficha, self.tela_decisao,
+                self.tela_de_ler, self.tela_lendo, self.tela_conferencia,
+                self.tela_erro)
+
+    # ------------------------------------------------------------------ uso
+
+    def comecar(self, caminho):
+        """Mostra que está trabalhando e então confere o documento.
+
+        A conferência é rápida, mas a tela precisa aparecer antes dela para não
+        haver um instante de janela parada sem explicação. Por isso a verificação
+        acontece logo depois, quando o Qt já desenhou a tela de espera.
+        """
+        # Escolher outro documento no meio de uma leitura para a leitura antiga:
+        # ela seguiria gastando a máquina num documento que ninguém quer mais.
+        self.abandonar_leitura()
+        self._mostrar(self.tela_verificando)
+        QTimer.singleShot(0, lambda: self.conferir_documento(caminho))
+
+    def conferir_documento(self, caminho):
+        try:
+            ficha = conferir(caminho)
+        except DocumentoNaoAbre as problema:
+            self.mostrar_erro(caminho, str(problema))
+            return
+        except Exception:
+            # Qualquer falha não prevista também precisa terminar numa tela com
+            # saída. A tela de espera não tem botão nenhum: sem isto, o painel
+            # ficaria preso nela para sempre, e nem sair pelo menu resolveria -
+            # quem usa só teria como fechar o programa inteiro.
+            self.mostrar_erro(caminho, NAO_ABRE)
+            return
+
+        self.ficha_atual = ficha
+        if not ficha.tem_camada_de_texto and not self._tem_motor():
+            # Documento escaneado só se lê com o motor. A ficha ofereceria "ler
+            # as páginas" num botão que só poderia falhar.
+            self._ao_faltar_motor(ficha)
+            return
+        if self._com_cartao:
+            self.mostrar_ficha(ficha)
+        elif ficha.tem_camada_de_texto:
+            self.decidir_sobre_o_texto_existente(ficha)
+        else:
+            self.tela_de_ler.mostrar(ficha, ignorando=False)
+            self._mostrar(self.tela_de_ler)
+
+    def mostrar_ficha(self, ficha):
+        """O cartão do que o programa descobriu sobre este documento."""
+        self.tela_ficha.mostrar(ficha, self._o_que_vai_acontecer)
+        self._mostrar(self.tela_ficha)
+
+    def seguir_a_partir_da_ficha(self, ficha):
+        """O botão da ficha leva a um de dois lugares, conforme o documento.
+
+        Tendo texto gravado por dentro, a escolha é da pessoa: aproveitar ou
+        mandar reler. Não tendo, não há o que escolher e a leitura começa.
+        """
+        if ficha.tem_camada_de_texto:
+            self.decidir_sobre_o_texto_existente(ficha)
+        else:
+            self.comecar_a_ler(ficha)
+
+    def decidir_sobre_o_texto_existente(self, ficha):
+        """Mostra o texto que já está no documento e deixa a escolha com a pessoa."""
+        try:
+            paginas = texto_da_camada(ficha.caminho)
+        except Exception:
+            self.mostrar_erro(ficha.caminho, NAO_ABRE)
+            return
+        self.tela_decisao.mostrar(ficha, paginas, self._motor_escolhido())
+        self._mostrar(self.tela_decisao)
+
+    def _ignorar_o_texto_existente(self, ficha):
+        """Quem manda ignorar o texto de dentro vai ler as imagens.
+
+        No Gerar OCR a leitura começa na hora, como sempre foi. No Anonimizar,
+        antes vem a tela de ler, com a escolha do motor e o aviso de que o texto
+        de dentro será deixado de lado (rascunho 08, estado 3c) - e, faltando o
+        motor, a tela de motor faltando, e não uma leitura que só falharia.
+        """
+        if self._com_cartao:
+            self.comecar_a_ler(ficha)
+        elif not self._tem_motor():
+            self._ao_faltar_motor(ficha)
+        else:
+            self.tela_de_ler.mostrar(ficha, ignorando=True)
+            self._mostrar(self.tela_de_ler)
+
+    def aproveitar_o_texto_existente(self, ficha, paginas):
+        """Vai direto para a conferência, com o texto que já estava no PDF.
+
+        A conferência acontece mesmo aqui: ela é passo obrigatório nos dois
+        caminhos. Texto gravado no documento erra menos que o adivinhado de uma
+        imagem, mas erra - e quem diz se está bom é quem olha.
+        """
+        self.tela_conferencia.mostrar(ficha, paginas, origem=ORIGEM_CAMADA_DO_PDF)
+        self._ao_abrir_conferencia()
+        self._mostrar(self.tela_conferencia)
+
+    def comecar_a_ler(self, ficha):
+        """Manda a leitura acontecer ao lado, e passa a mostrar o andamento."""
+        if not self._tem_motor():
+            # Chega aqui quem mandou ignorar o texto que já estava no documento,
+            # ou quem viu o motor sumir com o programa aberto.
+            self._ao_faltar_motor(ficha)
+            return
+        # Antes de a página sair: sem confirmar o endereço, a pessoa fica onde estava,
+        # e nada é enviado (RN-20 da spec 004).
+        if (self._motor_escolhido() == MOTOR_IA
+                and not avisos_da_ia.pode_usar_o_destino(self.tela_lendo)):
+            return
+        self.tela_lendo.comecar(ficha)
+        self._mostrar(self.tela_lendo)
+
+        # Cada aviso carrega quem o mandou. Leitura abandonada - porque a pessoa
+        # escolheu outro documento no meio - continua terminando o que estava
+        # fazendo, e o aviso dela chega depois; sem esta marca, ele sequestraria
+        # a tela e mostraria a conferência de um documento que ninguém pediu.
+        # O motor é lido uma vez, na largada: trocar a marca no meio da leitura
+        # não muda quem está lendo, e a conferência precisa dizer quem leu.
+        motor = self._motor_escolhido()
+        conferida = orientacao_conferida(motor)
+        leitura = LeituraEmSegundoPlano(ficha.caminho, motor)
+        self.leitura = leitura
+        leitura.avancou.connect(
+            lambda pagina, total: self._leitura_avancou(leitura, pagina, total))
+        leitura.terminou.connect(
+            lambda paginas: self._leitura_terminou(
+                leitura, ficha, paginas, motor, conferida))
+        leitura.cancelou.connect(
+            lambda pagina: self._leitura_cancelada(leitura, pagina))
+        leitura.falhou.connect(
+            lambda pagina, motivo: self._leitura_falhou(leitura, pagina, motivo))
+        leitura.start()
+
+    def tentar_ler_de_novo(self):
+        if self.ficha_atual is not None:
+            self.comecar_a_ler(self.ficha_atual)
+
+    def cancelar_leitura(self):
+        if self.leitura is not None:
+            self.tela_lendo.mostrar_que_esta_parando()
+            self.leitura.cancelar()
+
+    def abandonar_leitura(self):
+        """Para a leitura em andamento e a esquece.
+
+        Usado quando a pessoa escolhe outro documento no meio da leitura, e ao
+        fechar o programa. Sem isto, três coisas davam errado de uma vez: a
+        máquina seguia trabalhando num documento abandonado; o aviso de leitura
+        terminada chegava depois e levava a tela para a conferência do documento
+        antigo; e começar uma leitura nova por cima da velha derrubava o
+        programa.
+        """
+        if self.leitura is not None and self.leitura.isRunning():
+            self.leitura.cancelar()
+            self.leitura.wait(20_000)
+        self.leitura = None
+
+    def mostrar_erro(self, caminho, motivo):
+        self.tela_erro.mostrar(caminho, motivo)
+        self._mostrar(self.tela_erro)
+
+    def texto_conferido(self):
+        return self.tela_conferencia.texto_conferido()
+
+    def esquecer(self):
+        self.tela_conferencia.esquecer()
+
+    # -------------------------------------------------------------- por dentro
+
+    def _mostrar(self, tela):
+        self._pilha.setCurrentWidget(tela)
+
+    def _escolher_outro(self):
+        self._ao_escolher_outro()
+
+    def _conferiu(self):
+        self._ao_conferir()
+
+    def _e_a_leitura_de_agora(self, leitura):
+        """Diz se o aviso veio da leitura que a tela está esperando."""
+        return leitura is self.leitura
+
+    def _leitura_avancou(self, leitura, pagina, total):
+        if self._e_a_leitura_de_agora(leitura):
+            self.tela_lendo.avancar(pagina, total)
+
+    def _leitura_terminou(self, leitura, ficha, paginas, motor, conferida):
+        if not self._e_a_leitura_de_agora(leitura):
+            return
+        self.tela_conferencia.mostrar(ficha, paginas, motor=motor,
+                                      orientacao_conferida=conferida)
+        self._ao_abrir_conferencia()
+        self._mostrar(self.tela_conferencia)
+        self.leitura = None
+
+    def _leitura_cancelada(self, leitura, pagina):
+        if not self._e_a_leitura_de_agora(leitura):
+            return
+        self.leitura = None
+        self._ao_cancelar(pagina)
+
+    def _leitura_falhou(self, leitura, pagina, motivo):
+        if not self._e_a_leitura_de_agora(leitura):
+            return
+        if pagina:
+            titulo = f"A leitura parou na página {pagina}"
+            # Falhar numa página pode ser passageiro, e tentar de novo resolve.
+            pode_tentar = True
+        else:
+            titulo = "A leitura não pôde ser feita"
+            # Página 0 quer dizer que a falha não aconteceu dentro de uma página:
+            # faltou o motor de leitura, ou deu um defeito não previsto. Os dois
+            # ficam sem "tentar de novo". Falta de motor não é passageira - só
+            # instalando resolve -, e oferecer "tentar de novo" ali seria oferecer
+            # uma saída falsa, que falharia igual e esconderia a causa real.
+            pode_tentar = False
+
+        self.tela_erro.mostrar_falha(titulo, motivo, pode_tentar_de_novo=pode_tentar)
+        self._mostrar(self.tela_erro)
+        self.leitura = None
+
+
+class _TelaFicha(QWidget):
+    """O que o programa descobriu sobre o documento escolhido."""
+
+    def __init__(self, titulo, legenda, rotulo_de_outro, ao_escolher_outro, ao_ler,
+                 desenho="lupa"):
+        super().__init__()
+        self._ao_ler = ao_ler
+        self._ficha = None
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.cabecalho = CabecalhoDaTela(desenho, titulo, legenda)
+        layout.addWidget(self.cabecalho)
+        layout.addSpacing(estilo.ESPACO_4)
+
+        self.cartao = QFrame()
+        # O estilo vale só para o quadro, pelo nome. Escrito para todo QFrame,
+        # valia também para cada texto de dentro (todo texto do Qt é um
+        # QFrame), que repetia o fundo e a borda por cima do quadro - o mesmo
+        # vale para as caixas deste arquivo (entrega, 24/09/2026). E os textos
+        # ficam transparentes: senão pintam o fundo da janela, que a regra do
+        # painel em main.py passa para tudo o que está dentro dele.
+        self.cartao.setObjectName("quadro")
+        self.cartao.setStyleSheet(
+            f"""
+            QFrame#quadro {{
+                background-color: {estilo.COR_FUNDO_ELEVADO};
+                border: 1px solid {estilo.COR_BORDA};
+                border-radius: {estilo.RAIO}px;
+            }}
+            QLabel {{ background: transparent; }}
+            """
+        )
+        cartao_layout = QVBoxLayout(self.cartao)
+        cartao_layout.setContentsMargins(estilo.ESPACO_4, estilo.ESPACO_3,
+                                         estilo.ESPACO_4, estilo.ESPACO_3)
+        cartao_layout.setSpacing(0)
+
+        self.nome_arquivo = QLabel()
+        self.nome_arquivo.setWordWrap(True)
+        self.nome_arquivo.setStyleSheet(
+            f"font-family: {estilo.FONTE_MONO};"
+            f"font-size: {estilo.TEXTO_BASE}px; color: {estilo.COR_TEXTO};"
+            "border: none;"
+        )
+        cartao_layout.addWidget(self.nome_arquivo)
+        cartao_layout.addSpacing(estilo.ESPACO_3)
+
+        self.linha_paginas = _LinhaDaFicha("Páginas")
+        self.linha_texto = _LinhaDaFicha("Camada de texto")
+        self.linha_acontece = _LinhaDaFicha("O que vai acontecer")
+        for linha in (self.linha_paginas, self.linha_texto, self.linha_acontece):
+            cartao_layout.addWidget(linha)
+
+        layout.addWidget(self.cartao)
+        layout.addSpacing(estilo.ESPACO_4)
+
+        self.botao_ler = QPushButton("Ler o documento")
+        self.botao_ler.setCursor(Qt.PointingHandCursor)
+        self.botao_ler.setStyleSheet(estilo.estilo_botao(principal=True))
+        self.botao_ler.clicked.connect(self._pedir_leitura)
+
+        botao_outro = QPushButton(rotulo_de_outro)
+        botao_outro.setCursor(Qt.PointingHandCursor)
+        botao_outro.setStyleSheet(estilo.estilo_botao(principal=False))
+        botao_outro.clicked.connect(ao_escolher_outro)
+
+        acoes = QHBoxLayout()
+        acoes.setSpacing(estilo.ESPACO_3)
+        acoes.addWidget(self.botao_ler)
+        acoes.addWidget(botao_outro)
+        acoes.addStretch()
+        layout.addLayout(acoes)
+
+        layout.addStretch()
+
+    def _pedir_leitura(self):
+        if self._ficha is not None:
+            self._ao_ler(self._ficha)
+
+    def mostrar(self, ficha, o_que_vai_acontecer):
+        self._ficha = ficha
+        self.nome_arquivo.setText(ficha.caminho.name)
+        self.linha_paginas.definir(str(ficha.paginas))
+
+        if ficha.tem_camada_de_texto:
+            letras = com_separador_de_milhar(ficha.letras_na_camada_de_texto)
+            self.linha_texto.definir(
+                f"sim, {letras} letras", cor=estilo.COR_SUCESSO
+            )
+            self.botao_ler.setText("Ver o texto e decidir")
+        else:
+            self.linha_texto.definir("não há", cor=estilo.COR_ALERTA_TEXTO)
+            self.botao_ler.setText(f"Ler as {ficha.paginas} páginas")
+        # A frase do que vem depois é de quem está usando a peça: no Anonimizar
+        # ela termina na revisão, e no Gerar OCR, na conferência.
+        self.linha_acontece.definir(o_que_vai_acontecer(ficha))
+
+
+class _TelaLendo(QWidget):
+    """O andamento da leitura: onde está, quanto falta, e como parar."""
+
+    def __init__(self, ao_cancelar):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(0)
+
+        miolo = QWidget()
+        miolo.setFixedWidth(420)
+        miolo_layout = QVBoxLayout(miolo)
+        miolo_layout.setContentsMargins(0, 0, 0, 0)
+        miolo_layout.setSpacing(0)
+
+        self.nome_arquivo = QLabel()
+        self.nome_arquivo.setStyleSheet(
+            f"font-family: {estilo.FONTE_MONO};"
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+        )
+
+        self.contagem = QLabel()
+        self.contagem.setStyleSheet(
+            f"font-size: {estilo.TEXTO_GRANDE}px; color: {estilo.COR_TEXTO};"
+        )
+
+        self.restante = QLabel()
+        self.restante.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+        )
+
+        self.barra = QProgressBar()
+        self.barra.setTextVisible(False)
+        self.barra.setFixedHeight(6)
+        self.barra.setStyleSheet(
+            f"""
+            QProgressBar {{
+                background-color: {estilo.COR_BORDA};
+                border: none;
+                border-radius: 3px;
+            }}
+            QProgressBar::chunk {{
+                background-color: {estilo.COR_DESTAQUE};
+                border-radius: 3px;
+            }}
+            """
+        )
+
+        self.botao_cancelar = QPushButton("Cancelar a leitura")
+        self.botao_cancelar.setCursor(Qt.PointingHandCursor)
+        self.botao_cancelar.setStyleSheet(estilo.estilo_botao(principal=False))
+        self.botao_cancelar.clicked.connect(ao_cancelar)
+
+        miolo_layout.addWidget(self.nome_arquivo)
+        miolo_layout.addSpacing(estilo.ESPACO_3)
+        miolo_layout.addWidget(self.contagem)
+        miolo_layout.addWidget(self.restante)
+        miolo_layout.addSpacing(estilo.ESPACO_3)
+        miolo_layout.addWidget(self.barra)
+        miolo_layout.addSpacing(estilo.ESPACO_4)
+        miolo_layout.addWidget(self.botao_cancelar, alignment=Qt.AlignLeft)
+
+        layout.addWidget(miolo)
+
+    def comecar(self, ficha):
+        self.nome_arquivo.setText(ficha.caminho.name)
+        self.contagem.setText("Preparando a leitura…")
+        self.restante.setText("")
+        self.barra.setRange(0, ficha.paginas)
+        self.barra.setValue(0)
+        self.botao_cancelar.setEnabled(True)
+        self.botao_cancelar.setText("Cancelar a leitura")
+        # O relógio começa na primeira página, e é dele que sai a estimativa.
+        self._comeco = time.monotonic()
+
+    def avancar(self, pagina, total):
+        self.contagem.setText(f"Lendo a página {pagina} de {total}")
+        # A barra inclui a página que está sendo lida agora, como no rascunho
+        # aprovado. Contando só as terminadas, um documento de uma página só
+        # ficaria com a barra em zero do começo ao fim - e barra parada é lida
+        # como programa travado.
+        self.barra.setValue(pagina)
+        self.restante.setText(self._estimar(pagina, total))
+
+    def _estimar(self, pagina, total):
+        """Quanto falta, calculado pelo ritmo real desta leitura.
+
+        A estimativa sai do que já aconteceu nesta máquina e neste documento, e
+        não de um número fixo escrito no código: página com muito texto demora
+        mais que página quase vazia, e máquina lenta demora mais que rápida.
+        """
+        paginas_prontas = pagina - 1
+        if paginas_prontas < 1:
+            return "Calculando quanto falta…"
+
+        por_pagina = (time.monotonic() - self._comeco) / paginas_prontas
+        segundos = round(por_pagina * (total - paginas_prontas))
+        if segundos < 10:
+            return "Faltam poucos segundos."
+        if segundos < 60:
+            return f"Faltam cerca de {segundos} segundos."
+        minutos = round(segundos / 60)
+        return (f"Falta cerca de {minutos} minuto." if minutos == 1
+                else f"Faltam cerca de {minutos} minutos.")
+
+    def mostrar_que_esta_parando(self):
+        """O cancelamento não é instantâneo, e a tela precisa dizer isso.
+
+        A página que está sendo lida termina de ser lida - interromper o
+        Tesseract no meio deixaria o programa num estado que ninguém sabe
+        descrever. São uns dois segundos, e silêncio nesses dois segundos faz a
+        pessoa clicar de novo achando que o botão não pegou.
+        """
+        self.contagem.setText("Parando a leitura…")
+        self.restante.setText("Terminando a página que já estava sendo lida.")
+        self.botao_cancelar.setEnabled(False)
+        self.botao_cancelar.setText("Cancelando…")
+
+
+class _TelaErro(QWidget):
+    """O arquivo que não abre: uma frase, e o caminho de volta."""
+
+    # A caixa e o texto dentro dela têm largura fixa. Sem isso, o Qt calcula a
+    # altura da caixa achando que a frase cabe numa linha só, e o fim do texto
+    # some para fora da borda - a pessoa lê meia explicação e não tem como
+    # saber que faltou pedaço.
+    LARGURA_DA_CAIXA = 460
+    LARGURA_DO_TEXTO = 400
+
+    def __init__(self, ao_escolher_outro, ao_tentar_de_novo=None):
+        super().__init__()
+        self._ao_tentar_de_novo = ao_tentar_de_novo
+
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(0)
+
+        caixa = QFrame()
+        caixa.setFixedWidth(self.LARGURA_DA_CAIXA)
+        caixa.setObjectName("quadro")
+        caixa.setStyleSheet(
+            f"""
+            QFrame#quadro {{
+                background-color: {estilo.COR_ERRO_FUNDO};
+                border-left: 4px solid {estilo.COR_ERRO};
+                border-radius: {estilo.RAIO}px;
+            }}
+            QLabel {{ background: transparent; }}
+            """
+        )
+        caixa_layout = QVBoxLayout(caixa)
+        caixa_layout.setContentsMargins(estilo.ESPACO_4, estilo.ESPACO_3,
+                                        estilo.ESPACO_4, estilo.ESPACO_3)
+        caixa_layout.setSpacing(estilo.ESPACO_2)
+
+        self.titulo = QLabel("Não foi possível abrir o documento")
+        self.titulo.setStyleSheet(
+            f"font-size: {estilo.TEXTO_BASE}px; font-weight: 600;"
+            f"color: {estilo.COR_TEXTO}; border: none;"
+        )
+
+        self.explicacao = QLabel()
+        self.explicacao.setWordWrap(True)
+        self.explicacao.setFixedWidth(self.LARGURA_DO_TEXTO)
+        self.explicacao.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO}; border: none;"
+        )
+
+        caixa_layout.addWidget(self.titulo)
+        caixa_layout.addWidget(self.explicacao)
+
+        self.botao_tentar = QPushButton("Tentar de novo")
+        self.botao_tentar.setCursor(Qt.PointingHandCursor)
+        self.botao_tentar.setStyleSheet(estilo.estilo_botao(principal=True))
+        self.botao_tentar.setVisible(False)
+        if ao_tentar_de_novo is not None:
+            self.botao_tentar.clicked.connect(ao_tentar_de_novo)
+
+        botao = QPushButton("Escolher outro documento")
+        botao.setCursor(Qt.PointingHandCursor)
+        botao.setStyleSheet(estilo.estilo_botao(principal=True))
+        botao.clicked.connect(ao_escolher_outro)
+
+        linha_botao = QHBoxLayout()
+        linha_botao.setSpacing(estilo.ESPACO_3)
+        linha_botao.addStretch()
+        linha_botao.addWidget(self.botao_tentar)
+        linha_botao.addWidget(botao)
+        linha_botao.addStretch()
+
+        layout.addWidget(caixa, alignment=Qt.AlignCenter)
+        layout.addSpacing(estilo.ESPACO_4)
+        layout.addLayout(linha_botao)
+
+    def mostrar(self, caminho, motivo):
+        """O documento que não abre: sem "tentar de novo", porque não adianta."""
+        self.titulo.setText("Não foi possível abrir o documento")
+        self.botao_tentar.setVisible(False)
+        self._escrever(f"{Path(caminho).name} — {motivo}")
+
+    def mostrar_falha(self, titulo, motivo, pode_tentar_de_novo=True):
+        """A leitura que estourou. O botão de tentar de novo só aparece quando
+        tentar de novo pode dar certo."""
+        self.titulo.setText(titulo)
+        self.botao_tentar.setVisible(
+            pode_tentar_de_novo and self._ao_tentar_de_novo is not None
+        )
+        self._escrever(motivo)
+
+    def _escrever(self, texto):
+        self.explicacao.setText(texto)
+        # A frase muda de tamanho conforme o problema, então a altura de que
+        # ela precisa é recalculada a cada vez.
+        self.explicacao.setMinimumHeight(
+            self.explicacao.heightForWidth(self.LARGURA_DO_TEXTO)
+        )
+
+
+class _LinhaDaFicha(QWidget):
+    """Uma linha do cartão: o nome à esquerda, o valor à direita."""
+
+    def __init__(self, chave):
+        super().__init__()
+        self.setStyleSheet(f"border-top: 1px solid {estilo.COR_BORDA};")
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, estilo.ESPACO_2, 0, estilo.ESPACO_2)
+
+        rotulo = QLabel(chave)
+        rotulo.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO}; border: none;"
+        )
+
+        self.valor = QLabel()
+        self.valor.setAlignment(Qt.AlignRight)
+
+        layout.addWidget(rotulo)
+        layout.addStretch()
+        layout.addWidget(self.valor)
+
+    def definir(self, texto, cor=None):
+        self.valor.setText(texto)
+        self.valor.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 600;"
+            f"color: {cor or estilo.COR_TEXTO}; border: none;"
+        )
+
+
+def _montar_tela_verificando():
+    tela = QWidget()
+    layout = QVBoxLayout(tela)
+    layout.setAlignment(Qt.AlignCenter)
+    layout.setSpacing(estilo.ESPACO_2)
+
+    titulo = titulo_da_tela("Conferindo o documento…")
+    titulo.setAlignment(Qt.AlignCenter)
+
+    legenda = legenda_da_tela(
+        "Verificando a quantidade de páginas e a existência de camada de texto.")
+    legenda.setAlignment(Qt.AlignCenter)
+
+    barra = QProgressBar()
+    barra.setRange(0, 0)  # sem porcentagem: não se sabe quanto falta
+    barra.setTextVisible(False)
+    barra.setFixedSize(260, 4)
+    barra.setStyleSheet(
+        f"""
+        QProgressBar {{
+            background-color: {estilo.COR_BORDA};
+            border: none;
+            border-radius: 2px;
+        }}
+        QProgressBar::chunk {{
+            background-color: {estilo.COR_DESTAQUE};
+            border-radius: 2px;
+        }}
+        """
+    )
+
+    linha_barra = QHBoxLayout()
+    linha_barra.addStretch()
+    linha_barra.addWidget(barra)
+    linha_barra.addStretch()
+
+    layout.addWidget(titulo)
+    layout.addWidget(legenda)
+    layout.addSpacing(estilo.ESPACO_3)
+    layout.addLayout(linha_barra)
+    return tela
+
+
+def com_separador_de_milhar(numero):
+    """Escreve o número do jeito que se escreve em português: 1.720, não 1720.
+
+    A separação é feita aqui, e não pelo atalho do Python que "usa o formato da
+    máquina": esse atalho depende de como o Windows daquela máquina está
+    configurado, e numa máquina em inglês o mesmo número sairia com vírgula.
+    """
+    return f"{numero:,}".replace(",", ".")
+
+
+def titulo_da_tela(texto):
+    rotulo = QLabel(texto)
+    rotulo.setStyleSheet(
+        f"font-size: {estilo.TEXTO_GRANDE}px; font-weight: 600;"
+        f"color: {estilo.COR_TEXTO};"
+    )
+    return rotulo
+
+
+def legenda_da_tela(texto):
+    rotulo = QLabel(texto)
+    rotulo.setWordWrap(True)
+    rotulo.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px;"
+        f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+    )
+    return rotulo
+
+
+def rotulo_de_secao(texto):
+    rotulo = QLabel(texto)
+    rotulo.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px; font-weight: 700;"
+        f"color: {estilo.COR_TEXTO_SECUNDARIO}; letter-spacing: 1px;"
+    )
+    return rotulo
+
+
+# O resumo embaixo de cada motor (RN-31 da emenda de 18/10/2026). Os tempos
+# foram medidos nesta máquina na conferência 02; nas do núcleo podem ser um
+# pouco maiores. O tempo vai na cor do texto, e o resto na cor de apoio, para o
+# olho achar o número sem ler a frase inteira (rascunho 11).
+RESUMO_PADDLEOCR = ("Melhor resultado, inclusive em tabela e página escaneada "
+                    "ruim · ", "cerca de 2 segundos por página")
+RESUMO_TESSERACT = ("Pode pular tabela com grade · ",
+                    "cerca de 3 segundos por página")
+
+# O que a linha de cada motor diz quando ele falta (RN-29 e RN-30). O PaddleOCR
+# vai dentro do programa: faltar quer dizer instalação estragada, e o remédio é
+# reinstalar. O Tesseract é instalado à parte, e sem ele o que se perde, lendo
+# com o PaddleOCR, é endireitar a página deitada.
+FALTA_PADDLEOCR = "Esta instalação está incompleta — reinstale o programa."
+FALTA_TESSERACT = ("Não encontrado nesta máquina — sem ele, página deitada não "
+                   "é endireitada.")
+# Faltando os dois, o aviso do alto já explica e traz as saídas: a linha só diz
+# que falta (rascunho 11, estado 4).
+FALTA_TESSERACT_SEM_NENHUM = "Não encontrado nesta máquina."
+# O Tesseract instalado sem o pacote de português não serve para ler, mas
+# está lá: dizer "não encontrado" mandaria a TI conferir, ver que está
+# instalado, e não mexer em nada (lente crítica da etapa 4, 19/10/2026).
+FALTA_PORTUGUES = ("Sem o pacote de português nesta máquina — sem ele, página "
+                   "deitada não é endireitada.")
+FALTA_PORTUGUES_SEM_NENHUM = "Sem o pacote de português nesta máquina."
+
+
+# O recuo que põe a explicação de cada motor debaixo do nome dele, e não
+# debaixo da bolinha. Vale para as três linhas, a da IA local inclusive
+# (RN-15 da spec 001): encostada na margem, ela parecia de outro assunto.
+RECUO_DA_EXPLICACAO = 22
+
+
+def _linha_de_explicacao(texto=""):
+    # Sem quebra automática de linha: a quebra do Qt reservaria a altura de uma
+    # linha só, cortando o resto. As frases daqui foram medidas para caber numa
+    # linha na janela mínima, de 900 px (test_escolha_do_motor.py).
+    linha = QLabel(texto)
+    linha.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px;"
+        f"color: {estilo.COR_TEXTO_SECUNDARIO}; margin-left: {RECUO_DA_EXPLICACAO}px;"
+    )
+    return linha
+
+
+def _linha_de_falta():
+    linha = _linha_de_explicacao()
+    linha.setStyleSheet(
+        f"font-size: {estilo.TEXTO_PEQUENO}px;"
+        f"color: {estilo.COR_ALERTA_TEXTO}; margin-left: {RECUO_DA_EXPLICACAO}px;"
+    )
+    linha.setVisible(False)
+    return linha
+
+
+def _com_o_tempo_em_destaque(frase, tempo):
+    return f"{frase}<span style='color: {estilo.COR_TEXTO};'>{tempo}</span>"
+
+
+def _resumo(frase, tempo):
+    linha = _linha_de_explicacao()
+    linha.setTextFormat(Qt.RichText)
+    linha.setText(_com_o_tempo_em_destaque(frase, tempo))
+    return linha
+
+
+# No mesmo jeito das outras duas, com o tempo em destaque no fim (RN-15 da
+# spec 001; rascunho mockups/janela/05-titulo-dos-modulos.html).
+FRASE_DA_IA_ACESA = ("Lê pior que os outros dois, e a página vai com os CPFs inteiros · ",
+                     "tempo: depende do modelo")
+
+
+class EscolhaDoMotor(QWidget):
+    """A escolha do motor de leitura: o PaddleOCR, marcado; o Tesseract; e a IA
+    local, apagada (RN-25 da emenda de 18/10/2026).
+
+    Os dois módulos mostram esta mesma escolha - o Gerar OCR na tela de escolher
+    o documento, o Anonimizar na hora de ler as imagens (terceira emenda da spec
+    003) -, e ela é montada num lugar só para as duas não divergirem. Cada
+    módulo tem a sua (RN-26), e, desde a emenda de 28/10/2026, cada uma é
+    lembrada de um uso para o outro, pela `lembranca` que o módulo passa
+    (RN-36).
+    """
+
+    def __init__(self, rotulo, lembranca=None):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(estilo.ESPACO_2)
+
+        layout.addWidget(rotulo_de_secao(rotulo))
+
+        self.paddleocr = QRadioButton("PaddleOCR (nesta máquina)")
+        self.paddleocr.setChecked(True)
+        self.paddleocr.setStyleSheet(estilo_do_radio())
+        self.resumo_paddleocr = _resumo(*RESUMO_PADDLEOCR)
+
+        self.falta_paddleocr = _linha_de_falta()
+
+        self.tesseract = QRadioButton("Tesseract (nesta máquina)")
+        self.tesseract.setStyleSheet(estilo_do_radio())
+        self.resumo_tesseract = _resumo(*RESUMO_TESSERACT)
+        self.falta_tesseract = _linha_de_falta()
+        # As três saídas do Tesseract faltando - instalar, conferir de novo,
+        # apontar a pasta - moram aqui, coladas na linha do motor a que servem,
+        # quando o PaddleOCR funciona e por isso não há aviso no alto (RN-30).
+        # Quem as monta é o controle do motor de cada módulo.
+        self.saidas_do_tesseract = QWidget()
+        self.saidas_do_tesseract.setVisible(False)
+        self._lugar_das_saidas = QVBoxLayout(self.saidas_do_tesseract)
+        self._lugar_das_saidas.setContentsMargins(RECUO_DA_EXPLICACAO, 0, 0, 0)
+        self._lugar_das_saidas.setSpacing(estilo.ESPACO_1)
+
+        # "Local" porque ela roda na própria máquina da pessoa ou num servidor
+        # interno. Fica apagada até a chave ser ligada, com a frase embaixo dizendo
+        # onde (RN-38 da spec 004): apagada sozinha, pareceria quebrada.
+        self.ia_local = QRadioButton("IA local")
+        self.ia_local.setEnabled(False)
+        self.ia_local.setStyleSheet(estilo_do_radio(apagado=True))
+        # Uma frase que quebra linha, porque as daqui não foram medidas para
+        # caber numa linha só. O recuo vai na folha de estilo, como nas outras
+        # duas: posto numa moldura em volta, a letra começava 3 px antes da
+        # delas, porque o Qt soma um respiro seu à margem escrita no estilo.
+        self.frase_da_ia = Frase()
+        self.frase_da_ia.setStyleSheet(
+            self.frase_da_ia.styleSheet() + f"margin-left: {RECUO_DA_EXPLICACAO}px;")
+        self.frase_da_ia.setTextFormat(Qt.RichText)
+        # A marca que saiu da IA fica dita até a pessoa marcar outra coisa.
+        self._frase_da_troca = ""
+        for botao in (self.paddleocr, self.tesseract):
+            botao.clicked.connect(self._pessoa_marcou)
+
+        for peca in (self.paddleocr, self.resumo_paddleocr, self.falta_paddleocr,
+                     self.tesseract, self.resumo_tesseract, self.falta_tesseract,
+                     self.saidas_do_tesseract, self.ia_local, self.frase_da_ia):
+            layout.addWidget(peca)
+
+        # A escolha lembrada da última vez vem marcada, como se a pessoa tivesse
+        # acabado de marcar: a tela não diz nada a mais (RN-36). Sem lembrança,
+        # fica o PaddleOCR, o padrão (RN-25).
+        self._lembranca = lembranca
+        lembrado = lembranca.motor() if lembranca else None
+        if lembrado == MOTOR_TESSERACT:
+            self.tesseract.setChecked(True)
+        elif lembrado == MOTOR_IA:
+            self.ia_local.setChecked(True)
+        # Ligado só depois de pôr a lembrança, e valendo para qualquer troca de
+        # marca - a da pessoa e a do programa, quando o motor lembrado falta e a
+        # marca passa ao outro (RN-37): as duas são lembradas na hora.
+        if lembranca:
+            self.paddleocr.toggled.connect(self._lembrar)
+            self.tesseract.toggled.connect(self._lembrar)
+            self.ia_local.toggled.connect(self._lembrar)
+        self.atualizar_ia()
+
+    def atualizar_ia(self):
+        """Acerta a linha da IA conforme as Configurações de IA de agora (RN-38).
+
+        Sem a chave, a marca passa a outro motor, e a troca aparece: o programa
+        nunca troca de motor calado (RN-29 da spec 002). A troca vale como escolha
+        nova, e é lembrada, como a do motor que falta (RN-37 da spec 002).
+        """
+        ativa = config_ia.motor_ativo()
+        self.ia_local.setEnabled(ativa)
+        self.ia_local.setStyleSheet(estilo_do_radio(apagado=not ativa))
+        destino = config_ia.destino_ligado()
+        self.ia_local.setText(f"IA local ({config_ia.NOME_NA_TELA[destino]})" if ativa else "IA local")
+        if ativa:
+            self._frase_da_troca = ""
+            frase = _com_o_tempo_em_destaque(*FRASE_DA_IA_ACESA)
+        elif self.ia_local.isChecked():
+            self.paddleocr.setChecked(True)
+            self._frase_da_troca = "A marca passou a outro motor porque a IA foi desligada."
+            frase = self._frase_da_troca
+        elif self._frase_da_troca:
+            frase = self._frase_da_troca
+        elif config_ia.motor_ligado():
+            # "Configurações", e não mais "Configurações de IA": é o nome do item na
+            # faixa desde a funcionalidade 10 (emenda de 05/11/2026 da spec 004).
+            frase = ("O modelo do motor não passou no teste: veja em Configurações."
+                     if config_ia.modelo_do_motor(destino)
+                     else "Escolha o modelo do motor em Configurações.")
+        else:
+            frase = 'Ligue em Configurações, em "Habilitar IA".'
+        # As frases são todas do programa, e o texto rico só serve ao destaque
+        # do tempo; as outras vão sem marcação nenhuma.
+        self.frase_da_ia.setText(frase)
+
+    def _pessoa_marcou(self):
+        self._frase_da_troca = ""
+        self.atualizar_ia()
+
+    def _lembrar(self, marcado):
+        # Cada troca acende um botão e apaga o outro; só o que acendeu grava.
+        if marcado:
+            self._lembranca.lembrar(self.marcado())
+
+    def receber_saidas_do_tesseract(self, saidas):
+        """Põe embaixo da linha do Tesseract as mesmas saídas do aviso do alto."""
+        self._lugar_das_saidas.addLayout(saidas.linha_de_botoes())
+        for frase in (saidas.linha_sem_instalador, saidas.linha_sem_portugues,
+                      saidas.recado):
+            self._lugar_das_saidas.addWidget(frase)
+
+    def mostrar_o_que_ha(self, paddleocr_presente, tesseract_presente,
+                         tesseract_sem_portugues=False):
+        """Acerta a escolha conforme os motores que funcionam nesta máquina.
+
+        O motor que falta fica apagado, dizendo por quê. Se ele era o marcado,
+        a marca passa para o outro - e a troca aparece na tela, com a linha
+        apagada explicando: o programa nunca troca de motor calado (RN-29).
+        """
+        self.atualizar_ia()
+        self._mostrar_motor(self.paddleocr, self.resumo_paddleocr,
+                            self.falta_paddleocr, paddleocr_presente,
+                            FALTA_PADDLEOCR)
+        if tesseract_sem_portugues:
+            falta = FALTA_PORTUGUES if paddleocr_presente else FALTA_PORTUGUES_SEM_NENHUM
+        else:
+            falta = FALTA_TESSERACT if paddleocr_presente else FALTA_TESSERACT_SEM_NENHUM
+        self._mostrar_motor(self.tesseract, self.resumo_tesseract,
+                            self.falta_tesseract, tesseract_presente, falta)
+        self.saidas_do_tesseract.setVisible(
+            paddleocr_presente and not tesseract_presente)
+
+        if self.paddleocr.isChecked() and not paddleocr_presente and tesseract_presente:
+            self.tesseract.setChecked(True)
+        elif self.tesseract.isChecked() and not tesseract_presente and paddleocr_presente:
+            self.paddleocr.setChecked(True)
+
+    @staticmethod
+    def _mostrar_motor(botao, resumo, falta, presente, frase_da_falta):
+        botao.setEnabled(presente)
+        botao.setStyleSheet(estilo_do_radio(apagado=not presente))
+        resumo.setVisible(presente)
+        falta.setText(frase_da_falta)
+        falta.setVisible(not presente)
+
+    def marcado(self):
+        """O motor que vai ler o próximo documento: o marcado é o que lê."""
+        if self.ia_local.isChecked():
+            return MOTOR_IA
+        if self.tesseract.isChecked():
+            return MOTOR_TESSERACT
+        return MOTOR_PADDLEOCR
+
+
+class _TelaDeLer(QWidget):
+    """A tela de antes de ler as imagens, no Anonimizar (rascunho 08, 3a e 3c).
+
+    Ela faz o papel do cartão do Gerar OCR para quem vai ler o PDF como imagem:
+    diz o nome, as páginas e o que vai acontecer, e traz a escolha do motor logo
+    acima do botão de ler - o único momento em que essa escolha serve para
+    alguma coisa. Vem marcado o motor da última vez, e, para quem nunca
+    escolheu, o PaddleOCR: quem não quer pensar só clica em ler (RN-36).
+    """
+
+    def __init__(self, ao_ler, ao_escolher_outro, ao_voltar_a_decisao,
+                 lembranca_do_motor=None, desenho="cadeado"):
+        super().__init__()
+        self._ao_ler = ao_ler
+        self._ao_escolher_outro = ao_escolher_outro
+        self._ao_voltar_a_decisao = ao_voltar_a_decisao
+        self._ficha = None
+        self._ignorando = False
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.cabecalho = CabecalhoDaTela(desenho)
+        self.titulo = self.cabecalho.titulo
+        self.legenda = self.cabecalho.legenda
+        layout.addWidget(self.cabecalho)
+        layout.addSpacing(estilo.ESPACO_4)
+
+        self.escolha_do_motor = EscolhaDoMotor("LER COM", lembranca=lembranca_do_motor)
+        layout.addWidget(self.escolha_do_motor)
+        layout.addSpacing(estilo.ESPACO_4)
+
+        self.botao_ler = QPushButton()
+        self.botao_ler.setCursor(Qt.PointingHandCursor)
+        self.botao_ler.setStyleSheet(estilo.estilo_botao(principal=True))
+        self.botao_ler.clicked.connect(self._ler)
+
+        self.botao_outro = QPushButton()
+        self.botao_outro.setCursor(Qt.PointingHandCursor)
+        self.botao_outro.setStyleSheet(estilo.estilo_botao(principal=False))
+        self.botao_outro.clicked.connect(self._segundo_botao)
+
+        acoes = QHBoxLayout()
+        acoes.setSpacing(estilo.ESPACO_3)
+        acoes.addWidget(self.botao_ler)
+        acoes.addWidget(self.botao_outro)
+        acoes.addStretch()
+        layout.addLayout(acoes)
+        layout.addStretch()
+
+    def mostrar(self, ficha, ignorando):
+        """Prepara a tela para um de dois caminhos.
+
+        `ignorando` é o de quem clicou em "Ignorar e ler as imagens" num PDF que
+        tinha texto por dentro: o título avisa que esse texto vai ser deixado de
+        lado, e o segundo botão volta à decisão, para quem mudar de ideia.
+        """
+        self._ficha = ficha
+        self._ignorando = ignorando
+        paginas = f"{ficha.paginas} " + ("página" if ficha.paginas == 1 else "páginas")
+        if ignorando:
+            self.titulo.setText("Ler as imagens deste documento")
+            self.legenda.setText(
+                f"{ficha.caminho.name} — {paginas}: o texto que estava por dentro "
+                "será ignorado, e cada página será lida como imagem.")
+            self.botao_outro.setText("Voltar à decisão sobre o texto")
+        else:
+            self.titulo.setText("Este documento precisa ser lido")
+            self.legenda.setText(
+                f"{ficha.caminho.name} — {paginas}, sem texto por dentro: cada "
+                "página será lida como imagem.")
+            self.botao_outro.setText("Escolher outro arquivo")
+        self.botao_ler.setText(f"Ler as {paginas}")
+
+    def _ler(self):
+        if self._ficha is not None:
+            self._ao_ler(self._ficha)
+
+    def _segundo_botao(self):
+        if self._ignorando and self._ficha is not None:
+            self._ao_voltar_a_decisao(self._ficha)
+        else:
+            self._ao_escolher_outro()
+
+
+class FaixaDoTopo(QLabel):
+    """Uma linha de aviso no alto do painel, que aparece só quando há o que dizer."""
+
+    def __init__(self):
+        super().__init__()
+        self.setWordWrap(True)
+        self.setVisible(False)
+        self.setStyleSheet(
+            f"font-size: {estilo.TEXTO_PEQUENO}px;"
+            f"color: {estilo.COR_TEXTO_SECUNDARIO};"
+            f"border-left: 3px solid {estilo.COR_DESTAQUE};"
+            f"background-color: {estilo.COR_DESTAQUE_AVISO};"
+            f"border-radius: {estilo.RAIO}px;"
+            f"padding: {estilo.ESPACO_2}px {estilo.ESPACO_3}px;"
+        )
+
+    def mostrar(self, texto):
+        self.setText(texto)
+        self.setVisible(True)
+
+    def esconder(self):
+        self.setVisible(False)

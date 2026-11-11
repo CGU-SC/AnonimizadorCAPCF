@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de design — Anonimizador CAPCF</title>
+<style>
+  :root {
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  /* Os mesmos papéis, um valor em cada tema. Só as cores mudam. */
+  .escuro {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-texto-apagado: #6c737d;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-destaque-fraco: rgba(59, 110, 165, 0.24);
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-alerta-texto: #d9a441;
+    --cor-suspeito: #d9a441;
+    --cor-suspeito-barra: #d9a441;
+    --cor-erro: #d9534f;
+    --cor-erro-texto: #f08a86;
+    --cor-ia: #b39ddb;
+    --selo-sucesso: rgba(76, 175, 109, 0.15);
+    --selo-alerta: rgba(217, 164, 65, 0.15);
+    --selo-erro: rgba(217, 83, 79, 0.15);
+    --selo-ia: rgba(179, 157, 219, 0.15);
+  }
+  .claro {
+    --cor-fundo: #f2f4f7;
+    --cor-fundo-elevado: #fbfcfd;
+    --cor-borda: #c9d0d8;
+    --cor-texto: #16202b;
+    --cor-texto-secundario: #4a5868;
+    --cor-texto-apagado: #8a96a3;
+    --cor-destaque: #1f4e8c;
+    --cor-destaque-hover: #2a6fc9;
+    --cor-destaque-fraco: rgba(31, 78, 140, 0.10);
+    --cor-sucesso: #1f7a3a;
+    --cor-alerta: #c2aa07;
+    --cor-alerta-texto: #a85a00;
+    --cor-suspeito: #c28102;
+    --cor-suspeito-barra: #ec9c01;
+    --cor-erro: #ae0202;
+    --cor-erro-texto: #ae0202;
+    --cor-ia: #7356c8;
+    --selo-sucesso: rgba(31, 122, 58, 0.10);
+    --selo-alerta: rgba(194, 170, 7, 0.14);
+    --selo-erro: rgba(179, 38, 30, 0.08);
+    --selo-ia: rgba(115, 86, 200, 0.10);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.5;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-1) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 900px; }
+  h2 {
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: var(--espaco-2);
+    margin-top: var(--espaco-5);
+  }
+  section { margin-bottom: var(--espaco-5); }
+
+  .par { display: flex; gap: var(--espaco-4); flex-wrap: wrap; align-items: stretch; }
+  .tema {
+    flex: 1 1 560px;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+  }
+  .tema-nome {
+    font-size: var(--texto-pequeno); font-weight: 700; letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-3) 0;
+  }
+
+  .paleta { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--espaco-2); }
+  .cor-card {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+  }
+  .cor-amostra { height: 44px; }
+  .cor-info { padding: var(--espaco-1) var(--espaco-2); }
+  .cor-nome { font-size: var(--texto-pequeno); font-weight: 600; }
+  .cor-valor { font-family: var(--fonte-mono); font-size: 12px; color: var(--cor-texto-secundario); }
+
+  .escala-tipo p { margin: var(--espaco-2) 0; }
+  .txt-pequeno { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .txt-grande { font-size: var(--texto-grande); }
+  .txt-titulo { font-size: var(--texto-titulo); font-weight: 600; }
+  .txt-mono { font-family: var(--fonte-mono); }
+
+  .componentes { display: flex; flex-wrap: wrap; gap: var(--espaco-3); align-items: flex-start; }
+  button {
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-2) var(--espaco-4);
+    border-radius: var(--raio);
+    border: none;
+    cursor: pointer;
+  }
+  .btn-principal { background: var(--cor-destaque); color: #fff; }
+  .btn-principal:hover { background: var(--cor-destaque-hover); }
+  .btn-secundario { background: var(--cor-fundo-elevado); color: var(--cor-texto); border: 1px solid var(--cor-borda); }
+  .campo { display: flex; flex-direction: column; gap: var(--espaco-1); }
+  .campo label { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .campo input {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    color: var(--cor-texto);
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-base);
+    min-width: 240px;
+  }
+  .apagado { color: var(--cor-texto-apagado); font-size: var(--texto-pequeno); }
+  .selos { display: flex; flex-wrap: wrap; gap: var(--espaco-2); margin-top: var(--espaco-3); }
+  .selo { display: inline-flex; align-items: center; padding: 2px var(--espaco-2); border-radius: 12px; font-size: var(--texto-pequeno); font-weight: 600; }
+  .selo-sucesso { background: var(--selo-sucesso); color: var(--cor-sucesso); }
+  /* Letra do suspeito no papel próprio: no claro o amarelo não serve de letra, e o
+     âmbar da letra de aviso se confundia com o preto do texto (06/11/2026). */
+  .selo-alerta { background: var(--selo-alerta); color: var(--cor-suspeito); }
+  .selo-erro { background: var(--selo-erro); color: var(--cor-erro-texto); }
+  .selo-ia { background: var(--selo-ia); color: var(--cor-ia); }
+
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: var(--espaco-2) var(--espaco-3); border-bottom: 1px solid var(--cor-borda); }
+  th { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); font-weight: 600; }
+  td.numero { font-family: var(--fonte-mono); }
+
+  /* A faixa com as medidas do programa/main.py desde a funcionalidade 9: 220 px,
+     o cabeçalho de 60 px com o símbolo, o nome e a versão, e os itens com ícone
+     e filete. */
+  .layout-exemplo { display: flex; height: 330px; border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; }
+  .menu-lateral { width: 220px; flex: 0 0 auto; background: var(--cor-fundo-elevado); padding: var(--espaco-4) 0; border-right: 1px solid var(--cor-borda); display: flex; flex-direction: column; gap: var(--espaco-1); }
+  .cabecalho-faixa { display: flex; align-items: center; gap: 10px; height: 60px; padding: 0 var(--espaco-3) 20px; border-bottom: 1px solid var(--cor-borda); margin-bottom: 12px; }
+  .simbolo-programa { width: 34px; height: 34px; border-radius: 8px; background: var(--cor-destaque); flex: 0 0 auto; display: block; }
+  .cabecalho-faixa .nome { font-size: 16px; font-weight: 700; color: var(--cor-texto); line-height: 1.2; }
+  .cabecalho-faixa .versao { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); margin-top: 2px; }
+  .item-menu { display: flex; align-items: center; gap: 10px; margin: 0 var(--espaco-2); padding: 12px 12px 12px 9px; border-radius: var(--raio); font-size: var(--texto-base); color: var(--cor-texto-secundario); border-left: 3px solid transparent; }
+  .item-menu svg { flex: 0 0 auto; }
+  .item-menu.ativo { background: var(--cor-destaque-fraco); color: var(--cor-texto); border-left-color: var(--cor-destaque-hover); font-weight: 600; }
+  .item-menu.pe { margin-top: auto; }
+  .painel-principal { flex: 1; padding: var(--espaco-3); color: var(--cor-texto-secundario); }
+
+  /* ---- os roteiros da entrega, só no escuro (exceção do sistema de design) ----
+     Os valores são os de empacotar/como-instalar.html e como-usar.html (0.2.0). */
+  .roteiro { --cor-destaque-claro: #5b8fc9; background: #1e2228; color: #e8eaed; border: 1px solid #383e47; border-radius: var(--raio); overflow: hidden; }
+  .roteiro .topo { background: #22262d; border-bottom: 1px solid #383e47; padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+  .roteiro .identidade { display: flex; align-items: center; gap: 12px; }
+  .roteiro .identidade .simbolo { width: 43px; height: 43px; border-radius: 10px; background: #3b6ea5; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+  .roteiro .identidade .nome { font-weight: 700; font-size: 19px; line-height: 1.2; }
+  .roteiro .identidade .casa { color: #9aa1ac; font-size: 14px; }
+  .roteiro .etiqueta-versao { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 10.5px; font-weight: 600; color: #f0c674; background: rgba(217,164,65,0.12); border: 1px solid rgba(217,164,65,0.5); border-radius: 999px; padding: 4px 11px; }
+  .roteiro .etiqueta-versao::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #d9a441; }
+  .roteiro .miolo { padding: 24px 16px; }
+  .capas { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+  .capa { position: relative; overflow: hidden; padding: 36px 40px 34px; border-radius: 18px; border: 1px solid rgba(91,143,201,0.20); background: linear-gradient(120deg, #131b28 0%, #16253a 55%, #1a2f4a 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+  .capa::after { content: ""; position: absolute; right: -120px; bottom: -160px; width: 420px; height: 420px; border-radius: 50%; border: 36px solid rgba(255,255,255,0.04); }
+  .capa > * { position: relative; z-index: 1; }
+  .capa .chamada { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; color: #8fc1f0; }
+  .capa h3 { font-size: 44px; font-weight: 800; margin: 8px 0 0; line-height: 1.1; letter-spacing: -0.01em; }
+  .capa p { margin: 14px 0 0; max-width: 85%; color: #d4d8de; font-size: 16px; }
+  .capa p b { color: #fff; font-weight: 600; }
+  .capa p.ressalva { border-left: 3px solid #d9a441; padding: 2px 0 2px 12px; color: #f0d9a8; font-size: 15px; }
+  .capa p.ressalva b { color: #f0c674; }
+  .capa .mascara { display: inline-flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; font-family: var(--fonte-mono); font-size: 14px; }
+  .capa .mascara .rotulo { flex-basis: 100%; margin-bottom: -6px; font-family: var(--fonte-texto); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #9aa1ac; }
+  .capa .mascara .de { color: #9aa1ac; text-decoration: line-through; }
+  .capa .mascara .para b { color: #d9a441; font-weight: 700; }
+  .capa .fichas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .capa .fichas.longe { margin-top: 46px; }
+  .capa .ficha { font-size: 13px; border-radius: 999px; padding: 4px 13px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+  .capa .ficha.boa { border-color: rgba(76,175,109,0.6); color: #8fd6a6; }
+  .print-legenda { font-size: 12px; color: #9aa1ac; margin: 24px 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .print { position: relative; display: block; max-width: 520px; border: 1px solid #4a5260; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,0.35); }
+  .print .tela-neutra { height: 200px; background: repeating-linear-gradient(135deg, #2b3038 0 12px, #272c33 12px 24px); display: flex; align-items: center; justify-content: center; color: #6c737d; font-size: 13px; }
+  .print .alvo { position: absolute; border: 3px solid #d9a441; border-radius: 4px; box-shadow: 0 0 0 3px rgba(0,0,0,0.45); }
+  .roteiro footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #383e47; font-size: 13px; color: #9aa1ac; display: flex; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; }
+  .roteiro footer .quem-fez { text-align: right; }
+
+  .mudanca-sistema { max-width: 900px; margin-top: var(--espaco-3); padding: var(--espaco-3); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-alerta); border-radius: var(--raio); background: var(--cor-fundo-elevado); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); line-height: 1.5; }
+  .mudanca-sistema strong { color: var(--cor-texto); }
+</style>
+</head>
+<body class="escuro">
+
+<h1>Anonimizador CAPCF</h1>
+<p class="subtitulo">Sistema de design: decidido em 03/09/2026 e atualizado em 10/11/2026, quando
+ganhou a faixa da funcionalidade 9 e o desenho dos <strong>roteiros da entrega</strong>. Desde 05/11/2026 tem o
+<strong>tema claro</strong> (funcionalidade 10), e o escuro continua o padrão. Os dois temas têm os mesmos
+papéis, cada um com um valor próprio, e só as cores mudam: o desenho, os tamanhos, os espaços, as fontes
+e os textos são os mesmos. A tabela completa, com o contraste de cada cor e de onde vem cada valor do claro,
+está no rascunho <code>janela/06-tema-claro-e-configuracoes.html</code>.</p>
+
+<section>
+  <h2>Paleta</h2>
+  <div class="par">
+    <div class="tema escuro">
+      <p class="tema-nome">ESCURO (PADRÃO)</p>
+      <div class="paleta">
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-fundo)"></div><div class="cor-info"><div class="cor-nome">fundo</div><div class="cor-valor">#1e2228</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-fundo-elevado)"></div><div class="cor-info"><div class="cor-nome">fundo-elevado</div><div class="cor-valor">#262b33</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-borda)"></div><div class="cor-info"><div class="cor-nome">borda</div><div class="cor-valor">#383e47</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-texto)"></div><div class="cor-info"><div class="cor-nome">texto</div><div class="cor-valor">#e8eaed</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-texto-secundario)"></div><div class="cor-info"><div class="cor-nome">texto-secundario</div><div class="cor-valor">#9aa1ac</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque)"></div><div class="cor-info"><div class="cor-nome">destaque</div><div class="cor-valor">#3b6ea5</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque-hover)"></div><div class="cor-info"><div class="cor-nome">destaque-hover</div><div class="cor-valor">#4f86bf</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-sucesso)"></div><div class="cor-info"><div class="cor-nome">sucesso</div><div class="cor-valor">#4caf6d</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta)"></div><div class="cor-info"><div class="cor-nome">alerta, alerta-texto e suspeito</div><div class="cor-valor">#d9a441</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro)"></div><div class="cor-info"><div class="cor-nome">erro</div><div class="cor-valor">#d9534f</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro-texto)"></div><div class="cor-info"><div class="cor-nome">erro-texto</div><div class="cor-valor">#f08a86</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-ia)"></div><div class="cor-info"><div class="cor-nome">ia</div><div class="cor-valor">#b39ddb</div></div></div>
+      </div>
+    </div>
+    <div class="tema claro">
+      <p class="tema-nome">CLARO</p>
+      <div class="paleta">
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-fundo)"></div><div class="cor-info"><div class="cor-nome">fundo</div><div class="cor-valor">#f2f4f7</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-fundo-elevado)"></div><div class="cor-info"><div class="cor-nome">fundo-elevado</div><div class="cor-valor">#fbfcfd</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-borda)"></div><div class="cor-info"><div class="cor-nome">borda</div><div class="cor-valor">#c9d0d8</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-texto)"></div><div class="cor-info"><div class="cor-nome">texto</div><div class="cor-valor">#16202b</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-texto-secundario)"></div><div class="cor-info"><div class="cor-nome">texto-secundario</div><div class="cor-valor">#4a5868</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque)"></div><div class="cor-info"><div class="cor-nome">destaque</div><div class="cor-valor">#1f4e8c</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-destaque-hover)"></div><div class="cor-info"><div class="cor-nome">destaque-hover</div><div class="cor-valor">#2a6fc9</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-sucesso)"></div><div class="cor-info"><div class="cor-nome">sucesso</div><div class="cor-valor">#1f7a3a</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta)"></div><div class="cor-info"><div class="cor-nome">alerta (só fundo)</div><div class="cor-valor">#c2aa07</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-alerta-texto)"></div><div class="cor-info"><div class="cor-nome">alerta-texto</div><div class="cor-valor">#a85a00</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-suspeito)"></div><div class="cor-info"><div class="cor-nome">suspeito</div><div class="cor-valor">#c28102</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-suspeito-barra)"></div><div class="cor-info"><div class="cor-nome">suspeito-barra</div><div class="cor-valor">#ec9c01</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-erro)"></div><div class="cor-info"><div class="cor-nome">erro e erro-texto</div><div class="cor-valor">#ae0202</div></div></div>
+        <div class="cor-card"><div class="cor-amostra" style="background:var(--cor-ia)"></div><div class="cor-info"><div class="cor-nome">ia</div><div class="cor-valor">#7356c8</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou de novo em 06/11/2026, na conferência da etapa 3 da funcionalidade 10:</strong> no claro, o
+    âmbar escuro <code>#7a5c00</code> do suspeito se confundia com o preto do texto. O suspeito ganha
+    <strong>dois papéis próprios</strong>: o <strong>suspeito</strong>, <code>#c28102</code>, no número, na chave
+    de cores, no selo e na etiqueta; e o <strong>suspeito-barra</strong>, <code>#ec9c01</code>, na barra do item
+    da lista. A <strong>letra de aviso</strong> passa a <code>#a85a00</code>, e o <strong>vermelho</strong> a
+    <code>#ae0202</code>. O suspeito fica abaixo do mínimo de letra de propósito (3 para 1 sobre o fundo, 5 para 1
+    contra o texto), e a letra de aviso fica entre 4,1 e 4,5 para 1 dentro das caixas amarelas: as duas exceções
+    da RN-30 da spec 001. Escolhido pela solicitante na coluna A de <code>janela/09-o-ambar-do-suspeito-ajustado.html</code>.
+    O escuro não muda.
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou em 06/11/2026, na construção da funcionalidade 10:</strong> entram <strong>quinze papéis</strong>
+    para os tons que as telas já usavam sem nome — os fundos de erro, de alerta (comum, forte e do selo), de
+    informação, da IA e do número que a IA apontou; o item marcado da lista; o selo azul e a letra dele; a área
+    de soltar o arquivo; as duas letras de peça desligada e a borda do radio desligado; e a bolinha da chave
+    ligada. No escuro, cada um continua com o valor de hoje. No claro, o item marcado da lista e o número que a
+    IA apontou ficam bem mais fracos que no escuro, de propósito, para a letra pequena de dentro continuar com
+    4,5 para 1. Aprovados com a solicitante no rascunho <code>janela/07-os-tons-que-faltavam.html</code>, onde
+    cada um aparece na peça de verdade, nos dois temas; os valores estão no <code>sistema-de-design.md</code>.
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou em 05/11/2026, na funcionalidade 10:</strong> entra o <strong>tema claro</strong>, com as cores
+    do projeto Gerencial, papel por papel. Entra também um papel novo, o <strong>alerta-texto</strong>, para
+    a letra do suspeito: no escuro ele tem o mesmo amarelo do alerta, mas o amarelo do claro
+    (<code>#c2aa07</code>) tem contraste de 2,3 para 1 e não serve de letra. Por isso o claro usa um âmbar escuro,
+    <code>#7a5c00</code> (6,1 para 1), escolhido com a solicitante. No claro, o vermelho de fundo já tem
+    contraste de letra, e o erro e o erro-texto têm o mesmo valor.
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou em 16/09/2026, na conferência da etapa 2 do Anonimizar:</strong> o
+    <strong>"forma CPF válido" vira "CPF válido" e volta ao vermelho</strong>, no tom de letra <code>#f08a86</code>, e o
+    suspeito fica sozinho no amarelo. Com os dois na mesma cor, separados só pelo traço, a diferença
+    ficou sutil demais na tela de verdade — e é o número que passa na conta, o mais perigoso, que
+    precisa saltar aos olhos. O traço continua separando os dois: reto para o "forma CPF válido",
+    ondulado para o suspeito. A caixa da dupla conferência continua vermelha.
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou em 14/09/2026, nos rascunhos 06 e 07 do Anonimizar:</strong> o CPF que passa na
+    conta do dígito verificador deixou de ser verde. Na revisão ele é o número mais perigoso — quase
+    certamente o CPF de alguém —, e verde dava a impressão de coisa boa. Ele passa a aparecer como
+    <strong>"forma CPF válido", no amarelo de alerta</strong>, com sublinhado reto (o suspeito tem
+    o ondulado), e o <strong>vermelho fica para a caixa da dupla conferência</strong>, o momento em
+    que ele pode escapar. O verde fica só para "deu certo" (arquivo gravado). E entra o
+    <strong>erro-texto</strong>, um vermelho mais claro para letra: o
+    <code>#d9534f</code> sobre o fundo escuro tem contraste de 4:1, abaixo do mínimo de leitura para
+    letra pequena (3,6:1 sobre o fundo elevado); o <code>#f08a86</code> tem 6,6:1.
+  </div>
+</section>
+
+<section>
+  <h2>Tipografia (igual nos dois temas)</h2>
+  <div class="escala-tipo">
+    <p class="txt-titulo">Título — Segoe UI 28px</p>
+    <p class="txt-grande">Texto grande — Segoe UI 20px</p>
+    <p>Texto base — Segoe UI 15px, usado na maior parte da tela</p>
+    <p class="txt-pequeno">Texto pequeno / legenda — Segoe UI 13px</p>
+    <p class="txt-mono">123.456.789-10 — fonte monoespaçada, para CPF e número</p>
+  </div>
+</section>
+
+<section>
+  <h2>Componentes</h2>
+  <div class="par">
+    <div class="tema escuro">
+      <p class="tema-nome">ESCURO (PADRÃO)</p>
+      <div class="componentes">
+        <button class="btn-principal">Processar documento</button>
+        <button class="btn-secundario">Cancelar</button>
+        <div class="campo">
+          <label>Caminho do arquivo</label>
+          <input type="text" value="C:\Documentos\sintese-01.pdf" readonly>
+          <span class="apagado">IA local — Funcionalidade a ser implementada</span>
+        </div>
+      </div>
+      <div class="selos">
+        <span class="selo selo-erro">CPF válido</span>
+        <span class="selo selo-alerta">CPF suspeito</span>
+        <span class="selo selo-ia">a IA pediu para olhar</span>
+        <span class="selo selo-sucesso">Arquivo gravado</span>
+      </div>
+    </div>
+    <div class="tema claro">
+      <p class="tema-nome">CLARO</p>
+      <div class="componentes">
+        <button class="btn-principal">Processar documento</button>
+        <button class="btn-secundario">Cancelar</button>
+        <div class="campo">
+          <label>Caminho do arquivo</label>
+          <input type="text" value="C:\Documentos\sintese-01.pdf" readonly>
+          <span class="apagado">IA local — Funcionalidade a ser implementada</span>
+        </div>
+      </div>
+      <div class="selos">
+        <span class="selo selo-erro">CPF válido</span>
+        <span class="selo selo-alerta">CPF suspeito</span>
+        <span class="selo selo-ia">a IA pediu para olhar</span>
+        <span class="selo selo-sucesso">Arquivo gravado</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Tabela (densidade confortável)</h2>
+  <div class="par">
+    <div class="tema escuro">
+      <p class="tema-nome">ESCURO (PADRÃO)</p>
+      <table>
+        <thead><tr><th>Ocorrência</th><th>CPF encontrado</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr><td>Linha 12</td><td class="numero">XXX.456.789-XX</td><td><span class="selo selo-erro">CPF válido</span></td></tr>
+          <tr><td>Linha 47</td><td class="numero">XXX.1O2.345-XX</td><td><span class="selo selo-alerta">suspeito</span></td></tr>
+          <tr><td>Linha 88</td><td class="numero">XXX.789.012-XX</td><td><span class="selo selo-sucesso">liberado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tema claro">
+      <p class="tema-nome">CLARO</p>
+      <table>
+        <thead><tr><th>Ocorrência</th><th>CPF encontrado</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr><td>Linha 12</td><td class="numero">XXX.456.789-XX</td><td><span class="selo selo-erro">CPF válido</span></td></tr>
+          <tr><td>Linha 47</td><td class="numero">XXX.1O2.345-XX</td><td><span class="selo selo-alerta">suspeito</span></td></tr>
+          <tr><td>Linha 88</td><td class="numero">XXX.789.012-XX</td><td><span class="selo selo-sucesso">liberado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Layout de referência</h2>
+  <div class="par">
+    <div class="tema escuro">
+      <p class="tema-nome">ESCURO (PADRÃO)</p>
+      <div class="layout-exemplo">
+        <div class="menu-lateral">
+          <div class="cabecalho-faixa">
+            <svg class="simbolo-programa" viewBox="-6 -6 34 34" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2.5H13L17 6.5V18Q17 19.5 15.5 19.5H6.5Q5 19.5 5 18V4Q5 2.5 6.5 2.5Z"/><path d="M13 2.5V6.5H17"/><path d="M8 10.5H14"/><rect x="8" y="13.5" width="6" height="2.2" rx="1" fill="#fff" stroke="none"/></svg>
+            <div><div class="nome">Anonimizador</div><div class="versao">CAPCF · versão 0.2.0</div></div>
+          </div>
+          <div class="item-menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>Gerar OCR</div>
+          <div class="item-menu ativo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Anonimizar</div>
+          <div class="item-menu pe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Configurações</div>
+        </div>
+        <div class="painel-principal">O conteúdo de cada módulo aparece aqui, no painel principal.</div>
+      </div>
+    </div>
+    <div class="tema claro">
+      <p class="tema-nome">CLARO</p>
+      <div class="layout-exemplo">
+        <div class="menu-lateral">
+          <div class="cabecalho-faixa">
+            <svg class="simbolo-programa" viewBox="-6 -6 34 34" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2.5H13L17 6.5V18Q17 19.5 15.5 19.5H6.5Q5 19.5 5 18V4Q5 2.5 6.5 2.5Z"/><path d="M13 2.5V6.5H17"/><path d="M8 10.5H14"/><rect x="8" y="13.5" width="6" height="2.2" rx="1" fill="#fff" stroke="none"/></svg>
+            <div><div class="nome">Anonimizador</div><div class="versao">CAPCF · versão 0.2.0</div></div>
+          </div>
+          <div class="item-menu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>Gerar OCR</div>
+          <div class="item-menu ativo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Anonimizar</div>
+          <div class="item-menu pe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>Configurações</div>
+        </div>
+        <div class="painel-principal">O conteúdo de cada módulo aparece aqui, no painel principal.</div>
+      </div>
+    </div>
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Mudou em 10/11/2026:</strong> a faixa daqui passa a ser a do programa desde a funcionalidade 9
+    (emenda de 03/11/2026 da spec 001): 220 px, o cabeçalho com o símbolo, "Anonimizador" e "CAPCF · versão X",
+    um ícone por item, e o marcado com o filete e em seminegrito. A página mostrava ainda a faixa de antes,
+    com 200 px e sem nada disso.
+  </div>
+</section>
+
+<section>
+  <h2>Roteiros da entrega (só no escuro)</h2>
+  <p class="subtitulo">As páginas que vão com o instalador, <code>empacotar/como-instalar.html</code> e
+  <code>empacotar/como-usar.html</code>, no desenho aprovado na entrega da 0.2.0. A versão nova nasce de uma
+  cópia delas, e é conferida contra isto e contra a seção do <code>sistema-de-design.md</code>, que tem todas
+  as medidas e a lista das peças. São só escuras, com uma versão clara para imprimir, e têm cores próprias:
+  as duas exceções estão lá.</p>
+  <div class="roteiro">
+    <div class="topo">
+      <div class="identidade">
+        <div class="simbolo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></div>
+        <div><div class="nome">Anonimizador</div><div class="casa">CAPCF · UFSC</div></div>
+      </div>
+      <div class="etiqueta-versao">Versão 0.2.0 · teste</div>
+    </div>
+    <div class="miolo">
+      <div class="capas">
+        <div class="capa">
+          <div class="chamada">Para quem instala</div>
+          <h3>Instruções de instalação</h3>
+          <p><b>Este programa anonimiza os CPFs contidos em um documento, para que ele possa ser enviado a
+          assistentes de IA de assinatura pessoal.</b> Tudo acontece na sua máquina: o documento não é enviado
+          para lugar nenhum.</p>
+          <div class="fichas longe">
+            <span class="ficha boa">sem senha de administrador</span>
+            <span class="ficha boa">sem internet</span>
+            <span class="ficha">Windows 10 ou 11</span>
+          </div>
+        </div>
+        <div class="capa">
+          <div class="chamada">Instruções de uso</div>
+          <h3>O que é o Anonimizador</h3>
+          <p><b>Este programa anonimiza os CPFs contidos em um documento, para que ele possa ser enviado a
+          assistentes de IA de assinatura pessoal.</b></p>
+          <p class="ressalva">Ele remove <b>só o CPF</b>. Outros dados <b>não são tratados aqui</b>.</p>
+          <div class="mascara">
+            <span class="rotulo">Exemplo de saída</span>
+            <span class="de">123.456.789-10</span>
+            <span style="color:#9aa1ac">→</span>
+            <span class="para"><b>XXX</b>.456.789-<b>XX</b></span>
+          </div>
+          <div class="fichas">
+            <span class="ficha">PDF, Word, .md e .txt</span>
+            <span class="ficha boa">nada sai da máquina</span>
+          </div>
+        </div>
+      </div>
+      <div class="print-legenda">a legenda diz que tela é esta</div>
+      <div class="print">
+        <div class="tela-neutra">aqui vai a print de verdade, dentro do arquivo</div>
+        <div class="alvo" style="left:58.0%;top:62.0%;width:28.0%;height:16.0%;"></div>
+      </div>
+      <footer>
+        <span>Anonimizador CAPCF · versão 0.2.0</span>
+        <span class="quem-fez">O programa foi desenvolvido pela CGU no âmbito da consultoria realizada à UFSC em 2026.</span>
+      </footer>
+    </div>
+  </div>
+  <div class="mudanca-sistema">
+    <strong>Entrou em 10/11/2026:</strong> o desenho dos roteiros, aprovado pela solicitante na entrega da 0.2.0,
+    passa a morar aqui, para a próxima entrega sair igual. A moldura âmbar fica por cima da print, em
+    porcentagem dela, e nunca pintada dentro.
+  </div>
+</section>
+
+</body>
+</html>

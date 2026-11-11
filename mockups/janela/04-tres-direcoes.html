@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 04 — Três direções para a faixa</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-emoji: "Segoe UI Emoji", "Segoe UI", sans-serif;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #14171c; color: var(--cor-texto);
+    font-family: var(--fonte-texto); font-size: var(--texto-base);
+    padding: var(--espaco-5); line-height: 1.45;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  h2 { font-size: var(--texto-grande); margin: 48px 0 var(--espaco-2) 0; }
+  .subtitulo, .explica { color: var(--cor-texto-secundario); max-width: 900px; margin: 0 0 var(--espaco-3) 0; }
+  .explica b, .subtitulo b { color: var(--cor-texto); }
+  .rotulo {
+    font-size: var(--texto-pequeno); font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-2) 0;
+  }
+
+  /* ---- a faixa, nas medidas do programa (main.py) ---- */
+  .faixa {
+    width: 220px; flex: 0 0 220px; background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda); padding: 24px 0;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .faixa.solta { height: 480px; border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+  .espaco { flex: 1; }
+  .faixa .primeiro { margin-top: 12px; }
+
+  /* cabeçalho de hoje (nome em duas linhas, 20 px) */
+  .cabeca { padding: 0 16px 16px 16px; border-bottom: 1px solid var(--cor-borda); }
+  .nome { font-size: 20px; font-weight: 700; line-height: 1.25; }
+  .versao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: 6px; }
+  .versao.no-pe { padding: 0 16px; margin-top: 0; }
+
+  /* cabeçalho de aplicativo (direções A e C): símbolo + nome menor + versão */
+  .cabeca-app { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px 16px; border-bottom: 1px solid var(--cor-borda); }
+  .simbolo { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 8px; background: var(--cor-destaque); display: flex; align-items: center; justify-content: center; }
+  .simbolo svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .cabeca-app .nome-app { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .cabeca-app .sub { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); line-height: 1.3; margin-top: 2px; }
+
+  /* item de hoje: bloco azul cheio quando marcado */
+  .item {
+    display: flex; align-items: center; gap: 10px; padding: 12px; margin: 0 8px;
+    border-radius: var(--raio); color: var(--cor-texto-secundario); font-size: var(--texto-base);
+  }
+  .item.marcado { background: var(--cor-destaque); color: #fff; font-weight: 600; }
+  .item.pequeno { font-size: var(--texto-pequeno); padding: 8px 12px; }
+  .emoji { font-family: var(--fonte-emoji); font-size: 15px; font-weight: 400; width: 18px; text-align: center; }
+  .item svg { width: 18px; height: 18px; flex: 0 0 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .titulo-sub { font-weight: 600; padding: 4px 20px 8px 20px; }
+
+  /* item suave (direções B e C): fundo azul fraco e um filete à esquerda */
+  .suave .item.marcado {
+    background: rgba(59, 110, 165, 0.24); color: var(--cor-texto);
+    box-shadow: inset 3px 0 0 var(--cor-destaque-hover);
+  }
+
+  /* ---- comparação ---- */
+  .lado-a-lado { display: flex; gap: var(--espaco-4); flex-wrap: wrap; align-items: flex-start; }
+  .opcao { display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .opcao-titulo { font-weight: 600; }
+  .opcao-titulo .recomendada { color: var(--cor-sucesso); font-size: var(--texto-pequeno); font-weight: 700; margin-left: 6px; }
+  .opcao-diz { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 220px; min-height: 96px; }
+  .outro-estado { width: 220px; background: var(--cor-fundo-elevado); border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 8px 0; display: flex; flex-direction: column; gap: 4px; }
+  .outro-estado .rotulo { padding: 0 16px; margin: 0; font-size: 11px; }
+
+  /* ---- janela inteira ---- */
+  .janela { display: flex; border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.35); margin-bottom: var(--espaco-4); }
+  .janela.mil { width: 1000px; height: 640px; }
+  .janela.novecentos { width: 900px; height: 560px; }
+  .painel { flex: 1; background: var(--cor-fundo); display: flex; align-items: center; justify-content: center; }
+  .painel-vazio { text-align: center; color: var(--cor-texto-secundario); }
+  .painel-vazio .icone { font-size: 40px; }
+  .painel-vazio .titulo { font-size: 20px; color: var(--cor-texto); margin: 8px 0; }
+
+  .notas { margin-top: 48px; border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 900px; }
+  .notas li { margin-bottom: 6px; }
+  .notas b { color: var(--cor-texto); }
+</style>
+</head>
+<body>
+
+<!-- Os desenhos em traço: cor do texto do item, sem arquivo e sem nada baixado. -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="lupa" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.6 12.6L17.5 17.5"/></symbol>
+    <symbol id="cadeado" viewBox="0 0 20 20"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/><path d="M10 12.5v2"/></symbol>
+    <!-- Os dentes da engrenagem são um círculo grosso tracejado: no programa, o mesmo
+         efeito sai de uma caneta com traço interrompido, sem desenhar dente por dente. -->
+    <symbol id="engrenagem" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke-width="2.8" stroke-dasharray="2.75 2.75" stroke-linecap="butt"/><circle cx="10" cy="10" r="5.2"/><circle cx="10" cy="10" r="2"/></symbol>
+    <!-- Símbolo provisório do cabeçalho: uma página com uma linha tarjada. -->
+    <symbol id="simbolo" viewBox="0 0 22 22"><path d="M6 2.5h7l4 4V18a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 5 18V4a1.5 1.5 0 0 1 1-1.5z"/><path d="M13 2.5v4h4"/><path d="M8 10.5h6"/><rect x="8" y="13.5" width="6" height="2.2" rx="1" fill="#fff" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<h1>Rascunho 04 — Três direções para a faixa</h1>
+<p class="subtitulo">
+  Funcionalidade 9. Os rascunhos 02 e 03 ficaram feios por quatro motivos: o nome em 20 px pesa e
+  quebra em duas linhas, deixando a versão solta; os emojis coloridos fogem do tom sóbrio do
+  programa; o item marcado é um bloco azul cheio, a coisa mais forte da tela; e nada identifica o
+  programa além do texto. Abaixo, três direções que atacam esses pontos, todas só na faixa da
+  esquerda. Os módulos não mudam.
+</p>
+
+<h2>As três direções, com a de hoje ao lado</h2>
+<div class="lado-a-lado">
+
+  <div class="opcao">
+    <div class="opcao-titulo">Hoje</div>
+    <div class="opcao-diz">Para comparar. Sem ícone nos módulos, a versão no pé.</div>
+    <div class="faixa solta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div></div>
+      <div class="item primeiro">Gerar OCR</div>
+      <div class="item marcado">Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+      <div class="versao no-pe">versão 0.1.0</div>
+    </div>
+  </div>
+
+  <div class="opcao">
+    <div class="opcao-titulo">A — cabeçalho de aplicativo</div>
+    <div class="opcao-diz">Símbolo à esquerda, o nome menor ao lado, e a versão como segunda linha do nome. Os itens continuam com emoji e o bloco azul cheio.</div>
+    <div class="faixa solta">
+      <div class="cabeca-app">
+        <div class="simbolo"><svg><use href="#simbolo"/></svg></div>
+        <div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div>
+      </div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+      <div class="item marcado"><span class="emoji">🔒</span>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><span class="emoji">🔍</span>Gerar OCR</div>
+      <div class="item"><span class="emoji">🔒</span>Anonimizar</div>
+    </div>
+  </div>
+
+  <div class="opcao suave">
+    <div class="opcao-titulo">B — tudo em traço, marcado suave</div>
+    <div class="opcao-diz">Lupa, cadeado e engrenagem desenhados pelo programa, na cor do texto. O marcado vira um fundo azul fraco com um filete à esquerda. O cabeçalho fica como no rascunho 02.</div>
+    <div class="faixa solta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><svg><use href="#lupa"/></svg>Gerar OCR</div>
+      <div class="item marcado"><svg><use href="#cadeado"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><svg><use href="#engrenagem"/></svg>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><svg><use href="#lupa"/></svg>Gerar OCR</div>
+      <div class="item"><svg><use href="#cadeado"/></svg>Anonimizar</div>
+    </div>
+  </div>
+
+  <div class="opcao suave">
+    <div class="opcao-titulo">C — A e B juntas <span class="recomendada">✅ RECOMENDADA</span></div>
+    <div class="opcao-diz">O cabeçalho de aplicativo da A, com os ícones em traço e o marcado suave da B. É a única que resolve os quatro pontos.</div>
+    <div class="faixa solta">
+      <div class="cabeca-app">
+        <div class="simbolo"><svg><use href="#simbolo"/></svg></div>
+        <div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div>
+      </div>
+      <div class="item primeiro"><svg><use href="#lupa"/></svg>Gerar OCR</div>
+      <div class="item marcado"><svg><use href="#cadeado"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><svg><use href="#engrenagem"/></svg>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><svg><use href="#lupa"/></svg>Gerar OCR</div>
+      <div class="item"><svg><use href="#cadeado"/></svg>Anonimizar</div>
+    </div>
+  </div>
+</div>
+
+<h2>O submenu da IA, que muda junto nas direções B e C</h2>
+<p class="explica">
+  Todos os itens da faixa usam o mesmo estilo. Então, com o marcado suave, os itens de
+  "Configurações de IA" também ficam assim. Nada muda no que eles fazem, e eles continuam sem ícone.
+</p>
+<div class="lado-a-lado">
+  <div class="opcao">
+    <div class="rotulo">Hoje (e na direção A)</div>
+    <div class="faixa solta" style="height: 400px">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div></div>
+      <div class="item pequeno primeiro">‹ Voltar</div>
+      <div class="titulo-sub">Configurações de IA</div>
+      <div class="item marcado">LM Studio</div>
+      <div class="item">Servidor de IA Interno</div>
+      <div class="item">Habilitar IA</div>
+      <div class="espaco"></div>
+    </div>
+  </div>
+  <div class="opcao suave">
+    <div class="rotulo">Direção C</div>
+    <div class="faixa solta" style="height: 400px">
+      <div class="cabeca-app">
+        <div class="simbolo"><svg><use href="#simbolo"/></svg></div>
+        <div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div>
+      </div>
+      <div class="item pequeno primeiro">‹ Voltar</div>
+      <div class="titulo-sub">Configurações de IA</div>
+      <div class="item marcado">LM Studio</div>
+      <div class="item">Servidor de IA Interno</div>
+      <div class="item">Habilitar IA</div>
+      <div class="espaco"></div>
+    </div>
+  </div>
+</div>
+
+<h2>Na janela inteira, com a direção C</h2>
+<p class="explica">
+  No tamanho em que a janela abre fora do maximizado (1000 × 640) e no mínimo (900 × 560). A faixa
+  tem 220 px fixos e fica igual nos dois. Quem estreita é o painel da direita.
+</p>
+<div class="rotulo">1000 × 640 — nada escolhido ainda</div>
+<div class="janela mil suave">
+  <div class="faixa">
+    <div class="cabeca-app">
+      <div class="simbolo"><svg><use href="#simbolo"/></svg></div>
+      <div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div>
+    </div>
+    <div class="item primeiro"><svg><use href="#lupa"/></svg>Gerar OCR</div>
+    <div class="item"><svg><use href="#cadeado"/></svg>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><svg><use href="#engrenagem"/></svg>Configurações de IA</div>
+  </div>
+  <div class="painel"><div class="painel-vazio">
+    <div class="icone">◧</div>
+    <div class="titulo">Escolha um módulo para começar</div>
+    <div>Clique em "Gerar OCR" ou "Anonimizar" no menu ao lado.</div>
+  </div></div>
+</div>
+<div class="rotulo">900 × 560 — com o Anonimizar escolhido</div>
+<div class="janela novecentos suave">
+  <div class="faixa">
+    <div class="cabeca-app">
+      <div class="simbolo"><svg><use href="#simbolo"/></svg></div>
+      <div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div>
+    </div>
+    <div class="item primeiro"><svg><use href="#lupa"/></svg>Gerar OCR</div>
+    <div class="item marcado"><svg><use href="#cadeado"/></svg>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><svg><use href="#engrenagem"/></svg>Configurações de IA</div>
+  </div>
+  <div class="painel"><div class="painel-vazio">
+    <div class="titulo">(a tela do Anonimizar, que não muda)</div>
+  </div></div>
+</div>
+
+<div class="notas">
+  <ul>
+    <li><b>O símbolo do cabeçalho é provisório</b>: uma página com uma linha tarjada, desenhada pelo programa. A marca definitiva do programa é decisão de identidade visual (spec 001), e quando ela existir, toma este lugar. Ele não vira o ícone da janela nem o da barra de tarefas.</li>
+    <li><b>Contraste do marcado suave</b>: o texto claro sobre o azul fraco fica em cerca de 9,5:1, e o filete à esquerda é o que diz "este é o escolhido" para quem distingue mal as cores.</li>
+    <li><b>Nas direções B e C, a engrenagem deixa de ser emoji</b> e passa a ser desenhada como os outros dois ícones. Isso estica um pouco o combinado, que deixava "Configurações de IA" de fora, e só entra se você escolher B ou C.</li>
+    <li><b>Continua de fora</b>: o que os módulos fazem, as telas dos painéis, o ícone da janela e o desenho do painel vazio.</li>
+  </ul>
+</div>
+
+</body>
+</html>

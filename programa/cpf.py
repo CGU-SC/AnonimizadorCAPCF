@@ -1,0 +1,581 @@
+"""Acha, confere e mascara os CPFs de um texto.
+
+Este arquivo não desenha nada na tela. Ficar separado da tela é o que permite
+conferir por teste automático cada regra da spec 003 sobre o que é CPF, o que é
+suspeito e como a máscara fica - regras que, erradas, deixariam um CPF passar
+inteiro sem que ninguém percebesse olhando a janela.
+
+Ele mora só no Anonimizar. O Gerar OCR não usa nada daqui, e não pode usar: o
+módulo de OCR continua sem nenhuma linha de CPF (regra RN-18).
+"""
+import re
+from dataclasses import dataclass
+
+# Os tipos de ocorrência da spec 003 (seção Dados). Na tela, "passa na conta"
+# aparece como "forma CPF válido" - o nome daqui é o da regra, não o da tela.
+PASSA_NA_CONTA = "passa na conta"
+FALHA_NA_CONTA = "suspeito: falha na conta"
+QUASE_CPF = "suspeito: quase CPF"
+MASCARADO_A_MAO = "mascarado à mão"
+
+MASCARADO = "mascarado"
+LIBERADO = "liberado"
+
+# Por que o número foi parar entre os "quase CPF". Aparece ao lado dele na
+# lista de suspeitos, para a pessoa entender o que a leitura estragou.
+PARTIDO_EM_DUAS_LINHAS = "partido em duas linhas"
+LETRA_NO_LUGAR_DE_DIGITO = "letra no lugar de dígito"
+ESPACOS_NO_LUGAR_DOS_PONTOS = "espaços no lugar dos pontos"
+PONTUACAO_FORA_DO_PADRAO = "pontuação fora do padrão"
+
+# As letras que a leitura costuma confundir com dígito, da regra RN-2. A lista é
+# fechada de propósito: aceitar qualquer letra faria palavras comuns virarem
+# "CPF" e encheria a lista de suspeitos de alarme falso.
+LETRA_PARECIDA_COM_DIGITO = {
+    "O": "0", "o": "0", "D": "0", "Q": "0",
+    "l": "1", "I": "1", "i": "1", "|": "1",
+    "Z": "2",
+    "S": "5", "s": "5",
+    "G": "6", "b": "6",
+    "T": "7",
+    "B": "8",
+    "g": "9", "q": "9",
+}
+
+# Quantas letras no lugar de dígito uma sequência aceita antes de deixar de
+# contar como "quase CPF". O limite depende da pontuação (quarta emenda da spec
+# 003, de 16/09/2026): ponto, traço ou barra nos lugares exatos de um CPF quase
+# nunca aparecem numa palavra ou num código, e ali cabem 4 letras - ainda sobram
+# 7 dígitos certos. Sem separador nenhum, ou só com espaços, a sequência tem
+# cara de código ou de lista de números, e o limite continua em 2.
+MAXIMO_DE_LETRAS_COM_PONTUACAO = 4
+MAXIMO_DE_LETRAS_SEM_PONTUACAO = 2
+
+# O que fica no lugar do dígito escondido (regra RN-6, sétima emenda da spec
+# 003, de 18/09/2026). Era o asterisco, e ele quebrava na tela de quem abria o
+# arquivo: num `.md`, `***` e `**` são a marcação de negrito e itálico, então o
+# visualizador - o próprio Bloco de Notas do Windows faz isso - engolia os
+# asteriscos grudados na pontuação e mostrava `*.222.222-` no lugar da máscara.
+# O X não significa nada em Markdown, em posição nenhuma, e é como documento
+# brasileiro costuma mostrar CPF tarjado.
+MASCARA = "X"
+
+# Os separadores que contam como pontuação de CPF. O espaço fica de fora de
+# propósito: documento de prestação de contas é cheio de número separado por
+# espaço, e ali a chance de não ser CPF é bem maior.
+PONTUACAO_DE_CPF = ".-/"
+
+# Os quatro jeitos combinados de escrever um CPF (regra RN-1), pelos três
+# separadores entre os grupos: 123.456.789-10, 123456789-10, 12345678910 e
+# 123.456.789/10. Qualquer outra combinação é "quase CPF".
+FORMATOS_COMBINADOS = {
+    (".", ".", "-"),
+    ("", "", "-"),
+    ("", "", ""),
+    (".", ".", "/"),
+}
+
+_POSICAO = "[0-9" + re.escape("".join(LETRA_PARECIDA_COM_DIGITO)) + "]"
+_QUEBRA = r"[ \t]*\r?\n[ \t]*"
+# O que pode ficar entre dois grupos: nada, um dos separadores combinados, um
+# espaço, ou a quebra de linha - sozinha ou colada a um separador, como em
+# "123.456." no fim de uma linha e "789-10" no começo da seguinte.
+_SEPARADOR = rf"(?:{_QUEBRA}[.\-/]|[.\-/](?:{_QUEBRA})?|{_QUEBRA}| )?"
+
+# As duas travas de cada ponta são a regra RN-3: número grudado num número
+# maior não é CPF. É o que deixa inteiros o CNPJ (12.345.678/0001-90), o número
+# de processo e a linha do boleto, em que um pedaço de 11 dígitos até cabe no
+# desenho de um CPF, mas está colado a outros dígitos.
+_PADRAO = re.compile(
+    r"(?<![0-9])(?<![0-9][.\-/])"
+    rf"({_POSICAO}{{3}})({_SEPARADOR})({_POSICAO}{{3}})({_SEPARADOR})"
+    rf"({_POSICAO}{{3}})({_SEPARADOR})({_POSICAO}{{2}})"
+    r"(?![0-9])(?![.\-/][0-9])"
+)
+
+_GRUPOS_DE_DIGITOS = (1, 3, 5, 7)
+# Depois do número: o ponto e o começo do título de uma seção, como em "12. Equipe".
+_TITULO_NUMERADO = re.compile(r"\.[ \t]+[A-ZÀ-Ý]")
+LETRAS_ATE_A_PALAVRA_CPF = 20
+_GRUPOS_DE_SEPARADOR = (2, 4, 6)
+
+# O CPF que perdeu o zero da frente (nona emenda da spec 003): 10 dígitos, ou 9
+# quando perdeu dois, nos mesmos jeitos de escrever da RN-1 com o grupo da
+# frente mais curto - `12.345.678-91`, `12345678-91`, `1234567891`,
+# `12.345.678/91`. Só dígitos e só a pontuação do CPF: o curto com letra no
+# lugar de dígito, com espaço ou partido em duas linhas fica de fora, porque é
+# raro e encheria o texto de alarme falso (decidido no levantamento). As travas
+# das pontas são as mesmas da RN-3, o que deixa inteiro o pedaço de um CNPJ ou de
+# um número de processo.
+_PADRAO_CURTO = re.compile(
+    r"(?<![0-9])(?<![0-9][.\-/])"
+    r"([0-9]{1,2})(\.?)([0-9]{3})(\.?)([0-9]{3})([-/]?)([0-9]{2})"
+    r"(?![0-9])(?![.\-/][0-9])"
+)
+
+
+@dataclass
+class Ocorrencia:
+    """Um número achado no texto, ou um trecho mascarado à mão.
+
+    Começo e fim são as posições no texto de entrada. Quase sempre a máscara tem
+    o mesmo tamanho do original (premissa da spec 003). A exceção é o CPF que
+    perdeu o zero da frente: ele volta a ter 11 dígitos na máscara, e cresce
+    (nona emenda). Para a coluna da tabela continuar reta, ele leva junto
+    `espacos_tirados`: quantos dos espaços logo depois dele somem no texto que
+    sai. Por isso a posição no texto mascarado se pede a `posicoes_na_saida`, e
+    não se supõe igual à de entrada.
+    """
+
+    inicio: int
+    fim: int
+    original: str
+    mascara: str
+    tipo: str
+    passa_na_conta: bool
+    motivo: str | None = None
+    situacao: str = MASCARADO
+    espacos_tirados: int = 0
+    # Quantos zeros da frente o CPF tinha perdido: 1 com 10 dígitos, 2 com 9.
+    # Zero em todo o resto.
+    sem_zero: int = 0
+    # Quem apontou e por quê, quando foi a IA que achou o número (spec 004). A máscara
+    # é a de sempre, feita aqui: a IA nunca escreve o texto (RN-28).
+    origem: str | None = None
+    motivo_da_origem: str | None = None
+    # O que a IA disse sobre um número que já estava na lista: nunca muda a contagem nem
+    # a máscara dele (RN-31), e a seção só nos casos do `liberacao_para_revisar` e do
+    # `suspeito_que_a_ia_nega`.
+    comentario: str | None = None
+    # Para que lado vai o comentário. A frase sozinha não diz: "é o número de um termo"
+    # num mascarado que depois é liberado não pode parecer um alerta de CPF (RN-69).
+    # Falso também é o valor de quem a IA nunca comentou: "a IA nega" pede o comentário
+    # junto, senão todo suspeito pareceria negado por ela antes mesmo de ela rodar.
+    ia_acha_cpf: bool = False
+
+    @property
+    def da_ia(self):
+        return self.origem is not None
+
+    @property
+    def suspeito_que_a_ia_nega(self):
+        """Suspeito do programa sobre o qual a IA disse que não é CPF (RN-70).
+
+        Liberado ou não: depois de liberado ele continua na seção dela, para ser
+        mascarado de novo com um clique, como nas outras seções.
+        """
+        return (self.suspeito and not self.da_ia and self.comentario is not None
+                and not self.ia_acha_cpf)
+
+    @property
+    def liberacao_para_revisar(self):
+        """Liberado pela pessoa, e a IA acha que é CPF: o que mais pode vazar (RN-69)."""
+        return self.situacao == LIBERADO and self.ia_acha_cpf
+
+    @property
+    def suspeito(self):
+        return self.tipo in (FALHA_NA_CONTA, QUASE_CPF)
+
+    @property
+    def pede_dupla_conferencia(self):
+        """Todo número que passa na conta, inteiro ou "quase CPF" (RN-10).
+
+        É o que quase certamente é o CPF de alguém - o mais perigoso de sair
+        do programa com um clique.
+        """
+        return self.passa_na_conta and self.tipo != MASCARADO_A_MAO
+
+
+def passa_na_conta(digitos):
+    """A conta do dígito verificador do CPF, feita aqui mesmo (regra RN-4).
+
+    Os dois últimos dígitos são calculados a partir dos nove primeiros e
+    comparados com os que estão escritos. Sem biblioteca de fora: a conta tem
+    seis linhas, e uma dependência a mais seria mais uma coisa para instalar
+    nas máquinas do núcleo.
+    """
+    if len(digitos) != 11 or not digitos.isdigit():
+        return False
+    numeros = [int(d) for d in digitos]
+    for tamanho in (9, 10):
+        soma = sum(n * peso for n, peso in zip(numeros, range(tamanho + 1, 1, -1)))
+        esperado = soma * 10 % 11 % 10
+        if numeros[tamanho] != esperado:
+            return False
+    return True
+
+
+def procurar(texto):
+    """Todos os CPFs e "quase CPFs" do texto, na ordem em que aparecem.
+
+    Todos saem com a situação "mascarado", suspeitos inclusive (regra RN-5): um
+    CPF de verdade lido com um dígito trocado falha na conta, e sem máscara
+    sairia quase inteiro.
+    """
+    achados = []
+    posicao = 0
+    while True:
+        encontro = _PADRAO.search(texto, posicao)
+        if encontro is None:
+            break
+        ocorrencia = _avaliar(texto, encontro)
+        if ocorrencia is None:
+            # Recusado, procura de novo uma letra adiante, e não do fim do
+            # recusado: um CPF de verdade pode começar dentro dele.
+            posicao = encontro.start() + 1
+        else:
+            achados.append(ocorrencia)
+            posicao = encontro.end()
+
+    # O curto vem depois, e não ganha uma segunda máscara por cima de um número
+    # já achado: ela mudaria o tamanho dele e deixaria a lista dizendo duas
+    # coisas sobre o mesmo número.
+    #
+    # Com uma exceção, achada na revisão da etapa 2: o "quase CPF" que falha na
+    # conta cede o lugar ao curto que fecha. A busca do CPF completo junta o
+    # curto com o número da linha de baixo ("000000000" e "12", cada um numa
+    # célula da tabela) num "quase CPF" que falha - e aí a máscara caía no "12",
+    # os dígitos verificadores do CPF de verdade ficavam à vista, e ele saía com
+    # um clique, sem a dupla conferência. O "quase CPF" que fecha a conta
+    # continua ganhando: é o CPF de verdade que a leitura estragou.
+    for encontro in _PADRAO_CURTO.finditer(texto):
+        por_cima = [a for a in achados
+                    if a.inicio < encontro.end() and encontro.start() < a.fim]
+        if any(a.tipo != QUASE_CPF or a.passa_na_conta for a in por_cima):
+            continue
+        ocorrencia = _avaliar_curto(texto, encontro)
+        if ocorrencia is not None:
+            for engolido in por_cima:
+                achados.remove(engolido)
+            achados.append(ocorrencia)
+    achados.sort(key=lambda a: a.inicio)
+    return achados
+
+
+def mascarar_a_mao(texto, inicio, fim):
+    """A máscara do trecho que a pessoa marcou com o mouse (regra RN-9).
+
+    Esconde os 3 primeiros e os 2 últimos dígitos do trecho, ou todos, se forem
+    5 ou menos. Devolve None quando o trecho não tem dígito nenhum - aí nada
+    muda, e a tela diz por quê.
+
+    O que fica marcado como ocorrência vai do primeiro ao último dígito: um
+    espaço pego sem querer na ponta da seleção não precisa ficar destacado.
+    """
+    trecho = texto[inicio:fim]
+    if not any(letra.isdigit() for letra in trecho):
+        return None
+
+    digitos = _posicoes_do_trecho(trecho)
+    primeiro, ultimo = digitos[0], digitos[-1]
+    original = trecho[primeiro:ultimo + 1]
+    posicoes = [i - primeiro for i in digitos]
+    esconder = posicoes if len(posicoes) <= 5 else posicoes[:3] + posicoes[-2:]
+    mascara = "".join(
+        MASCARA if i in esconder else letra for i, letra in enumerate(original)
+    )
+    return Ocorrencia(
+        inicio=inicio + primeiro,
+        fim=inicio + ultimo + 1,
+        original=original,
+        mascara=mascara,
+        tipo=MASCARADO_A_MAO,
+        passa_na_conta=False,
+    )
+
+
+# Menos que isto não dá um CPF, nem estragado: é um ano, um valor, um número de
+# página. O número curto apontado pela IA fica só apontado, sem máscara (RN-30).
+MINIMO_DE_DIGITOS_DO_APONTADO = 8
+# Mais que isto não é um número, são dois: a máscara esconde só as pontas do que
+# recebe, e os dígitos do meio ficariam à vista com a lista dizendo "mascarado". Um
+# CPF tem 11, e sobra folga para o que a leitura estragou.
+MAXIMO_DE_DIGITOS_DO_APONTADO = 14
+
+
+def mascarar_apontado(texto, inicio, fim, origem, motivo):
+    """A máscara de um número que a IA apontou e o programa não tinha achado (RN-30).
+
+    A mesma máscara do trecho marcado à mão, feita aqui, e não pela IA. O tipo diz se
+    ele passa na conta: é o que pede a dupla conferência para soltá-lo, como em
+    qualquer número (RN-10). Devolve None quando não dá para mascarar, e ele fica só
+    apontado.
+    """
+    trecho = texto[inicio:fim]
+    if not any(letra.isdigit() for letra in trecho):
+        return None
+    posicoes = _posicoes_do_trecho(trecho)
+    if not MINIMO_DE_DIGITOS_DO_APONTADO <= len(posicoes) <= MAXIMO_DE_DIGITOS_DO_APONTADO:
+        return None
+    ocorrencia = mascarar_a_mao(texto, inicio, fim)
+    digitos = "".join(LETRA_PARECIDA_COM_DIGITO.get(trecho[i], trecho[i]) for i in posicoes)
+    fecha = passa_na_conta(digitos)
+    ocorrencia.tipo = PASSA_NA_CONTA if fecha else FALHA_NA_CONTA
+    ocorrencia.passa_na_conta = fecha
+    ocorrencia.origem = origem
+    ocorrencia.motivo_da_origem = motivo
+    return ocorrencia
+
+
+def aplicar(texto, ocorrencias):
+    """O texto de saída: o de entrada, com a máscara de toda ocorrência mascarada.
+
+    É só isto que vai para o arquivo. A troca é feita no texto, letra por letra
+    - nunca uma tarja por cima, que deixaria o número original por baixo para
+    quem copiasse o texto.
+
+    Cada máscara escreve só o que ela troca (o asterisco, e o traço no lugar
+    da barra), e nunca devolve uma letra do original. Duas máscaras podem se
+    sobrepor - a pessoa marca à mão um trecho que engloba um CPF já mascarado -
+    e, se a segunda escrevesse o trecho inteiro, os dígitos do meio dela
+    apagariam os asteriscos da primeira: o CPF voltaria a aparecer no arquivo
+    com a lista dizendo que ele está mascarado.
+    """
+    return "".join(_pecas(texto, ocorrencias))
+
+
+def posicoes_na_saida(texto, ocorrencias):
+    """Onde cada posição do texto de entrada vai parar no texto mascarado.
+
+    A lista tem uma casa a mais que o texto: a última é o tamanho do texto que
+    sai. Com todas as máscaras do tamanho do original, ela é só 0, 1, 2...; o
+    CPF sem o zero da frente, que cresce, e os espaços tirados depois dele
+    empurram o resto. É por ela que a tela de revisão põe o destaque em cima do
+    número - sem ela, o destaque escorregaria para o lado a cada CPF curto.
+    """
+    posicoes = [0]
+    for peca in _pecas(texto, ocorrencias):
+        posicoes.append(posicoes[-1] + len(peca))
+    return posicoes
+
+
+def _pecas(texto, ocorrencias):
+    """O texto de saída em pedaços, um para cada letra do texto de entrada.
+
+    Quase sempre cada pedaço é uma letra. A máscara que cresce põe o que tem a
+    mais no pedaço da primeira letra do número - é ali que voltam os zeros da
+    frente -, e o espaço tirado vira um pedaço vazio. Assim a troca continua
+    letra por letra, como antes, e a posição de cada uma no texto que sai é a
+    soma dos pedaços anteriores.
+    """
+    pecas = list(texto)
+    for ocorrencia in ocorrencias:
+        if ocorrencia.situacao != MASCARADO:
+            continue
+        a_mais = len(ocorrencia.mascara) - len(ocorrencia.original)
+        primeira = ocorrencia.mascara[:a_mais + 1]
+        if primeira != ocorrencia.original[0]:
+            pecas[ocorrencia.inicio] = primeira
+        for deslocamento, (antes, depois) in enumerate(
+                zip(ocorrencia.original[1:], ocorrencia.mascara[a_mais + 1:]),
+                start=1):
+            if antes != depois:
+                pecas[ocorrencia.inicio + deslocamento] = depois
+        for deslocamento in range(ocorrencia.espacos_tirados):
+            pecas[ocorrencia.fim + deslocamento] = ""
+    return pecas
+
+
+def _avaliar(texto, encontro):
+    """Decide o que é o número achado, ou devolve None se ele não conta.
+
+    As duas pontas do número são tratadas de jeitos diferentes, e de propósito.
+
+    Na ponta do começo, letra grudada numa palavra continua contando. Já houve
+    aqui uma regra que descartava esse caso, e ela deixava sair inteiro, sem
+    máscara e fora da lista, o CPF que a leitura grudou no "CPF" e cujo primeiro
+    1 virou "l" ("CPFl11.111.111-11"). Entre um alarme falso e um CPF que escapa
+    calado, fica o alarme (regra RN-5).
+
+    Na ponta final, letra grudada numa palavra é começo de palavra, e o número
+    não conta (quinta emenda da spec 003) - **mas só quando não há pontuação de
+    CPF**. Um número de 9 dígitos no fim da linha, com "Situação" na linha de
+    baixo, fechava as 11 posições com o "Si", e num teste do solicitante isso deu
+    18 alarmes falsos; todos eram sem pontuação. Com ponto, traço ou barra nas
+    posições exatas, a regra não vale: "CPF 111.111.111-1SAssinado" é um CPF que
+    a leitura estragou e colou na palavra seguinte, e soltá-lo seria deixá-lo
+    sair inteiro, calado (revisão da etapa 3).
+    """
+    posicoes = "".join(encontro.group(g) for g in _GRUPOS_DE_DIGITOS)
+    letras = sum(1 for letra in posicoes if not letra.isdigit())
+    separadores = tuple(encontro.group(g) for g in _GRUPOS_DE_SEPARADOR)
+    if letras > _maximo_de_letras(separadores):
+        return None
+    depois = texto[encontro.end()] if encontro.end() < len(texto) else ""
+    if (not _tem_pontuacao(separadores)
+            and not encontro.group(0)[-1].isdigit() and depois.isalpha()):
+        return None
+
+    digitos = "".join(LETRA_PARECIDA_COM_DIGITO.get(l, l) for l in posicoes)
+    conta = passa_na_conta(digitos)
+
+    # Um número de 9 dígitos no fim da linha, com "12. Equipe do Projeto" na linha de
+    # baixo, fechava as 11 posições com o número da seção. Só quando não fecha a conta: o
+    # que fecha é quase certamente um CPF, e continua mascarado (achado pelo
+    # solicitante na conferência da funcionalidade 4, 01/11/2026).
+    if (not conta and not letras and separadores[:2] == ("", "")
+            and "\n" in separadores[2]
+            and _TITULO_NUMERADO.match(texto, encontro.end())
+            # Com a palavra CPF logo antes, é um CPF mal lido, e a leitura pode ter partido
+            # a linha ali por acaso. Entre um alarme falso e um CPF que escapa calado, fica
+            # o alarme (RN-5). As letras de folga cabem um "inscrito no CPF sob o nº".
+            and "CPF" not in texto[max(0, encontro.start() - LETRAS_ATE_A_PALAVRA_CPF):
+                                   encontro.start()].upper()):
+        return None
+
+    if not letras and separadores in FORMATOS_COMBINADOS:
+        tipo, motivo = (PASSA_NA_CONTA if conta else FALHA_NA_CONTA), None
+    else:
+        tipo, motivo = QUASE_CPF, _por_que_e_quase(separadores, letras)
+
+    return Ocorrencia(
+        inicio=encontro.start(),
+        fim=encontro.end(),
+        original=encontro.group(0),
+        mascara=_mascarar(encontro),
+        tipo=tipo,
+        passa_na_conta=conta,
+        motivo=motivo,
+    )
+
+
+def _avaliar_curto(texto, encontro):
+    """O CPF sem o zero da frente, ou None se o número curto não for CPF.
+
+    Só conta o que fecha a conta com os zeros de volta. O curto que falha não é
+    achado nem vira suspeito: sem a conta, nada separa um CPF curto de um
+    telefone ou de um número de processo, e cada um deles viraria um suspeito a
+    mais para a pessoa olhar, sem ser CPF (nona emenda).
+    """
+    separadores = tuple(encontro.group(g) for g in _GRUPOS_DE_SEPARADOR)
+    if separadores not in FORMATOS_COMBINADOS:
+        return None
+    digitos = "".join(encontro.group(g) for g in _GRUPOS_DE_DIGITOS)
+    sem_zero = 11 - len(digitos)
+    if not passa_na_conta("0" * sem_zero + digitos):
+        return None
+
+    # A máscara cresce tantas casas quantos zeros voltaram. Para a coluna da
+    # tabela continuar reta, saem o mesmo tanto de espaços logo depois do
+    # número - mas sempre sobra um, para duas colunas nunca se juntarem. Só
+    # espaço de verdade é tirado: tabulação, quebra de linha ou outra letra
+    # ficam, e aí a linha cresce.
+    espacos = 0
+    while (encontro.end() + espacos < len(texto)
+           and texto[encontro.end() + espacos] == " "):
+        espacos += 1
+    return Ocorrencia(
+        inicio=encontro.start(),
+        fim=encontro.end(),
+        original=encontro.group(0),
+        mascara=_mascarar_curto(encontro),
+        tipo=PASSA_NA_CONTA,
+        passa_na_conta=True,
+        espacos_tirados=min(sem_zero, max(espacos - 1, 0)),
+        sem_zero=sem_zero,
+    )
+
+
+def _mascarar_curto(encontro):
+    """A máscara do CPF sem o zero da frente: a de um CPF completo.
+
+    Os zeros voltam e o número é escrito no jeito em que estava: o grupo da
+    frente inteiro vira `XXX`, e a barra antes dos dois últimos vira traço, como
+    na RN-6. Fica à vista o mesmo miolo de 6 dígitos de qualquer CPF
+    (`1234567891` -> `XXX345678XX`). Separada da conta de propósito: é aqui que
+    o teste confere o formato com dígitos diferentes, sem precisar de um número
+    que feche a conta e possa ser o CPF de alguém (RN-22).
+    """
+    ultimo_separador = "-" if encontro.group(6) == "/" else encontro.group(6)
+    return (MASCARA * 3 + encontro.group(2) + encontro.group(3)
+            + encontro.group(4) + encontro.group(5) + ultimo_separador
+            + MASCARA * 2)
+
+
+def _posicoes_do_trecho(trecho):
+    """Onde os asteriscos podem cair no trecho marcado à mão (regra RN-9).
+
+    A conta é feita pedaço por pedaço, e não pelo trecho inteiro. **Pedaço com
+    dígito** - `l23.4S6.789-1O` - conta dígito e letra parecida com dígito, como
+    a sexta emenda decidiu: senão o "l" e o "O", que são o primeiro e o último
+    dígito do número, ficariam à vista. **Pedaço sem nenhum dígito** - `|`,
+    `isso`, `Sobre` - não conta nada.
+
+    Olhando o trecho inteiro, dois casos gastavam os asteriscos fora do número e
+    deixavam dígitos à mostra (revisão da etapa 4): a barra de tabela em volta da
+    célula (`| l23.4S6.789-1O |`) e a palavra feita só de letras parecidas
+    ("isso" é i, s, s, o). A barra vertical fica de fora da conta aqui: em
+    documento, ela separa coluna muito mais vezes do que vale por "1".
+    """
+    parecidas = set(LETRA_PARECIDA_COM_DIGITO) - {"|"}
+    posicoes = []
+    for pedaco in _pedacos(trecho):
+        letras = trecho[pedaco.start:pedaco.stop]
+        if any(letra.isdigit() for letra in letras):
+            posicoes.extend(
+                pedaco.start + i for i, letra in enumerate(letras)
+                if letra.isdigit() or letra in parecidas
+            )
+    return posicoes
+
+
+def _pedacos(trecho):
+    """Os pedaços do trecho, separados por espaço ou quebra de linha."""
+    pedaco = None
+    for i, letra in enumerate(trecho + " "):
+        if letra.isspace():
+            if pedaco is not None:
+                yield range(pedaco, i)
+                pedaco = None
+        elif pedaco is None:
+            pedaco = i
+
+
+def _tem_pontuacao(separadores):
+    """Diz se os grupos estão separados por ponto, traço ou barra.
+
+    É a evidência mais forte de que aquilo é um CPF: a pontuação nas posições
+    exatas quase nunca aparece dentro de uma palavra ou de um código.
+    """
+    return any(
+        letra in PONTUACAO_DE_CPF for separador in separadores for letra in separador
+    )
+
+
+def _maximo_de_letras(separadores):
+    """Quantas letras esta sequência aceita, pela pontuação que ela tem."""
+    return (MAXIMO_DE_LETRAS_COM_PONTUACAO if _tem_pontuacao(separadores)
+            else MAXIMO_DE_LETRAS_SEM_PONTUACAO)
+
+
+def _por_que_e_quase(separadores, letras):
+    if any("\n" in s for s in separadores):
+        return PARTIDO_EM_DUAS_LINHAS
+    if letras:
+        return LETRA_NO_LUGAR_DE_DIGITO
+    if all(s == " " for s in separadores):
+        return ESPACOS_NO_LUGAR_DOS_PONTOS
+    return PONTUACAO_FORA_DO_PADRAO
+
+
+def _mascarar(encontro):
+    """A máscara da regra RN-6: asterisco nas 3 primeiras e nas 2 últimas posições.
+
+    Os separadores ficam como estavam, com uma exceção: a barra antes dos dois
+    últimos vira traço (123.456.789/10 vira XXX.456.789-XX). Nenhuma outra
+    letra muda, e o tamanho do número também não.
+    """
+    comeco = encontro.start()
+    letras = list(encontro.group(0))
+    posicoes = [
+        i - comeco
+        for g in _GRUPOS_DE_DIGITOS
+        for i in range(*encontro.span(g))
+    ]
+    for i in posicoes[:3] + posicoes[-2:]:
+        letras[i] = MASCARA
+    inicio_do_ultimo_separador = encontro.start(6) - comeco
+    for i in range(inicio_do_ultimo_separador, encontro.end(6) - comeco):
+        if letras[i] == "/":
+            letras[i] = "-"
+    return "".join(letras)

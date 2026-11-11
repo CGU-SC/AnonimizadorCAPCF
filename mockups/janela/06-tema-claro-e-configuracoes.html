@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 06 — Tema claro e menu Configurações</title>
+<style>
+  /* A página em si é escura, como as outras de documentação; quem troca de tema são
+     só as janelas desenhadas dentro dela. */
+  :root {
+    --pg-fundo: #14171c; --pg-texto: #e8eaed; --pg-sec: #9aa1ac; --pg-borda: #383e47;
+    --pg-verde: #4caf6d; --pg-alerta: #d9a441;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --raio: 6px;
+  }
+  /* Cada papel com os dois valores. O escuro é o de hoje, do estilo.py; o claro vem do
+     Gerencial, e o que ele não tem está marcado na tabela da seção 5. */
+  .escuro {
+    --fundo: #1e2228; --elev: #262b33; --borda: #383e47;
+    --texto: #e8eaed; --sec: #9aa1ac; --apag: #6c737d;
+    --dest: #3b6ea5; --dest-h: #4f86bf; --dest-fraco: rgba(59, 110, 165, 0.24);
+    --suc: #4caf6d;
+    --alerta: #d9a441; --alerta-txt: #d9a441; --alerta-fundo: rgba(217, 164, 65, 0.10);
+    --erro: #d9534f; --erro-txt: #f08a86; --erro-fundo: rgba(217, 83, 79, 0.10);
+    --ia: #b39ddb; --ia-fundo: rgba(179, 157, 219, 0.14);
+    --hover: rgba(255, 255, 255, 0.06); --atras-pdf: #0f1216; --sombra: rgba(0, 0, 0, 0.45);
+  }
+  .claro {
+    --fundo: #f2f4f7; --elev: #fbfcfd; --borda: #c9d0d8;
+    --texto: #16202b; --sec: #4a5868; --apag: #8a96a3;
+    --dest: #1f4e8c; --dest-h: #2a6fc9; --dest-fraco: rgba(31, 78, 140, 0.10);
+    --suc: #1f7a3a;
+    --alerta: #c2aa07; --alerta-txt: #7a5c00; --alerta-fundo: rgba(194, 170, 7, 0.12);
+    --erro: #b3261e; --erro-txt: #b3261e; --erro-fundo: rgba(179, 38, 30, 0.07);
+    --ia: #7356c8; --ia-fundo: rgba(115, 86, 200, 0.10);
+    --hover: rgba(22, 32, 43, 0.06); --atras-pdf: #c9d0d8; --sombra: rgba(0, 0, 0, 0.30);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--pg-fundo); color: var(--pg-texto);
+    font-family: var(--fonte-texto); font-size: 15px; padding: 32px; line-height: 1.45;
+  }
+  h1 { font-size: 28px; margin: 0 0 8px 0; }
+  h2 { font-size: 20px; margin: 56px 0 8px 0; }
+  .subtitulo, .explica { color: var(--pg-sec); max-width: 1000px; margin: 0 0 16px 0; }
+  .explica b, .subtitulo b { color: var(--pg-texto); }
+  .rotulo {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--pg-sec); margin: 16px 0 8px 0;
+  }
+  .rotulo .diz { text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 8px; }
+  .par { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+
+  svg.ic { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---- a janela, com as medidas do main.py ---- */
+  .janela { display: flex; width: 900px; height: 560px; border: 1px solid var(--borda); border-radius: var(--raio); overflow: hidden; box-shadow: 0 8px 24px var(--sombra); color: var(--texto); }
+  .janela.baixa { height: 470px; }
+  .faixa { width: 220px; flex: 0 0 220px; background: var(--elev); border-right: 1px solid var(--borda); padding: 24px 0; display: flex; flex-direction: column; gap: 4px; }
+  .espaco { flex: 1; }
+  .cabeca-app { display: flex; align-items: center; gap: 10px; padding: 0 16px 20px 16px; border-bottom: 1px solid var(--borda); margin-bottom: 12px; min-height: 60px; }
+  .simbolo { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 8px; background: var(--dest); display: flex; align-items: center; justify-content: center; }
+  .simbolo svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .nome-app { font-size: 16px; font-weight: 700; line-height: 1.2; }
+  .sub { color: var(--sec); font-size: 13px; line-height: 1.3; margin-top: 2px; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 9px; margin: 0 8px; border-left: 3px solid transparent; border-radius: var(--raio); color: var(--sec); font-size: 15px; }
+  .item svg { width: 18px; height: 18px; flex: 0 0 18px; }
+  .item.marcado { background: var(--dest-fraco); color: var(--texto); font-weight: 600; border-left-color: var(--dest-h); }
+  .item.passando { background: var(--hover); }
+  /* O título de seção do submenu: menor que o item, com o filete fino até a borda. */
+  .secao-sub { display: flex; align-items: center; gap: 8px; padding: 10px 20px 4px 20px; font-size: 13px; font-weight: 600; color: var(--sec); white-space: nowrap; }
+  .secao-sub::after { content: ""; flex: 1; height: 1px; background: var(--borda); }
+  .secao-sub.dos-dois-lados::before { content: ""; width: 10px; height: 1px; background: var(--borda); }
+
+  .painel { flex: 1; background: var(--fundo); display: flex; flex-direction: column; min-width: 0; }
+  .cab-mod { min-height: 83px; padding: 24px 24px 14px 24px; border-bottom: 1px solid var(--borda); display: flex; align-items: center; gap: 12px; }
+  .cab-mod .t { font-size: 20px; font-weight: 700; line-height: 1.2; }
+  .cab-mod .l { font-size: 13px; color: var(--sec); line-height: 1.3; margin-top: 2px; }
+  .caixa-ic { width: 38px; height: 38px; flex: 0 0 38px; border-radius: 8px; background: var(--dest-fraco); display: flex; align-items: center; justify-content: center; color: var(--texto); }
+  .caixa-ic svg { width: 22px; height: 22px; }
+  .corpo { padding: 24px; }
+
+  .secao { font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--sec); margin-bottom: 8px; }
+  .radio { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-top: 10px; }
+  .radio .bola { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--sec); flex: 0 0 16px; }
+  .radio .bola.cheia { border-color: var(--dest-h); background: radial-gradient(circle, var(--dest-h) 0 45%, transparent 50%); }
+  .radio.apagado { color: var(--apag); }
+  .radio.apagado .bola { border-color: var(--apag); }
+  .expl { font-size: 12.5px; color: var(--sec); margin: 2px 0 0 24px; }
+  .expl b { color: var(--texto); font-weight: 400; }
+
+  .botao { display: inline-block; background: var(--dest); color: #fff; padding: 9px 18px; border-radius: var(--raio); font-size: 14px; font-weight: 600; }
+  .botao.secundario { background: transparent; color: var(--sec); border: 1px solid var(--borda); font-weight: 400; }
+  .botao.pequeno { padding: 6px 12px; font-size: 13px; }
+  .botao.apagado { background: var(--elev); color: var(--apag); border: 1px solid var(--borda); font-weight: 400; }
+
+  .aviso-reabrir { margin-top: 22px; display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--raio); background: var(--elev); border: 1px solid var(--borda); font-size: 14px; color: var(--sec); }
+  .aviso-reabrir .frase { flex: 1; }
+  .faixa-aviso { margin-top: 22px; border-radius: var(--raio); padding: 12px 14px; font-size: 14px; border: 1px solid var(--alerta); background: var(--alerta-fundo); }
+  .faixa-aviso .t { font-weight: 600; color: var(--alerta-txt); margin-bottom: 4px; }
+  .faixa-aviso .botoes { display: flex; gap: 8px; margin-top: 10px; }
+  .faixa-aviso.erro { border-color: var(--erro); background: var(--erro-fundo); }
+  .faixa-aviso.erro .t { color: var(--erro-txt); }
+
+  .soltar { border: 2px dashed var(--borda); border-radius: 8px; padding: 22px; text-align: center; margin-bottom: 20px; }
+  .soltar .grande { font-size: 18px; margin: 4px 0; }
+  .soltar .ou { font-size: 12px; color: var(--sec); margin: 6px 0 10px 0; }
+
+  /* a revisão do Anonimizar, recortada */
+  .selos { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .selo { font-size: 13px; padding: 2px 10px; border-radius: 10px; border: 1px solid var(--borda); background: var(--elev); }
+  .selo.aceso { border-color: var(--dest); background: var(--dest-fraco); }
+  .texto-doc { background: var(--elev); border: 1px solid var(--borda); border-radius: var(--raio); padding: 14px 16px; font-family: var(--fonte-mono); font-size: 13.5px; line-height: 1.9; color: var(--texto); }
+  .m { text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+  .m.valido { color: var(--erro-txt); text-decoration: underline solid var(--erro-txt); }
+  .m.suspeito { color: var(--alerta-txt); text-decoration: underline wavy var(--alerta-txt); text-decoration-thickness: 1px; }
+  .m.ia { color: var(--ia); background: var(--ia-fundo); text-decoration: underline dashed var(--ia); }
+  .m.liberado { color: var(--suc); text-decoration: underline dashed var(--suc); }
+  .m.mao { color: var(--dest-h); text-decoration: underline dotted var(--dest-h); }
+  .chave { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--sec); margin-top: 10px; }
+  .chave span.m { font-family: var(--fonte-mono); }
+
+  .conferencia { display: flex; gap: 12px; padding: 16px; height: 100%; }
+  .atras-pdf { flex: 1; background: var(--atras-pdf); border-radius: var(--raio); display: flex; align-items: center; justify-content: center; }
+  .folha-pdf { width: 150px; height: 200px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.3); padding: 16px 12px; }
+  .folha-pdf div { height: 5px; background: #d5d8dc; margin-bottom: 8px; border-radius: 2px; }
+  .lado-texto { flex: 1; background: var(--elev); border: 1px solid var(--borda); border-radius: var(--raio); padding: 12px; font-family: var(--fonte-mono); font-size: 12.5px; color: var(--texto); line-height: 1.8; }
+  .etiqueta-pdf { display: inline-block; font-family: var(--fonte-texto); font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px; color: var(--dest-h); background: var(--dest-fraco); margin-bottom: 6px; }
+  .claro .etiqueta-pdf { color: var(--dest); }
+
+  /* ---- os ícones ---- */
+  .grade-ic { display: grid; grid-template-columns: 170px repeat(4, 150px); gap: 10px 14px; align-items: center; }
+  .grade-ic .cab { font-size: 13px; font-weight: 600; color: var(--pg-sec); }
+  .grade-ic .nome { font-size: 14px; }
+  .grade-ic .nome small { display: block; color: var(--pg-sec); font-size: 12px; }
+  .amostra-ic { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--raio); background: var(--elev); color: var(--sec); font-size: 13px; border: 1px solid var(--borda); }
+  .amostra-ic svg { width: 18px; height: 18px; flex: 0 0 18px; }
+  .amostra-ic.grande svg { width: 36px; height: 36px; flex-basis: 36px; stroke-width: 1.6; }
+  .amostra-ic.marcado { background: var(--dest-fraco); color: var(--texto); }
+
+  /* ---- a tabela das cores ---- */
+  table.cores { border-collapse: collapse; font-size: 13.5px; max-width: 1100px; }
+  table.cores th, table.cores td { border-bottom: 1px solid var(--pg-borda); padding: 7px 10px; text-align: left; vertical-align: top; }
+  table.cores th { color: var(--pg-sec); font-weight: 600; }
+  table.cores code { font-family: var(--fonte-mono); font-size: 12.5px; }
+  .pinta { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; border: 1px solid rgba(255,255,255,0.25); }
+  .novo { color: var(--pg-alerta); font-weight: 600; }
+  .origem { color: var(--pg-sec); font-size: 12.5px; }
+
+  .notas { margin-top: 56px; border-top: 1px solid var(--pg-borda); padding-top: 16px; color: var(--pg-sec); font-size: 13px; max-width: 1000px; }
+  .notas li { margin-bottom: 6px; }
+  .notas b { color: var(--pg-texto); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="lupa" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M12.6 12.6L17.5 17.5"/></symbol>
+    <symbol id="cadeado" viewBox="0 0 20 20"><rect x="4" y="9" width="12" height="9" rx="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/><path d="M10 12.5v2"/></symbol>
+    <symbol id="engrenagem" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" stroke-width="2.8" stroke-dasharray="2.75 2.75" stroke-linecap="butt"/><circle cx="10" cy="10" r="5.2"/><circle cx="10" cy="10" r="2"/></symbol>
+    <symbol id="simbolo" viewBox="0 0 22 22"><path d="M6 2.5h7l4 4V18a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 5 18V4a1.5 1.5 0 0 1 1-1.5z"/><path d="M13 2.5v4h4"/><path d="M8 10.5h6"/><rect x="8" y="13.5" width="6" height="2.2" rx="1" fill="#fff" stroke="none"/></symbol>
+
+    <!-- as propostas -->
+    <symbol id="tema" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 3a7 7 0 0 0 0 14z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="lmstudio" viewBox="0 0 20 20"><rect x="2.5" y="3.5" width="15" height="10" rx="1.5"/><path d="M10 13.5v3"/><path d="M6.5 16.5h7"/></symbol>
+    <symbol id="servidor" viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="6" rx="1.5"/><rect x="3" y="11" width="14" height="6" rx="1.5"/><path d="M6 6h0.01M6 14h0.01" stroke-width="2"/><path d="M10 6h4M10 14h4"/></symbol>
+    <symbol id="habilitar" viewBox="0 0 20 20"><rect x="2" y="6" width="16" height="8" rx="4"/><circle cx="14" cy="10" r="2.2" fill="currentColor" stroke="none"/></symbol>
+
+    <!-- as segundas opções -->
+    <symbol id="tema-b" viewBox="0 0 20 20"><circle cx="7" cy="7" r="2.6"/><path d="M7 1.6v1.2M7 11.2v1.2M1.6 7h1.2M11.2 7h1.2M3.2 3.2l0.8 0.8M10 10l0.8 0.8M3.2 10.8l0.8-0.8M10 4l0.8-0.8"/><path d="M18 14.2a4.6 4.6 0 1 1-5.2-5.2a3.6 3.6 0 0 0 5.2 5.2z"/></symbol>
+    <symbol id="lmstudio-b" viewBox="0 0 20 20"><rect x="5" y="5" width="10" height="10" rx="1.5"/><rect x="8" y="8" width="4" height="4" rx="0.5"/><path d="M8 2.5V5M12 2.5V5M8 15v2.5M12 15v2.5M2.5 8H5M2.5 12H5M15 8h2.5M15 12h2.5"/></symbol>
+    <symbol id="servidor-b" viewBox="0 0 20 20"><path d="M4.5 17.5V4a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1v13.5"/><path d="M13 8h2.5a1 1 0 0 1 1 1v8.5"/><path d="M2.5 17.5h15"/><path d="M7.5 6h2M7.5 9h2M7.5 12h2"/></symbol>
+    <symbol id="habilitar-b" viewBox="0 0 20 20"><path d="M10 2.5v6.5"/><path d="M6 5.3a6.3 6.3 0 1 0 8 0"/></symbol>
+  </defs>
+</svg>
+
+<h1>Rascunho 06 — Tema claro e menu Configurações</h1>
+<p class="subtitulo">
+  Funcionalidade 10. "Configurações de IA" vira <b>"Configurações"</b>, com duas seções, e a primeira
+  opção é a do <b>Tema</b>. As janelas aparecem na largura mínima do programa, 900 px, uma do lado da
+  outra: à esquerda o escuro de hoje, à direita o claro, com as cores do Gerencial. <b>O desenho é o
+  mesmo nas duas; só as cores mudam.</b> Numa tela estreita, a clara desce para debaixo da escura.
+</p>
+
+<!-- =========================================================== -->
+<h2>1. O submenu novo, com a tela do Tema aberta</h2>
+<p class="explica">
+  É o que aparece ao clicar em "Configurações": abre a primeira opção, o Tema. A escolha é gravada
+  no clique. Aqui, quem está no escuro e nunca escolheu nada; e, à direita, a mesma tela depois de
+  escolher o claro e reabrir.
+</p>
+<div class="par">
+  <div>
+    <div class="rotulo">Escuro</div>
+    <div class="janela escuro">
+      <div class="faixa">
+        <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+        <div class="item">‹ Voltar</div>
+        <div class="secao-sub">Configurações Gerais</div>
+        <div class="item marcado"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+        <div class="secao-sub">Configurações de IA</div>
+        <div class="item"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+        <div class="item"><svg class="ic"><use href="#servidor"/></svg>Servidor de IA Interno</div>
+        <div class="item"><svg class="ic"><use href="#habilitar"/></svg>Habilitar IA</div>
+      </div>
+      <div class="painel">
+        <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#engrenagem"/></svg></div><div><div class="t">Tema</div><div class="l">As cores do programa. O desenho das telas é o mesmo nos dois.</div></div></div>
+        <div class="corpo">
+          <div class="secao">TEMA</div>
+          <div class="radio"><span class="bola cheia"></span>Escuro</div>
+          <div class="expl">Fundo grafite e letra clara · <b>o tema de quem nunca escolheu</b></div>
+          <div class="radio"><span class="bola"></span>Claro</div>
+          <div class="expl">Fundo claro e letra escura</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="rotulo">Claro</div>
+    <div class="janela claro">
+      <div class="faixa">
+        <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+        <div class="item">‹ Voltar</div>
+        <div class="secao-sub">Configurações Gerais</div>
+        <div class="item marcado"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+        <div class="secao-sub">Configurações de IA</div>
+        <div class="item"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+        <div class="item"><svg class="ic"><use href="#servidor"/></svg>Servidor de IA Interno</div>
+        <div class="item"><svg class="ic"><use href="#habilitar"/></svg>Habilitar IA</div>
+      </div>
+      <div class="painel">
+        <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#engrenagem"/></svg></div><div><div class="t">Tema</div><div class="l">As cores do programa. O desenho das telas é o mesmo nos dois.</div></div></div>
+        <div class="corpo">
+          <div class="secao">TEMA</div>
+          <div class="radio"><span class="bola"></span>Escuro</div>
+          <div class="expl">Fundo grafite e letra clara · <b>o tema de quem nunca escolheu</b></div>
+          <div class="radio"><span class="bola cheia"></span>Claro</div>
+          <div class="expl">Fundo claro e letra escura</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="explica" style="margin-top:14px">
+  O <b>ícone do título</b> continua o da engrenagem, como nas três telas da IA: é o do módulo em que
+  a pessoa está (RN-14 da spec 001), e não o da opção. O ícone da opção fica no item da faixa.
+  O título de seção tem <b>13 px, em cinza, com o filete até a borda</b>; com o filete dos dois
+  lados, como no desenho do pedido, sobram só 10 px de cada lado na faixa de 220 px (veja a seção 3).
+</p>
+
+<!-- =========================================================== -->
+<h2>2. A tela do Tema, em cada situação</h2>
+<p class="explica">
+  Os quatro jeitos que a tela pode estar. Recortes só do painel; a faixa é a da seção 1.
+</p>
+
+<div class="rotulo">a) A escolha é diferente do tema que está na tela <span class="diz">a frase e o botão aparecem só aqui</span></div>
+<div class="par">
+  <div class="janela escuro baixa" style="width:680px"><div class="painel">
+    <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#engrenagem"/></svg></div><div><div class="t">Tema</div><div class="l">As cores do programa. O desenho das telas é o mesmo nos dois.</div></div></div>
+    <div class="corpo">
+      <div class="secao">TEMA</div>
+      <div class="radio"><span class="bola"></span>Escuro</div>
+      <div class="expl">Fundo grafite e letra clara · <b>o tema de quem nunca escolheu</b></div>
+      <div class="radio"><span class="bola cheia"></span>Claro</div>
+      <div class="expl">Fundo claro e letra escura</div>
+      <div class="aviso-reabrir"><span class="frase">O tema novo vale quando o programa abrir de novo.</span><span class="botao">Reabrir agora</span></div>
+    </div>
+  </div></div>
+  <div class="janela claro baixa" style="width:680px"><div class="painel">
+    <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#engrenagem"/></svg></div><div><div class="t">Tema</div><div class="l">As cores do programa. O desenho das telas é o mesmo nos dois.</div></div></div>
+    <div class="corpo">
+      <div class="secao">TEMA</div>
+      <div class="radio"><span class="bola cheia"></span>Escuro</div>
+      <div class="expl">Fundo grafite e letra clara · <b>o tema de quem nunca escolheu</b></div>
+      <div class="radio"><span class="bola"></span>Claro</div>
+      <div class="expl">Fundo claro e letra escura</div>
+      <div class="aviso-reabrir"><span class="frase">O tema novo vale quando o programa abrir de novo.</span><span class="botao">Reabrir agora</span></div>
+    </div>
+  </div></div>
+</div>
+<p class="explica" style="margin-top:10px">Marcar de volta o tema que está na tela faz a frase e o botão sumirem: não há nada a reabrir.</p>
+
+<div class="rotulo">b) Com uma leitura de PDF em andamento, depois do clique em "Reabrir agora"</div>
+<div class="par">
+  <div class="janela escuro baixa" style="width:680px"><div class="painel">
+    <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#engrenagem"/></svg></div><div><div class="t">Tema</div><div class="l">As cores do programa. O desenho das telas é o mesmo nos dois.</div></div></div>
+    <div class="corpo">
+      <div class="secao">TEMA</div>
+      <div class="radio"><span class="bola"></span>Escuro</div>
+      <div class="expl">Fundo grafite e letra clara · <b>o tema de quem nunca escolheu</b></div>
+      <div class="radio"><span class="bola cheia"></span>Claro</div>
+      <div class="expl">Fundo claro e letra escura</div>
+      <div class="faixa-aviso"><div class="t">Há uma leitura em andamento no Gerar OCR.</div>Reabrir agora a interrompe, e o documento precisa ser lido de novo depois.
+        <div class="botoes"><span class="botao pequeno">Continuar a leitura</span><span class="botao secundario pequeno">Reabrir mesmo assim</span></div></div>
+    </div>
+  </div></div>
+  <div class="janela claro baixa" style="width:680px"><div class="painel">
+    <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#engrenagem"/></svg></div><div><div class="t">Tema</div><div class="l">As cores do programa. O desenho das telas é o mesmo nos dois.</div></div></div>
+    <div class="corpo">
+      <div class="secao">TEMA</div>
+      <div class="radio"><span class="bola cheia"></span>Escuro</div>
+      <div class="expl">Fundo grafite e letra clara · <b>o tema de quem nunca escolheu</b></div>
+      <div class="radio"><span class="bola"></span>Claro</div>
+      <div class="expl">Fundo claro e letra escura</div>
+      <div class="faixa-aviso"><div class="t">Há uma leitura em andamento no Gerar OCR.</div>Reabrir agora a interrompe, e o documento precisa ser lido de novo depois.
+        <div class="botoes"><span class="botao pequeno">Continuar a leitura</span><span class="botao secundario pequeno">Reabrir mesmo assim</span></div></div>
+    </div>
+  </div></div>
+</div>
+<p class="explica" style="margin-top:10px">
+  O botão forte é o que <b>não perde nada</b>, como na pergunta da revisão. A pergunta toma o lugar
+  da frase e do botão, sem caixa por cima da janela. Com a leitura no Anonimizar, a frase diz
+  "no Anonimizar".
+</p>
+
+<div class="rotulo">c) e d) O tema igual ao da tela, e a revisão não salva</div>
+<p class="explica">
+  <b>c)</b> É a seção 1: só as duas opções, nada embaixo. <b>d)</b> A revisão não salva, na prática,
+  não chega até aqui: sair do Anonimizar com uma revisão aberta já pergunta antes (RN-2 da spec 004),
+  e quem descarta chega às Configurações sem revisão. A spec manda o "Reabrir agora" passar pela mesma
+  pergunta de quando se fecha a janela mesmo assim, para o caso de um caminho novo um dia levar até
+  aqui com a revisão aberta; ela aparece no Anonimizar, com o botão "Reabrir sem salvar".
+</p>
+
+<!-- =========================================================== -->
+<h2>3. Os ícones das opções: a proposta e a segunda opção</h2>
+<p class="explica">
+  Todos em traço, na grade de 20 × 20 da lupa e do cadeado, desenhados pelo programa. Cinza no item
+  normal, claro (ou escuro, no tema claro) no marcado, como os do menu principal. A linha de cima de
+  cada ícone é o tamanho de verdade; a de baixo, ampliada, para ver o traço.
+</p>
+<div class="par">
+  <div class="escuro" style="background:var(--fundo);padding:16px;border-radius:var(--raio);border:1px solid var(--borda)">
+    <div class="rotulo" style="margin-top:0">Escuro</div>
+    <div class="grade-ic">
+      <div></div><div class="cab">proposta</div><div class="cab">segunda opção</div><div class="cab">proposta, ampliada</div><div class="cab">segunda, ampliada</div>
+      <div class="nome" style="color:var(--texto)">Tema<small>metade cheio · sol com lua</small></div>
+      <div class="amostra-ic marcado"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#tema-b"/></svg>Tema</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#tema"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#tema-b"/></svg></div>
+      <div class="nome" style="color:var(--texto)">LM Studio<small>tela · chip</small></div>
+      <div class="amostra-ic"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#lmstudio-b"/></svg>LM Studio</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#lmstudio"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#lmstudio-b"/></svg></div>
+      <div class="nome" style="color:var(--texto)">Servidor de IA Interno<small>servidor · prédio</small></div>
+      <div class="amostra-ic"><svg class="ic"><use href="#servidor"/></svg>Servidor</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#servidor-b"/></svg>Servidor</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#servidor"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#servidor-b"/></svg></div>
+      <div class="nome" style="color:var(--texto)">Habilitar IA<small>chave · ligar</small></div>
+      <div class="amostra-ic"><svg class="ic"><use href="#habilitar"/></svg>Habilitar IA</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#habilitar-b"/></svg>Habilitar IA</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#habilitar"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#habilitar-b"/></svg></div>
+    </div>
+  </div>
+  <div class="claro" style="background:var(--fundo);padding:16px;border-radius:var(--raio);border:1px solid var(--borda)">
+    <div class="rotulo" style="margin-top:0;color:var(--sec)">Claro</div>
+    <div class="grade-ic">
+      <div></div><div class="cab" style="color:var(--sec)">proposta</div><div class="cab" style="color:var(--sec)">segunda opção</div><div class="cab" style="color:var(--sec)">proposta, ampliada</div><div class="cab" style="color:var(--sec)">segunda, ampliada</div>
+      <div class="nome" style="color:var(--texto)">Tema<small style="color:var(--sec)">metade cheio · sol com lua</small></div>
+      <div class="amostra-ic marcado"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#tema-b"/></svg>Tema</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#tema"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#tema-b"/></svg></div>
+      <div class="nome" style="color:var(--texto)">LM Studio<small style="color:var(--sec)">tela · chip</small></div>
+      <div class="amostra-ic"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#lmstudio-b"/></svg>LM Studio</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#lmstudio"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#lmstudio-b"/></svg></div>
+      <div class="nome" style="color:var(--texto)">Servidor de IA Interno<small style="color:var(--sec)">servidor · prédio</small></div>
+      <div class="amostra-ic"><svg class="ic"><use href="#servidor"/></svg>Servidor</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#servidor-b"/></svg>Servidor</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#servidor"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#servidor-b"/></svg></div>
+      <div class="nome" style="color:var(--texto)">Habilitar IA<small style="color:var(--sec)">chave · ligar</small></div>
+      <div class="amostra-ic"><svg class="ic"><use href="#habilitar"/></svg>Habilitar IA</div>
+      <div class="amostra-ic"><svg class="ic"><use href="#habilitar-b"/></svg>Habilitar IA</div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#habilitar"/></svg></div>
+      <div class="amostra-ic grande"><svg class="ic"><use href="#habilitar-b"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<div class="rotulo">O título de seção: filete só à direita (proposta) ou dos dois lados (como no pedido)</div>
+<div class="par">
+  <div class="escuro faixa" style="height:auto;border:1px solid var(--borda);border-radius:var(--raio)">
+    <div class="secao-sub">Configurações Gerais</div>
+    <div class="item"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+    <div class="secao-sub">Configurações de IA</div>
+    <div class="item"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+  </div>
+  <div class="escuro faixa" style="height:auto;border:1px solid var(--borda);border-radius:var(--raio)">
+    <div class="secao-sub dos-dois-lados">Configurações Gerais</div>
+    <div class="item"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+    <div class="secao-sub dos-dois-lados">Configurações de IA</div>
+    <div class="item"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+  </div>
+  <div class="claro faixa" style="height:auto;border:1px solid var(--borda);border-radius:var(--raio)">
+    <div class="secao-sub">Configurações Gerais</div>
+    <div class="item"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+    <div class="secao-sub">Configurações de IA</div>
+    <div class="item"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+  </div>
+  <div class="claro faixa" style="height:auto;border:1px solid var(--borda);border-radius:var(--raio)">
+    <div class="secao-sub dos-dois-lados">Configurações Gerais</div>
+    <div class="item"><svg class="ic"><use href="#tema"/></svg>Tema</div>
+    <div class="secao-sub dos-dois-lados">Configurações de IA</div>
+    <div class="item"><svg class="ic"><use href="#lmstudio"/></svg>LM Studio</div>
+  </div>
+</div>
+
+<!-- =========================================================== -->
+<h2>4. As outras telas, nos dois temas</h2>
+<p class="explica">
+  As telas de hoje, sem mudar nada além da cor. A faixa principal já com o item renomeado para
+  "Configurações".
+</p>
+
+<div class="rotulo">Entrada do Gerar OCR <span class="diz">com a "IA local" apagada e o mouse passando sobre "Anonimizar"</span></div>
+<div class="par">
+  <div class="janela escuro baixa">
+    <div class="faixa">
+      <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+      <div class="item marcado"><svg class="ic"><use href="#lupa"/></svg>Gerar OCR</div>
+      <div class="item passando"><svg class="ic"><use href="#cadeado"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><svg class="ic"><use href="#engrenagem"/></svg>Configurações</div>
+    </div>
+    <div class="painel">
+      <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#lupa"/></svg></div><div><div class="t">Gerar OCR</div><div class="l">Converte documento digitalizado em texto para conferência.</div></div></div>
+      <div class="corpo">
+        <div class="soltar"><div class="grande">Arraste o PDF aqui</div><div class="ou">ou</div><span class="botao">Escolher arquivo…</span></div>
+        <div class="secao">MOTOR DE LEITURA</div>
+        <div class="radio"><span class="bola cheia"></span>PaddleOCR (nesta máquina)</div>
+        <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+        <div class="radio apagado"><span class="bola"></span>IA local (LM Studio)</div>
+        <div class="expl">Ligue em Configurações, em "Habilitar IA".</div>
+      </div>
+    </div>
+  </div>
+  <div class="janela claro baixa">
+    <div class="faixa">
+      <div class="cabeca-app"><div class="simbolo"><svg><use href="#simbolo"/></svg></div><div><div class="nome-app">Anonimizador</div><div class="sub">CAPCF · versão 0.1.0</div></div></div>
+      <div class="item marcado"><svg class="ic"><use href="#lupa"/></svg>Gerar OCR</div>
+      <div class="item passando"><svg class="ic"><use href="#cadeado"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><svg class="ic"><use href="#engrenagem"/></svg>Configurações</div>
+    </div>
+    <div class="painel">
+      <div class="cab-mod"><div class="caixa-ic"><svg class="ic"><use href="#lupa"/></svg></div><div><div class="t">Gerar OCR</div><div class="l">Converte documento digitalizado em texto para conferência.</div></div></div>
+      <div class="corpo">
+        <div class="soltar"><div class="grande">Arraste o PDF aqui</div><div class="ou">ou</div><span class="botao">Escolher arquivo…</span></div>
+        <div class="secao">MOTOR DE LEITURA</div>
+        <div class="radio"><span class="bola cheia"></span>PaddleOCR (nesta máquina)</div>
+        <div class="expl">Melhor resultado, inclusive em tabela e página escaneada ruim · <b>cerca de 2 segundos por página</b></div>
+        <div class="radio apagado"><span class="bola"></span>IA local (LM Studio)</div>
+        <div class="expl">Ligue em Configurações, em "Habilitar IA".</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="rotulo">A revisão do Anonimizar <span class="diz">as cores de significado: é aqui que o tema claro mais pesa</span></div>
+<div class="par">
+  <div class="janela escuro" style="width:680px;height:auto"><div class="painel">
+    <div class="corpo">
+      <div class="selos">
+        <span class="selo" style="color:var(--erro-txt)">3 CPF válido</span>
+        <span class="selo aceso" style="color:var(--alerta-txt)">2 suspeitos</span>
+        <span class="selo" style="color:var(--ia)">1 apontado pela IA</span>
+        <span class="selo" style="color:var(--suc)">1 liberado por você</span>
+      </div>
+      <div class="texto-doc">
+        Termo de outorga nº 0418/2026<br>
+        Bolsista: CPF <span class="m valido">XXX.517.204-XX</span>, matrícula 2026.0193<br>
+        Coordenadora: CPF <span class="m valido">XXX.862.390-XX</span><br>
+        Testemunha: CPF <span class="m suspeito">406.381.29-17</span><br>
+        Processo <span class="m liberado">23080.012345</span>, telefone <span class="m suspeito">4800001234</span><br>
+        Anexo: <span class="m ia">XXX.30I.448-XX</span> · rubrica <span class="m mao">XXX.XXX</span>
+      </div>
+      <div class="chave">
+        <span><span class="m valido">XXX</span> CPF válido</span>
+        <span><span class="m suspeito">XXX</span> suspeito</span>
+        <span><span class="m ia">XXX</span> apontado pela IA</span>
+        <span><span class="m liberado">XXX</span> liberado</span>
+        <span><span class="m mao">XXX</span> mascarado por você</span>
+      </div>
+      <div class="faixa-aviso"><div class="t">Este texto veio de OCR</div>Confira cada número suspeito antes de salvar.</div>
+      <div class="faixa-aviso erro"><div class="t">Não deu para gravar o arquivo</div>A pasta escolhida não aceita gravação.</div>
+    </div>
+  </div></div>
+  <div class="janela claro" style="width:680px;height:auto"><div class="painel">
+    <div class="corpo">
+      <div class="selos">
+        <span class="selo" style="color:var(--erro-txt)">3 CPF válido</span>
+        <span class="selo aceso" style="color:var(--alerta-txt)">2 suspeitos</span>
+        <span class="selo" style="color:var(--ia)">1 apontado pela IA</span>
+        <span class="selo" style="color:var(--suc)">1 liberado por você</span>
+      </div>
+      <div class="texto-doc">
+        Termo de outorga nº 0418/2026<br>
+        Bolsista: CPF <span class="m valido">XXX.517.204-XX</span>, matrícula 2026.0193<br>
+        Coordenadora: CPF <span class="m valido">XXX.862.390-XX</span><br>
+        Testemunha: CPF <span class="m suspeito">406.381.29-17</span><br>
+        Processo <span class="m liberado">23080.012345</span>, telefone <span class="m suspeito">4800001234</span><br>
+        Anexo: <span class="m ia">XXX.30I.448-XX</span> · rubrica <span class="m mao">XXX.XXX</span>
+      </div>
+      <div class="chave">
+        <span><span class="m valido">XXX</span> CPF válido</span>
+        <span><span class="m suspeito">XXX</span> suspeito</span>
+        <span><span class="m ia">XXX</span> apontado pela IA</span>
+        <span><span class="m liberado">XXX</span> liberado</span>
+        <span><span class="m mao">XXX</span> mascarado por você</span>
+      </div>
+      <div class="faixa-aviso"><div class="t">Este texto veio de OCR</div>Confira cada número suspeito antes de salvar.</div>
+      <div class="faixa-aviso erro"><div class="t">Não deu para gravar o arquivo</div>A pasta escolhida não aceita gravação.</div>
+    </div>
+  </div></div>
+</div>
+<p class="explica" style="margin-top:10px">
+  Números inventados. O traço continua separando os tipos para quem não distingue bem as cores: reto,
+  ondulado, tracejado, pontilhado e, no programa, traço-ponto para a IA (o navegador não desenha
+  traço-ponto, então aqui ele sai tracejado).
+</p>
+
+<div class="rotulo">A conferência do Gerar OCR <span class="diz">o fundo atrás da página, mais escuro que o da janela</span></div>
+<div class="par">
+  <div class="janela escuro baixa" style="width:680px;height:280px"><div class="painel"><div class="conferencia">
+    <div class="atras-pdf"><div class="folha-pdf"><div></div><div style="width:70%"></div><div></div><div style="width:85%"></div><div style="width:60%"></div></div></div>
+    <div class="lado-texto"><span class="etiqueta-pdf">VEIO DO PRÓPRIO PDF</span><br>Termo de outorga nº 0418/2026<br>Bolsista: CPF 123.456.789-10<br>Coordenadora: CPF ...</div>
+  </div></div></div>
+  <div class="janela claro baixa" style="width:680px;height:280px"><div class="painel"><div class="conferencia">
+    <div class="atras-pdf"><div class="folha-pdf"><div></div><div style="width:70%"></div><div></div><div style="width:85%"></div><div style="width:60%"></div></div></div>
+    <div class="lado-texto"><span class="etiqueta-pdf">VEIO DO PRÓPRIO PDF</span><br>Termo de outorga nº 0418/2026<br>Bolsista: CPF 123.456.789-10<br>Coordenadora: CPF ...</div>
+  </div></div></div>
+</div>
+
+<!-- =========================================================== -->
+<h2>5. Os dois valores de cada papel</h2>
+<p class="explica">
+  O contraste é contra o fundo da faixa e dos quadros. Para letra pequena, o mínimo é 4,5 para 1.
+  Em <span class="novo">amarelo</span>, o que foi escolhido aqui: ou o Gerencial não tem esse papel, ou o
+  valor dele não serve como letra.
+</p>
+<table class="cores">
+  <tr><th>Papel</th><th>Escuro (hoje)</th><th>Claro</th><th>Contraste no claro</th><th>De onde vem o claro</th></tr>
+  <tr><td>Fundo da janela</td><td><span class="pinta" style="background:#1e2228"></span><code>#1e2228</code></td><td><span class="pinta" style="background:#f2f4f7"></span><code>#f2f4f7</code></td><td>—</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Fundo da faixa e dos quadros</td><td><span class="pinta" style="background:#262b33"></span><code>#262b33</code></td><td><span class="pinta" style="background:#fbfcfd"></span><code>#fbfcfd</code></td><td>—</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Borda e divisória</td><td><span class="pinta" style="background:#383e47"></span><code>#383e47</code></td><td><span class="pinta" style="background:#c9d0d8"></span><code>#c9d0d8</code></td><td>—</td><td class="origem">do Gerencial (o cinza mais claro dele some no contorno de campo)</td></tr>
+  <tr><td>Texto</td><td><span class="pinta" style="background:#e8eaed"></span><code>#e8eaed</code></td><td><span class="pinta" style="background:#16202b"></span><code>#16202b</code></td><td>16 para 1</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Texto secundário</td><td><span class="pinta" style="background:#9aa1ac"></span><code>#9aa1ac</code></td><td><span class="pinta" style="background:#4a5868"></span><code>#4a5868</code></td><td>7,1 para 1</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Texto apagado (opção desligada)</td><td><span class="pinta" style="background:#6c737d"></span><code>#6c737d</code></td><td><span class="pinta" style="background:#8a96a3"></span><code>#8a96a3</code></td><td>2,9 para 1</td><td class="origem"><span class="novo">o papel, escolhido aqui</span>, com um cinza do Gerencial — apagado de propósito, como no escuro (3,6 para 1)</td></tr>
+  <tr><td>Destaque (botão, item marcado)</td><td><span class="pinta" style="background:#3b6ea5"></span><code>#3b6ea5</code></td><td><span class="pinta" style="background:#1f4e8c"></span><code>#1f4e8c</code></td><td>8,1 para 1; letra branca dentro, 8,3</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Destaque vivo (passar o mouse, filete, bolinha, "mascarado por você")</td><td><span class="pinta" style="background:#4f86bf"></span><code>#4f86bf</code></td><td><span class="pinta" style="background:#2a6fc9"></span><code>#2a6fc9</code></td><td>4,8 para 1</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Fundo do item marcado e do ícone do título</td><td><code>#3b6ea5</code> a 24%</td><td><code>#1f4e8c</code> a 10%</td><td>texto dentro, 13 para 1</td><td class="origem"><span class="novo">a força, escolhida aqui</span>: o azul-marinho é mais forte que o azul do escuro</td></tr>
+  <tr><td>Passar o mouse num item</td><td>branco a 6%</td><td><code>#16202b</code> a 6%</td><td>—</td><td class="origem"><span class="novo">escolhido aqui</span></td></tr>
+  <tr><td>Liberado, deu certo</td><td><span class="pinta" style="background:#4caf6d"></span><code>#4caf6d</code></td><td><span class="pinta" style="background:#1f7a3a"></span><code>#1f7a3a</code></td><td>5,2 para 1</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Alerta: fundo e borda de aviso</td><td><span class="pinta" style="background:#d9a441"></span><code>#d9a441</code></td><td><span class="pinta" style="background:#c2aa07"></span><code>#c2aa07</code></td><td>só fundo, nunca letra</td><td class="origem">do Gerencial, que o usa só como fundo</td></tr>
+  <tr><td><b>Alerta: letra (suspeito)</b> — papel novo</td><td><code>#d9a441</code>, o mesmo</td><td><span class="pinta" style="background:#7a5c00"></span><code>#7a5c00</code></td><td>6,1 para 1</td><td class="origem"><span class="novo">escolhido com você</span> (R-5 do mapa)</td></tr>
+  <tr><td>Erro: fundo e borda</td><td><span class="pinta" style="background:#d9534f"></span><code>#d9534f</code></td><td><span class="pinta" style="background:#b3261e"></span><code>#b3261e</code></td><td>6,4 para 1</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Erro: letra (CPF válido)</td><td><span class="pinta" style="background:#f08a86"></span><code>#f08a86</code></td><td><span class="pinta" style="background:#b3261e"></span><code>#b3261e</code></td><td>6,4 para 1</td><td class="origem">do Gerencial: no claro, o mesmo serve para os dois</td></tr>
+  <tr><td>IA</td><td><span class="pinta" style="background:#b39ddb"></span><code>#b39ddb</code></td><td><span class="pinta" style="background:#7356c8"></span><code>#7356c8</code></td><td>5,3 para 1</td><td class="origem">do Gerencial</td></tr>
+  <tr><td>Atrás da página do PDF</td><td><span class="pinta" style="background:#0f1216"></span><code>#0f1216</code></td><td><span class="pinta" style="background:#c9d0d8"></span><code>#c9d0d8</code></td><td>—</td><td class="origem">do Gerencial; mais escuro que o fundo (I-9 do mapa)</td></tr>
+</table>
+
+<div class="notas">
+  <ul>
+    <li><b>O que escolher nesta página</b>: os quatro ícones (proposta ou segunda opção, um por um), o
+    filete do título de seção (só à direita ou dos dois lados) e se algum tom do claro incomoda. O resto
+    é o que já foi combinado.</li>
+    <li><b>Por que recomendo as propostas</b>: o círculo metade cheio não puxa para nenhum dos dois
+    temas; a tela de computador diz "nesta máquina", que é o que o LM Studio é aqui; as caixas empilhadas
+    são o desenho comum de servidor, e o prédio confunde com "universidade"; e a chave repete a peça que a
+    própria tela de Habilitar IA usa, enquanto o símbolo de ligar parece "desligar o programa".</li>
+    <li><b>Filete só à direita</b>: com ele dos dois lados, "Configurações Gerais" deixa 10 px de cada lado
+    na faixa de 220 px, e o título parece espremido; à direita, o filete corre até a borda e separa as
+    seções do mesmo jeito.</li>
+    <li><b>O que continua igual</b>: o desenho, os tamanhos, os espaços, as fontes e os textos de toda
+    tela; o símbolo do programa (azul com o desenho branco); a barra de título do Windows; o arquivo
+    <code>.md</code> gravado.</li>
+    <li><b>O que só a tela de verdade mostra</b>: a barra de rolagem e as caixas do Windows (escolher
+    arquivo, mensagens), que o programa não pinta. Confiro na primeira etapa construída, e o que destoar
+    no claro volta para você.</li>
+  </ul>
+</div>
+
+</body>
+</html>

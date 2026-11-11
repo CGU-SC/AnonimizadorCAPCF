@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 10 — Falta o motor de leitura (Gerar OCR)</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #14171c;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); max-width: 760px; }
+
+  .rotulo-estado {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    margin: var(--espaco-5) 0 var(--espaco-2) 0;
+  }
+  .rotulo-estado .quando {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--cor-texto-secundario);
+  }
+  .rotulo-estado .depois {
+    display: inline-block;
+    background: rgba(217,164,65,0.15);
+    color: var(--cor-alerta);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: var(--espaco-2);
+    font-weight: 700;
+  }
+  .nota {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    max-width: 900px;
+    margin-top: var(--espaco-2);
+  }
+
+  /* janela simulada do programa */
+  .janela {
+    display: flex;
+    width: 100%;
+    max-width: 900px;
+    height: 520px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .menu-lateral {
+    width: 220px;
+    flex: 0 0 220px;
+    background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda);
+    padding: var(--espaco-4) 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-nome-programa {
+    padding: 0 var(--espaco-3) var(--espaco-4) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-grande);
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: var(--espaco-3);
+  }
+  .menu-item {
+    padding: var(--espaco-3);
+    margin: 0 var(--espaco-2);
+    border-radius: var(--raio);
+    color: var(--cor-texto-secundario);
+    cursor: default;
+    font-size: var(--texto-base);
+  }
+  .menu-item.ativo {
+    background: var(--cor-destaque);
+    color: #fff;
+    font-weight: 600;
+  }
+  .painel-principal {
+    flex: 1;
+    background: var(--cor-fundo);
+    padding: var(--espaco-4) var(--espaco-5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .painel-centrado {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .titulo-modulo {
+    font-size: var(--texto-grande);
+    font-weight: 600;
+    margin-bottom: var(--espaco-1);
+  }
+  .legenda-modulo {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-4);
+  }
+
+  /* area de largar o arquivo */
+  .area-arrastar {
+    border: 2px dashed var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-5) var(--espaco-4);
+    text-align: center;
+    background: rgba(255,255,255,0.015);
+  }
+  .area-arrastar .icone { font-size: 34px; opacity: 0.5; margin-bottom: var(--espaco-2); }
+  .area-arrastar .chamada { font-size: var(--texto-grande); margin-bottom: var(--espaco-1); }
+  .area-arrastar .ou {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin: var(--espaco-3) 0;
+  }
+
+  .botao {
+    display: inline-block;
+    background: var(--cor-destaque);
+    color: #fff;
+    border: none;
+    border-radius: var(--raio);
+    padding: 10px 18px;
+    font-size: var(--texto-base);
+    font-family: inherit;
+    font-weight: 600;
+    cursor: default;
+  }
+  .botao.secundario {
+    background: transparent;
+    color: var(--cor-texto-secundario);
+    border: 1px solid var(--cor-borda);
+    font-weight: 400;
+  }
+  .botao.apagado {
+    background: var(--cor-fundo-elevado);
+    color: #5d646e;
+    border: 1px solid var(--cor-borda);
+    font-weight: 400;
+  }
+
+  /* escolha do motor */
+  .motor { margin-top: var(--espaco-4); }
+  .motor-titulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+    margin-bottom: var(--espaco-2);
+  }
+  .motor-opcao {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--espaco-2);
+    padding: var(--espaco-2) 0;
+  }
+  .bolinha {
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    border: 2px solid var(--cor-texto-secundario);
+    flex: 0 0 15px;
+    margin-top: 3px;
+  }
+  .bolinha.marcada {
+    border-color: var(--cor-destaque);
+    background:
+      radial-gradient(circle, var(--cor-destaque) 0 4px, transparent 5px);
+  }
+  .bolinha.apagada { border-color: #4a5058; }
+  .motor-opcao .rotulo { font-size: var(--texto-base); }
+  .motor-opcao.desligada .rotulo { color: #6c737d; }
+  .motor-opcao .explica {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-top: 2px;
+  }
+
+  /* ficha do documento escolhido */
+  .ficha {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .ficha .nome-arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-base);
+    margin-bottom: var(--espaco-3);
+    word-break: break-all;
+  }
+  .ficha-linha {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--espaco-2) 0;
+    border-top: 1px solid var(--cor-borda);
+    font-size: var(--texto-pequeno);
+  }
+  .ficha-linha .chave { color: var(--cor-texto-secundario); }
+  .ficha-linha .valor { font-weight: 600; }
+  .valor.alerta { color: var(--cor-alerta); }
+  .valor.sucesso { color: var(--cor-sucesso); }
+
+  .acoes { display: flex; gap: var(--espaco-3); align-items: center; }
+
+  /* carregando */
+  .barra-fina {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--cor-borda);
+    overflow: hidden;
+    margin-top: var(--espaco-3);
+    width: 260px;
+  }
+  .barra-fina .pedaco {
+    width: 40%;
+    height: 100%;
+    background: var(--cor-destaque);
+    border-radius: 2px;
+  }
+
+  /* erro */
+  .caixa-erro {
+    border-left: 4px solid var(--cor-erro);
+    background: rgba(217,83,79,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    text-align: left;
+    max-width: 460px;
+    margin-bottom: var(--espaco-4);
+  }
+  .caixa-erro .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .caixa-erro .texto { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+
+  /* aviso de motor faltando, no alto do painel */
+  .faixa-aviso {
+    border: 1px solid var(--cor-alerta);
+    background: rgba(217,164,65,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    margin-bottom: var(--espaco-4);
+  }
+  .faixa-aviso .titulo {
+    font-weight: 600;
+    color: var(--cor-alerta);
+    margin-bottom: var(--espaco-1);
+    font-size: var(--texto-pequeno);
+  }
+  .faixa-aviso .texto {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-3);
+  }
+  .faixa-aviso .acoes { gap: var(--espaco-2); }
+  .faixa-aviso .botao { padding: 6px 12px; font-size: var(--texto-pequeno); }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+    max-width: 900px;
+  }
+  .rodape code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo-elevado);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 10 — Falta o motor de leitura</h1>
+<p class="subtitulo">
+  A etapa 7 de 7, a última. Numa máquina sem o Tesseract, o aviso aparece no alto
+  <strong>já com o que fazer</strong> — sem a pessoa precisar escolher um
+  documento para descobrir que falta uma peça. O primeiro bloco é o desenho que
+  você já aprovou no rascunho 03; os outros três são novos.
+</p>
+
+<div class="rotulo-estado">Estado 1 — falta o motor, e o instalador está na pasta <span class="quando">· já aprovado no rascunho 03</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="faixa-aviso">
+      <div class="titulo">O motor de leitura não foi encontrado nesta máquina</div>
+      <div class="texto">
+        Documento escaneado não vai funcionar até isto ser resolvido. Documento
+        que já tem texto por dentro continua funcionando normalmente.
+      </div>
+      <div class="acoes">
+        <button class="botao">Instalar agora</button>
+        <button class="botao secundario">Conferir de novo</button>
+        <button class="botao secundario">Apontar a pasta…</button>
+      </div>
+    </div>
+    <div class="area-arrastar">
+      <div class="icone">📄</div>
+      <div class="chamada">Arraste o PDF aqui</div>
+      <div class="ou">ou</div>
+      <button class="botao">Escolher arquivo…</button>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  "Instalar agora" abre o instalador que está na pasta <code>instaladores</code>,
+  ao lado do programa. <strong>O Windows vai pedir uma confirmação</strong> — e
+  é a pessoa que clica nela, nunca o programa. Terminada a instalação, "conferir
+  de novo" faz o aviso sumir, sem fechar o programa.
+</p>
+
+<div class="rotulo-estado">Estado 2 — falta o motor, e não há instalador <span class="quando">· novo</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="faixa-aviso">
+      <div class="titulo">O motor de leitura não foi encontrado nesta máquina</div>
+      <div class="texto">
+        Documento escaneado não vai funcionar até isto ser resolvido. Documento
+        que já tem texto por dentro continua funcionando normalmente.
+      </div>
+      <div class="texto" style="color: var(--cor-texto);">
+        <strong>O instalador não está nesta máquina.</strong> Peça à TI da UFSC
+        para instalar o Tesseract com o pacote de português. Se ele já estiver
+        instalado em outra pasta, use "apontar a pasta".
+      </div>
+      <div class="acoes">
+        <button class="botao apagado">Instalar agora</button>
+        <button class="botao secundario">Conferir de novo</button>
+        <button class="botao secundario">Apontar a pasta…</button>
+      </div>
+    </div>
+    <div class="area-arrastar">
+      <div class="icone">📄</div>
+      <div class="chamada">Arraste o PDF aqui</div>
+      <div class="ou">ou</div>
+      <button class="botao">Escolher arquivo…</button>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  O botão de instalar <strong>aparece apagado, não some</strong> — é assim que
+  a pessoa entende que instalar é possível, só que o instalador não veio junto.
+  <strong>Não há link de download</strong>: o programa não tem nenhum endereço de
+  internet, e é isso que permite provar, numa busca só, que ele nunca fala com a
+  internet. O link fica no documento de instalação da TI.
+</p>
+
+<div class="rotulo-estado">Estado 3 — a pessoa ignorou o aviso e mandou ler um escaneado <span class="quando">· novo, é o critério 17</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal painel-centrado">
+    <div style="max-width: 480px;">
+      <div class="caixa-erro" style="max-width: 480px;">
+        <div class="titulo">Este documento precisa do motor de leitura</div>
+        <div class="texto">
+          O <strong>02-imprimir-para-pdf.pdf</strong> não tem texto por dentro —
+          ele só pode ser lido pelo Tesseract, que não foi encontrado nesta
+          máquina.
+        </div>
+      </div>
+      <div class="acoes" style="justify-content: center; flex-wrap: wrap;">
+        <button class="botao">Instalar agora</button>
+        <button class="botao secundario">Conferir de novo</button>
+        <button class="botao secundario">Apontar a pasta…</button>
+      </div>
+      <div style="margin-top: var(--espaco-3);">
+        <button class="botao secundario">Escolher outro documento</button>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  A tela cheia repete a explicação e <strong>as mesmas três saídas</strong> do
+  aviso — agora sem ter o que fazer além disso. É o que a spec pede: quem ignorou
+  o aviso do alto não fica sem saber por que o documento não abre.
+</p>
+
+<div class="rotulo-estado">Estado 4 — a pasta apontada não tem o Tesseract <span class="quando">· novo, caminho torto</span></div>
+<div class="janela">
+  <div class="menu-lateral">
+    <div class="menu-nome-programa">AnomizadorCAPCF</div>
+    <div class="menu-item ativo">Gerar OCR</div>
+    <div class="menu-item">Anonimizar</div>
+  </div>
+  <div class="painel-principal">
+    <div class="faixa-aviso">
+      <div class="titulo">O motor de leitura não foi encontrado nesta máquina</div>
+      <div class="texto" style="color: var(--cor-erro);">
+        A pasta <code>C:\Programas\OCR</code> não tem o Tesseract. Procure a
+        pasta onde está o arquivo <code>tesseract.exe</code>.
+      </div>
+      <div class="acoes">
+        <button class="botao">Instalar agora</button>
+        <button class="botao secundario">Conferir de novo</button>
+        <button class="botao secundario">Apontar a pasta…</button>
+      </div>
+    </div>
+    <div class="area-arrastar">
+      <div class="icone">📄</div>
+      <div class="chamada">Arraste o PDF aqui</div>
+      <div class="ou">ou</div>
+      <button class="botao">Escolher arquivo…</button>
+    </div>
+  </div>
+</div>
+<p class="nota">
+  Apontar uma pasta errada <strong>não faz o aviso sumir</strong> — ele continua,
+  com uma frase dizendo o que houve. Apontando a certa, o aviso some e vale até o
+  programa fechar. Para valer sempre naquela máquina, a TI grava o caminho no
+  <code>.env</code> da instalação, na variável <code>TESSERACT_CAMINHO</code>.
+</p>
+
+<p class="rodape">
+  Rascunho gerado pela skill-07-designer-de-telas em 12/09/2026, a partir do
+  rascunho aprovado <code>mockups/ocr/03-escolher-o-documento.html</code>, que já
+  trazia o estado 1. As pastas mostradas são inventadas.
+</p>
+
+</body>
+</html>

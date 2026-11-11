@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa do entendimento — Lembrar as escolhas</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 900px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .contagens { display: flex; gap: var(--espaco-3); margin-bottom: var(--espaco-5); flex-wrap: wrap; }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 140px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-inferido .contagem-numero { color: var(--cor-alerta); }
+  .c-respondido .contagem-numero { color: var(--cor-sucesso); }
+  .c-aberto .contagem-numero { color: var(--cor-texto-secundario); }
+
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .explica-secao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: calc(-1 * var(--espaco-2)) 0 var(--espaco-3) 0; }
+  .marca { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .marca-inferido { background: var(--cor-alerta); }
+  .marca-respondido { background: var(--cor-sucesso); }
+  .marca-aberto { background: var(--cor-texto-secundario); }
+
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao.inferido { border-left-color: var(--cor-alerta); }
+  .cartao.aberto { border-left-color: var(--cor-texto-secundario); }
+  .cartao-titulo { font-weight: 600; margin-bottom: var(--espaco-2); display: flex; align-items: baseline; gap: var(--espaco-2); flex-wrap: wrap; }
+  .numero { font-family: var(--fonte-mono); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); font-weight: 400; }
+  .dimensao { margin-left: auto; font-size: var(--texto-pequeno); font-weight: 400; color: var(--cor-texto-secundario); white-space: nowrap; }
+  .cartao-texto { color: var(--cor-texto); }
+  .selo-premissa {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(217,164,65,0.15); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+
+  /* a tabela de exemplos: como o número está escrito e como sai */
+  table.exemplos { border-collapse: collapse; margin-top: var(--espaco-3); width: 100%; font-size: var(--texto-pequeno); }
+  table.exemplos th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: var(--espaco-1) var(--espaco-3) var(--espaco-1) 0; border-bottom: 1px solid var(--cor-borda); }
+  table.exemplos td { padding: var(--espaco-2) var(--espaco-3) var(--espaco-2) 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  table.exemplos td.mono { font-family: var(--fonte-mono); white-space: pre; }
+  .nota-exemplo { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: var(--espaco-2); }
+
+  /* a linha da lista da revisão, com a etiqueta nova ao lado */
+  .linha-lista {
+    margin-top: var(--espaco-3);
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2); flex-wrap: wrap;
+  }
+  .linha-lista .num { font-family: var(--fonte-mono); color: var(--cor-erro-texto); text-decoration: underline; text-underline-offset: 3px; }
+  .etiqueta {
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 1px 8px; border-radius: 10px;
+    color: var(--cor-erro-texto); background: rgba(240,138,134,0.13);
+  }
+  .etiqueta.nova { outline: 1px dashed var(--cor-erro-texto); }
+
+  .medicao { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--espaco-2); margin-top: var(--espaco-3); }
+  .medida { background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); }
+  .medida strong { display: block; font-size: var(--texto-grande); color: var(--cor-texto); }
+
+  .fora { margin-top: var(--espaco-5); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+  .fora h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .fora ul { margin: 0; padding-left: 20px; color: var(--cor-texto-secundario); }
+  .fora li { margin-bottom: var(--espaco-1); }
+  .rodape { margin-top: var(--espaco-4); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+
+  /* o pedaço do .md gerado, como texto de largura fixa */
+  pre.md {
+    margin: var(--espaco-3) 0 0 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    font-family: var(--fonte-mono); font-size: var(--texto-pequeno);
+    white-space: pre; overflow-x: auto;
+  }
+  /* a faixa dos avisos na revisão: amarela, porque nada falhou */
+  .faixa {
+    margin-top: var(--espaco-3);
+    border: 1px solid var(--cor-alerta);
+    background: rgba(217,164,65,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    font-size: var(--texto-pequeno);
+  }
+  .faixa div + div { margin-top: var(--espaco-1); }
+  .cartao-texto ul { margin: var(--espaco-2) 0 0 0; padding-left: 20px; }
+  .cartao-texto li + li { margin-top: var(--espaco-1); }
+  @media (max-width: 600px) {
+    body { padding: var(--espaco-3); }
+    .dimensao { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Mapa do entendimento — Lembrar as escolhas</h1>
+<p class="subtitulo">Funcionalidade 8 do backlog: levantamento fechado em 28/10/2026, no nível detalhado. Vira uma
+emenda da spec 002 (a RN-22 e a RN-26), uma da spec 003 (a RN-19) e uma da spec 001 (a janela). Ainda não foi
+escrita nem construída, então o que está aqui ainda se corrige de graça.</p>
+
+<div class="contagens">
+  <div class="contagem-item c-inferido">
+    <div class="contagem-numero">7</div>
+    <div class="contagem-label">inferido por mim: vira premissa se você não derrubar</div>
+  </div>
+  <div class="contagem-item c-respondido">
+    <div class="contagem-numero">7</div>
+    <div class="contagem-label">respondido por você</div>
+  </div>
+  <div class="contagem-item c-aberto">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">em aberto, e não muda o que o programa faz</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Inferido por mim: confirme ou derrube</h2>
+<p class="explica-secao">Ninguém perguntou estes. Eu deduzi do que você respondeu, das specs ou do código de hoje.
+Diga o número de qualquer um que não seja assim.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-2</span> Cada pessoa tem a sua escolha <span class="dimensao">quem usa</span></div>
+    <div class="cartao-texto">A instalação é de uma pessoa só, na pasta de programas dela: o que o programa lembra é dela.
+    Ninguém do núcleo herda a escolha de outra pessoa.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-3</span> Nada do trabalho é lembrado <span class="dimensao">retenção e privacidade</span></div>
+    <div class="cartao-texto">Documento, texto lido, pasta usada, histórico e achados continuam proibidos de ficar
+    guardados (RN-19 e RN-22). As emendas separam isso da escolha da pessoa, que passa a poder ficar.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-4</span> O zoom da conferência continua não lembrado <span class="dimensao">fora de escopo</span></div>
+    <div class="cartao-texto">Como hoje (RN-23 da spec 002): ele vale enquanto o programa está aberto.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-5</span> Escolha que não dá para ler volta ao padrão <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Se o lugar da escolha sumiu, foi apagado, ou ficou estragado, o programa abre com o
+    PaddleOCR marcado, como hoje, sem erro e sem aviso. Se não der para gravar (pasta protegida), a escolha vale até
+    fechar, também sem aviso: perder a lembrança não estraga nenhum documento.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-6</span> Desenvolvimento e testes não se misturam com o uso <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">A escolha guardada nesta máquina de desenvolvimento fica fora do histórico, e os testes
+    usam uma escolha própria, isolada: um teste nunca herda o que outro (ou você, abrindo o programa) marcou.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-7</span> A IA local entra depois, no mesmo lugar <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Quando a funcionalidade 4 existir, a escolha da IA local passa a ser lembrada do mesmo
+    jeito. A senha dela continua morando no <code>.env</code>, como manda a regra dura do projeto.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-8</span> Desinstalar leva a escolha junto <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">Quem desinstala e instala de novo começa do padrão. Atualizar para uma versão nova, sem
+    desinstalar, mantém a escolha.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+</div>
+
+<h2><span class="marca marca-respondido"></span>Respondido por você</h2>
+<div class="cartoes">
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-1</span> O que é lembrado: o motor de leitura <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">De um uso para o outro, o programa lembra o motor marcado, em vez de voltar ao PaddleOCR a
+    cada vez que abre. A configuração da IA local entra quando a funcionalidade 4 existir.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-2</span> A janela abre maximizada no primeiro uso <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Pedido junto, em 28/10/2026: o programa passa a abrir com a janela maximizada, ocupando a
+    tela. Hoje ela abre com 1000 × 640.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-7</span> A janela lembra o tamanho e se estava maximizada <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Já que a escolha vai ficar guardada, a janela também: fechou maximizada, abre maximizada;
+    fechou com 1200 × 800, abre com 1200 × 800. A posição não é lembrada: ela abre no meio da tela, e assim nunca
+    abre fora dela (o caso de quem fechou num segundo monitor que não está mais ligado). Deixou de ser a inferência
+    I-1, derrubada pela usuária.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-3</span> Uma escolha para cada módulo <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">O Gerar OCR lembra a dele, e o Anonimizar a dele, como hoje cada um tem a sua: trocar num
+    não muda o outro.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-4</span> Vale na hora em que a pessoa marca <span class="dimensao">fluxos</span></div>
+    <div class="cartao-texto">Marcou o Tesseract e fechou o programa sem ler nada: na próxima vez ele já vem marcado.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-5</span> Motor lembrado que sumiu: passa a ser lembrado o outro <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Se o motor lembrado faltar ao abrir, a marca passa ao outro, e a troca aparece na tela, como
+    já manda a RN-29. A troca conta como escolha nova: fica lembrado o motor que passou a estar marcado, e quando o de
+    antes voltar, a pessoa o marca de novo se quiser.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-6</span> A tela não diz nada <span class="dimensao">estados da interface</span></div>
+    <div class="cartao-texto">O motor lembrado aparece marcado, como se a pessoa tivesse acabado de marcar. Voltar ao
+    padrão é marcar o PaddleOCR. A escolha do motor não muda de desenho, e por isso não precisa de rascunho de tela.</div></div>
+</div>
+
+<h2><span class="marca marca-aberto"></span>Em aberto, e não muda o que o programa faz</h2>
+<div class="cartoes">
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-1</span> Onde a escolha fica guardada <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">O <code>.env</code> da instalação, um arquivo próprio ao lado dele, a pasta do usuário do
+    Windows ou o registro do Windows. O <code>.env</code> é da TI, tem comentários e três formatos de acentuação, e o
+    programa hoje só sabe lê-lo. A decisão é da skill-03-arquiteto-de-solucao, antes da spec.</div></div>
+</div>
+
+<div class="fora">
+  <h3>Fora de escopo desta funcionalidade</h3>
+  <ul>
+    <li>Lembrar qualquer coisa do trabalho: documento, texto lido, pasta usada, histórico, achados (I-3).</li>
+    <li>Lembrar o zoom da conferência (I-4) e a posição da janela (R-7).</li>
+    <li>A configuração da IA local: entra com a funcionalidade 4 (I-7).</li>
+    <li>Um aviso na tela de que a escolha foi lembrada, e um botão de voltar ao padrão (R-6).</li>
+    <li>Escolha compartilhada entre pessoas, ou entre máquinas (I-2).</li>
+  </ul>
+</div>
+
+<p class="rodape">Página gerada em 28/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-02-analista-de-requisitos.</p>
+</body>
+</html>

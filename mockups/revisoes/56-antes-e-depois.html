@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 56 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 56 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre o que seria gravado, em 03/11/2026: a confirmação dos suspeitos retirada (RN-66), o "Pular esta parte e seguir" (RN-67), a frase da inscrição (RN-68), a seção "Revisar liberação" (RN-69) e a dos "Suspeitos que a IA nega" (RN-70). A varredura automática trouxe nove suspeitas; uma sobreviveu, foi aprovada pela solicitante e consertada, e oito caíram.</p>
+
+<div class="achado"><h3>O número que a própria IA apontou, liberado e revisado de novo</h3>
+<p>Quem libera um número que a IA apontou e pede "Revisar de novo com IA" deve vê-lo subir para "Revisar liberação", se a IA continuar achando que é CPF. Isso dependia de ela escrever uma frase diferente da primeira — e, com o mesmo texto, ela costuma repetir a mesma.</p>
+<div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Frase repetida era ignorada inteira: o programa nem anotava que a IA achava que era CPF. O número ficava liberado lá embaixo, sem a seção vermelha e sem o selo.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A opinião da IA é anotada sempre que ela discorda; a regra da frase repetida vale só para não mostrar o mesmo comentário duas vezes. Teste novo, <code>test_o_numero_da_ia_liberado_sobe_mesmo_com_a_mesma_frase</code>, que falha quando o conserto é desfeito. 958 testes passam.</div></div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul><li>Só <code>revisao_ia.py</code> e <code>test_revisao_por_ia.py</code>. Nenhum arquivo criado, apagado ou movido além desta página.</li></ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li><strong>Pular quando o envio é recusado</strong> marca a parte como pulada mesmo sem seguir. Só pode exagerar o que ficou sem revisão, nunca esconder.</li>
+  <li><strong>Dupla conferência do suspeito que a IA acha que é CPF</strong>: retirada de propósito com a RN-66; liberado de novo, ele volta ao topo vermelho.</li>
+  <li><strong>Opinião antiga que fica de uma revisão para a outra</strong>: a IA não cita o suspeito que acha que é CPF, e o texto não muda entre revisões.</li>
+  <li><strong>"Revisou até a página N" junto da página pulada</strong>: a frase dos pulados diz qual ficou sem revisão. É clareza, não defeito.</li>
+  <li><strong>Retomar depois de pular a última parte</strong>: nenhum botão leva até lá.</li>
+  <li><strong>Um comentário em <code>tela_revisao.py</code> diz "mascarado ou não"</strong>, e a linha de baixo conta só os mascarados. É da lente de clareza.</li>
+  <li><strong>Os nomes dos dois selos novos estão escritos à mão</strong>, como os selos antigos, em vez de virem do arquivo dos nomes. É da lente de manutenção.</li>
+  <li><strong>A regra de quem vai para cada seção está na lista e nos selos</strong>, em dois lugares. Também é da lente de manutenção.</li>
+</ul>
+<p class="rodape">Gerada em 03/11/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

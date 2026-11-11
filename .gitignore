@@ -1,0 +1,73 @@
+# Segredo do ambiente de desenvolvimento — nunca versionado.
+# O .env.example (com só os nomes das variáveis) fica de fora desta lista de propósito.
+.env
+
+# O pacote de skills e o mapa dele: ficam nesta máquina, para o agente
+# trabalhar, e não vão para o histórico. Estavam desde o commit fundador e
+# foram tirados do histórico inteiro em 28/10/2026, a pedido da solicitante.
+# São material cedido a ela num curso, com o pedido de NÃO DISTRIBUIR: nunca
+# commitar, publicar em página ou mandar para fora o conteúdo deles. O
+# repositório é público, e o PR #1 ainda os mostrava em 29/10/2026 - pedido
+# de limpeza aberto no suporte do GitHub; em 05/11/2026 foi autorizado apagar o PR.
+# A cerca do agente (.claude/settings.json) é do projeto, e continua.
+.claude/skills/
+.claude/mapa-das-skills.html
+
+# A página do PR #1 salva em PDF (conversa, commits e arquivos alterados) antes
+# de o suporte do GitHub apagá-lo, em 05/11/2026 - é o que sobra dele. Guarda
+# de quem mantém o projeto, e não do projeto: são 18 MB de página impressa, e o
+# código e os commits dela já estão na master reescrita.
+histórico Git/
+
+# As escolhas lembradas de quem usa o programa nesta máquina (o motor de cada
+# módulo, o tamanho da janela - funcionalidade 8). São do uso, e não do
+# projeto; o ".gravando" é o arquivo provisório de quando a gravação é cortada.
+preferencias.ini
+preferencias.ini.*.gravando
+# O provisório de uma gravação cortada do .env tem o token dentro.
+.env.*.gravando
+
+# Documentos de teste guardados só na própria máquina - nunca entram no
+# histórico, mesmo que a pasta volte a existir depois. Documento de pessoa não
+# vai para dados-exemplo/, que é versionada. O git do Windows não separa
+# maiúscula de minúscula: Exemplos/ pega também qualquer pasta "exemplos",
+# em qualquer lugar do projeto.
+Exemplos/
+fora-do-historico/
+
+# Artefatos gerados (instalador, .exe final) — nascem do código, não se editam à mão.
+builds/
+
+# O instalador do Tesseract, que fica ao lado do programa para o botão
+# "instalar agora" (spec 002). É programa de terceiros, vem do site dele no dia
+# da entrega - não é código deste projeto.
+instaladores/
+
+# A marca que o abrir-sem-motor.bat e o abrir-sem-portugues.bat criam para
+# fingir que o Tesseract não está pronto. Existe só enquanto a simulação dura.
+abrir/.motor-escondido
+
+# Saída padrão do PyInstaller ao gerar o executável. A receita dele (o .spec em
+# empacotar/) fica DENTRO do histórico: é código do projeto, e sem ela a
+# próxima versão seria montada de outro jeito (entrega de 23/09/2026).
+build/
+dist/
+
+# Ambiente virtual do Python — cada máquina cria o seu com `pip install -r requirements.txt`.
+.venv/
+
+# Os ambientes e os modelos da medição dos motores de leitura (conferência 02,
+# funcionalidade 7): pesam perto de 1,5 GB juntos e se refazem com os comandos
+# do conferencias/ler-com-o-motor.py. As leituras da massa também se refazem.
+.venv-paddleocr/
+.venv-rapidocr/
+.modelos-medicao/
+conferencias/leituras-02/
+
+# Arquivos que o Python gera sozinho ao rodar.
+__pycache__/
+*.pyc
+
+# Arquivos de configuração do editor/sistema, específicos de cada máquina.
+.vscode/
+Thumbs.db

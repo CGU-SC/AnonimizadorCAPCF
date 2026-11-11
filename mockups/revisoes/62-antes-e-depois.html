@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 62 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 62 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre o ícone do título nas Configurações (acréscimo de 06/11/2026 da spec 001, RN-31),
+em 06/11/2026, depois de a solicitante conferir na tela. A varredura levantou oito suspeitas; nenhuma virou achado.</p>
+
+<div class="achado"><h3>Nenhum achado da lente crítica</h3>
+  <p>A suspeita mais séria era uma tela de Configurações sem desenho, que pintaria um quadrado vazio no título. Hoje
+  ela não existe: as quatro telas dizem o seu desenho, e nenhuma nasce sem ele. Um teste novo pinta o quadrado do título
+  de cada uma e confere que o desenho aparece.</p>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li>Nada, nesta revisão: sem achado, sem conserto. Fica esta página.</li>
+</ul>
+
+<h2>O que foi levantado e não é da lente crítica</h2>
+<ul>
+  <li><b>O desenho de cada opção está escrito duas vezes</b>, no item do submenu e no título; trocado num lugar só, os
+    dois deixariam de bater, e o teste, que compara com os mesmos nomes, não acusaria. E <b>uma tela nova sem desenho só
+    falharia ao pintar</b>. São da lente de manutenção.</li>
+  <li><b>O teste confere o nome do desenho, e não o do item clicado</b>, e o teste da pintura passaria também com a
+    engrenagem. São da lente de critérios de aceite.</li>
+  <li><b>O comentário do <code>cabecalho_da_tela.py</code> ainda fala só do ícone do módulo</b>, e <b>a RN-14 e a RN-22
+    não dizem, no lugar delas, que a RN-31 revogou um trecho</b>. São da lente de clareza.</li>
+  <li><b>Um arquivo de teste lê uma cor ao carregar</b>, o jeito que o <code>CLAUDE.md</code> avisa que prende a cor no
+    tema de antes. É de antes desta mudança, e só pesa se algum teste dele rodar no claro.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 06/11/2026.</p>
+</body>
+</html>

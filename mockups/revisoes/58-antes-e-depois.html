@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 58 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 58 — antes e depois</h1>
+<p class="subtitulo">Lente de segredo e dado real sobre a documentação da funcionalidade 10 (as emendas das specs 001, 002 e 004, o mapa 09, o rascunho 06 da janela, o sistema de design, a spec ilustrada, o índice e o backlog), e sobre o <code>.gitignore</code>, em 05/11/2026, antes de ir para um repositório público. Dois achados, os dois aprovados pela solicitante e consertados. Nenhum código do programa foi tocado.</p>
+
+<div class="achado"><h3>Dois números do exemplo podiam ser de verdade</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>No exemplo da revisão do rascunho 06, o "telefone" estava na faixa dos ramais da UFSC, e o "processo" tinha o começo do número de processo dela e um final sem cara de inventado. Os dois podiam existir.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O processo passa a ser o <code>23080.012345</code>, que o resto do projeto já usa. O telefone passa a ser o <code>4800001234</code>: nenhum telefone de verdade começa com 0 depois do código de área, e ele continua com 10 dígitos, como o exemplo de número suspeito pede. Nas duas cópias da página, escuro e claro.</div></div></div>
+<div class="achado"><h3>Mais do Gerencial do que os valores de cor</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>O sistema de design, a tabela do rascunho 06 e o mapa 09 levavam os nomes que o Gerencial dá às próprias cores, cor por cor, e frases que descreviam o que o Gerencial é e de onde as cores foram lidas. A regra da funcionalidade era: do Gerencial, só os valores de cor.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Ficam os valores e o nome "Gerencial" como origem. A coluna "de onde vem" diz só "do Gerencial" ou "escolhido aqui", com o motivo de cada escolha e o contraste. Saíram também um valor dele que não foi escolhido e a frase "da mesma equipe", na spec 001.</div></div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul><li>Só texto, em <code>mockups/janela/06-tema-claro-e-configuracoes.html</code>, <code>mockups/sistema-de-design.md</code>, <code>mockups/requisitos/09-mapa-do-entendimento.html</code> e <code>especificacoes/specs/001-interface-da-janela.md</code>. Nenhum arquivo criado, apagado ou movido além desta página. Nada muda no programa, e nada que você aprovou no rascunho mudou de cor ou de lugar.</li></ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li>Nada desta lente ficou de fora. Nenhuma senha ou chave, nenhum endereço de fora, nenhum CPF além do exemplo de sempre do projeto (<code>123.456.789-10</code>) e nenhum texto do pacote de skills: as páginas citam as skills só pelo nome, como todas as outras.</li>
+  <li>O <code>.gitignore</code> está em ordem: a pasta que ele passa a ignorar não está no histórico, e passa a ficar fora dele.</li>
+</ul>
+<p class="rodape">Gerada em 05/11/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# O git tenta "arrumar" quebras de linha nos arquivos que ele acha que sao
+# texto, e alguns PDFs enganam essa deteccao. Os documentos de exemplo existem
+# para serem EXATOS - o script os gera de um jeito, e eles precisam sair do
+# repositorio do mesmo jeito, em qualquer maquina. Aqui esta dito que PDF nao
+# se mexe.
+*.pdf binary

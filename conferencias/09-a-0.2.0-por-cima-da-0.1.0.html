@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 09 — a 0.2.0 instalada por cima de uma 0.1.0 em uso</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5; --cor-alerta: #d9a441; --cor-sucesso: #4caf6d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 980px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--cor-borda); }
+  h3 { font-size: 16px; margin: 24px 0 8px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .copiar { display: block; font-family: "Cascadia Mono", Consolas, monospace; font-size: 13.5px; background: #15181d; border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 8px 12px; margin: 6px 0; user-select: all; overflow-x: auto; white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--cor-borda); }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  ol { padding-left: 24px; }
+  li { margin-bottom: 14px; }
+  .ve { color: var(--cor-texto-secundario); display: block; font-size: 14px; margin-top: 4px; }
+  .torto { color: var(--cor-alerta); font-weight: 600; }
+  .fase { color: var(--cor-destaque); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 26px 0 6px; font-weight: 600; }
+  .aviso { border: 1px solid var(--cor-alerta); background: rgba(217,164,65,.10); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Conferência 09 — a 0.2.0 instalada por cima de uma 0.1.0 em uso</h1>
+<p class="subtitulo">O teste obrigatório da entrega da versão 0.2.0, em 10/11/2026: provar que a versão nova encontra
+uma 0.1.0 que já foi usada, com o <code>.env</code> preenchido, e não estraga nada. Começar do zero testaria o caminho
+que sempre funciona; é o de cima que quebra.</p>
+
+<div class="aviso"><strong>O que só este teste prova:</strong> a atualização de verdade. A 0.1.0 é a que está nas
+máquinas do núcleo, e ninguém instalou a 0.2.0 por cima dela até hoje — os instaladores de teste foram sempre por cima
+de outros instaladores de teste. O instalador testado aqui é o mesmo arquivo que vai para o núcleo.</div>
+
+<h2>O que já está provado, antes de você instalar</h2>
+<table>
+  <tr><th>Conferência</th><th>O resultado</th></tr>
+  <tr><td>A lista inteira de testes</td><td>1.072 testes passando, rodados pelo próprio gerador da entrega, antes de
+    montar o programa</td></tr>
+  <tr><td>Os roteiros da pasta da entrega</td><td>Idênticos, byte a byte, aos gravados no commit <code>90f23ad</code></td></tr>
+  <tr><td>Segredo dentro do instalador</td><td>A pasta montada não tem <code>.env</code> nem <code>preferencias.ini</code>,
+    e a receita do instalador deixa os dois de fora de qualquer jeito</td></tr>
+  <tr><td>O instalador da 0.1.0</td><td>Intocado em <code>builds\instalador</code>, com a data de 25/09/2026</td></tr>
+  <tr><td>A impressão digital do instalador da 0.2.0</td><td><code>1B760E9AFA62788B5B045EF42636E1AA21AD558134C3CF22114558E5A83DDF23</code>
+    — a do arquivo que vai para o núcleo tem de ser esta</td></tr>
+</table>
+
+<h2>Antes de começar</h2>
+<div class="aviso">
+<ul>
+  <li><strong>Feche o programa</strong>, o de desenvolvimento e o instalado, antes de cada instalação e antes de
+    desinstalar.</li>
+  <li><strong>O passo 1 desinstala o instalador de teste desta máquina</strong>, e com ele vão o <code>.env</code> e
+    as escolhas daquela instalação. Se você escreveu alguma coisa no <code>.env</code> dela (a pasta do Tesseract, um
+    token), copie antes.</li>
+  <li><strong>Só documentos inventados</strong>, da pasta <code>dados-exemplo</code>. O que for salvo vai para uma
+    pasta de teste dentro de <code>builds</code>, fora do histórico.</li>
+  <li><strong>Desligue a internet no passo 7</strong>, e só religue no fim. Daí em diante nada precisa dela — nem a
+    leitura, nem a IA, que roda no LM Studio desta máquina.</li>
+</ul>
+</div>
+
+<h2>Roteiro na tela</h2>
+<p class="fase">Montar a 0.1.0 em uso</p>
+<ol>
+  <li><strong>Desinstalar o de teste.</strong> Configurações do Windows › Aplicativos › Aplicativos instalados ›
+    Anonimizador CAPCF › Desinstalar. Depois cole no Explorador de Arquivos:
+    <span class="copiar">%LOCALAPPDATA%\Programs\Anonimizador CAPCF</span>
+    <span class="ve">Você deve ver: a pasta não existir mais, ou existir vazia, sem <code>.env</code> e sem
+    <code>preferencias.ini</code>.</span></li>
+  <li><strong>Instalar a 0.1.0.</strong> Dois cliques em:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\builds\instalador\Anonimizador-CAPCF-0.1.0-instalador.exe</span>
+    Siga o instalador e deixe marcado "Abrir o Anonimizador CAPCF agora".
+    <span class="ve">Você deve ver: o programa antigo, com "versão 0.1.0" no <strong>pé</strong> da faixa da esquerda, e
+    os itens sem ícones.</span></li>
+  <li><strong>Usar a 0.1.0 de verdade.</strong> No Anonimizar, abra:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\dados-exemplo\14-folha-com-40-bolsistas.md</span>
+    Revise, clique em "Salvar o texto mascarado…", use "Escolher pasta…" para esta pasta, e salve:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\builds\teste-sobre-0.1.0</span>
+    <span class="ve">Você deve ver: o arquivo "14-folha-com-40-bolsistas - sem CPF.md" salvo na pasta de teste.</span></li>
+  <li><strong>Preencher o <code>.env</code> da 0.1.0, como a TI faria.</strong> Feche o programa. Na pasta do passo 1,
+    abra o <code>.env</code> no Bloco de Notas. Na linha do Tesseract, escreva a pasta de verdade dele:
+    <span class="copiar">TESSERACT_CAMINHO=C:\Program Files\Tesseract-OCR</span>
+    e, no começo do arquivo, uma linha a mais, só para reconhecer depois:
+    <span class="copiar"># escrito pela TI no teste da entrega 0.2.0</span>
+    Salve com Ctrl+S.
+    <span class="ve">Você deve ver: o arquivo continuar se chamando só <code>.env</code>, e não <code>.env.txt</code>.</span></li>
+  <li><strong>Conferir que a 0.1.0 lê o <code>.env</code>.</strong> Abra o programa e, no Gerar OCR, escolha:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\dados-exemplo\03-conteudo-girado.pdf</span>
+    <span class="ve">Você deve ver: a tela de ler com o Tesseract, sem aviso de motor faltando. Não precisa ler. Feche o
+    programa.</span></li>
+</ol>
+<p class="fase">Atualizar, sem internet</p>
+<ol start="6">
+  <li><strong>Conferir o instalador novo.</strong> Abra a pasta da entrega:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\builds\entrega-0.2.0</span>
+    <span class="ve">Você deve ver: três arquivos — "Anonimizador-CAPCF-0.2.0-instalador.exe", "Como instalar.html" e
+    "Como usar.html".</span></li>
+  <li><strong>Desligar a internet</strong> (o Wi-Fi pela barra de tarefas, ou o cabo) e <strong>instalar a 0.2.0 por
+    cima</strong>, sem desinstalar a 0.1.0: dois cliques no instalador da pasta da entrega. Siga e deixe marcado "Abrir
+    o Anonimizador CAPCF agora".
+    <span class="ve">Você deve ver: o instalador dizendo "Anonimizador CAPCF 0.2.0", sem pedir senha de administrador e
+    sem perguntar a pasta. Se aparecer "O Windows protegeu o computador", é o passo 2 do "Como instalar".</span>
+    <span class="ve"><span class="torto">Se ele pedir para fechar um programa</span>, a 0.1.0 ficou aberta: feche e
+    tente de novo.</span></li>
+  <li><strong>A primeira abertura da 0.2.0.</strong>
+    <span class="ve">Você deve ver: a janela <strong>maximizada</strong>, no tema escuro, com o símbolo e "CAPCF · versão
+    0.2.0" no <strong>alto</strong> da faixa, a lupa em "Gerar OCR", o cadeado em "Anonimizar" e a engrenagem em
+    "Configurações". Nenhuma caixa de erro, nenhum aviso de que algo se perdeu.</span></li>
+  <li><strong>O <code>.env</code> da TI continua valendo.</strong> No Anonimizar, abra o mesmo
+    <code>03-conteudo-girado.pdf</code> do passo 5.
+    <span class="ve">Você deve ver: "Este documento precisa ser lido", com o <strong>PaddleOCR</strong> marcado e a linha
+    do Tesseract <strong>sem</strong> "Não encontrado nesta máquina" — sinal de que a pasta escrita no
+    <code>.env</code> foi lida.</span></li>
+  <li><strong>Ler sem internet, com o motor que veio dentro.</strong> Clique para ler, confira a página e clique em
+    "Conferido".
+    <span class="ve">Você deve ver: a leitura terminar em poucos segundos, a página endireitada na conferência, e a
+    revisão abrir.</span></li>
+  <li><strong>O que é novo funciona.</strong> Clique em "Anonimizar outro documento" e abra, um de cada vez:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\dados-exemplo\17-cpf-sem-o-zero.md</span>
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\dados-exemplo\18-documento-do-word.docx</span>
+    <span class="ve">Você deve ver: no primeiro, CPFs com a etiqueta "sem o zero da frente"; no segundo, o texto do Word
+    na revisão, com a faixa do que ficou de fora.</span></li>
+  <li><strong>A IA, pelo roteiro "Como usar".</strong> Abra o LM Studio e deixe o modelo em READY e o servidor em
+    Running. Abra o "Como usar.html" da pasta da entrega e siga a parte 3, "Revisão por IA", com:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\dados-exemplo\30-revisao-por-ia.md</span>
+    <span class="ve">Você deve ver: o roteiro abrir com todas as imagens, mesmo sem internet; e, no programa, o "Online",
+    a IA habilitada e, depois de "Revisar com IA", a seção "A IA pediu para olhar".</span>
+    <span class="ve">Se algum passo do roteiro não bater com a tela, é isso que este passo existe para pegar: me diga
+    qual.</span></li>
+  <li><strong>Escolhas para a segunda abertura.</strong> Em Configurações › Tema, marque "Claro" e clique em "Reabrir
+    agora" (se houver revisão aberta, ele pergunta: pode reabrir). Depois, no Gerar OCR, abra o
+    <code>03-conteudo-girado.pdf</code> e marque o Tesseract, sem ler. Tire a janela do maximizado, deixe-a de um tamanho
+    menor, e feche pelo X.
+    <span class="ve">Você deve ver: o programa voltar no claro depois do "Reabrir agora".</span></li>
+</ol>
+<p class="fase">A segunda abertura</p>
+<ol start="14">
+  <li><strong>Abrir de novo, pelo menu Iniciar.</strong>
+    <span class="ve">Você deve ver: o programa no <strong>claro</strong>, do <strong>tamanho menor</strong> em que foi
+    fechado, no meio da tela. No Gerar OCR, com o mesmo PDF, o <strong>Tesseract</strong> marcado; no Anonimizar, o
+    <strong>PaddleOCR</strong>. Em Configurações › Habilitar IA, a IA continua ligada. Nada perguntado de novo.</span></li>
+  <li><strong>O <code>.env</code>, depois de tudo.</strong> Feche o programa e abra o <code>.env</code> no Bloco de Notas,
+    na pasta do passo 1.
+    <span class="ve">Você deve ver: a linha "# escrito pela TI no teste da entrega 0.2.0" e a pasta do Tesseract como
+    você as escreveu, e nada apagado. Pode ter linhas a mais embaixo só se você salvou um token (não precisava).</span></li>
+  <li><strong>Deixar a máquina no padrão.</strong> Abra o programa, volte o tema para "Escuro" e feche. Religue a
+    internet.
+    <span class="ve">A 0.2.0 fica instalada nesta máquina, que é o programa entregue.</span></li>
+</ol>
+
+<p><strong>Conferida na tela em 10/11/2026:</strong> os 16 passos, com a internet desligada do passo 7 ao 16, todos
+como esperado. A 0.2.0 encontrou a 0.1.0 usada, com o <code>.env</code> da TI, e não estragou nada; o roteiro "Como
+usar" da pasta da entrega levou da configuração da IA até a revisão sem nenhum passo diferente da tela. Com isso, a
+entrega da 0.2.0 foi aprovada pela solicitante para ir ao núcleo.</p>
+<p>Pedido no teste, anotado no <code>CLAUDE.md</code> para uma versão depois desta: lembrar a pasta do último arquivo
+escolhido, em vez de abrir sempre na pasta da instalação.</p>
+
+<h2>Se der errado</h2>
+<p>O caminho de volta é o mesmo do núcleo: desinstalar a 0.2.0 e instalar a 0.1.0, que está guardada em
+<code>builds\instalador</code>. Desinstalar apaga o <code>.env</code>: o que a TI escreveu nele precisa ser escrito de
+novo. Nesse caso, a entrega não vai para o núcleo até o defeito ser consertado, numa versão com outro número.</p>
+
+<p class="rodape">Escrita a pedido da skill-11, no modelo da conferência 08, em 10/11/2026. Os números de CPF dos
+documentos de exemplo são inventados.</p>
+</body>
+</html>

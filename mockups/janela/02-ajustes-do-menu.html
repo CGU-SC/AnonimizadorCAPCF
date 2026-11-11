@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 02 — Ajustes de design do menu</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-alerta: #d9a441;
+    --cor-sucesso: #4caf6d;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --fonte-emoji: "Segoe UI Emoji", "Segoe UI", sans-serif;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #14171c;
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.45;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  h2 { font-size: var(--texto-grande); margin: 48px 0 var(--espaco-2) 0; }
+  .subtitulo, .explica { color: var(--cor-texto-secundario); max-width: 860px; margin: 0 0 var(--espaco-3) 0; }
+  .explica b { color: var(--cor-texto); }
+  .rotulo {
+    font-size: var(--texto-pequeno); font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-2) 0;
+  }
+  code { font-family: var(--fonte-mono); background: var(--cor-fundo-elevado); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+
+  /* ---- a faixa, nas medidas do programa (main.py) ---- */
+  .faixa {
+    width: 220px; flex: 0 0 220px;
+    background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda);
+    padding: 24px 0;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .faixa.curta { height: 380px; border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+  .cabeca { padding: 0 16px 16px 16px; border-bottom: 1px solid var(--cor-borda); }
+  .cabeca.pe-antigo { }
+  .nome { font-size: 20px; font-weight: 700; line-height: 1.25; }
+  .versao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: 6px; }
+  .versao.selo { display: inline-block; border: 1px solid var(--cor-borda); border-radius: 10px; padding: 0 8px; margin-top: 8px; }
+  .versao.mono { font-family: var(--fonte-mono); margin-top: 6px; }
+  .versao.no-pe { padding: 0 16px; margin-top: 0; }
+  .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; margin: 0 8px; border-radius: var(--raio);
+    color: var(--cor-texto-secundario); font-size: var(--texto-base);
+  }
+  .item.marcado { background: var(--cor-destaque); color: #fff; font-weight: 600; }
+  .item svg { width: 18px; height: 18px; flex: 0 0 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .emoji { font-family: var(--fonte-emoji); font-size: 15px; font-weight: 400; width: 18px; text-align: center; }
+  .espaco { flex: 1; }
+  .faixa .primeiro { margin-top: 12px; }
+
+  /* ---- grades de comparação ---- */
+  .familia { display: flex; gap: var(--espaco-4); flex-wrap: wrap; margin-bottom: var(--espaco-3); }
+  .opcao { display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .opcao-titulo { font-weight: 600; }
+  .opcao-titulo .recomendada { color: var(--cor-sucesso); font-size: var(--texto-pequeno); font-weight: 700; margin-left: 6px; }
+  .opcao-diz { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 220px; min-height: 76px; }
+  .outro-estado { width: 220px; background: var(--cor-fundo-elevado); border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 8px 0; display: flex; flex-direction: column; gap: 4px; }
+  .outro-estado .rotulo { padding: 0 16px; margin: 0; font-size: 11px; }
+
+  .versoes { display: flex; gap: var(--espaco-4); flex-wrap: wrap; }
+  .versoes .faixa { height: auto; padding-bottom: 12px; border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+
+  /* ---- janela inteira ---- */
+  .janela { display: flex; border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.35); margin-bottom: var(--espaco-4); }
+  .janela.mil { width: 1000px; height: 640px; }
+  .janela.novecentos { width: 900px; height: 560px; }
+  .painel { flex: 1; background: var(--cor-fundo); display: flex; align-items: center; justify-content: center; }
+  .painel-vazio { text-align: center; color: var(--cor-texto-secundario); }
+  .painel-vazio .icone { font-size: 40px; }
+  .painel-vazio .titulo { font-size: 20px; color: var(--cor-texto); margin: 8px 0; }
+
+  .antes-depois { display: flex; gap: var(--espaco-5); align-items: flex-start; flex-wrap: wrap; }
+  .antes-depois .faixa { height: 420px; border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+
+  .notas { margin-top: 48px; border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 860px; }
+  .notas li { margin-bottom: 6px; }
+  .notas b { color: var(--cor-texto); }
+</style>
+</head>
+<body>
+
+<!-- Os ícones desenhados, reaproveitados nas faixas abaixo. São traço, na cor do texto
+     do item: cinza normal, branco quando marcado. -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ocr-1" viewBox="0 0 20 20"><path d="M2 6V3.5A1.5 1.5 0 0 1 3.5 2H6M14 2h2.5A1.5 1.5 0 0 1 18 3.5V6M18 14v2.5a1.5 1.5 0 0 1-1.5 1.5H14M6 18H3.5A1.5 1.5 0 0 1 2 16.5V14"/><path d="M6 7h8M6 10h8M6 13h5"/></symbol>
+    <symbol id="ocr-2" viewBox="0 0 20 20"><path d="M2.5 4h12M2.5 8h7M2.5 12h4"/><circle cx="12.5" cy="12.5" r="3.5"/><path d="M15 15l3 3"/></symbol>
+    <symbol id="ocr-3" viewBox="0 0 20 20"><path d="M5 2h7l4 4v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M12 2v4h4"/><path d="M7 10h6M7 13h6M7 16h3.5"/></symbol>
+    <symbol id="anon-1" viewBox="0 0 20 20"><rect x="1.5" y="4.5" width="17" height="11" rx="2"/><path d="M5 8l3 4M8 8l-3 4M12 8l3 4M15 8l-3 4"/></symbol>
+    <symbol id="anon-2" viewBox="0 0 20 20"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z"/><circle cx="10" cy="10" r="2.5"/><path d="M3.5 16.5l13-13"/></symbol>
+    <symbol id="anon-3" viewBox="0 0 20 20"><path d="M10 2l6.5 2.5v5c0 4-2.8 6.9-6.5 8.5-3.7-1.6-6.5-4.5-6.5-8.5v-5z"/><path d="M7 10l2 2 4-4"/></symbol>
+  </defs>
+</svg>
+
+<h1>Rascunho 02 — Ajustes de design do menu</h1>
+<p class="subtitulo">
+  Funcionalidade 9 do backlog. A faixa da esquerda ganha um ícone em <b>Gerar OCR</b> e outro em
+  <b>Anonimizar</b>, e o número da versão sobe para logo abaixo do nome do programa. Nada muda no que
+  os módulos fazem. Ponto de partida: a faixa como ela está hoje no programa, com o nome em duas
+  linhas e "Configurações de IA" no fim (o rascunho 01 é anterior a isso).
+</p>
+<p class="explica">
+  Há três escolhas para fazer olhando: <b>o desenho dos ícones</b> (duas famílias, três opções em
+  cada uma), <b>o jeito da versão no alto</b> (três opções) e, ao fim, a conferência nas janelas de
+  1000 e de 900 px. Dá para misturar dentro da mesma família, por exemplo o ícone de OCR da opção 1 com
+  o de Anonimizar da opção 2.
+</p>
+
+<h2>Antes e depois</h2>
+<p class="explica">Hoje, à esquerda, e depois, à direita, com as opções recomendadas de cada parte.</p>
+<div class="antes-depois">
+  <div class="opcao">
+    <div class="rotulo">Hoje</div>
+    <div class="faixa">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div></div>
+      <div class="item primeiro">Gerar OCR</div>
+      <div class="item marcado">Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+      <div class="versao no-pe">versão 0.1.0</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="rotulo">Depois (emoji, opção 1 · versão, opção A)</div>
+    <div class="faixa">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+      <div class="item marcado"><span class="emoji">🔒</span>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="rotulo">Depois (desenhados, opção 1 · versão, opção A)</div>
+    <div class="faixa">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><svg><use href="#ocr-1"/></svg>Gerar OCR</div>
+      <div class="item marcado"><svg><use href="#anon-1"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+  </div>
+</div>
+
+<h2>1. Os ícones — família emoji, do mesmo jeito da engrenagem</h2>
+<p class="explica">
+  Colorido, desenhado pela fonte de emoji que já vem no Windows (a mesma da engrenagem de
+  "Configurações de IA"). <b>Não muda de cor quando o item é marcado</b>: fica colorido sobre o
+  azul. Os três foram conferidos no próprio programa, nesta máquina, antes de entrar aqui.
+</p>
+<div class="familia">
+  <div class="opcao">
+    <div class="opcao-titulo">Emoji 1 <span class="recomendada">✅ RECOMENDADA</span></div>
+    <div class="opcao-diz">Lupa: "ler o documento". Cadeado: "proteger". Os dois existem desde o Windows 8.</div>
+    <div class="faixa curta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+      <div class="item marcado"><span class="emoji">🔒</span>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><span class="emoji">🔍</span>Gerar OCR</div>
+      <div class="item"><span class="emoji">🔒</span>Anonimizar</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="opcao-titulo">Emoji 2</div>
+    <div class="opcao-diz">Página: "o documento". Escudo: "proteger". A página serve aos dois módulos, e diz menos do OCR.</div>
+    <div class="faixa curta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">📄</span>Gerar OCR</div>
+      <div class="item marcado"><span class="emoji">🛡️</span>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><span class="emoji">📄</span>Gerar OCR</div>
+      <div class="item"><span class="emoji">🛡️</span>Anonimizar</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="opcao-titulo">Emoji 3</div>
+    <div class="opcao-diz">"abc": "vira letra". Carteira de identidade: "o documento da pessoa". A carteira é de 2021: no Windows 10 pode sair um quadradinho vazio.</div>
+    <div class="faixa curta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">🔤</span>Gerar OCR</div>
+      <div class="item marcado"><span class="emoji">🪪</span>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><span class="emoji">🔤</span>Gerar OCR</div>
+      <div class="item"><span class="emoji">🪪</span>Anonimizar</div>
+    </div>
+  </div>
+</div>
+
+<h2>2. Os ícones — família desenhada pelo programa</h2>
+<p class="explica">
+  Traço fino, desenhado pelo próprio programa, sem arquivo e sem nada baixado. <b>Acompanha a cor do
+  item</b>: cinza normal, branco quando marcado. Sai igual em qualquer Windows. A engrenagem continua
+  emoji, e é aqui que dá para ver se ela destoa ao lado do traço.
+</p>
+<div class="familia">
+  <div class="opcao">
+    <div class="opcao-titulo">Desenho 1</div>
+    <div class="opcao-diz">Os cantos de quem digitaliza, com linhas de texto dentro. Um cartão com "XX", que é a própria máscara do CPF.</div>
+    <div class="faixa curta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><svg><use href="#ocr-1"/></svg>Gerar OCR</div>
+      <div class="item marcado"><svg><use href="#anon-1"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><svg><use href="#ocr-1"/></svg>Gerar OCR</div>
+      <div class="item"><svg><use href="#anon-1"/></svg>Anonimizar</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="opcao-titulo">Desenho 2</div>
+    <div class="opcao-diz">Uma lupa sobre linhas de texto. Um olho cortado, o sinal de "esconder".</div>
+    <div class="faixa curta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><svg><use href="#ocr-2"/></svg>Gerar OCR</div>
+      <div class="item marcado"><svg><use href="#anon-2"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><svg><use href="#ocr-2"/></svg>Gerar OCR</div>
+      <div class="item"><svg><use href="#anon-2"/></svg>Anonimizar</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="opcao-titulo">Desenho 3</div>
+    <div class="opcao-diz">Uma página com o canto dobrado e texto. Um escudo com o sinal de certo.</div>
+    <div class="faixa curta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><svg><use href="#ocr-3"/></svg>Gerar OCR</div>
+      <div class="item marcado"><svg><use href="#anon-3"/></svg>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+    <div class="outro-estado"><div class="rotulo">o outro estado</div>
+      <div class="item marcado"><svg><use href="#ocr-3"/></svg>Gerar OCR</div>
+      <div class="item"><svg><use href="#anon-3"/></svg>Anonimizar</div>
+    </div>
+  </div>
+</div>
+
+<h2>3. A versão no alto</h2>
+<p class="explica">
+  As três ficam logo abaixo do nome, acima da linha que separa o nome dos itens, e saem do pé da
+  faixa. O texto continua "versão 0.1.0". As três usam o cinza de apoio, que tem contraste de 5,5:1
+  sobre o fundo da faixa, acima do mínimo de 4,5:1 para letra pequena.
+</p>
+<div class="versoes">
+  <div class="opcao">
+    <div class="opcao-titulo">A — texto simples <span class="recomendada">✅ RECOMENDADA</span></div>
+    <div class="opcao-diz">No tamanho pequeno do programa (13 px). Discreta, como hoje no pé, só que no alto.</div>
+    <div class="faixa">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="opcao-titulo">B — num selo</div>
+    <div class="opcao-diz">O mesmo texto numa moldura arredondada. Chama um pouco mais o olho.</div>
+    <div class="faixa">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao selo">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+    </div>
+  </div>
+  <div class="opcao">
+    <div class="opcao-titulo">C — letra de número</div>
+    <div class="opcao-diz">Na mesma letra dos números do programa (a de largura fixa). Cara de "dado técnico".</div>
+    <div class="faixa">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao mono">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+    </div>
+  </div>
+</div>
+
+<h2>4. Na janela inteira</h2>
+<p class="explica">
+  Com as recomendadas (emoji 1 e versão A), no tamanho em que a janela abre fora do maximizado
+  (1000 × 640) e no mínimo (900 × 560). A faixa tem largura fixa de 220 px: ela fica igual nos dois
+  tamanhos, e quem estreita é o painel da direita.
+</p>
+<div class="rotulo">1000 × 640 — nada escolhido ainda</div>
+<div class="janela mil">
+  <div class="faixa">
+    <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+    <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+    <div class="item"><span class="emoji">🔒</span>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+  </div>
+  <div class="painel"><div class="painel-vazio">
+    <div class="icone">◧</div>
+    <div class="titulo">Escolha um módulo para começar</div>
+    <div>Clique em "Gerar OCR" ou "Anonimizar" no menu ao lado.</div>
+  </div></div>
+</div>
+<div class="rotulo">900 × 560 — com o Anonimizar escolhido</div>
+<div class="janela novecentos">
+  <div class="faixa">
+    <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+    <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+    <div class="item marcado"><span class="emoji">🔒</span>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+  </div>
+  <div class="painel"><div class="painel-vazio">
+    <div class="titulo">(a tela do Anonimizar, que não muda)</div>
+  </div></div>
+</div>
+
+<div class="notas">
+  <p><b>O que fica de fora</b>, como combinado:</p>
+  <ul>
+    <li><b>"Configurações de IA" e o submenu</b> ("Voltar", "LM Studio", "Servidor de IA Interno", "Habilitar IA") ficam como estão. Se a engrenagem destoar da família escolhida, dá para pedir o ajuste ao olhar este rascunho.</li>
+    <li><b>O ícone da janela</b>, o da barra de título e da barra de tarefas, continua o padrão do Windows (spec 001): é decisão de identidade visual.</li>
+    <li><b>O desenho do painel vazio</b> (◧) não muda.</li>
+  </ul>
+  <p><b>Por que conferir na tela depois de escolher:</b> este rascunho usa as mesmas fontes que o programa usa no Windows, mas a palavra final é a da janela de verdade. Os emojis foram conferidos no programa antes de entrar aqui, e nessa conferência se viu também que a engrenagem atual é emoji colorido, e não um traço.</p>
+  <p><b>Estados:</b> a faixa não carrega nada nem pode falhar, então os estados de "carregando" e "erro" não se aplicam. Os estados que valem são o item normal e o marcado, e cada opção mostra os dois.</p>
+</div>
+
+</body>
+</html>

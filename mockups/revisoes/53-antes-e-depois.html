@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 53 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 53 — antes e depois</h1>
+<p class="subtitulo">Lentes de segredo e dado real e de critérios de aceite, sobre o que seria gravado, em 01/11/2026. Dois achados, os dois aprovados pela solicitante e consertados. Nenhum muda o que aparece na tela do programa.</p>
+
+<h2>Lente de segredo e dado real</h2>
+<p>Nas linhas que seriam gravadas, a busca por padrões não achou CPF que feche a conta além dos inventados com dígitos iguais, nem token, nem e-mail real, nem os sinais procurados dos documentos de teste. A busca não prova que nenhum outro dado real passou. O <code>.env</code>, o <code>preferencias.ini</code>, os dados reais e o pacote de skills seguem fora do histórico.</p>
+<div class="achado"><h3>Endereço público num teste novo</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>O teste do aviso usava <code>8.8.8.8</code>, contra a regra de não escrever endereço de fora em teste.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Ele usa o nome inventado <code>ia.instituicao.exemplo</code>. Os testes antigos, que precisam de um número público de verdade e não se conectam a ele, ficam como exceção escrita no <code>CLAUDE.md</code>.</div></div></div>
+
+<h2>Lente de critérios de aceite</h2>
+<p>Dos 50 critérios da spec 004, 46 passam, 2 estavam com o texto vencido, 1 depende de instalar de verdade (o token ao atualizar e desinstalar) e 1 é para a solicitante conferir na tela (navegar, liberar e mascarar com a IA rodando).</p>
+<div class="achado"><h3>Número curto, ou trecho sem número</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes, na spec</div>"Então ele é apontado." É a regra antiga, trocada pela RN-57.</div>
+  <div class="lado depois"><div class="rotulo">Depois, na spec</div>"Então nada aparece, e o texto não muda."</div></div></div>
+<div class="achado"><h3>Comentário em número já listado</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes, na spec</div>Todo comentário virava etiqueta. É a regra antiga, trocada pela RN-63.</div>
+  <div class="lado depois"><div class="rotulo">Depois, na spec</div>Só quando a IA discorda. Concordando, nada aparece; num suspeito, vem a etiqueta "IA: parece CPF".</div></div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul><li>Só um teste, o <code>CLAUDE.md</code> e o texto da spec 004. Nenhum arquivo criado, apagado ou movido além desta página.</li></ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li><strong>O <code>8.8.8.8</code> nos dois testes antigos:</strong> continua neles e no histórico já publicado, por decisão da solicitante.</li>
+  <li><strong>O teste que diz "com a IA desligada" lê o arquivo de escolhas de verdade:</strong> nesta máquina a IA está ligada, então ele não prova o caso desligado aqui. Outro teste cobre o caminho inteiro.</li>
+</ul>
+<p class="rodape">Gerada em 01/11/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

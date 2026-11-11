@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 08 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-3); }
+  .mudanca .pergunta {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-4);
+    border-left: 2px solid var(--cor-borda);
+    padding-left: var(--espaco-3);
+  }
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 300px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  pre {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    overflow-x: auto;
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    line-height: 1.5;
+    color: var(--cor-texto);
+  }
+  pre .rem { color: var(--cor-texto-secundario); }
+  pre .novo { color: var(--cor-sucesso); }
+  .lista-simples { list-style: none; padding: 0; margin: 0; }
+  .lista-simples li {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-2);
+  }
+  .nao-consertado {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-erro);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-3);
+  }
+  .nao-consertado .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .nao-consertado .motivo {
+    margin-top: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+  }
+  code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  .aviso {
+    margin-top: var(--espaco-5);
+    background: rgba(59,110,165,0.12);
+    border: 1px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .prova {
+    background: rgba(76,175,109,0.10);
+    border: 1px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  table { border-collapse: collapse; width: 100%; margin-top: var(--espaco-2); }
+  th, td {
+    text-align: left;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: var(--texto-pequeno);
+  }
+  th { color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rodape {
+    margin-top: var(--espaco-4);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+</style>
+</head><body>
+
+<h1>Revisão 08 — antes e depois</h1>
+<p class="subtitulo">AnomizadorCAPCF — 12/09/2026</p>
+
+<div class="lente">
+  <div class="rotulo">O que foi revisado, e por qual lente</div>
+  <p>
+    A <strong>etapa 6 do Módulo de OCR</strong> — as telas de salvar, a peça que
+    grava o arquivo, e a pergunta antes de descartar texto não salvo.
+  </p>
+  <p>
+    A lente foi a <strong>CRÍTICA</strong>, porque esta é a primeira etapa em que
+    o programa <strong>escreve no disco</strong>. Perda de dado mora aqui.
+  </p>
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">achados, os dois reproduzidos</div>
+  </div>
+  <div class="contagem-item c-consertado">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">aprovados e consertados</div>
+  </div>
+  <div class="contagem-item c-recusado">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">suspeita derrubada por teste</div>
+  </div>
+  <div class="contagem-item c-fora">
+    <div class="contagem-numero">1</div>
+    <div class="contagem-label">erro de conta corrigido nos registros</div>
+  </div>
+</div>
+
+<h2>A suspeita que não se confirmou — e era a mais grave</h2>
+
+<div class="prova">
+  <p>
+    O arquivo <code>.md</code> é gravado <strong>na mesma pasta do PDF de
+    origem</strong>, com o mesmo nome. Se a troca de terminação falhasse em algum
+    caso, o programa escreveria por cima do documento original — a regra RN-17
+    diz que isso nunca pode acontecer.
+  </p>
+  <p>
+    <strong>Conferido e derrubado:</strong> em nenhum formato de nome o
+    <code>.md</code> cai por cima do PDF. Nem digitando o próprio nome do PDF no
+    campo — o programa grava <code>doc.pdf.md</code>, e o original fica intacto.
+    Um teste guarda isso agora.
+  </p>
+</div>
+
+<h2>O que foi consertado</h2>
+
+<div class="mudanca">
+  <div class="arquivo">1 · programa/painel_ocr.py — a proteção que prendia</div>
+  <div class="explicacao">
+    A pergunta de "o texto ainda não foi salvo" podia <strong>prender a pessoa
+    e fazer o texto se perder</strong>. Com a pergunta na tela, soltar outro PDF
+    por cima fazia o programa guardar a própria pergunta como "o lugar para onde
+    voltar". Aí "Voltar e salvar" não saía do lugar — e a única saída que
+    funcionava era "Descartar e seguir".
+  </div>
+  <div class="pergunta">
+    <strong>Isto foi criado construindo a própria proteção.</strong> A pergunta
+    existe para evitar a perda de correções — e, do jeito que estava, ela mesma
+    podia forçar essa perda. Reproduzido: pergunta na tela, outro PDF por cima,
+    "Voltar e salvar" continuou na mesma tela.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">self._acao_pendente = acao
+self._tela_antes_da_pergunta = (
+    self.telas.currentWidget())
+# se a pergunta ja estava na tela, a
+# "tela de antes" vira a propria pergunta</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">self._acao_pendente = acao
+# Com a pergunta ja na tela, o lugar para
+# onde voltar continua sendo o de antes.
+if self.telas.currentWidget() \
+        is not self.tela_descartar:
+    self._tela_antes_da_pergunta = (
+        self.telas.currentWidget())</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">2 · programa/telas_de_salvar.py — o arquivo que ia para lugar nenhum</div>
+  <div class="explicacao">
+    Digitando <strong>só o nome</strong> no campo de salvar — <code>saida.md</code>,
+    sem a pasta —, o programa aceitava, gravava, e a tela de sucesso dizia apenas
+    "saida.md". O arquivo ia parar <strong>na pasta de onde o programa foi
+    aberto</strong>.
+  </div>
+  <div class="pergunta">
+    Aqui, em desenvolvimento, isso é <strong>a raiz do projeto</strong> —
+    reproduzido: o <code>saida.md</code> apareceu ao lado do
+    <code>CLAUDE.md</code>, dentro do repositório que vai para o GitHub a cada
+    envio. Nas máquinas do núcleo, seria a pasta do atalho do programa, que a
+    pessoa nem sabe qual é. Nos dois casos, um arquivo <strong>com os CPFs
+    inteiros</strong> perdido onde ninguém vai procurar — nem para usar, nem
+    para apagar.
+  </div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">caminho = Path(texto)
+# "saida.md" vira um caminho relativo,
+# que aponta para a pasta de onde o
+# programa foi aberto</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">caminho = Path(texto)
+if not caminho.is_absolute():
+    # vai para a pasta do documento,
+    # onde o programa ja sugeria
+    caminho = self._pasta_sugerida / caminho</span></pre>
+    </div>
+  </div>
+  <p class="nota" style="margin-top: var(--espaco-3); color: var(--cor-texto-secundario); font-size: 13px;">
+    E a tela de sucesso passa a mostrar sempre o caminho completo.
+  </p>
+</div>
+
+<h2>Um erro de conta, corrigido nos registros</h2>
+
+<div class="nao-consertado">
+  <div class="titulo">Os números da revisão 06 estavam somados errado</div>
+  <p>
+    O resumo da revisão de critérios de aceite dizia <strong>15 critérios que
+    passam e 9 que não passam</strong>. A tabela logo abaixo sempre esteve certa:
+    eram <strong>16 e 8</strong>. Como os dois erros se compensam e a soma dava
+    26 do mesmo jeito, passou despercebido.
+  </p>
+  <p>
+    O mesmo erro foi para a frase "a etapa 6 cumpre sete critérios" — eram seis,
+    e a própria página listava seis números.
+  </p>
+  <div class="motivo">
+    Corrigido na página da revisão 06 e no rascunho 08, com uma nota dizendo o
+    que era. A mensagem do commit da etapa 4, que já está no repositório online,
+    ficou com o número errado — a correção fica registrada aqui, em vez de mexer
+    num histórico já enviado.
+  </div>
+</div>
+
+<h2>Os testes</h2>
+
+<div class="prova">
+  <p>
+    De <strong>83 para 86</strong>. Os três novos guardam os dois consertos e a
+    suspeita derrubada: a pergunta por cima da pergunta não prende ninguém; nome
+    sem pasta vai para a pasta do documento; e o <code>.md</code> nunca cai por
+    cima do PDF de origem.
+  </p>
+</div>
+
+<div class="aviso">
+  <strong>Esta página não substitui abrir o programa.</strong> Ela mostra o que
+  foi mexido — não que tudo continua funcionando.
+</div>
+
+<p class="rodape">
+  Gerado pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.
+  Uma lente rodou nesta rodada: a crítica. Clareza e manutenção continuam sem
+  nunca ter rodado neste projeto.
+</p>
+
+</body>
+</html>

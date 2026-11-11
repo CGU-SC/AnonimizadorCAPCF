@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 07 — tema claro e menu Configurações</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5; --cor-alerta: #d9a441; --cor-sucesso: #4caf6d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 980px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--cor-borda); }
+  h3 { font-size: 16px; margin: 24px 0 8px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--cor-borda); }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  ol { padding-left: 24px; }
+  li { margin-bottom: 10px; }
+  .ve { color: var(--cor-texto-secundario); display: block; font-size: 14px; }
+  .torto { color: var(--cor-alerta); font-weight: 600; }
+  .aviso { border: 1px solid var(--cor-alerta); background: rgba(217,164,65,.10); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .situacao { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--cor-borda); color: var(--cor-texto-secundario); }
+  .situacao.agora { border-color: var(--cor-destaque); color: var(--cor-texto); }
+  .situacao.feita { border-color: var(--cor-sucesso); color: var(--cor-sucesso); }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Conferência 07 — tema claro e menu Configurações</h1>
+<p class="subtitulo">Funcionalidade 10, construída em seis etapas a partir de 06/11/2026. Esta página cresce a cada etapa:
+o que ficou pronto, o que os testes automáticos provam, e o roteiro para conferir na tela.</p>
+
+<div class="aviso"><strong>O que os testes automáticos não provam:</strong> a aparência. Eles conferem os valores
+das cores e onde cada uma está escrita, mas quem diz se a tela ficou igual, legível e sem nada cortado é quem olha.</div>
+
+<h2>As etapas</h2>
+<table>
+  <tr><th>Etapa</th><th>O que você vê ao fim</th><th>Situação</th></tr>
+  <tr><td>1</td><td>Nada muda: o escuro igual, cor por cor</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
+  <tr><td>2</td><td>O menu "Configurações", com as seções, os ícones e a tela do Tema</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
+  <tr><td>3</td><td>O programa abre no tema guardado</td><td><span class="situacao feita">conferida em 06/11/2026</span></td></tr>
+  <tr><td>4</td><td>O "Reabrir agora", sem nada a perder</td><td><span class="situacao feita">conferida em 07/11/2026</span></td></tr>
+  <tr><td>5</td><td>O claro conferido tela por tela</td><td><span class="situacao feita">conferida em 07/11/2026</span></td></tr>
+  <tr><td>6</td><td>As perguntas antes de reabrir</td><td><span class="situacao feita">conferida em 07/11/2026</span></td></tr>
+</table>
+
+<h2>Etapa 1 — as cores ganham nome, e o escuro fica igual</h2>
+
+<h3>O que mudou por dentro</h3>
+<p>Antes, as cores estavam escritas à mão dentro das telas, ou guardadas no instante em que o programa carrega, em dezoito arquivos. Agora todas
+moram num lugar só, cada uma com o nome do papel que cumpre e com o valor dos dois temas ao lado — os quinze tons
+novos são os do rascunho <code>mockups\janela\07-os-tons-que-faltavam.html</code>. Também a letra de aviso, que no
+escuro usa o mesmo amarelo das bordas, passou a ter nome próprio: no claro, ela vai ser o âmbar escuro.</p>
+<p>Nada disso aparece na tela. O tema claro ainda não pode ser escolhido: isso vem nas etapas 2 e 3.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O escuro de antes</td><td>Cada um dos 33 valores do escuro é exatamente o que o programa usava antes, copiado à mão do código antigo</td></tr>
+  <tr><td>Nenhuma cor fora do lugar</td><td>Nenhum arquivo de tela tem cor escrita dentro (RN-26). Um teste à parte prova que a procura acha cor de verdade, para ela não passar calada</td></tr>
+  <tr><td>Nada do escuro no claro</td><td>Com o claro escolhido por dentro, a janela inteira é montada e nenhuma peça tem um valor do escuro (RN-17)</td></tr>
+  <tr><td>Contraste do claro</td><td>Cada cor de letra do claro tem 4,5 para 1 ou mais sobre o fundo e sobre os quadros, e o amarelo do claro não é letra de nenhuma peça (RN-18)</td></tr>
+  <tr><td>Cor lida cedo demais</td><td>Nenhuma tela lê a cor quando o programa carrega — fora de função, no corpo de uma classe ou como valor padrão —, com um arquivo de mentira que prova a procura. Entrou na revisão pela lente crítica (revisão 59), que achou dois títulos da lista de achados que ficariam invisíveis no claro</td></tr>
+  <tr><td>A lista inteira</td><td>1.000 testes passando: os 986 de antes e 14 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026:</strong> os sete passos do roteiro abaixo, tudo como antes.</p>
+
+<h3>Roteiro na tela</h3>
+<p>O que se confere aqui é que <strong>nada mudou</strong>. Se alguma cor parecer diferente do que você via até ontem,
+me diga em que tela e em que peça — mesmo que a diferença seja pequena.</p>
+<ol>
+  <li><strong>Abrir.</strong> Dois cliques em <code>abrir\abrir-dev.bat</code>.
+    <span class="ve">Você deve ver: o programa no escuro de sempre, com o menu da esquerda como ontem.</span></li>
+  <li><strong>Um PDF com texto por dentro.</strong> No Gerar OCR, escolha <code>dados-exemplo\01-com-texto-e-tabela.pdf</code>.
+    <span class="ve">Você deve ver: a tela de decisão com a etiqueta azul "TEXTO GRAVADO NO PRÓPRIO DOCUMENTO", na mesma cor de antes.</span></li>
+  <li><strong>A conferência.</strong> Siga até a conferência.
+    <span class="ve">Você deve ver: a etiqueta azul "VEIO DO PRÓPRIO PDF", o fundo quase preto atrás da página e, na primeira página, o botão de página anterior apagado.</span></li>
+  <li><strong>O aviso de antes de gravar.</strong> Clique em "Conferido" e escolha salvar o texto.
+    <span class="ve">Você deve ver: a caixa amarela "⚠ Este arquivo sai com os CPFs inteiros", com o título em amarelo.</span></li>
+  <li><strong>A revisão.</strong> No Anonimizar, abra <code>dados-exemplo\14-folha-com-40-bolsistas.md</code> e clique num número da lista ao lado do texto.
+    <span class="ve">Você deve ver: os números vermelhos e amarelos de sempre no texto, e o item clicado com o fundo azul.</span></li>
+  <li><strong>A chave da IA.</strong> Vá a "Configurações de IA" e depois a "Habilitar IA".
+    <span class="ve">Você deve ver: as chaves de ligar como antes, com a bolinha branca na ligada.</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>um PDF estragado.</strong> No Anonimizar, escolha <code>dados-exemplo\05-corrompido.pdf</code>.
+    <span class="ve">Você deve ver: o aviso de erro com o fundo avermelhado de sempre, e o programa de pé.</span></li>
+</ol>
+
+<h2>Etapa 2 — o menu "Configurações", com as seções, os ícones e a tela do Tema</h2>
+
+<h3>O que mudou</h3>
+<p>O último item da faixa passa a se chamar "Configurações". Dentro dele, o submenu tem duas seções com título —
+"Configurações Gerais", com o Tema, e "Configurações de IA", com as três opções de sempre —, e cada opção ganha o seu
+ícone em traço: o círculo metade cheio, a tela de computador, as caixas empilhadas e a chave de ligar. Entrar abre o
+Tema. Marcar "Claro" já fica guardado e mostra a frase "O tema novo vale quando o programa abrir de novo." As cinco
+frases que mandavam a "Configurações de IA" passam a dizer "Configurações".</p>
+<p>O que ainda não existe: abrir no tema guardado (etapa 3) e o botão "Reabrir agora" (etapa 4, na ordem nova). O programa continua
+abrindo no escuro, mesmo com "Claro" marcado.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O submenu</td><td>As sete linhas na ordem da spec; cada opção com o seu ícone, e o "‹ Voltar" sem; o título de seção em letra pequena, no cinza, com o filete; clicar nele não muda nada</td></tr>
+  <tr><td>A tela do Tema</td><td>A engrenagem no título, os textos exatos, o tema da tela marcado ao entrar, e a frase só quando a escolha é outra</td></tr>
+  <tr><td>Guardar a escolha</td><td>Marcar grava na hora; marcar de volta grava de novo; o motor e o tamanho da janela continuam como estavam; sem poder gravar, a escolha vale até fechar, sem erro</td></tr>
+  <tr><td>O nome do menu</td><td>O único texto do programa com "Configurações de IA" é o título de seção</td></tr>
+  <tr><td>A janela mínima</td><td>Em 900 × 560, nada sai cortado no submenu nem na tela do Tema</td></tr>
+  <tr><td>A lista inteira</td><td>1.016 testes passando: os 1.000 de antes e 16 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026:</strong> os nove passos do roteiro abaixo, tudo como esperado. A revisão
+pela lente crítica não achou defeito.</p>
+
+<h3>Roteiro na tela</h3>
+<ol>
+  <li><strong>Abrir.</strong> Dois cliques em <code>abrir\abrir-dev.bat</code>.
+    <span class="ve">Você deve ver: o último item da faixa chamado "Configurações", com a engrenagem.</span></li>
+  <li><strong>Entrar.</strong> Clique em "Configurações".
+    <span class="ve">Você deve ver: "‹ Voltar"; o título "Configurações Gerais" com um traço fino à direita; "Tema" marcado; o título "Configurações de IA"; e "LM Studio", "Servidor de IA Interno" e "Habilitar IA", cada um com o seu ícone. À direita, a tela "Tema" com a engrenagem, "Escuro" marcado e nada embaixo das opções. Compare com <code>mockups\janela\06-tema-claro-e-configuracoes.html</code>, seção 1.</span></li>
+  <li><strong>Escolher o claro.</strong> Marque "Claro".
+    <span class="ve">Você deve ver: uma faixa com "O tema novo vale quando o programa abrir de novo." O programa continua escuro — abrir no claro é a etapa 3.</span></li>
+  <li><strong>Mudar de ideia.</strong> Marque "Escuro" de novo.
+    <span class="ve">Você deve ver: a faixa sumir.</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>clicar num título de seção.</strong> Clique em "LM Studio" e depois em "Configurações Gerais".
+    <span class="ve">Você deve ver: nada mudar — "LM Studio" continua marcado, com a tela dele.</span></li>
+  <li><strong>As telas da IA.</strong> Clique em "Servidor de IA Interno" e em "Habilitar IA".
+    <span class="ve">Você deve ver: as telas de sempre, com o ícone da opção claro quando ela está marcada e cinza nas outras.</span></li>
+  <li><strong>As frases que apontam para o menu.</strong> Clique em "‹ Voltar". No Anonimizar, abra <code>dados-exemplo\14-folha-com-40-bolsistas.md</code>.
+    <span class="ve">Você deve ver: ao lado de "Revisar com IA", apagado, "Ligue em Configurações, no fim do menu". E no Gerar OCR, com <code>dados-exemplo\20-paginas-dificeis.pdf</code>, embaixo de "IA local": 'Ligue em Configurações, em "Habilitar IA".'</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>uma revisão não salva.</strong> Com a revisão da folha de bolsistas aberta no Anonimizar, clique em "Configurações".
+    <span class="ve">Você deve ver: a pergunta de descartar a revisão, como antes, e o menu continuar no Anonimizar.</span></li>
+  <li><strong>A janela pequena.</strong> Saia do maximizado e encolha a janela até o mínimo, com o submenu aberto.
+    <span class="ve">Você deve ver: nada cortado no submenu nem na tela do Tema.</span></li>
+</ol>
+
+<h2>Etapa 3 — o programa abre no tema guardado</h2>
+<p class="explica" style="color:var(--cor-texto-secundario)">A ordem das etapas mudou em 06/11/2026, a pedido da
+solicitante: o "Reabrir agora" passou a vir antes do claro conferido tela por tela, para a troca de tema levar um
+clique durante aquela conferência.</p>
+
+<h3>O que mudou</h3>
+<p>Ao abrir, o programa lê o tema guardado e o escolhe antes de montar a janela, que já nasce inteira no tema. Sem
+tema guardado, ou com um que não dá para ler, vale o escuro, sem erro. No claro, as peças que o Windows desenha — a
+barra de rolagem, o menu do botão direito, a dica do mouse — passam a seguir o claro também; no escuro, nada se
+força, e elas continuam como sempre foram.</p>
+<p>Esta é a primeira vez que o claro aparece. A conferência dele tela por tela é a etapa 5: aqui basta ver que ele
+chega, e que o escuro volta.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O tema ao abrir</td><td>Nada guardado, escuro, claro e um valor estranho ("azul"): abre no escuro, no escuro, no claro e no escuro, sem erro</td></tr>
+  <tr><td>O guardado que não se lê</td><td>Com o arquivo impossível de ler, abre no escuro</td></tr>
+  <tr><td>As peças do Windows</td><td>No claro, o programa pede o modo claro ao Windows; no escuro, não muda nada</td></tr>
+  <tr><td>Fechar e abrir no claro</td><td>A janela nasce no claro, e a tela do Tema mostra "Claro" marcado e nada embaixo</td></tr>
+  <tr><td>A lista inteira</td><td>1.024 testes passando: os 1.016 de antes e 8 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026:</strong> o claro chega ao abrir, e o escuro volta. Na conferência, a
+solicitante trouxe dois pedidos que mudam o que foi aprovado, e que voltam para as skills donas antes da etapa 4: o
+ícone do título das telas de Configurações igual ao da opção, e o âmbar do suspeito no claro, que se confunde com o
+preto do texto. A lente crítica achou um defeito, consertado: o programa passa a pedir o Qt a partir da versão 6.8
+(revisão 60).</p>
+
+<h3>Roteiro na tela</h3>
+<ol>
+  <li><strong>Escolher.</strong> Com o programa aberto, vá a Configurações → Tema e marque "Claro". Feche a janela pelo X.
+    <span class="ve">Você deve ver: o programa fechar normalmente.</span></li>
+  <li><strong>Abrir no claro.</strong> Dois cliques em <code>abrir\abrir-dev.bat</code>.
+    <span class="ve">Você deve ver: o programa inteiro no claro — a faixa da esquerda, o painel, o símbolo azul-marinho no alto. Compare com <code>mockups\janela\06-tema-claro-e-configuracoes.html</code>.</span></li>
+  <li><strong>A tela do Tema.</strong> Vá a Configurações.
+    <span class="ve">Você deve ver: "Claro" marcado, e nada embaixo das opções.</span></li>
+  <li><strong>Uma olhada no resto.</strong> Clique em "Gerar OCR" e em "Anonimizar".
+    <span class="ve">Você deve ver: as duas telas de entrada no claro, inteiras. Se algo estiver escuro ou difícil de ler, anote: a conferência tela por tela é a etapa 5, mas já dá para contar.</span></li>
+  <li><strong>A barra de rolagem.</strong> No Gerar OCR, com a janela fora do maximizado e baixa, role a tela até o fim.
+    <span class="ve">Você deve ver: a barra de rolagem clara. Ela é pintada pelo próprio programa, e por isso não prova as peças que o Windows desenha: essas — a dica do mouse e o menu do botão direito — ficam para a etapa 5, onde há botões pequenos e texto para provar (revisão da etapa 3).</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>voltar ao escuro.</strong> Em Configurações → Tema, marque "Escuro", feche pelo X e abra de novo.
+    <span class="ve">Você deve ver: o escuro de sempre, igual ao de antes da funcionalidade.</span></li>
+</ol>
+
+<h2>Ajuste depois da etapa 3 — o âmbar e o vermelho do claro</h2>
+<h3>O que mudou</h3>
+<p>O primeiro dos dois pedidos da conferência da etapa 3. No claro, o suspeito ganha cor própria, um âmbar mais claro
+(<code>#c28102</code>) que se separa do preto do texto, com a barra do item da lista num laranja mais vivo
+(<code>#ec9c01</code>). A letra de aviso passa a <code>#a85a00</code>, e o vermelho a <code>#ae0202</code>. O escuro não
+muda. As opções foram comparadas nos rascunhos <code>mockups\janela\08</code> e <code>09</code>, e a escolha virou o
+acréscimo de 06/11/2026 da spec 001 (RN-29 e RN-30).</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>As cores escolhidas</td><td>O suspeito, a barra, a letra de aviso e o vermelho do claro são os da coluna A do rascunho 09</td></tr>
+  <tr><td>O suspeito contra o texto</td><td>No claro, ele tem pelo menos 4,5 para 1 contra a letra do texto: é o que o faz ser achado</td></tr>
+  <tr><td>A revisão no claro</td><td>O CPF válido e o suspeito saem cada um na sua cor no texto, na etiqueta, na barra e no selo</td></tr>
+  <tr><td>O escuro de antes</td><td>Os dois papéis novos do suspeito ficam, no escuro, no amarelo de sempre</td></tr>
+  <tr><td>A lista inteira</td><td>1.027 testes passando: os 1.024 de antes e 3 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026</strong>, nos dois temas. A lente crítica não achou defeito (revisão 61).</p>
+
+<h2>Ajuste depois da etapa 3 — o ícone do título nas Configurações</h2>
+<h3>O que mudou</h3>
+<p>O segundo pedido da conferência da etapa 3. Nas quatro telas de Configurações, o título deixa a engrenagem e passa a
+levar o mesmo desenho do item do submenu: o do Tema, o do LM Studio, o do Servidor de IA Interno e o do Habilitar IA. A
+engrenagem fica no item "Configurações" da faixa, e o Gerar OCR e o Anonimizar continuam com a lupa e o cadeado. É o
+acréscimo de 06/11/2026 da spec 001 (RN-31).</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O desenho de cada tela</td><td>Tema, LM Studio, Servidor e Habilitar levam, cada uma, o desenho da sua opção</td></tr>
+  <tr><td>O desenho pintado</td><td>O quadrado do título das quatro telas sai com o desenho, e não vazio</td></tr>
+  <tr><td>Entrar em Configurações</td><td>A tela do Tema abre com o desenho do Tema no título</td></tr>
+  <tr><td>A lista inteira</td><td>1.028 testes passando: os 1.027 de antes e 1 novo</td></tr>
+</table>
+<p><strong>Conferida na tela em 06/11/2026.</strong> A lente crítica não achou defeito (revisão 62).</p>
+
+<h2>Etapa 4 — o "Reabrir agora", sem nada a perder</h2>
+<h3>O que mudou</h3>
+<p>Na tela do Tema, ao lado da frase "O tema novo vale quando o programa abrir de novo.", aparece o botão
+<strong>"Reabrir agora"</strong> (RN-24 da spec 001). Clicado, o programa grava o tamanho da janela, abre uma cópia nova
+no tema marcado e só então fecha a velha. A nova volta no mesmo tamanho, maximizada ou não, com o menu principal e nada
+marcado. O tema vai junto com o pedido, e não só no arquivo de preferências: mesmo que o arquivo não aceite a gravação,
+a cópia nova abre no tema certo.</p>
+<p>O caminho torto: se o Windows não deixar abrir a cópia nova, a janela fica de pé, e a frase e o botão dão lugar a
+"Não foi possível reabrir agora. O tema novo vale quando você fechar e abrir o programa." Com uma revisão não salva, vem
+antes a pergunta do fechar, com o botão "Reabrir sem salvar".</p>
+<p>O que ainda não pergunta: uma leitura em andamento e um texto lido e não salvo se perdem ao reabrir. As perguntas
+deles são a etapa 6. Para ver a falha na tela sem bloquear nada de verdade, há o atalho
+<code>abrir\abrir-sem-reabrir.bat</code>.</p>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>O botão</td><td>Aparece ao lado da frase quando o tema marcado é outro, e cabe inteiro, com a frase, na janela mínima</td></tr>
+  <tr><td>Reabrir</td><td>O pedido leva o tema marcado e a janela fecha; o tamanho já está gravado quando a cópia nova começa; sem poder gravar, o tema vai mesmo assim</td></tr>
+  <tr><td>A falha</td><td>A janela fica, a frase da falha aparece e o botão some; marcar o outro tema e voltar devolve a frase e o botão</td></tr>
+  <tr><td>O comando</td><td>Em desenvolvimento, o Python reabre o programa; instalado, o próprio programa se reabre; o tema pedido só vale se for escuro ou claro, e vale mais que o guardado</td></tr>
+  <tr><td>A revisão não salva</td><td>A pergunta vem com "Reabrir sem salvar", e nada reabre antes da resposta</td></tr>
+  <tr><td>A falha depois da pergunta</td><td>Respondida a pergunta e recusada a cópia nova, a pessoa volta para a tela do Tema e lê a frase da falha. Entrou na revisão pela lente crítica (revisão 63): antes, ela ficava parada no Anonimizar, sem resposta</td></tr>
+  <tr><td>A lista inteira</td><td>1.046 testes passando: os 1.028 de antes e 18 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 07/11/2026.</strong> A lente crítica achou um defeito e ele foi consertado (revisão 63).</p>
+
+<h2>Etapa 5 — o claro conferido tela por tela</h2>
+<h3>O que foi feito</h3>
+<p>Nenhuma linha do programa mudou nesta etapa. Treze telas foram fotografadas nos dois temas e comparadas lado a
+lado: o início, as duas entradas, a revisão de um texto, a de um CPF sem o zero da frente e a de um documento do Word, o
+salvar, a pergunta de descartar, o PDF estragado e as quatro telas das Configurações. Depois a solicitante seguiu o
+roteiro na tela, com um PDF lido pelo OCR e a revisão por IA. O que se procurava era algo escuro sobrando no claro,
+letra difícil de ler ou peça cortada.</p>
+<p><strong>Conferida na tela em 07/11/2026:</strong> no visual, tudo certo. Não houve o que consertar, e por isso não
+houve revisão pela lente crítica: ela olha o que mudou, e nada mudou.</p>
+
+<h3>O que apareceu e não é do tema</h3>
+<div class="aviso">Na folha de bolsistas lida com erros, do documento <code>20-paginas-dificeis</code>, um número ficou
+sem máscara: <code>777.777.777.377</code>, a leitura estragada de <code>777.777.777-77</code>. A procura mostrou duas
+causas, e nenhuma veio da funcionalidade 10.
+<ol>
+  <li><strong>O programa sozinho não acha esse número.</strong> Ele tem 12 dígitos, e a regra do que conta como CPF (spec
+    003) só olha números de 9 a 11. O mesmo vale para <code>000.000:000-00</code>, com dois-pontos no meio.</li>
+  <li><strong>A IA só o aponta quando vê o cabeçalho da tabela.</strong> Aberto como arquivo de texto, o documento vai
+    para a IA em dois pedaços, e o corte caiu entre o cabeçalho ("Nome", "CPF") e a linha do Fabio. Sem o "CPF" em cima
+    da coluna, a IA não apontou o número. Com a página inteira, apontou em todas as vezes. Um corte numa linha em branco
+    foi medido: a IA passou a apontar o Fabio, e deixou de apontar o <code>000.000:000-00</code>. Ou seja, trocou um erro
+    por outro.</li>
+</ol>
+Decidido em 07/11/2026: fica para uma versão depois desta entrega, como melhoria do que o programa já faz. A anotação
+está no <code>CLAUDE.md</code>, em "Decidido antes de esquecer".</div>
+
+<h2>Etapa 6 — as perguntas antes de reabrir</h2>
+<h3>O que mudou</h3>
+<p>O "Reabrir agora" pergunta antes quando jogaria trabalho fora (RN-25, RN-27 e RN-28 da spec 001). Isso vale para
+uma leitura em andamento ou um texto lido e ainda não salvo, no Gerar OCR ou no Anonimizar. A pergunta toma o lugar
+da frase e do botão, na própria tela do Tema, sem caixa por cima. É uma faixa amarela, com a linha de cima em negrito
+e dois botões:</p>
+<ul>
+  <li>o forte é o que não perde nada: "Continuar a leitura" quando há uma leitura no meio, ou "Não reabrir" quando há
+    só texto;</li>
+  <li>o outro é "Reabrir mesmo assim".</li>
+</ul>
+<p>Com coisas a perder nos dois módulos, vem uma pergunta só, com as frases da tabela da spec. Sem nada a perder, o
+"Reabrir agora" reabre direto, como na etapa 4.</p>
+<p>Dois cuidados a mais:</p>
+<ul>
+  <li><strong>O que muda com a pergunta na tela é perguntado de novo.</strong> Se a leitura termina enquanto a pergunta
+    espera, o "Reabrir mesmo assim" pergunta sobre o texto que ela virou, porque a pessoa aceitou perder uma leitura, e
+    não o texto.</li>
+  <li><strong>A leitura para no fechar, depois de a janela nova começar a abrir</strong>, como já acontecia ao fechar
+    pelo X. A revisão 63 tinha previsto parar antes. Ao construir, apareceu que, se a janela nova não abrisse, o módulo
+    ficaria preso na tela de "lendo", sem leitura nenhuma. Do jeito que ficou, a falha deixa tudo como estava e diz
+    por quê.</li>
+</ul>
+
+<h3>O que os testes provam</h3>
+<table>
+  <tr><th>Teste</th><th>O que ele confere</th></tr>
+  <tr><td>As frases</td><td>Cada um dos oito casos tem a linha de cima, a de baixo e o botão forte da spec, e sem
+    nada a perder não há pergunta</td></tr>
+  <tr><td>A leitura</td><td>No Gerar OCR e no Anonimizar: a pergunta aparece na tela do Tema, sem caixa por cima;
+    "Continuar a leitura" não toca na leitura e devolve a frase e o botão; "Reabrir mesmo assim" para a leitura e
+    reabre; se a janela nova não abre, a frase da falha aparece</td></tr>
+  <tr><td>O texto não salvo</td><td>No Gerar OCR e na conferência do Anonimizar: "Não reabrir" deixa o texto e a tela
+    como estavam; depois de salvo, reabre sem perguntar</td></tr>
+  <tr><td>Duas coisas</td><td>Uma pergunta só, com "Continuar a leitura", e nada se perde ao continuar</td></tr>
+  <tr><td>O que muda com a pergunta na tela</td><td>Texto novo é perguntado de novo; leitura que acabou não é</td></tr>
+  <tr><td>A revisão não salva</td><td>A pergunta dela vem antes; com "Reabrir sem salvar", a pessoa é levada à tela do
+    Tema, com a pergunta da leitura, e nada reabre antes da resposta</td></tr>
+  <tr><td>A janela mínima</td><td>A pergunta mais longa sai inteira, com as duas linhas e os dois botões</td></tr>
+  <tr><td>Sair da tela com a pergunta aberta</td><td>A pergunta some, a frase e o botão voltam, e o clique seguinte
+    pergunta o que vale naquela hora. Entrou na revisão pela lente crítica (revisão 64): antes, a pergunta velha ficava,
+    e o "Reabrir mesmo assim" perdia sem perguntar as correções de outro documento lido no meio-tempo</td></tr>
+  <tr><td>A lista inteira</td><td>1.071 testes passando: os 1.046 de antes e 25 novos</td></tr>
+</table>
+<p><strong>Conferida na tela em 07/11/2026.</strong> A lente crítica achou um defeito e ele foi consertado (revisão 64).</p>
+
+<h3>Roteiro para conferir na tela</h3>
+<p>Feche o programa, se estiver aberto, e abra de novo por <code>abrir\abrir-dev.bat</code>: ele só pega o código novo
+ao reabrir. O PDF <code>dados-exemplo\20-paginas-dificeis.pdf</code> tem 7 páginas, e a leitura leva alguns segundos
+por página: dá tempo de ir às Configurações enquanto ele lê.</p>
+<ol>
+  <li><strong>Uma leitura no Gerar OCR.</strong> No Gerar OCR, escolha o <code>20-paginas-dificeis.pdf</code> e mande
+    ler. Enquanto ele lê, vá a Configurações → Tema, marque o tema que não está na tela e clique em "Reabrir agora".
+    <span class="ve">Você deve ver: no lugar da frase e do botão, uma faixa amarela com "Há uma leitura em andamento no
+    Gerar OCR." em negrito, e embaixo "Reabrir agora a interrompe, e o documento precisa ser lido de novo depois.". Os
+    botões são "Continuar a leitura", em azul, e "Reabrir mesmo assim". Nenhuma caixa por cima da janela.</span></li>
+  <li>Clique em "Continuar a leitura" e volte ao Gerar OCR.
+    <span class="ve">Você deve ver: na tela do Tema, a faixa sumir e voltarem a frase e o "Reabrir agora". No Gerar
+    OCR, a leitura seguindo, ou já terminada, com o texto na conferência.</span></li>
+  <li><strong>Um texto lido e não salvo.</strong> Com o texto na conferência do Gerar OCR, sem salvar, vá a
+    Configurações → Tema e clique em "Reabrir agora".
+    <span class="ve">Você deve ver: "Há um texto lido e ainda não salvo no Gerar OCR.", com os botões "Não reabrir" e
+    "Reabrir mesmo assim". Clicando em "Não reabrir" e voltando ao Gerar OCR, o texto continua lá, com as correções
+    que você fez.</span></li>
+  <li><strong>Duas coisas a perder.</strong> Com o texto do Gerar OCR ainda sem salvar, vá ao Anonimizar, escolha o
+    mesmo PDF e mande ler. Enquanto ele lê, vá a Configurações → Tema e clique em "Reabrir agora".
+    <span class="ve">Você deve ver: uma pergunta só, "Há um texto lido e ainda não salvo no Gerar OCR e uma leitura em
+    andamento no Anonimizar.", com "Continuar a leitura".</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>a janela mínima.</strong> Com essa pergunta na tela, diminua
+    a janela até o menor tamanho.
+    <span class="ve">Você deve ver: as duas linhas inteiras, quebrando linha se precisar, e os dois botões sem nada
+    cortado.</span></li>
+  <li><span class="torto">Caminho torto:</span> <strong>reabrir mesmo assim.</strong> Clique em "Reabrir mesmo
+    assim".
+    <span class="ve">Você deve ver: o programa fechar e abrir de novo no tema marcado, sem a caixa de "o programa parou
+    de funcionar". O texto do Gerar OCR e a leitura do Anonimizar se perderam, como a pergunta disse.</span></li>
+</ol>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-08, em 07/11/2026. Os números de CPF dos documentos de
+exemplo são inventados.</p>
+</body>
+</html>

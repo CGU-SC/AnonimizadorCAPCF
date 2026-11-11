@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 50 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 50 — antes e depois</h1>
+<p class="subtitulo">Revisão de segurança e varredura mecânica sobre os consertos da revisão 49, em 31/10/2026. Foram 14 achados, todos aprovados pela solicitante e consertados com teste. Um 15º defeito apareceu nos próprios testes novos, e também foi consertado. Nada disto foi visto na tela ainda.</p>
+
+<h2>Revisão de segurança: nenhuma falha grave, e dois problemas com o token</h2>
+<div class="achado"><h3>Ligar a chave do motor mandava o token sem conferir o endereço</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Numa rede hostil, o nome do servidor podia apontar para outra máquina, e ligar a chave enviava o token sem aviso.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Esse teste e o de trocar de modelo conferem o endereço antes. Sem confirmar, nada é enviado, e a tela diz isso.</div></div></div>
+<div class="achado"><h3>"Apagar o token" podia falhar calado</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Com o <code>.env</code> só para leitura, o token ficava, o endereço novo era salvo, e o token ia para onde a pessoa tinha recusado.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O endereço novo não é salvo, e a tela diz por quê.</div></div></div>
+<div class="achado"><h3>Duas leituras ao mesmo tempo, e o instalador</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Uma segunda leitura pela IA sobrescrevia o destino da primeira. E a receita do instalador não excluía o <code>.env</code> da pasta montada.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Cada leitura fica com o seu destino, e o <code>.env</code> nunca entra no instalador.</div></div></div>
+
+<h2>O que podia deixar um CPF sem marca ou à vista</h2>
+<div class="achado"><h3>Número descartado por um espaço</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A IA copiava o número com outro espaçamento, e ele era tratado como inventado: sem máscara e sem aviso.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A busca aceita a diferença de espaços, inclusive um número partido em duas linhas.</div></div></div>
+<div class="achado"><h3>Pedaço de um número maior</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Era mascarado como se fosse o número inteiro, com o resto à vista e a lista dizendo "mascarado".</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Fica só apontado, para a pessoa olhar. Vizinho separado por espaço não conta, para não deixar sem máscara um CPF depois de um "item 3".</div></div></div>
+<div class="achado"><h3>Quatro casos menores</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A segunda ocorrência de um trecho era ignorada. Um CPF liberado dentro de um trecho perdia o traço verde. Uma resposta atrasada mudava o arquivo depois do resumo. E um <code>&lt;/documento&gt;</code> no texto fechava o bloco da instrução.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Os quatro estão corrigidos. Ao cancelar, o "Tentar de novo" retoma do que foi de fato aplicado.</div></div></div>
+
+<h2>O que confundia a pessoa</h2>
+<ul>
+  <li>O "próximo" não pula mais um item que começa na mesma letra de outro.</li>
+  <li>Se tudo o que a IA citou foi descartado, a faixa diz que ela terminou sem nada a mais, em vez de sumir.</li>
+  <li>A pergunta de descartar fala de "1 trecho apontado pela IA", e não de "0 números mascarados". Isto muda a tela.</li>
+  <li>O aviso sobre o trecho marcado não some quando chega um pedaço, e quem arrasta para cima continua arrastando para cima. Isto muda a tela.</li>
+</ul>
+
+<h2>O defeito que os testes novos acharam</h2>
+<p>Revisar de novo punha no número da própria IA um comentário repetindo o motivo dela. Agora o motivo repetido não vira comentário.</p>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li>A leitura pela IA passou a ser uma peça por leitura, em <code>programa/motor_ia.py</code>.</li>
+  <li>As RN-54 a RN-56 entraram na spec 004, e a conferência 06 ganhou um passo.</li>
+  <li>Nenhum arquivo foi apagado, renomeado ou movido.</li>
+</ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li><strong>O modelo ainda pode inventar uma resposta vazia:</strong> com um documento que traga ordens à IA, ela pode responder que não há nada a apontar. Isso não solta máscara nem muda o texto, e é por isso que a faixa lembra que a IA não dispensa a leitura.</li>
+  <li><strong>O nome do servidor pode mudar entre a conferência e a conexão:</strong> a revisão de segurança tratou isso como teórico, e nada foi feito.</li>
+  <li><strong>Página em branco pela IA:</strong> uma resposta vazia vira página vazia, sem falha, porque há páginas em branco de verdade. A conferência mostra a página ao lado do texto.</li>
+</ul>
+<p class="rodape">Gerada em 31/10/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

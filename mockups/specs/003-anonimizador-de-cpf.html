@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Spec ilustrada 003 — Anonimizador de CPF</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1080px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-5); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-2);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  h2 + .nota { margin-top: 0; }
+  .nota { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-3); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .objetivo {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .emenda {
+    background: rgba(217,164,65,0.10);
+    border: 1px solid var(--cor-alerta);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin: var(--espaco-4) 0;
+  }
+
+  /* ---- diagrama do percurso: caixas e setas ---- */
+  .mapa { display: flex; flex-direction: column; gap: var(--espaco-2); align-items: center; }
+  .caixa {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+    text-align: center;
+    min-width: 200px;
+  }
+  .caixa .rotulo { font-weight: 600; }
+  .caixa .detalhe { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .caixa.decisao { border-color: var(--cor-destaque); border-style: dashed; }
+  .caixa.pessoa { border-left: 4px solid var(--cor-sucesso); }
+  .caixa.saida { border-left: 4px solid var(--cor-destaque); }
+  .caixa.reuso { border-left: 4px solid var(--cor-texto-secundario); }
+  .seta { color: var(--cor-texto-secundario); font-size: var(--texto-grande); line-height: 1; }
+  .ramos { display: flex; gap: var(--espaco-3); flex-wrap: wrap; justify-content: center; width: 100%; }
+  .ramo {
+    flex: 1; min-width: 240px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    display: flex; flex-direction: column; gap: var(--espaco-2); align-items: center;
+  }
+  .ramo-titulo { font-size: var(--texto-pequeno); text-transform: uppercase; letter-spacing: 0.05em; color: var(--cor-texto-secundario); font-weight: 700; text-align: center; }
+
+  /* ---- o que conta como CPF: três destinos ---- */
+  .classes { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .classe {
+    flex: 1; min-width: 260px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-top: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .classe.suspeito { border-top-color: var(--cor-alerta); }
+  .classe.ignorado { border-top-color: var(--cor-texto-secundario); }
+  .classe h3 { margin: 0 0 var(--espaco-1) 0; font-size: var(--texto-base); }
+  .classe .destino { font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); margin-bottom: var(--espaco-3); }
+  .exemplo { display: flex; justify-content: space-between; gap: var(--espaco-2); font-family: var(--fonte-mono); font-size: var(--texto-pequeno); padding: var(--espaco-1) 0; border-bottom: 1px dashed var(--cor-borda); flex-wrap: wrap; }
+  .exemplo:last-child { border-bottom: none; }
+  .exemplo .de { color: var(--cor-texto); }
+  .exemplo .para { color: var(--cor-texto-secundario); }
+  .exemplo .porque { width: 100%; font-family: var(--fonte-texto); color: var(--cor-texto-secundario); }
+
+  /* ---- fluxos lado a lado ---- */
+  .fluxos { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .fluxo-coluna {
+    flex: 1; min-width: 320px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .fluxo-coluna.torto { border-color: var(--cor-alerta); }
+  .fluxo-titulo { font-weight: 700; margin-bottom: var(--espaco-2); display: flex; align-items: center; gap: var(--espaco-2); }
+  .fluxo-titulo .marca { width: 10px; height: 10px; border-radius: 50%; background: var(--cor-sucesso); flex: 0 0 auto; }
+  .torto .fluxo-titulo .marca { background: var(--cor-alerta); }
+  .fluxo-quando { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-bottom: var(--espaco-3); }
+  .passo { display: flex; gap: var(--espaco-3); align-items: flex-start; padding: var(--espaco-2) 0; }
+  .passo:not(:last-child) { border-bottom: 1px dashed var(--cor-borda); }
+  .passo-numero {
+    flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--cor-destaque); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--texto-pequeno); font-weight: 700;
+  }
+  .torto .passo-numero { background: var(--cor-alerta); color: #2a2200; }
+  .passo-texto { padding-top: 2px; }
+
+  /* ---- estados ---- */
+  .estados { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .estado-quadro {
+    flex: 1; min-width: 230px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+  }
+  .estado-cabecalho {
+    padding: var(--espaco-2) var(--espaco-3);
+    font-weight: 700; font-size: var(--texto-pequeno);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .cab-vazio { background: rgba(59,110,165,0.18); color: var(--cor-destaque-hover); }
+  .cab-carregando { background: rgba(154,161,172,0.18); color: var(--cor-texto-secundario); }
+  .cab-dados { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .cab-decisao { background: rgba(217,164,65,0.18); color: var(--cor-alerta); }
+  .cab-erro { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .estado-corpo { padding: var(--espaco-3); }
+
+  /* ---- fora de escopo: mesmo peso do escopo ---- */
+  .duas-colunas { display: flex; gap: var(--espaco-3); flex-wrap: wrap; align-items: stretch; }
+  .coluna-peso { flex: 1; min-width: 320px; display: flex; flex-direction: column; }
+  .titulo-peso {
+    font-size: var(--texto-grande); font-weight: 700;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .titulo-entra { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .titulo-nao-entra { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .corpo-peso {
+    flex: 1;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda); border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .corpo-peso ul { margin: 0; padding-left: var(--espaco-4); }
+  .corpo-peso li { margin-bottom: var(--espaco-2); }
+  .corpo-peso li:last-child { margin-bottom: 0; }
+
+  /* ---- premissas, regras e fronteira ---- */
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-alerta);
+    border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3);
+  }
+  .cartao.regra { border-left-color: var(--cor-destaque); }
+  .cartao .chave { font-weight: 700; color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); text-transform: uppercase; letter-spacing: 0.05em; }
+  .selo-nova {
+    display: inline-block; margin-left: var(--espaco-2);
+    background: rgba(217,164,65,0.18); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 700;
+    padding: 0 8px; border-radius: 10px;
+  }
+  .fronteira {
+    display: flex; gap: var(--espaco-3); flex-wrap: wrap; align-items: stretch;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .fronteira .lado { flex: 1; min-width: 260px; }
+  .fronteira .divisor { width: 2px; background: var(--cor-alerta); border-radius: 2px; min-height: 60px; }
+  .fronteira h3 { margin: 0 0 var(--espaco-1) 0; font-size: var(--texto-base); }
+  .fronteira ul { margin: var(--espaco-2) 0 0 0; padding-left: 20px; }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+
+<h1>Spec ilustrada 003 — Anonimizador de CPF</h1>
+<p class="subtitulo">O combinado do item 3 do backlog, desenhado — 13/09/2026 · situação: aprovada em 14/09/2026, com oito emendas aprovadas até 18/09/2026 · <strong>nona emenda aprovada em 20/10/2026</strong> (funcionalidade 6, o CPF sem o zero da frente) · <strong>décima emenda aprovada em 23/10/2026</strong> (funcionalidade 5, o documento do Word)</p>
+
+<div class="objetivo">
+  <strong>Objetivo.</strong> Entregar um <code>.md</code> <strong>sem nenhum CPF inteiro</strong>,
+  pronto para arrastar para a conversa com o assistente de IA, partindo de um PDF, de um
+  <code>.md</code> ou <code>.txt</code> que já existe, ou do texto que acabou de ser conferido no "Gerar OCR".
+  <div class="nota" style="margin-top:8px;margin-bottom:0">
+    Esta página desenha <em>o combinado</em>: caixas, setas e quadros. Ela não é o desenho da
+    tela. O rascunho visual da revisão é outro artefato, com aprovação própria.
+  </div>
+</div>
+
+<div class="emenda">
+  <strong>Uma resposta mudou na hora de escrever.</strong> A linha no topo do arquivo (R-11 do
+  mapa 02) saiu, porque ia contra a RN-11 da spec 002. O arquivo que sai tem o texto e mais
+  nada, igual ao do OCR. O formato <code>XXX.456.789-XX</code> é o mesmo que portais do governo
+  usam, e o assistente o reconhece sem aviso.
+</div>
+
+<div class="emenda">
+  <strong>Emenda de 14/09/2026, aprovada.</strong> O "quase CPF" que passa na conta — depois de
+  trocadas as letras de volta por dígitos e juntadas as partes quebradas — continua suspeito e na
+  lista, mas com a marca "passa na conta": liberá-lo pede a dupla conferência, e, liberado, ele
+  entra no lembrete antes de salvar (RN-2, RN-10 e RN-11). É o CPF de verdade que a leitura
+  estragou, e era o único número válido que saía com um clique. Veio da revisão dos rascunhos de
+  tela 02 e 03.
+</div>
+
+<div class="emenda">
+  <strong>Uma segunda emenda, desfeita no mesmo dia.</strong> O formato único
+  <code>***.456.789-**</code> para todo número mascarado chegou a ser aprovado e foi desfeito
+  horas depois. A máscara continua <strong>mantendo a pontuação original</strong> (RN-6): preserva
+  o formato do documento, e um número mascarado por engano como CPF continua reconhecível pelo
+  formato que tinha — a não ser pela barra antes dos dois últimos, que continua virando traço.
+</div>
+
+<div class="emenda">
+  <strong>O nome na tela, decidido em 14/09/2026.</strong> O tipo "passa na conta" aparece na tela
+  como <strong>"forma CPF válido"</strong>, no amarelo de alerta, e a caixa da dupla conferência é
+  vermelha — o verde de antes dava a impressão de coisa boa, e o vermelho fica para o momento em
+  que um CPF de verdade pode escapar.
+</div>
+
+<div class="emenda">
+  <strong>Terceira emenda de 14/09/2026, aprovada.</strong> No "Anonimizar", a escolha do motor
+  de leitura sai da tela de escolher o arquivo e aparece só quando o PDF vai ser lido como imagem —
+  sem camada de texto, ou depois que a pessoa escolhe ler as imagens. Na primeira tela ela confundia:
+  parecia preciso escolher um motor até para anonimizar um <code>.md</code>. O aviso de motor
+  faltando continua na primeira tela, e o "Gerar OCR" não muda.
+</div>
+
+<div class="emenda">
+  <strong>Quarta emenda de 16/09/2026, aprovada.</strong> Quantas letras no lugar de dígito um
+  "quase CPF" aceita passa a depender da <strong>pontuação</strong>: com ponto, traço ou barra
+  separando os grupos, até <strong>4</strong> das 11 posições; sem separador nenhum, ou só com
+  espaços, até <strong>2</strong>, como era. Veio da conferência da construção: o
+  <code>l23.4S6.789-1O</code> saía inteiro, e o número continuava reconhecível. A pontuação exata de
+  um CPF quase nunca aparece em palavra ou código; sem ela, a sequência tem cara de código.
+</div>
+
+<div class="emenda">
+  <strong>Quinta emenda de 17/09/2026, aprovada.</strong> <strong>Letra no fim do número, grudada numa
+  palavra, é começo de palavra</strong>, e não dígito. Veio de um teste do solicitante: um número
+  de 9 dígitos no fim da linha, com "Situação" na linha de baixo, fechava as 11 posições com o "Si" — 18
+  alarmes falsos num documento só. Vale só para a ponta final: na do começo, a letra grudada continua
+  contando, porque é assim que a leitura cola o "CPF" no número (<code>CPFl11.111.111-11</code>).
+</div>
+
+<div class="emenda">
+  <strong>Sexta emenda de 17/09/2026, aprovada.</strong> Na máscara feita à mão, a
+  <strong>letra parecida com dígito conta como posição</strong> quando o trecho marcado é só um número.
+  Contando só os dígitos, o <code>l23.4S6.789-1O</code> viraria <code>lXX.XS6.78X-XO</code>, com o
+  primeiro e o último dígito à vista — e é justamente esse caso que leva alguém a mascarar à mão. Num
+  trecho que traz palavras junto, continuam contando só os dígitos.
+</div>
+
+<div class="emenda">
+  <strong>Sétima emenda de 18/09/2026, aprovada.</strong> A máscara passa a ser o <strong>X maiúsculo</strong>
+  no lugar do asterisco: <code>123.456.789-10</code> → <code>XXX.456.789-XX</code>, na tela e no arquivo.
+  Veio da conferência da etapa 5, ao abrir o arquivo gravado: num <code>.md</code>, <code>***</code> e
+  <code>**</code> são a marcação de negrito e itálico, e o visualizador — o próprio Bloco de Notas do
+  Windows abre <code>.md</code> já formatado — engolia os asteriscos grudados na pontuação, mostrando
+  <code>*.222.222-</code> no lugar da máscara. O arquivo estava certo por dentro, mas quem o recebesse
+  veria a tarja quebrada. O X não significa nada em Markdown, em posição nenhuma, e não exige escrever
+  no documento nenhum sinal que não estava nele.
+</div>
+
+<div class="emenda">
+  <strong>Oitava emenda de 18/09/2026, aprovada.</strong> As duas decisões que faltavam para as etapas
+  do PDF e do "Seguir para Anonimizar" poderem ser construídas sem adivinhação.
+  <strong>(a) No Anonimizar, o PDF segue o desenho do rascunho 08, sem o cartão do Gerar OCR no
+  meio</strong>: sem texto por dentro, abre a tela "Este documento precisa ser lido", com o nome, as páginas e
+  a escolha do motor logo acima do botão de ler; com texto por dentro, vai direto para a tela de decidir,
+  que já mostra nome, páginas, letras e as primeiras linhas. Nos dois caminhos o tamanho aparece antes de
+  qualquer leitura. <em>Corrigida em 21/09/2026:</em> a primeira versão pedia o cartão do Gerar OCR
+  também aqui, decidida sem reler os estados 3a e 3b do rascunho aprovado, que já respondiam a pergunta.
+  <strong>(b) Depois do "Seguir para Anonimizar", o Gerar OCR fica exatamente como estava</strong>:
+  o texto conferido continua na tela de escolher a saída, e voltando pelo menu dá para salvar o texto como
+  está ou seguir de novo. Um clique por engano não joga fora uma leitura de PDF, que custa minutos — e é
+  isso que a pergunta antes de descartar existe para proteger. Um segundo "Seguir", com a revisão aberta e
+  não salva do outro lado, passa por essa pergunta.
+</div>
+
+<div class="emenda">
+  <strong>Acréscimo de 17/09/2026.</strong> Na revisão, a navegação
+  <strong>"‹ anterior · N de M · próximo ›"</strong>, acima do texto, para passar o documento de cima a
+  baixo sem rolar. Ela percorre todos os números da lista, liberados inclusive, na ordem do texto; cada
+  passo leva o texto até o número e marca o item dele na lista, e a navegação dá a volta nas duas pontas.
+  Clicar num selo do alto — "CPFs válidos", "suspeitos" ou "liberados por você" — leva ao primeiro número
+  daquele grupo e faz a navegação andar só por ele, sem esconder nada do texto nem da lista; clicar de novo, ou no "números encontrados", volta a percorrer todos. Os
+  selos contam <strong>grupos separados, e a soma fecha</strong>: "12 números encontrados" fica fixo, e
+  "CPFs válidos" + "suspeitos" + "liberados por você" dá 12 — liberar um suspeito tira um de "suspeitos"
+  e põe em "liberados". Não muda regra nenhuma de máscara.
+</div>
+
+<div class="emenda">
+  <strong>Nona emenda de 20/10/2026, aprovada — o CPF que perdeu o zero da frente.</strong>
+  Um número solto de <strong>10 ou 9 dígitos</strong> que, com o zero (ou os dois zeros) de volta na frente,
+  <strong>fecha a conta</strong> passa a ser CPF válido, com a etiqueta "sem o zero da frente" na lista. Não
+  precisa estar perto da palavra "CPF". Na máscara, ele <strong>volta a ter 11 dígitos</strong>, no mesmo jeito em
+  que estava escrito, e a coluna da tabela é compensada com os espaços de depois dele. O curto que não fecha a
+  conta, e o que a leitura estragou, ficam de fora. Achado pelo solicitante no teste da 0.1.0: o CPF de
+  10 dígitos saía inteiro. Os exemplos desta
+  página usam números só de zeros, os únicos curtos que fecham a conta e não podem ser de ninguém (RN-22).
+  <div class="classes" style="margin-top:16px">
+    <div class="classe">
+      <h3>Como ele sai</h3>
+      <div class="destino">reconhecido · mascarado com os zeros de volta</div>
+      <div class="exemplo"><span class="de">0000000000</span><span class="para">→ XXX000000XX</span><span class="porque">10 dígitos, sem pontuação: continua sem</span></div>
+      <div class="exemplo"><span class="de">00.000.000-00</span><span class="para">→ XXX.000.000-XX</span><span class="porque">com pontuação: continua com</span></div>
+      <div class="exemplo"><span class="de">000000000</span><span class="para">→ XXX000000XX</span><span class="porque">9 dígitos: "sem os zeros da frente"</span></div>
+    </div>
+    <div class="classe">
+      <h3>A coluna da tabela</h3>
+      <div class="destino">saem, logo depois dele, os espaços que ele cresceu · sempre sobra um</div>
+      <div class="exemplo"><span class="de" style="white-space:pre">| 0000000000     | R$ 1.500,00 |</span></div>
+      <div class="exemplo"><span class="para" style="white-space:pre">| XXX000000XX    | R$ 1.500,00 |</span><span class="porque">do mesmo tamanho: a coluna continua reta</span></div>
+      <div class="exemplo"><span class="de" style="white-space:pre">0000000000 R$ 10,00</span><span class="para" style="white-space:pre">→ XXX000000XX R$ 10,00</span><span class="porque">um espaço só depois dele: a linha cresce uma posição</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="emenda">
+  <strong>Décima emenda de 23/10/2026, aprovada — o documento do Word.</strong>
+  O Anonimizar passa a abrir o <code>.docx</code> e leva para a revisão <strong>tudo o que aparece no documento
+  impresso</strong>: o corpo, as tabelas com barras, o cabeçalho e o rodapé, as notas e as caixas de texto, com as
+  alterações controladas aceitas. O que o Word guarda e não imprime (comentários, texto oculto) e as imagens ficam de
+  fora, e uma <strong>faixa na revisão</strong> diz o que ficou. Só o <code>.docx</code>. O arquivo gerado continua
+  sendo só o <code>.md</code>: devolver o próprio Word mascarado foi perguntado e decidido que não se faz (os motivos
+  estão em "Não entra"). A leitura usa só o que já vem no Python, sem biblioteca nova. Levantamento no mapa 06.
+  <div class="classes" style="margin-top:16px">
+    <div class="classe">
+      <h3>Vai para o arquivo</h3>
+      <div class="destino">nesta ordem · sem rótulo do programa</div>
+      <div class="exemplo"><span class="porque">1. o cabeçalho (cada um diferente, uma vez)</span></div>
+      <div class="exemplo"><span class="porque">2. o corpo: títulos, listas, tabelas com barras, caixas de texto onde estão presas</span></div>
+      <div class="exemplo"><span class="porque">3. o rodapé (cada um diferente, uma vez)</span></div>
+      <div class="exemplo"><span class="porque">4. as notas, numeradas: <code>[^1]</code> no texto, <code>[^1]: …</code> no fim</span></div>
+    </div>
+    <div class="classe ignorado">
+      <h3>Fica de fora, e a faixa conta</h3>
+      <div class="destino">nunca vai para o arquivo</div>
+      <div class="exemplo"><span class="porque">comentários · texto oculto · imagens, gráficos e objetos colados</span></div>
+      <div class="exemplo"><span class="porque">o trecho apagado das alterações controladas (o inserido entra)</span></div>
+      <div class="exemplo"><span class="porque">sem aviso: a descrição escondida das imagens, o endereço por trás dos links, a fórmula dos campos</span></div>
+    </div>
+  </div>
+</div>
+
+<h2>O percurso do texto</h2>
+<p class="nota">Quatro portas de entrada (o Word desde a décima emenda), e todas terminam na mesma revisão. O único momento em que algo vai para o disco é o último.</p>
+
+<div class="mapa">
+  <div class="ramos">
+    <div class="ramo">
+      <div class="ramo-titulo">Menu "Anonimizar" · PDF</div>
+      <div class="caixa reuso"><div class="rotulo">O caminho do Gerar OCR, inteiro</div><div class="detalhe">camada de texto · leitura · cancelar</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa pessoa"><div class="rotulo">Conferência</div><div class="detalhe">obrigatória, como na spec 002</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">"Conferido" → direto</div><div class="detalhe">sem oferecer o arquivo com CPF inteiro</div></div>
+    </div>
+    <div class="ramo">
+      <div class="ramo-titulo">Menu "Anonimizar" · <code>.md</code> ou <code>.txt</code></div>
+      <div class="caixa"><div class="rotulo">Lê o arquivo</div><div class="detalhe">com os acentos certos</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Direto</div><div class="detalhe">o texto já existe, não há leitura nem conferência</div></div>
+    </div>
+    <div class="ramo">
+      <div class="ramo-titulo">Menu "Anonimizar" · <code>.docx</code> (décima emenda)</div>
+      <div class="caixa"><div class="rotulo">Monta o texto do documento impresso</div><div class="detalhe">cabeçalho · corpo · rodapé · notas · alterações aceitas</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">Direto, com a faixa se algo ficou de fora</div><div class="detalhe">sem leitura nem conferência: o texto já existe</div></div>
+    </div>
+    <div class="ramo">
+      <div class="ramo-titulo">Fim do "Gerar OCR"</div>
+      <div class="caixa saida"><div class="rotulo">"Seguir para Anonimizar"</div><div class="detalhe">o botão que hoje está apagado, aceso</div></div>
+      <div class="seta">↓</div>
+      <div class="caixa"><div class="rotulo">O texto conferido passa por dentro</div><div class="detalhe">sem arquivo no meio · o menu marca "Anonimizar"</div></div>
+    </div>
+  </div>
+  <div class="seta">↓</div>
+  <div class="caixa decisao" style="min-width:340px"><div class="rotulo">Procura os CPFs e confere cada um pela conta</div><div class="detalhe">o programa sozinho, num instante · tudo o que achou sai mascarado</div></div>
+  <div class="seta">↓</div>
+  <div class="caixa pessoa" style="min-width:340px">
+    <div class="rotulo">Revisão — sempre aparece</div>
+    <div class="detalhe">o texto mascarado com as trocas destacadas · a lista de suspeitos ao lado · mascarar à mão · desfazer · o salvar liberado desde o começo</div>
+  </div>
+  <div class="seta">↓</div>
+  <div class="caixa saida" style="min-width:340px"><div class="rotulo">Salvar <code>relatorio - sem CPF.md</code></div><div class="detalhe">na pasta da origem · caminho editável · pergunta antes de escrever por cima</div></div>
+  <div class="seta">↓</div>
+  <div class="caixa" style="min-width:340px"><div class="rotulo">Gravado — só o texto, mascarado</div><div class="detalhe">e a tela lembra que a origem continua na pasta com os CPFs inteiros</div></div>
+</div>
+
+<h2>O que conta como CPF</h2>
+<p class="nota">Todo número achado vai para um de três destinos. Os exemplos são inventados: nenhum passa na conta, a não ser os de dígitos repetidos e os só de zeros, que a Receita não emite.</p>
+
+<div class="classes">
+  <div class="classe">
+    <h3>Passa na conta</h3>
+    <div class="destino">mascarado · fora da lista de suspeitos · desfazer pede dupla conferência</div>
+    <div class="exemplo"><span class="de">111.111.111-11</span><span class="para">→ XXX.111.111-XX</span></div>
+    <div class="exemplo"><span class="de">11111111111</span><span class="para">→ XXX111111XX</span></div>
+    <div class="exemplo"><span class="de">111.111.111/11</span><span class="para">→ XXX.111.111-XX</span><span class="porque">a barra vira traço</span></div>
+    <div class="exemplo"><span class="porque">Os quatro formatos combinados, só com dígitos, e os dois últimos batendo com a conta.</span></div>
+    <div class="exemplo"><span class="de">0000000000</span><span class="para">→ XXX000000XX</span><span class="porque"><strong>sem o zero da frente</strong>: 10 ou 9 dígitos que fecham a conta com os zeros de volta; sai com 11 dígitos (nona emenda)</span></div>
+  </div>
+  <div class="classe suspeito">
+    <h3>Suspeito</h3>
+    <div class="destino">mascarado <strong>e</strong> na lista · desfazer é um clique, a não ser o quase CPF que passa na conta</div>
+    <div class="exemplo"><span class="de">123.456.789-10</span><span class="para">→ XXX.456.789-XX</span><span class="porque">falha na conta: pode ser um CPF lido errado</span></div>
+    <div class="exemplo"><span class="de">l23.456.789-1O</span><span class="para">→ XXX.456.789-XX</span><span class="porque">quase CPF: letra no lugar do dígito (até 4, com pontuação)</span></div>
+    <div class="exemplo"><span class="de">123 456 789 10</span><span class="para">→ XXX 456 789 XX</span><span class="porque">quase CPF: espaço no lugar da pontuação</span></div>
+    <div class="exemplo"><span class="de">123.456.⏎789-10</span><span class="para">→ XXX.456.⏎789-XX</span><span class="porque">quase CPF: quebrado entre duas linhas</span></div>
+    <div class="exemplo"><span class="de">l23.4S6.789-1O</span><span class="para">→ XXX.4S6.789-XX</span><span class="porque">quase CPF: três letras, mas com a pontuação de um CPF (quarta emenda)</span></div>
+    <div class="exemplo"><span class="de">l11.111.111-11</span><span class="para">→ XXX.111.111-XX</span><span class="porque">quase CPF que <strong>passa na conta</strong> com o l trocado por 1: continua suspeito, mas desfazer pede dupla conferência (emenda)</span></div>
+  </div>
+  <div class="classe ignorado">
+    <h3>Não é CPF</h3>
+    <div class="destino">fica inteiro, como está</div>
+    <div class="exemplo"><span class="de">12.345.678/0001-90</span><span class="para">CNPJ</span></div>
+    <div class="exemplo"><span class="de">9111.111.111-11</span><span class="para">grudado em outro dígito</span></div>
+    <div class="exemplo"><span class="de">SOL.IDA.DES-OS</span><span class="para">letras demais, mesmo com pontuação</span></div>
+    <div class="exemplo"><span class="de">l234S67891O</span><span class="para">três letras e nenhum separador</span></div>
+    <div class="exemplo"><span class="de">123456789 ⏎ Situação</span><span class="para">o "Si" é começo de palavra (quinta emenda)</span></div>
+    <div class="exemplo"><span class="de">1234567891</span><span class="para">curto que não fecha a conta (nona emenda)</span></div>
+    <div class="exemplo"><span class="de">0000O00000</span><span class="para">curto estragado pela leitura (nona emenda)</span></div>
+    <div class="exemplo"><span class="de">00000000</span><span class="para">8 dígitos ou menos (nona emenda)</span></div>
+    <div class="exemplo"><span class="porque">Número de processo e linha de boleto também: o CPF de verdade não aparece grudado num número maior.</span></div>
+  </div>
+</div>
+
+<h2>Fluxos — o normal e os tortos, lado a lado</h2>
+<p class="nota">O normal tem dez passos. Cada torto tem um ou dois, e é olhando essa diferença que se lembra do que falta.</p>
+
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Normal — um PDF pelo "Anonimizar"</div>
+    <div class="fluxo-quando">O caminho mais longo, e o mais comum</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">Clica em "Anonimizar" no menu.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Vê a área de escolher arquivo (PDF, <code>.md</code>, <code>.txt</code>). O motor não aparece aqui.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">Escolhe o PDF.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">Segue o caminho da spec 002: camada de texto, leitura, conferência. Se o PDF vai ser lido como imagem, a escolha do motor aparece nessa hora.</div></div>
+    <div class="passo"><div class="passo-numero">5</div><div class="passo-texto">Confere, corrige, clica em "conferido".</div></div>
+    <div class="passo"><div class="passo-numero">6</div><div class="passo-texto">Vai direto para a revisão, sem a escolha de saída do OCR.</div></div>
+    <div class="passo"><div class="passo-numero">7</div><div class="passo-texto">O programa acha, confere e mascara. A revisão abre.</div></div>
+    <div class="passo"><div class="passo-numero">8</div><div class="passo-texto">Passa o olho no texto e na lista.</div></div>
+    <div class="passo"><div class="passo-numero">9</div><div class="passo-texto">Salvar: o caminho vem preenchido com <code>- sem CPF.md</code>.</div></div>
+    <div class="passo"><div class="passo-numero">10</div><div class="passo-texto">Gravado. A tela diz onde e lembra que o PDF continua na pasta.</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — a máscara que não devia</div>
+    <div class="fluxo-quando">A pessoa acha que um número mascarado não é CPF</div>
+    <div class="passo"><div class="passo-numero">a</div><div class="passo-texto"><strong>Suspeito que falha na conta:</strong> "desfazer" é um clique. Ele fica na lista como "liberado", com a opção de mascarar de novo.</div></div>
+    <div class="passo"><div class="passo-numero">b</div><div class="passo-texto"><strong>Passa na conta, ou quase CPF que passa:</strong> abre a caixa com o número como está escrito, e o botão já escolhido é "manter a máscara". Enter e Esc não liberam nada.</div></div>
+    <div class="passo"><div class="passo-numero">c</div><div class="passo-texto">Ao salvar, se ela liberou algum que passa na conta, o programa mostra quais foram e deixa voltar.</div></div>
+    <div class="passo"><div class="passo-numero">d</div><div class="passo-texto"><strong>Curto que fechou a conta por acaso</strong> (um telefone com DDD, por exemplo): ela o reconhece pela etiqueta "sem o zero da frente" e desfaz pela dupla conferência, que mostra o número como está no documento. Liberado, ele volta inteiro, com os espaços de antes (nona emenda).</div></div>
+    <div class="fluxo-titulo" style="margin-top:16px"><span class="marca"></span>Torto — o CPF que escapou</div>
+    <div class="passo"><div class="passo-numero">a</div><div class="passo-texto">Ela marca o trecho com o mouse e escolhe "mascarar". Ele aparece na lista como "mascarado à mão".</div></div>
+  </div>
+</div>
+
+<div class="fluxos" style="margin-top:16px">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Alternativos — as outras duas portas</div>
+    <div class="fluxo-quando">Mais curtos que o normal, e terminam no mesmo passo 7</div>
+    <div class="passo"><div class="passo-numero">3a</div><div class="passo-texto"><strong><code>.md</code> ou <code>.txt</code>:</strong> o programa lê o arquivo e pula direto para a revisão.</div></div>
+    <div class="passo"><div class="passo-numero">3a</div><div class="passo-texto"><strong><code>.docx</code> (décima emenda):</strong> o programa monta o texto do documento impresso e pula direto para a revisão. Se havia comentários, texto oculto, imagens ou alterações controladas, a faixa no alto diz o que ficou de fora.</div></div>
+    <div class="passo"><div class="passo-numero">1a</div><div class="passo-texto"><strong>Do "Gerar OCR":</strong> "Seguir para Anonimizar" leva o texto conferido para a revisão, e o menu passa a marcar "Anonimizar".</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Torto — desistências e tropeços</div>
+    <div class="fluxo-quando">Oito casos, e nenhum deixa arquivo pela metade</div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Word só com imagens (décima emenda):</strong> a revisão não abre. A frase diz que ele não tem texto, só imagens, e manda salvar como PDF pelo Word e escolher o PDF. Volta à escolha.</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Word que não abre (décima emenda):</strong> protegido por senha, <code>.doc</code> com o nome trocado, estragado, vazio ou grande demais — cada um com a sua frase, e volta à escolha. <code>.docm</code>, <code>.dotx</code> e <code>.doc</code> recebem a frase de "outro tipo".</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Nenhum CPF:</strong> a revisão abre com o aviso "nenhum CPF encontrado neste texto".</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Sai sem salvar:</strong> o programa pergunta antes de descartar.</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Arquivo que não serve:</strong> uma frase dizendo o que houve, e volta à escolha.</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Já existe o <code>- sem CPF.md</code>:</strong> pergunta antes de escrever por cima.</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Motor faltando:</strong> o aviso do OCR, com as três saídas. <code>.md</code>, <code>.txt</code> e PDF com texto por dentro seguem normalmente. Num PDF com texto em que ela escolhe ler as imagens, a tela do OCR diz que ler como imagem precisa do motor e que o texto continua podendo ser aproveitado — sem dizer que ele "não tem texto por dentro".</div></div>
+    <div class="passo"><div class="passo-numero">·</div><div class="passo-texto"><strong>Cancela a leitura:</strong> volta à escolha do arquivo no "Anonimizar", sem nada gravado.</div></div>
+  </div>
+</div>
+
+<h2>Estados — o que aparece em cada momento</h2>
+<p class="nota">O vazio primeiro, porque é o primeiro que a pessoa vê.</p>
+
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-vazio">vazio</div>
+    <div class="estado-corpo">A área de escolher o arquivo, dizendo que aceita PDF, <code>.docx</code>, <code>.md</code> e <code>.txt</code>, sem a escolha do motor.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-vazio">vazio, com o motor faltando</div>
+    <div class="estado-corpo">O mesmo, mais o aviso do OCR com as três saídas. Escolher arquivo continua funcionando.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-carregando">PDF em andamento</div>
+    <div class="estado-corpo">As telas da spec 002, com "Anonimizar" marcado no menu.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-carregando">procurando os CPFs</div>
+    <div class="estado-corpo">Um instante. A tela mostra que está trabalhando.</div>
+  </div>
+</div>
+<div class="estados" style="margin-top:16px">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">revisão, com CPF</div>
+    <div class="estado-corpo">O texto mascarado, as trocas destacadas por tipo, a lista de suspeitos, a contagem e o salvar liberado.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">revisão, sem CPF</div>
+    <div class="estado-corpo">O texto como veio, o aviso "nenhum CPF encontrado", a lista vazia e o salvar liberado.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-decisao">dupla conferência</div>
+    <div class="estado-corpo">O número como está escrito no texto, a explicação, e "manter a máscara" já escolhido.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">revisão de um Word com algo de fora</div>
+    <div class="estado-corpo">Qualquer uma das duas revisões, mais a faixa no alto: uma linha por aviso, à vista o tempo todo, sem fechar (décima emenda).</div>
+  </div>
+</div>
+<div class="estados" style="margin-top:16px">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-decisao">salvando</div>
+    <div class="estado-corpo">O caminho preenchido e editável. Havendo número que passa na conta liberado, o lembrete vem antes.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-dados">sucesso</div>
+    <div class="estado-corpo">Onde gravou, o lembrete da origem com CPF inteiro, abrir a pasta e anonimizar outro.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho cab-erro">erro</div>
+    <div class="estado-corpo">Uma frase em linguagem comum, e o caminho de volta.</div>
+  </div>
+</div>
+
+<h2>O que entra e o que não entra</h2>
+<p class="nota">As duas listas têm o mesmo peso. O que está à direita não vai ser construído.</p>
+
+<div class="duas-colunas">
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-entra">Entra</div>
+    <div class="corpo-peso">
+      <ul>
+        <li>O painel "Anonimizar", aceitando PDF, <code>.md</code> e <code>.txt</code></li>
+        <li>PDF pelo caminho do OCR, com a conferência obrigatória</li>
+        <li>O botão "Seguir para Anonimizar" do OCR, aceso</li>
+        <li>Os quatro formatos, e o "quase CPF" das leituras estragadas</li>
+        <li>A conta do dígito verificador, feita pelo próprio programa</li>
+        <li>Tudo o que foi achado sai mascarado, suspeitos inclusive</li>
+        <li>A revisão sempre, com a lista de suspeitos</li>
+        <li>Mascarar à mão, e desfazer com dupla conferência para todo número que passa na conta, inclusive o quase CPF</li>
+        <li>O aviso "nenhum CPF encontrado"</li>
+        <li><code>- sem CPF.md</code> na pasta da origem, com o lembrete de que a origem continua lá</li>
+        <li>O aviso da tela de salvar do OCR, atualizado</li>
+        <li>Massa de teste nova, sem CPF de ninguém</li>
+        <li><strong>Nona emenda:</strong> o CPF de 10 ou 9 dígitos que fecha a conta com os zeros de volta, com ou sem pontuação, mascarado com 11 dígitos e a coluna da tabela compensada</li>
+        <li><strong>Décima emenda:</strong> o <code>.docx</code>, com tudo o que aparece impresso — corpo, tabelas com barras, cabeçalho, rodapé, notas, caixas de texto —, as alterações aceitas, títulos e listas, e a faixa do que ficou de fora</li>
+        <li><strong>Décima emenda:</strong> uma frase para cada Word que não abre, e para o Word só com imagens</li>
+        <li><strong>Décima emenda:</strong> documentos do Word inventados na massa, gerados por script</li>
+      </ul>
+    </div>
+  </div>
+  <div class="coluna-peso">
+    <div class="titulo-peso titulo-nao-entra">Não entra</div>
+    <div class="corpo-peso">
+      <ul>
+        <li>Outro dado sensível além do CPF</li>
+        <li>Qualquer linha escrita pelo programa dentro do arquivo</li>
+        <li>Mexer no PDF: nem tarja, nem PDF mascarado</li>
+        <li>Saída que não seja <code>.md</code></li>
+        <li>Caixa para colar texto sem arquivo</li>
+        <li>Apagar o arquivo de origem</li>
+        <li>Editar livremente o texto na revisão</li>
+        <li>Mascarar CNPJ, processo, conta, telefone ou boleto</li>
+        <li>CPF por extenso ou com outros símbolos no meio (fica para a revisão humana e o "mascarar à mão")</li>
+        <li>Vários arquivos de uma vez, ou separar um PDF com vários documentos</li>
+        <li>Guardar histórico</li>
+        <li>A leitura por IA local (item 4 do backlog)</li>
+        <li><strong>Nona emenda:</strong> o curto que não fecha a conta, o curto estragado pela leitura, o de 8 dígitos ou menos, e procurar "CPF" por perto para decidir</li>
+        <li>O aviso de "limitação conhecida" do <code>como-usar.html</code>: cai quando os roteiros forem refeitos para a próxima entrega</li>
+        <li><strong>Décima emenda:</strong> o <code>.doc</code> antigo, o <code>.docm</code> e o <code>.dotx</code>; ler o texto de dentro das imagens; comentários, texto oculto e o trecho apagado; negrito, itálico, cor e fonte; planilha e apresentação; o CPF partido por uma tecla apertada no meio dele (Enter ou Shift+Enter na célula da tabela) — a rede é a revisão humana e o "mascarar à mão"</li>
+        <li><strong>Décima emenda — devolver o próprio Word mascarado, nem agora nem depois.</strong> O Word guarda o texto em pedaços, e o CPF pode vir partido entre dois; cada decisão da revisão teria de voltar à posição exata dentro dele; o arquivo inteiro iria junto, e o CPF teria de sair também dos comentários, do trecho apagado, do texto oculto, dos links, das propriedades, da miniatura e da planilha colada; o CPF numa imagem não se reescreve; e seriam umas cinco ou seis etapas a mais, as com mais chance de vazar sem ninguém ver</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h2>A fronteira com o módulo 2</h2>
+<p class="nota">O Anonimizar usa o OCR sem colocar CPF dentro dele.</p>
+<div class="fronteira">
+  <div class="lado">
+    <h3>Módulo 2 — Gerar OCR · o que muda nele</h3>
+    <ul>
+      <li>O botão "Seguir para Anonimizar" acende</li>
+      <li>O aviso da tela de salvar aponta para o Anonimizar pronto</li>
+      <li>O caminho dele passa a ser usado também pelo "Anonimizar", com o fim da conferência levando à revisão</li>
+    </ul>
+  </div>
+  <div class="divisor"></div>
+  <div class="lado">
+    <h3>O que continua igual</h3>
+    <ul>
+      <li>Nenhuma linha de CPF no código do OCR: procurar, conferir e mascarar mora só no Anonimizar</li>
+      <li>O arquivo que o OCR salva continua com os CPFs inteiros, e a tela continua dizendo isso</li>
+      <li>Todas as regras e os critérios da spec 002</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Premissas — o que está sendo assumido</h2>
+<p class="nota">As 15 de antes, as 10 da nona emenda e as 16 da décima, no fim. Das da décima, as 4 marcadas como "nova" apareceram ao escrever a emenda, e você ainda não as viu no mapa 06.</p>
+<div class="cartoes">
+  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — No "Anonimizar", o aviso de motor faltando aparece igual ao "Gerar OCR", na primeira tela; a escolha do motor aparece só quando o PDF vai ser lido como imagem (terceira emenda). Para <code>.md</code> e <code>.txt</code>, o motor não importa.</div>
+  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — "Quase CPF" tem o limite de letras no lugar de dígito <strong>depende da pontuação</strong>: até <strong>4</strong> com ponto, traço ou barra separando os grupos, e <strong>2</strong> sem separador ou só com espaços (quarta emenda).</div>
+  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — A máscara à mão esconde os 3 primeiros e os 2 últimos dígitos do trecho, ou todos se forem 5 ou menos. Trecho sem dígito não muda nada.</div>
+  <div class="cartao"><span class="chave">premissa</span><span class="selo-nova">nova</span> — Máscara desfeita pode ser refeita: o item fica na lista como "liberado".</div>
+  <div class="cartao"><span class="chave">premissa</span> — No "quase CPF", a máscara cai nas 3 primeiras e nas 2 últimas posições, mesmo com letra ali. Quebrado entre linhas, as duas partes são mascaradas.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Dígitos repetidos (<code>111.111.111-11</code>) passam na conta e são tratados como CPF.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Desfazer um suspeito que falha na conta ou uma máscara feita à mão é um clique. O quase CPF que passa na conta pede dupla conferência.</div>
+  <div class="cartao"><span class="chave">premissa</span> — A máscara não muda o tamanho do número: a tabela continua alinhada. <em>Desde a nona emenda, com uma exceção:</em> o CPF sem o zero da frente cresce 1 ou 2 posições, e a coluna é compensada pelos espaços de depois dele.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Clicar num suspeito da lista leva o texto até ele.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Sair da revisão sem salvar pergunta antes de descartar.</div>
+  <div class="cartao"><span class="chave">premissa</span> — O menu marca "Anonimizar" o caminho todo.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Um arquivo já anonimizado dá "nenhum CPF encontrado".</div>
+  <div class="cartao"><span class="chave">premissa</span> — O <code>.txt</code> abre com os acentos certos.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Arquivo vazio ou que não é texto dá erro e volta. PDF com problema usa os avisos do OCR.</div>
+  <div class="cartao"><span class="chave">premissa</span> — Um arquivo por vez, nada guardado entre usos, a origem nunca alterada.</div>
+  <div class="cartao"><span class="chave">premissa</span> — O botão do OCR acende, e o aviso da tela de salvar do OCR é atualizado.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — O curto é achado em todo caminho do Anonimizar. O Gerar OCR continua sem CPF (RN-18).</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — O curto colado a outro dígito, ou ligado a ele por ponto, traço ou barra, não conta (RN-3).</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Com 8 dígitos ou menos, fica de fora.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Soltá-lo pede a dupla conferência e o aviso antes de gravar, e ele conta nos "CPFs válidos".</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — O número que fecha a conta por acaso (cerca de 1 em 100 curtos soltos) sai mascarado, e a pessoa o solta pela dupla conferência.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Pontuações aceitas: as da RN-1, com o grupo da frente mais curto. Outra mistura fica de fora.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span> — Soltá-lo devolve exatamente o que estava no documento, com os espaços que a compensação tinha tirado.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Letra grudada <strong>antes</strong> do curto não o impede de contar (<code>CPF0000000000</code>), como no CPF completo.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Com 9 dígitos, a etiqueta diz "sem os zeros da frente", no plural.</div>
+  <div class="cartao"><span class="chave">premissa · nona emenda</span><span class="selo-nova">nova</span> — Na massa e nos testes, o curto que fecha a conta é só de zeros. O formato com outros dígitos é conferido direto na regra da máscara, e o telefone que fecha a conta não entra na massa.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — Gráfico, planilha colada, desenho e outros objetos colados contam como <strong>imagem</strong> na faixa: o programa não lê o que está dentro deles.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — As notas de rodapé vêm primeiro, numeradas de 1 em diante, e as de fim continuam a numeração, no formato de nota do <code>.md</code> (<code>[^1]</code>).</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — Título é o parágrafo que o Word marca como título (estilo "Título", "Título 1" a "Título 6", ou nível de tópico). Texto só em negrito e maior não vira título.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span><span class="selo-nova">nova</span> — Quando o CPF sem o zero da frente é o texto mais largo da coluna, aquela linha da tabela anda 1 ou 2 posições: continua tabela, só o alinhamento visual muda.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — O texto do <code>.docx</code> vai direto para a revisão, sem leitura nem conferência.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Protegido por senha, <code>.doc</code> renomeado, estragado e vazio: cada um com a sua frase, e volta à escolha.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — O Word entra só no Anonimizar. O Gerar OCR continua só com PDF.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — <code>relatorio.docx</code> sugere <code>relatorio - sem CPF.md</code>, e o <code>.docx</code> original nunca é alterado.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Campo automático: vai o que o Word mostra, e não a fórmula.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Link: vai o texto que aparece, nunca o endereço por trás.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — A descrição escondida da imagem não vai.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Há um tamanho máximo para o Word: 50 MB de texto descompactado, conferido antes de descompactar.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — A massa ganha documentos do Word inventados, gerados por script, com os CPFs da RN-22.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — A tela de escolher diz "PDF, .docx, .md ou .txt", e o <code>.docx</code> funciona sem motor.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — Quebra de página não deixa marca; subitem sai com recuo; lista numerada leva o número que o Word mostra.</div>
+  <div class="cartao"><span class="chave">premissa · décima emenda</span> — O teste que proibia o Word passa a usar uma planilha como "outro tipo".</div>
+</div>
+
+<h2>As regras que mais pesam</h2>
+<div class="cartoes">
+  <div class="cartao regra"><span class="chave">RN-5</span> — Tudo o que foi achado é mascarado, inclusive o suspeito. O erro fica do lado seguro.</div>
+  <div class="cartao regra"><span class="chave">RN-3</span> — Número grudado num número maior não é CPF. CNPJ, processo e boleto saem inteiros.</div>
+  <div class="cartao regra"><span class="chave">RN-10</span> — Desfazer todo número que passa na conta, inclusive o quase CPF que passa, pede dupla conferência, com "manter a máscara" já escolhido.</div>
+  <div class="cartao regra"><span class="chave">RN-12</span> — O arquivo tem o texto e mais nada. A RN-11 da spec 002 vale nos dois arquivos.</div>
+  <div class="cartao regra"><span class="chave">RN-15</span> — PDF pelo "Anonimizar" passa pela conferência obrigatória e nunca oferece o arquivo com CPF inteiro.</div>
+  <div class="cartao regra"><span class="chave">RN-22</span> — A massa de teste nunca tem CPF que possa ser de alguém. Na nona emenda, o curto que fecha a conta é só de zeros.</div>
+  <div class="cartao regra"><span class="chave">RN-1 · nona emenda</span> — O número de 10 ou 9 dígitos que fecha a conta com os zeros de volta é CPF válido. O que falha não é achado.</div>
+  <div class="cartao regra"><span class="chave">RN-6 · nona emenda</span> — Ele é mascarado com os 11 dígitos de volta, no jeito em que estava escrito, e a coluna é compensada.</div>
+  <div class="cartao regra"><span class="chave">RN-24 · décima emenda</span> — Do Word vai o documento impresso, na ordem cabeçalho, corpo, rodapé, notas, sem rótulo do programa.</div>
+  <div class="cartao regra"><span class="chave">RN-25 · décima emenda</span> — O Word como ficaria com tudo aceito: o trecho apagado, os comentários e o texto oculto nunca vão para o arquivo.</div>
+  <div class="cartao regra"><span class="chave">RN-29 · décima emenda</span> — A faixa diz o que ficou de fora, só na tela, e nunca no arquivo.</div>
+  <div class="cartao regra"><span class="chave">RN-30 · décima emenda</span> — O Word só com imagens não abre a revisão: a frase manda pelo caminho do PDF.</div>
+</div>
+
+<h2>Questões em aberto</h2>
+<p>Nenhuma. O desenho das telas vem no rascunho, em <code>mockups/anonimizar/</code>, com aprovação própria antes da construção.</p>
+
+<p class="rodape">
+  O contrato é o texto: <code>especificacoes/specs/003-anonimizador-de-cpf.md</code>. Esta página é
+  como ele se lê, e se regenera por cima sempre que a spec mudar.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 65 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro: #e05d5d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lado { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .caixa { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 12px 16px; }
+  .caixa.antes { border-top: 3px solid var(--cor-erro); }
+  .caixa.depois { border-top: 3px solid var(--cor-sucesso); }
+  .caixa b.rotulo { display: block; font-size: 13px; color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .caixa blockquote { margin: 0 0 10px; padding-left: 12px; border-left: 2px solid var(--cor-borda); font-style: italic; }
+  ol { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 65 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre o roteiro <code>empacotar/como-instalar.html</code>, refeito para a versão
+0.2.0, em 10/11/2026, depois de a solicitante conferir a página no navegador. Um achado, aprovado e consertado. A
+varredura automática (<code>/code-review</code>) não rodou, porque o arquivo é um roteiro com imagens embutidas, e não
+código; o que ela faria foi feito à mão: os links internos da página, a busca por endereço de fora e cada frase do
+programa citada no roteiro, comparada com o texto dele.</p>
+
+<div class="achado"><h3>Acrescentar a linha dos endereços locais podia estragar a linha do Tesseract</h3>
+  <div class="lado">
+    <div class="caixa antes"><b class="rotulo">Antes</b>
+      <blockquote>Numa instalação atualizada da 0.1.0, essa linha não existe: acrescente-a no fim do arquivo.</blockquote>
+      <ol>
+        <li>A TI atualiza uma 0.1.0 cujo <code>.env</code> já tem a pasta do Tesseract preenchida.</li>
+        <li>Abre o arquivo no Bloco de Notas, clica no fim da última linha que vê e escreve ali mesmo.</li>
+        <li>As duas linhas viram uma só:
+          <code>TESSERACT_CAMINHO=D:\Programas\Tesseract-OCRIA_ENDERECOS_LOCAIS=...</code></li>
+        <li>O programa deixa de achar o Tesseract e continua abrindo o aviso de "endereço externo", cada sintoma numa
+          tela diferente, sem nada ligando um ao outro.</li>
+      </ol>
+    </div>
+    <div class="caixa depois"><b class="rotulo">Depois</b>
+      <blockquote>Numa instalação atualizada da 0.1.0, essa linha não existe: acrescente-a <b>numa linha nova</b>, no
+        fim do arquivo — aperte <b>Ctrl+End</b> e <b>Enter</b> antes de escrever. Escrita na ponta da linha do
+        Tesseract, as duas viram uma só, e nenhuma das duas funciona.</blockquote>
+      <ol>
+        <li>A mesma TI, o mesmo arquivo.</li>
+        <li>Ctrl+End leva ao fim, Enter abre a linha nova, e a linha dos endereços entra sozinha.</li>
+        <li>As duas linhas continuam valendo.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li><code>empacotar/como-instalar.html</code>: só a frase acima, na parte 4, "Um servidor de IA da rede". Nenhum
+    arquivo criado, apagado ou movido, e nada do programa tocado.</li>
+</ul>
+
+<h2>O que foi levantado e não virou achado</h2>
+<p>Três frases do roteiro foram escritas sem teste. Nenhuma leva alguém a errar em silêncio, porque cada uma, se
+falhar, aparece na tela de quem a segue. Ficam anotadas para a solicitante decidir:</p>
+<ul>
+  <li><b>A pasta do plano B</b>, <code>.lmstudio\models\lmstudio-community</code>: veio da print do LM Studio 0.4.23 e
+    do nome que a Library mostra, mas ninguém copiou um modelo de uma máquina para outra. Se estiver errada, o modelo
+    não aparece na Library, e o roteiro já manda conferir lá.</li>
+  <li><b>"Server Settings, do jeito que vem, atende só esta máquina"</b>: é o padrão conhecido do LM Studio, sem
+    conferência na tela desta máquina.</li>
+  <li><b>"Windows 10 ou 11"</b>: a 0.2.0 só rodou no Windows 11.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 10/11/2026.</p>
+</body>
+</html>

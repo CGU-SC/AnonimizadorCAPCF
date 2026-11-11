@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 60 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  pre { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; background: var(--cor-fundo); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 10px 12px; white-space: pre-wrap; margin: 6px 0 0; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 60 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre a etapa 3 da funcionalidade 10 (o programa abre no tema guardado), em
+06/11/2026, depois de a solicitante conferir na tela. A varredura levantou oito suspeitas; uma virou achado, aprovado e
+consertado.</p>
+
+<div class="achado"><h3>Numa máquina com o Qt 6.7, quem guardou o claro não abriria o programa</h3>
+  <p>O pedido ao Windows para desenhar as peças dele no modo claro só existe a partir do Qt 6.8, e a lista de peças do
+  programa aceitava a 6.7. Numa máquina que já tivesse a 6.7, a instalação das dependências não atualizaria nada, e o
+  programa quebraria antes de a janela aparecer — até alguém apagar o <code>preferencias.ini</code>. Agora a lista pede a
+  6.8, e o atalho de abrir, que roda a instalação toda vez, atualiza sozinho quem estiver abaixo. Nesta máquina, que tem
+  a 6.11, nada muda.</p>
+  <div class="lados">
+    <div class="lado antes"><div class="rotulo">Antes</div>
+<pre># Interface gráfica (janela do programa)
+PySide6>=6.7,<7</pre></div>
+    <div class="lado depois"><div class="rotulo">Depois</div>
+<pre># Interface gráfica (janela do programa). A partir da 6.8,
+# e não da 6.7: é a versão que deixa o programa pedir ao
+# Windows as peças no modo claro ...
+PySide6>=6.8,<7</pre></div>
+  </div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li><code>requirements.txt</code>: a versão mínima do Qt e o comentário com o porquê.</li>
+  <li><code>conferencias/07-tema-claro-e-configuracoes.html</code>: duas frases corrigidas — a etapa 2 ainda chamava o
+    "Reabrir agora" de etapa 5, e o passo 5 da etapa 3 dizia provar as peças do Windows com uma barra de rolagem que é
+    pintada pelo próprio programa.</li>
+  <li>Nenhum arquivo criado, apagado ou movido além desta página.</li>
+</ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li><b>O escuro não desfaz o modo claro pedido ao Windows, se a janela for refeita no mesmo programa aberto.</b> Não
+    acontece: o "Reabrir agora" vai abrir uma cópia nova do programa.</li>
+  <li><b>A regra "tema estranho vale como escuro" está escrita em dois lugares</b>, e <b>um nome se repete em
+    <code>main.py</code></b> com dois sentidos. São da lente de clareza.</li>
+  <li><b>O modo do Windows não volta sozinho entre um teste e outro</b>, e <b>falta um teste do escuro depois do claro</b>.
+    São falhas de teste, e não do programa: lente de manutenção.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 06/11/2026.</p>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 51 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 51 — antes e depois</h1>
+<p class="subtitulo">Varredura mecânica sobre os consertos da revisão 50, em 31/10/2026. De 10 suspeitas, 7 eram defeitos reais, aprovados pela solicitante e consertados com teste. Por decisão dela, as varreduras param aqui: o que mais falta é ver a tela e testar com um modelo de verdade.</p>
+
+<h2>O que podia esconder um CPF ou mandar o token</h2>
+<div class="achado"><h3>O falso "terminou sem nada a mais"</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Cancelando no instante em que a última resposta chegava, ela era descartada, e a tela dizia que a IA não tinha apontado nada.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A tela diz que a pessoa cancelou, e oferece retomar do que foi de fato aplicado.</div></div></div>
+<div class="achado"><h3>Mudar o endereço durante um teste</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A resposta antiga religava o destino, e o token podia ir para o endereço novo sem esse teste ter sido pedido.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Endereço, token, porta e os botões ficam travados enquanto o teste está aberto.</div></div></div>
+<div class="achado"><h3>O motor valendo por um teste antigo</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Depois de trocar a porta ou religar a chave, uma leitura com CPFs inteiros podia sair durante o novo teste.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A marca de testado é limpa antes de cada teste, e ao trocar a porta.</div></div></div>
+<div class="achado"><h3>O documento na memória, e as variações de <code>&lt;/documento&gt;</code></h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>O trabalho terminado podia ficar guardado com o texto até fechar o programa. E <code>&lt;/documento &gt;</code>, com espaço, ainda parecia o fim do bloco.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O trabalho é solto assim que termina, e as variações com espaço são reconhecidas.</div></div></div>
+
+<h2>O que confundia a pessoa</h2>
+<ul>
+  <li>Falha do motor pela IA agora diz o motivo, como token recusado ou modelo fora do ar. Isto muda um texto na tela.</li>
+  <li>Modelo guardado que saiu do LM Studio deixa de contar como testado ao abrir a tela, em vez de dizer "Respondendo agora" e falhar a cada revisão.</li>
+</ul>
+
+<h2>O que foi achado e não consertado</h2>
+<ul>
+  <li><strong>Um pedaço com resposta ruim trava o resto:</strong> a tela diz isso. O botão "Pular esta parte e seguir" fica para depois do teste com modelo. Está anotado no <code>CLAUDE.md</code>.</li>
+  <li><strong>Modelo que responde vazio ou se recusa:</strong> não dá para distinguir de uma página em branco de verdade, e fica com a conferência humana.</li>
+  <li><strong>Endereço externo salvo depois do aviso:</strong> a varredura apontou isso como violação da regra dura, mas foi decisão da solicitante, e a regra já está emendada.</li>
+</ul>
+<p class="rodape">Gerada em 31/10/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

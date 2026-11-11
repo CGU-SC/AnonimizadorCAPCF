@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 02 — antes e depois</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 1000px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .contagens { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-4); }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 130px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-achado .contagem-numero { color: var(--cor-alerta); }
+  .c-consertado .contagem-numero { color: var(--cor-sucesso); }
+  .c-recusado .contagem-numero { color: var(--cor-texto-secundario); }
+  .c-fora .contagem-numero { color: var(--cor-erro); }
+
+  .lente {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .lente .rotulo {
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-secundario);
+    font-weight: 700;
+  }
+  .lente.limpa { border-left-color: var(--cor-sucesso); }
+
+  .mudanca {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  .mudanca .arquivo {
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    color: var(--cor-texto-secundario);
+    margin-bottom: var(--espaco-2);
+  }
+  .mudanca .explicacao { margin-bottom: var(--espaco-4); }
+  .mudanca .pergunta {
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    margin-bottom: var(--espaco-4);
+    border-left: 2px solid var(--cor-borda);
+    padding-left: var(--espaco-3);
+  }
+
+  .lado-a-lado { display: flex; gap: var(--espaco-3); flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 300px; }
+  .lado-titulo {
+    font-size: var(--texto-pequeno);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .lado-titulo.antes { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .lado-titulo.depois { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  pre {
+    margin: 0;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+    padding: var(--espaco-3);
+    overflow-x: auto;
+    font-family: var(--fonte-mono);
+    font-size: var(--texto-pequeno);
+    line-height: 1.5;
+    color: var(--cor-texto);
+  }
+  pre .rem { color: var(--cor-texto-secundario); }
+  pre .novo { color: var(--cor-sucesso); }
+
+  .lista-simples { list-style: none; padding: 0; margin: 0; }
+  .lista-simples li {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-2);
+  }
+
+  .nao-consertado {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-erro);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-3);
+  }
+  .nao-consertado .titulo { font-weight: 600; margin-bottom: var(--espaco-2); }
+  .nao-consertado .motivo {
+    margin-top: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+  }
+  code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+
+  .aviso {
+    margin-top: var(--espaco-5);
+    background: rgba(59,110,165,0.12);
+    border: 1px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .prova {
+    background: rgba(76,175,109,0.10);
+    border: 1px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+  table { border-collapse: collapse; width: 100%; }
+  th, td {
+    text-align: left;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: var(--texto-pequeno);
+  }
+  th { color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rodape {
+    margin-top: var(--espaco-4);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+</style>
+</head>
+<body>
+
+<h1>Revisão 02 — antes e depois</h1>
+<p class="subtitulo">AnomizadorCAPCF — 10/09/2026</p>
+
+<div class="lente">
+  <div class="rotulo">O que foi revisado</div>
+  <p>
+    O preparo da funcionalidade 2, <strong>Módulo de OCR</strong> — o script que
+    fabrica os documentos de teste (<code>dados-exemplo/gerar-massa.py</code>), os
+    seis PDFs que ele gera, o <code>README.md</code> da pasta de exemplos e as duas
+    anotações novas no <code>CLAUDE.md</code>.
+  </p>
+  <p>
+    <strong>Duas lentes rodaram, uma de cada vez</strong>, porque lente é um tipo de
+    defeito por vez: seis lentes juntas viram uma lista de trinta observações que
+    ninguém lê.
+  </p>
+</div>
+
+<div class="contagens">
+  <div class="contagem-item c-achado">
+    <div class="contagem-numero">5</div>
+    <div class="contagem-label">achados nas duas lentes</div>
+  </div>
+  <div class="contagem-item c-consertado">
+    <div class="contagem-numero">5</div>
+    <div class="contagem-label">aprovados e consertados</div>
+  </div>
+  <div class="contagem-item c-recusado">
+    <div class="contagem-numero">0</div>
+    <div class="contagem-label">recusados</div>
+  </div>
+  <div class="contagem-item c-fora">
+    <div class="contagem-numero">5</div>
+    <div class="contagem-label">suspeitas fora das lentes</div>
+  </div>
+</div>
+
+<h2>Lente 1 — segredo e dado real</h2>
+
+<div class="lente limpa">
+  <div class="rotulo">Resultado: nada encontrado</div>
+  <p>
+    Esta lente procura só quatro coisas: senha escrita no código, arquivo de
+    segredo entrando no histórico, dado de gente de verdade em pasta versionada, e
+    arquivo sendo gravado fora do lugar dele. Nenhuma apareceu.
+  </p>
+  <p>
+    Silêncio é resultado legítimo — mas só depois de olhar. O que foi olhado:
+  </p>
+</div>
+
+<table>
+  <tr><th>O que foi conferido</th><th>O que se achou</th></tr>
+  <tr><td>Senha ou chave escrita no código</td><td>nenhuma</td></tr>
+  <tr><td>O arquivo <code>.env</code> entrou no histórico?</td><td>não — só o <code>.env.example</code>, sem nenhum valor preenchido</td></tr>
+  <tr><td>Dado real nos seis PDFs</td><td>nenhum. O único nome é "Fulano de Tal Exemplo"</td></tr>
+  <tr><td>O CPF da massa é inválido de verdade?</td><td><strong>sim, conferido por conta.</strong> Para <code>123.456.789</code> os dígitos corretos seriam <code>09</code>; o arquivo traz <code>10</code></td></tr>
+  <tr><td>O que os PDFs contam sobre esta máquina</td><td>nada — sem autor e sem nome de usuário gravado dentro</td></tr>
+  <tr><td>O script grava fora da pasta dele?</td><td>não, só dentro de <code>dados-exemplo</code></td></tr>
+</table>
+
+<div class="aviso" style="margin-top: var(--espaco-4);">
+  <strong>Uma coisa que parece achado e não é.</strong> O script tem a palavra
+  <code>senha-de-teste</code> escrita nele. Ela abre um único arquivo inventado,
+  gerado pelo próprio script, e está publicada no <code>README.md</code> da pasta de
+  propósito — não dá acesso a nada. Senha de verdade continua morando só no
+  <code>.env</code>, que nunca entra no histórico.
+</div>
+
+<h2>Lente 2 — clareza</h2>
+
+<p>
+  Esta lente não procura defeito de funcionamento. Ela procura o trecho que
+  funciona mas que ninguém consegue ler depois — inclusive quem escreveu. Cinco
+  achados, todos aprovados e consertados.
+</p>
+
+<div class="mudanca">
+  <div class="arquivo">1 · dados-exemplo/gerar-massa.py — o número escolhido a dedo</div>
+  <div class="explicacao">
+    O parágrafo dos documentos era quebrado em linhas de 78 letras, e o número
+    aparecia cru. Agora ele tem nome e o comentário conta de onde veio — inclusive
+    o aviso de que a folga é de apenas dois pontos até a borda da página.
+  </div>
+  <div class="pergunta">Pergunta que ficava sem resposta: <em>por que 78, e não 60 ou 90?</em></div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">for pedaco in _quebrar(PARAGRAFO, 78):</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo"># Quantas letras cabem numa linha antes de
+# ela precisar quebrar. O número foi medido
+# para a linha caber na folha, e a folga é
+# pouca: com a fonte usada nos documentos de
+# contorno, a linha mais longa chega a dois
+# pontos da borda direita. Aumentar este
+# número corta o fim das linhas sem avisar.
+LARGURA_DA_LINHA = 78
+...
+for pedaco in _quebrar(PARAGRAFO, LARGURA_DA_LINHA):</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">2 · dados-exemplo/gerar-massa.py — peças pedidas no meio do caminho</div>
+  <div class="explicacao">
+    O script pedia as peças de desenho do Qt lá dentro das funções, em três
+    lugares, enquanto o resto era pedido no alto do arquivo. Não havia motivo — e é
+    justamente por isso que confundia: quem lê procura a razão escondida e não
+    acha. Agora está tudo junto, no alto.
+  </div>
+  <div class="pergunta">Pergunta que ficava sem resposta: <em>por que estas peças são pedidas aqui dentro, e não lá em cima com as outras? Tem armadilha nisso?</em></div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">def _desenhar_como_contorno(...):
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QFont, QPainterPath
+    ...
+
+def _abrir_folha(caminho):
+    from PySide6.QtGui import QPageSize, QPdfWriter, QPainter
+    from PySide6.QtCore import QMarginsF
+    ...</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo">import pymupdf
+from PySide6.QtCore import QMarginsF, Qt
+from PySide6.QtGui import (
+    QFont,
+    QGuiApplication,
+    QPageSize,
+    QPainter,
+    QPainterPath,
+    QPdfWriter,
+)</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">3 · dados-exemplo/gerar-massa.py — as seções fora de ordem</div>
+  <div class="explicacao">
+    As faixas que numeram as seções do arquivo estavam na ordem 1, 4, 5, 6 — e só
+    então 2 e 3, lá no fim. Foi descuido: elas nasceram numa segunda passada.
+    Agora leem na mesma ordem dos nomes dos arquivos e da tabela do README.
+  </div>
+  <div class="pergunta">Pergunta que ficava sem resposta: <em>o 2 e o 3 estão no fim porque dependem de alguma coisa anterior, ou foi descuido?</em></div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem"># 1. PDF com texto por dentro e uma tabela
+# 4. PDF com camada de texto embaralhada
+# 5. Arquivo que não abre
+# 6. PDF protegido por senha
+# 2 e 3. PDFs em que as letras viraram desenho</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo"># As duas ferramentas dos documentos em que
+#   as letras viraram desenho (2 e 3)
+# 1. PDF com texto por dentro e uma tabela
+# 2. PDF do "Imprimir para PDF"
+# 3. PDF com o conteúdo deitado
+# 4. PDF com camada de texto embaralhada
+# 5. Arquivo que não abre
+# 6. PDF protegido por senha</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">4 · dados-exemplo/gerar-massa.py — o nome que mentia</div>
+  <div class="explicacao">
+    Na função que fabrica o documento deitado, a variável que faz o texto descer
+    linha a linha se chamava <code>x</code>; em todas as outras funções, essa mesma
+    coisa se chama <code>y</code>. O nome mudou porque, ao girar o desenho um quarto
+    de volta, os eixos trocam de lugar na cabeça de quem escreve. Agora o nome fala
+    do papel dele, e não do eixo.
+  </div>
+  <div class="pergunta">Pergunta que ficava sem resposta: <em>o <code>x</code> aqui é outra coisa, ou é o mesmo <code>y</code> das outras funções com outro nome?</em></div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem">x = 70
+for linha in _texto_da_pagina(1, 1):
+    if linha:
+        _desenhar_como_contorno(pintor, 60, x, linha, 11)
+    x += 16</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo"># Dentro do desenho girado os eixos não são
+# mais os da folha: o que faz o texto descer
+# linha a linha aqui é a mesma coisa que nas
+# outras funções se chama y, e por isso o nome
+# fala do papel dele, e não do eixo.
+avanco_da_linha = 70
+for linha in _texto_da_pagina(1, 1):
+    if linha:
+        _desenhar_como_contorno(pintor, MARGEM_ESQUERDA,
+                                avanco_da_linha, linha, 11)
+    avanco_da_linha += 16</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="mudanca">
+  <div class="arquivo">5 · dados-exemplo/gerar-massa.py — as medidas sem procedência</div>
+  <div class="explicacao">
+    As posições das colunas da tabela eram três números crus, e o número 60 — a
+    margem esquerda da página — aparecia solto em dez lugares diferentes. Agora a
+    margem tem nome, e um comentário conta de onde saíram as posições das colunas e
+    o que acontece ao mexer nelas.
+  </div>
+  <div class="pergunta">Pergunta que ficava sem resposta: <em>de onde vieram 330 e 430? Se eu mexer no texto de uma coluna, qual número eu ajusto?</em></div>
+  <div class="lado-a-lado">
+    <div class="lado">
+      <div class="lado-titulo antes">antes</div>
+<pre><span class="rem"># Onde cada coluna da tabela começa, medido
+# da margem esquerda da página.
+COLUNAS_X = [0, 60, 330, 430]
+...
+pagina.insert_text((60, y), linha, ...)
+pagina.draw_line((60, y + 5), (535, y + 5), ...)</span></pre>
+    </div>
+    <div class="lado">
+      <div class="lado-titulo depois">depois</div>
+<pre><span class="novo"># Onde o texto começa, contado da borda
+# esquerda do papel.
+MARGEM_ESQUERDA = 60
+
+# Onde cada coluna da tabela começa, contado a
+# partir da margem esquerda. Os números foram
+# escolhidos no olho, para a descrição mais
+# longa caber sem encostar na coluna seguinte.
+# Mexer no texto de uma coluna pede conferir
+# estes números de novo.
+COLUNAS_X = [0, 60, 330, 430]
+...
+pagina.insert_text((MARGEM_ESQUERDA, y), linha, ...)</span></pre>
+    </div>
+  </div>
+</div>
+
+<h2>Como se sabe que nada quebrou</h2>
+
+<div class="prova">
+  <p>
+    Antes de mexer, foi guardada uma <strong>impressão digital</strong> de cada um
+    dos seis PDFs: quantas páginas tem, todo o texto que há por dentro, quantas
+    imagens, o campo de rotação — e, nos dois que não têm texto nenhum, o que o
+    motor de leitura consegue ler da primeira página.
+  </p>
+  <p>
+    Depois do conserto, os seis foram gerados de novo e comparados com a impressão
+    digital guardada. <strong>Os seis saíram idênticos.</strong> Nenhum documento de
+    teste mudou de conteúdo — o conserto mexeu só em nome, comentário e ordem.
+  </p>
+</div>
+
+<h2>O que mudou no projeto</h2>
+
+<ul class="lista-simples">
+  <li><strong>Nasceu</strong> <code>dados-exemplo/gerar-massa.py</code> — o script que fabrica os documentos de teste.</li>
+  <li><strong>Nasceram</strong> seis PDFs em <code>dados-exemplo/</code>, todos inventados, do <code>01</code> ao <code>06</code>.</li>
+  <li><strong>Foi reescrito</strong> <code>dados-exemplo/README.md</code> — agora explica o que é cada arquivo e para que ele serve.</li>
+  <li><strong>Cresceu</strong> a seção "O que já nos mordeu" do <code>CLAUDE.md</code>, com duas armadilhas novas.</li>
+  <li><strong>Nasceu</strong> a linha de trabalho separada <code>feature-002-modulo-de-ocr</code>. A principal segue intocada.</li>
+</ul>
+
+<h2>O que foi achado e NÃO consertado</h2>
+
+<p>
+  Antes das lentes, uma varredura mecânica passou pelo mesmo material e levantou
+  cinco suspeitas. <strong>Nenhuma delas cai nas duas lentes desta rodada</strong>,
+  então nenhuma foi consertada — suspeita de ferramenta não vira conserto sem
+  passar por uma lente e por uma decisão de gente.
+</p>
+
+<div class="nao-consertado">
+  <div class="titulo">O script pode dizer "gerado" sem ter gerado nada</div>
+  <p>
+    Se um dos PDFs estiver aberto num leitor no momento em que o script roda, o
+    Windows pode impedir a escrita. O script não confere isso e imprime "gerado"
+    do mesmo jeito, mostrando o tamanho do arquivo <em>velho</em>.
+  </p>
+  <div class="motivo">Por que ficou: é da lente crítica, que ainda não rodou nesta funcionalidade.</div>
+</div>
+
+<div class="nao-consertado">
+  <div class="titulo">Uma frase minha no CLAUDE.md está no tempo verbal errado</div>
+  <p>
+    A anotação nova diz que "o programa procura o Tesseract nas pastas de sempre por
+    conta própria" — no presente, como se já fizesse. Ele ainda não faz: isso é a
+    etapa 7 desta funcionalidade. Do jeito que está, pode fazer a próxima sessão
+    pular a construção achando que já existe.
+  </p>
+  <div class="motivo">Por que ficou: não foi aprovado como achado nesta rodada. É correção de uma linha e está esperando decisão.</div>
+</div>
+
+<div class="nao-consertado">
+  <div class="titulo">Três suspeitas menores</div>
+  <p>
+    A peça do Qt podendo ser recolhida da memória no meio do trabalho (já
+    endereçada de passagem, guardando-a numa variável); a largura da linha com
+    folga apertada até a borda; e a quebra de linha deixando uma linha vazia caso
+    apareça uma palavra maior que a largura inteira.
+  </p>
+  <div class="motivo">Por que ficaram: as duas primeiras são da lente crítica; a última não acontece com o texto de hoje.</div>
+</div>
+
+<div class="aviso">
+  <strong>Esta página não substitui abrir os arquivos.</strong> Ela mostra o que foi
+  mexido — não que tudo continua funcionando. Quem mostra isso é você, abrindo os
+  documentos de teste e vendo que eles continuam do jeito que estavam.
+</div>
+
+<p class="rodape">
+  Gerado pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.
+  Duas lentes rodaram nesta rodada: segredo e dado real, e clareza. As outras
+  quatro não rodaram — o que elas veriam continua invisível.
+</p>
+
+</body>
+</html>

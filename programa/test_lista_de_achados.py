@@ -1,0 +1,859 @@
+"""Testes da lista do que o programa achou, e do desfazer.
+
+Eles não substituem olhar a tela: pegam o que olhar pega tarde demais — a
+contagem que não bate com a lista, o número que volta ao texto sem estar
+liberado, e o pior de todos, um número que passa na conta saindo do programa
+sem a pergunta que a regra RN-10 exige.
+"""
+from pathlib import Path
+
+import pytest
+from PySide6.QtGui import QTextCharFormat, QTextCursor
+
+import cpf
+from dupla_conferencia import DuplaConferencia
+from tela_revisao import TelaRevisao, _posicao_no_qt
+
+MASSA = Path(__file__).parent.parent / "dados-exemplo"
+
+TEXTO = (
+    "Fulano de Tal Exemplo, inscrito no CPF 111.111.111-11, e\n"
+    "Ciclano Teste Souza, CPF 777.777.777-78, no Termo de outorga\n"
+    "nº 246 813 579 12, com o recibo de Otávio, CPF l11.111.111-11."
+)
+
+
+def _revisao():
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", TEXTO, cpf.procurar(TEXTO))
+    return tela
+
+
+def _itens(tela):
+    """Os itens da lista, na ordem em que estão na tela."""
+    return [tela.lista._itens[id(o)] for o in tela._ocorrencias
+            if id(o) in tela.lista._itens]
+
+
+def _achado(tela, original):
+    return next(o for o in tela._ocorrencias if o.original == original)
+
+
+def _etiquetas_do_item(item):
+    """As etiquetas do item, estejam lado a lado ou uma embaixo da outra."""
+    from PySide6.QtWidgets import QLabel
+    return [rotulo for rotulo in item.findChildren(QLabel)
+            if "border-radius: 8px" in rotulo.styleSheet()]
+
+
+def test_a_lista_traz_os_suspeitos_primeiro(aplicacao):
+    tela = _revisao()
+    titulos = [
+        tela.lista._layout.itemAt(i).widget().text()
+        for i in range(tela.lista._layout.count())
+        if hasattr(tela.lista._layout.itemAt(i).widget(), "text")
+    ]
+    assert titulos[0] == "O que o programa achou"
+    # Três suspeitos (falha na conta, espaços e letra) e um CPF válido.
+    assert titulos[1] == "Suspeitos — olhe estes 3"
+    assert titulos[2] == "CPF válido 1"
+
+
+def test_o_item_mostra_o_numero_como_estava_escrito(aplicacao):
+    """Sem o original não há como decidir se aquilo é CPF (regra RN-10)."""
+    tela = _revisao()
+    item = tela.lista._itens[id(_achado(tela, "246 813 579 12"))]
+    textos = [item.layout().itemAt(i).widget().text()
+              for i in range(item.layout().count())
+              if hasattr(item.layout().itemAt(i).widget(), "text")]
+    assert "246 813 579 12" in textos
+    # E o contexto, que é o que denuncia o que o número é.
+    assert any("Termo de outorga" in t for t in textos)
+
+
+def test_clicar_num_item_leva_o_texto_ate_ele(aplicacao):
+    tela = _revisao()
+    achado = _achado(tela, "l11.111.111-11")
+    tela.ir_para(achado)
+
+    cursor = tela.texto.textCursor()
+    assert cursor.selectedText() == achado.mascara
+    assert cursor.position() == _posicao_no_qt(TEXTO, achado.fim)
+
+
+def test_desfazer_um_suspeito_e_um_clique_so(aplicacao):
+    """Quem falha na conta sai com um clique, sem caixa nenhuma (RN-10)."""
+    tela = _revisao()
+    achado = _achado(tela, "777.777.777-78")
+    assert not achado.pede_dupla_conferencia
+
+    tela.lista._itens[id(achado)].botao.click()
+
+    assert achado.situacao == cpf.LIBERADO
+    assert "777.777.777-78" in tela.texto_mascarado()
+    assert tela.lista._itens[id(achado)].botao.text() == "Mascarar de novo"
+
+
+def test_desfazer_nao_pinta_o_resto_do_texto(aplicacao):
+    """Regressão da conferência da etapa 3, com a imagem da tela em 17/09/2026.
+
+    Depois de um "Desfazer", o texto inteiro ficava amarelo e sublinhado: ao
+    redesenhar, o Qt reaproveitava a formatação que estava debaixo do cursor, e
+    o cursor tinha acabado de passar por um número destacado.
+    """
+    tela = _revisao()
+    tela.ir_para(_achado(tela, "246 813 579 12"))
+    tela.liberar(_achado(tela, "777.777.777-78"))
+
+    cursor = tela.texto.textCursor()
+    # Três pontos de texto comum: o começo, o meio e perto do fim. O último
+    # número do texto fica de fora de propósito - ele é destacado mesmo.
+    for posicao in (2, TEXTO.index("inscrito") + 2, TEXTO.index("recibo") + 2):
+        cursor.setPosition(posicao)
+        assert cursor.charFormat().underlineStyle() == QTextCharFormat.NoUnderline, (
+            f"texto comum sublinhado na posição {posicao}")
+
+
+def test_o_liberado_continua_na_lista_e_volta_com_um_clique(aplicacao):
+    tela = _revisao()
+    achado = _achado(tela, "777.777.777-78")
+    tela.liberar(achado)
+    # Os grupos são separados: o liberado sai de "suspeitos" e entra em
+    # "liberados", e o total encontrado não muda (conferência da etapa 3).
+    assert tela.selo_liberados.text() == "1 liberado por você"
+    assert tela.selo_suspeitos.text() == "2 suspeitos"
+    assert tela.selo_encontrados.text() == "4 números encontrados"
+    # O item continua na lista, e o título da seção acompanha o selo.
+    assert id(achado) in tela.lista._itens
+    assert _titulos_da_lista(tela)[1] == "Suspeitos — olhe estes 2"
+
+    tela.lista._itens[id(achado)].botao.click()
+    assert achado.situacao == cpf.MASCARADO
+    assert "777.777.777-78" not in tela.texto_mascarado()
+    assert not tela.selo_liberados.isVisibleTo(tela)
+    assert tela.selo_suspeitos.text() == "3 suspeitos"
+
+
+def test_a_soma_dos_selos_da_o_total_encontrado(aplicacao, monkeypatch):
+    """Decisão da conferência da etapa 3: quem soma os três confere o total."""
+    monkeypatch.setattr("tela_revisao.liberar_mesmo_assim", lambda *_: True)
+    texto = (MASSA / "10-prestacao-com-cpf.md").read_text(encoding="utf-8")
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("m.md", texto, cpf.procurar(texto))
+
+    def numero(selo):
+        return int(selo.text().split()[0]) if selo.isVisibleTo(tela) else 0
+
+    for ocorrencia in list(tela._ocorrencias)[::3]:
+        tela.liberar(ocorrencia)
+        soma = sum(numero(s) for s in (tela.selo_validos, tela.selo_suspeitos,
+                                       tela.selo_liberados))
+        assert soma == numero(tela.selo_encontrados) == 12
+
+
+def test_a_navegacao_pelos_suspeitos_nao_passa_pelos_liberados(aplicacao):
+    """Regressão da conferência da etapa 3, com a imagem da tela em 17/09/2026."""
+    tela = _revisao()
+    liberado = _achado(tela, "777.777.777-78")
+    tela.liberar(liberado)
+    tela.selo_suspeitos.mousePressEvent(_clique())
+
+    # O clique no selo já leva ao primeiro; mais dois "próximo" dão a volta.
+    vistos = [tela.texto.textCursor().selectedText()]
+    for _ in range(2):
+        tela.botao_proximo.click()
+        vistos.append(tela.texto.textCursor().selectedText())
+    assert "777.777.777-78" not in vistos
+    assert vistos[0] == vistos[2]
+    assert len(set(vistos)) == 2
+
+
+def _titulos_da_lista(tela):
+    return [
+        tela.lista._layout.itemAt(i).widget().text()
+        for i in range(tela.lista._layout.count())
+        if hasattr(tela.lista._layout.itemAt(i).widget(), "text")
+    ]
+
+
+def test_numero_que_passa_na_conta_so_sai_pela_dupla_conferencia(aplicacao, monkeypatch):
+    """Regra RN-10: é o que menos pode sair do programa com um clique."""
+    tela = _revisao()
+    for original in ("111.111.111-11", "l11.111.111-11"):
+        achado = _achado(tela, original)
+        assert achado.pede_dupla_conferencia
+        assert tela.lista._itens[id(achado)].botao.text() == "Desfazer…"
+
+        # A caixa apareceu e a pessoa manteve a máscara: nada muda.
+        monkeypatch.setattr("tela_revisao.liberar_mesmo_assim",
+                            lambda *_: False)
+        tela.lista._itens[id(achado)].botao.click()
+        assert achado.situacao == cpf.MASCARADO
+        assert original not in tela.texto_mascarado()
+
+        # A pessoa liberou mesmo assim: aí sim o número volta.
+        monkeypatch.setattr("tela_revisao.liberar_mesmo_assim", lambda *_: True)
+        tela.lista._itens[id(achado)].botao.click()
+        assert achado.situacao == cpf.LIBERADO
+        assert original in tela.texto_mascarado()
+
+
+def test_o_quase_cpf_que_passa_na_conta_leva_as_duas_etiquetas(aplicacao):
+    tela = _revisao()
+    item = tela.lista._itens[id(_achado(tela, "l11.111.111-11"))]
+    etiquetas = [rotulo.text() for rotulo in _etiquetas_do_item(item)]
+    # A segunda etiqueta não repete o nome da seção de cima: ali é "CPF
+    # válido", aqui é o número que só fecha a conta depois de corrigido.
+    assert etiquetas == ["quase CPF · letra no lugar de dígito",
+                         "válido se corrigido"]
+
+
+# ------------------------------------------------ anterior · N de M · próximo
+
+def test_a_navegacao_percorre_todos_os_numeros_na_ordem_do_texto(aplicacao):
+    tela = _revisao()
+    em_ordem = sorted(tela._ocorrencias, key=lambda o: o.inicio)
+    assert tela.posicao.text() == "— de 4"
+
+    vistos = []
+    for _ in em_ordem:
+        tela.botao_proximo.click()
+        vistos.append(tela.texto.textCursor().selectedText())
+    assert vistos == [o.mascara for o in em_ordem]
+    assert tela.posicao.text() == "4 de 4"
+
+
+def test_a_navegacao_da_a_volta_nas_duas_pontas(aplicacao):
+    """Pedido na conferência da etapa 3: do último ao primeiro, e vice-versa."""
+    tela = _revisao()
+    tela.botao_anterior.click()  # sem nenhum escolhido, o "anterior" vai ao último
+    assert tela.posicao.text() == "4 de 4"
+    tela.botao_proximo.click()   # do último, o "próximo" volta ao primeiro
+    assert tela.posicao.text() == "1 de 4"
+    tela.botao_anterior.click()  # do primeiro, o "anterior" vai ao último
+    assert tela.posicao.text() == "4 de 4"
+    assert tela.botao_proximo.isEnabled() and tela.botao_anterior.isEnabled()
+
+
+def test_a_navegacao_marca_o_item_na_lista_tambem(aplicacao):
+    """Regressão da conferência da etapa 3, em 17/09/2026.
+
+    O "próximo" selecionava o número no texto e não acendia nada na lista: a
+    conta que decide qual item acender comparava do jeito errado, e dava "não
+    é este" para todos - inclusive no clique na própria lista.
+    """
+    tela = _revisao()
+    em_ordem = sorted(tela._ocorrencias, key=lambda o: o.inicio)
+    for ocorrencia in em_ordem:
+        tela.botao_proximo.click()
+        marcados = [o.original for o in tela._ocorrencias
+                    if tela.lista._itens[id(o)].marcado]
+        assert marcados == [ocorrencia.original]
+
+
+def test_clicar_na_lista_acerta_a_posicao_da_navegacao(aplicacao):
+    tela = _revisao()
+    tela.ir_para(_achado(tela, "777.777.777-78"))
+    assert tela.posicao.text() == "2 de 4"
+    tela.botao_proximo.click()
+    assert tela.texto.textCursor().selectedText() == _achado(tela, "246 813 579 12").mascara
+
+
+def test_a_navegacao_conta_tambem_o_que_foi_liberado(aplicacao):
+    """M conta a lista inteira: o liberado não sai dela, nem da navegação."""
+    tela = _revisao()
+    tela.liberar(_achado(tela, "777.777.777-78"))
+    assert tela.posicao.text() == "2 de 4"
+
+
+def test_clicar_no_selo_faz_a_navegacao_andar_so_pelo_grupo(aplicacao):
+    """Acréscimo de 17/09/2026: o selo filtra a navegação, e nada mais."""
+    tela = _revisao()
+    suspeitos = sorted((o for o in tela._ocorrencias if o.suspeito),
+                       key=lambda o: o.inicio)
+
+    tela.selo_suspeitos.mousePressEvent(_clique())
+    assert tela.selo_suspeitos.aceso
+    # Escolher o grupo leva direto ao primeiro dele (conferência da etapa 3).
+    assert tela.posicao.text() == "1 de 3 suspeitos"
+
+    vistos = [tela.texto.textCursor().selectedText()]
+    for _ in suspeitos[1:]:
+        tela.botao_proximo.click()
+        vistos.append(tela.texto.textCursor().selectedText())
+    assert vistos == [o.mascara for o in suspeitos]
+    assert tela.posicao.text() == "3 de 3 suspeitos"
+    # O texto e a lista continuam inteiros: o filtro não esconde nada.
+    assert len(tela.lista._itens) == 4
+
+
+def test_clicar_de_novo_no_selo_volta_a_percorrer_todos(aplicacao):
+    tela = _revisao()
+    tela.ir_para(_achado(tela, "246 813 579 12"))  # o terceiro número do texto
+    tela.selo_validos.mousePressEvent(_clique())
+    assert tela.posicao.text() == "1 de 1 CPF válido"
+
+    # Desligar o filtro não muda de lugar: continua no CPF válido, que é o
+    # primeiro do texto.
+    tela.selo_validos.mousePressEvent(_clique())
+    assert not tela.selo_validos.aceso
+    assert tela.posicao.text() == "1 de 4"
+
+    # Já o "encontrados" é a escolha de um grupo - o de todos - e leva ao primeiro.
+    tela.ir_para(_achado(tela, "l11.111.111-11"))
+    tela.selo_encontrados.mousePressEvent(_clique())
+    assert tela.posicao.text() == "1 de 4"
+
+
+def test_clicar_num_selo_sempre_leva_ao_primeiro_do_grupo(aplicacao):
+    """Conferência da etapa 3: não ao que estiver perto de onde a pessoa estava."""
+    tela = _revisao()
+    tela.ir_para(_achado(tela, "l11.111.111-11"))  # o último do texto
+    tela.selo_suspeitos.mousePressEvent(_clique())
+    assert tela.texto.textCursor().selectedText() == _achado(tela, "777.777.777-78").mascara
+    assert tela.posicao.text() == "1 de 3 suspeitos"
+
+
+def test_o_proximo_segue_de_onde_a_pessoa_esta_mesmo_fora_do_grupo(aplicacao):
+    """Clicou na lista num número de outro grupo: o "próximo" segue dali."""
+    tela = _revisao()
+    tela.selo_suspeitos.mousePressEvent(_clique())
+    valido = _achado(tela, "111.111.111-11")  # o primeiro do texto, e não é suspeito
+    tela.ir_para(valido)
+    assert tela.posicao.text() == "— de 3 suspeitos"
+
+    tela.botao_proximo.click()
+    assert tela.texto.textCursor().selectedText() == _achado(tela, "777.777.777-78").mascara
+    assert tela.posicao.text() == "1 de 3 suspeitos"
+
+
+def test_o_filtro_de_liberados_desliga_quando_o_grupo_esvazia(aplicacao):
+    """O selo do grupo vazio some - e sem ele não haveria como desligar o filtro."""
+    tela = _revisao()
+    achado = _achado(tela, "777.777.777-78")
+    tela.liberar(achado)
+    tela.selo_liberados.mousePressEvent(_clique())
+    assert tela.posicao.text() == "1 de 1 liberado"
+
+    tela.mascarar_de_novo(achado)
+    assert not tela.selo_liberados.aceso
+    assert tela.posicao.text() == "2 de 4"
+
+
+def _clique():
+    from PySide6.QtCore import QPointF, Qt as QtCore
+    from PySide6.QtGui import QMouseEvent
+    from PySide6.QtCore import QEvent
+    return QMouseEvent(QEvent.MouseButtonPress, QPointF(1, 1), QPointF(1, 1),
+                       QtCore.LeftButton, QtCore.LeftButton, QtCore.NoModifier)
+
+
+def test_sem_cpf_a_navegacao_nao_aparece(aplicacao):
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("sem.md", "Ata sem número de pessoa nenhuma.", [])
+    for peca in (tela.botao_anterior, tela.posicao, tela.botao_proximo):
+        assert not peca.isVisibleTo(tela)
+
+
+def test_o_que_foi_liberado_fica_verde_no_selo_no_texto_e_na_lista(aplicacao):
+    """Decisão da usuária em 17/09/2026: o que ela soltou se acha de relance."""
+    import estilo
+
+    tela = _revisao()
+    achado = _achado(tela, "777.777.777-78")
+    tela.liberar(achado)
+    assert estilo.COR_SUCESSO in tela.selo_liberados.styleSheet()
+
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(_posicao_no_qt(TEXTO, achado.inicio) + 1)
+    formato = cursor.charFormat()
+    assert formato.foreground().color().name() == estilo.COR_SUCESSO
+    assert formato.underlineStyle() == QTextCharFormat.DashUnderline
+
+    item = tela.lista._itens[id(achado)]
+    liberado = next(rotulo for rotulo in _etiquetas_do_item(item)
+                    if rotulo.text() == "liberado")
+    assert estilo.COR_SUCESSO in liberado.styleSheet()
+
+
+def test_o_conteudo_da_lista_cabe_na_largura_da_coluna(aplicacao):
+    """Regressão da conferência da etapa 3, com a imagem da tela em 17/09/2026.
+
+    O item com duas etiquetas lado a lado ("quase CPF · espaços no lugar dos
+    pontos" e "CPF válido") deixava o conteúdo com 350 pontos numa coluna de
+    320. A lista deslizava para o lado e cortava a primeira letra dos títulos
+    ("uspeitos — olhe estes 9"). A medida é feita com a massa inteira, que tem
+    as etiquetas mais compridas do programa.
+    """
+    texto = (MASSA / "10-prestacao-com-cpf.md").read_text(encoding="utf-8")
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 640)
+    tela.show()
+    tela.mostrar("10-prestacao-com-cpf.md", texto, cpf.procurar(texto))
+    # Liberado, o item ganha a etiqueta "liberado" ao lado da do tipo.
+    for ocorrencia in tela._ocorrencias:
+        tela.liberar(ocorrencia) if not ocorrencia.pede_dupla_conferencia else None
+    aplicacao.processEvents()
+
+    lista = tela.lista
+    assert lista.widget().minimumSizeHint().width() <= lista.viewport().width()
+    for _ in tela._ocorrencias:
+        tela.botao_proximo.click()
+        assert lista.horizontalScrollBar().value() == 0
+
+
+def test_ir_para_um_numero_o_deixa_no_meio_do_texto(aplicacao):
+    """Conferência de 03/11/2026: vindo de baixo, o número parava rente à borda de baixo, e
+    quase não se achava. Vindo de cima ou de baixo, ele fica no meio."""
+    linhas = [f"Linha {n} do relatório inventado." for n in range(120)]
+    linhas[30] = "CPF 111.111.111-11"
+    linhas[90] = "CPF 222.222.222-22"
+    texto = "\n".join(linhas) + "\n"
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 640)
+    tela.show()
+    tela.mostrar("relatorio.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+    primeiro, segundo = tela._ocorrencias
+    meio = tela.texto.viewport().height() // 2
+    altura_da_linha = tela.texto.fontMetrics().height()
+    for ocorrencia in (segundo, primeiro):
+        tela.ir_para(ocorrencia)
+        aplicacao.processEvents()
+        centro = tela.texto.cursorRect().center().y()
+        assert abs(centro - meio) <= altura_da_linha
+
+
+# --------------------------------------------------- mascarar à mão (etapa 4)
+
+def _marcar_no_texto(tela, trecho):
+    """Marca um trecho com o mouse, do jeito que a pessoa faz."""
+    from tela_revisao import _posicao_no_qt
+    inicio = tela._texto.index(trecho)
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(_posicao_no_qt(tela._texto, inicio))
+    cursor.setPosition(_posicao_no_qt(tela._texto, inicio + len(trecho)),
+                       QTextCursor.KeepAnchor)
+    tela.texto.setTextCursor(cursor)
+
+
+def test_mascarar_o_trecho_marcado(aplicacao):
+    """O caminho da etapa 4: a rede para o CPF que o programa não pegou."""
+    # Cinco letras: o programa não pega de propósito (quarta emenda), e é
+    # justamente esse número que sobra para a pessoa mascarar à mão.
+    texto = TEXTO + "\nNa ficha, o CPF ilegível lZ3.4S6.7B9-1O, sem mais."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, cpf.procurar(texto))
+    assert not tela.botao_mascarar.isEnabled()
+
+    _marcar_no_texto(tela, "lZ3.4S6.7B9-1O")
+    assert tela.botao_mascarar.isEnabled()
+    tela.botao_mascarar.click()
+
+    assert "lZ3.4S6.7B9-1O" not in tela.texto_mascarado()
+    assert "XXX.4S6.7B9-XX" in tela.texto_mascarado()
+    assert tela.selo_a_mao.text() == "1 mascarado à mão"
+    assert _titulos_da_lista(tela)[-1] == "Mascarados à mão 1"
+
+
+def test_o_trecho_mascarado_a_mao_tem_traco_proprio(aplicacao):
+    """Azul e pontilhado: não é achado do programa, e não pode virar vermelho."""
+    import estilo
+
+    texto = "O código 1234 5678 910 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+
+    achado = tela._ocorrencias[0]
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(_posicao_no_qt(texto, achado.inicio) + 1)
+    formato = cursor.charFormat()
+    assert formato.foreground().color().name() == estilo.COR_DESTAQUE_HOVER
+    assert formato.underlineStyle() == QTextCharFormat.DotLine
+
+
+def test_trecho_sem_digito_nao_muda_nada_e_a_tela_diz_por_que(aplicacao):
+    tela = _revisao()
+    _marcar_no_texto(tela, "Fulano de Tal")
+    antes = tela.texto_mascarado()
+    tela.botao_mascarar.click()
+
+    assert tela.texto_mascarado() == antes
+    assert "não tem nenhum dígito" in tela.aviso_do_trecho.text()
+    assert tela.aviso_do_trecho.isVisibleTo(tela)
+    # O aviso some quando a pessoa marca outro trecho.
+    _marcar_no_texto(tela, "Ciclano")
+    assert not tela.aviso_do_trecho.isVisibleTo(tela)
+
+
+def test_trecho_que_encosta_num_numero_da_lista_e_recusado(aplicacao):
+    """Duas máscaras no mesmo pedaço fariam a lista dizer duas coisas dele."""
+    tela = _revisao()
+    quantos = len(tela._ocorrencias)
+    _marcar_no_texto(tela, "CPF 111.111.111-11")
+    tela.botao_mascarar.click()
+
+    assert len(tela._ocorrencias) == quantos
+    assert "já está na lista" in tela.aviso_do_trecho.text()
+
+
+def test_desfazer_uma_mascara_a_mao_e_um_clique_so(aplicacao):
+    texto = "O código 1234 5678 910 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+    achado = tela._ocorrencias[0]
+    assert not achado.pede_dupla_conferencia
+
+    tela.lista._itens[id(achado)].botao.click()
+    assert "1234 5678 910" in tela.texto_mascarado()
+    assert tela.selo_liberados.text() == "1 liberado por você"
+    assert not tela.selo_a_mao.isVisibleTo(tela)
+
+
+def test_a_soma_dos_selos_continua_fechando_com_o_a_mao(aplicacao):
+    texto = "O código 1234 5678 910, e o CPF 111.111.111-11 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, cpf.procurar(texto))
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+
+    def numero(selo):
+        return int(selo.text().split()[0]) if selo.isVisibleTo(tela) else 0
+
+    grupos = (tela.selo_validos, tela.selo_suspeitos, tela.selo_a_mao,
+              tela.selo_liberados)
+    assert sum(numero(s) for s in grupos) == numero(tela.selo_encontrados) == 2
+
+
+def test_a_selecao_feita_pelo_programa_nao_acende_o_botao(aplicacao):
+    """Regressão da revisão da etapa 4: o botão acendia sozinho.
+
+    O programa seleciona o número no texto para mostrar onde ele está - no
+    "próximo", no clique da lista, ao liberar. Isso não é a pessoa marcando um
+    trecho, e clicar no botão ali só produzia um aviso sem sentido.
+    """
+    tela = _revisao()
+    assert not tela.botao_mascarar.isEnabled()
+    tela.botao_proximo.click()
+    assert not tela.botao_mascarar.isEnabled()
+    tela.ir_para(_achado(tela, "777.777.777-78"))
+    assert not tela.botao_mascarar.isEnabled()
+
+    # E a marcação de verdade continua acendendo.
+    _marcar_no_texto(tela, "Fulano")
+    assert tela.botao_mascarar.isEnabled()
+
+
+def test_a_etiqueta_do_mascarado_a_mao_e_azul(aplicacao):
+    """A mesma cor do traço no texto, do selo e da chave: é decisão da pessoa."""
+    import estilo
+
+    texto = "O código 1234 5678 910 no fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    _marcar_no_texto(tela, "1234 5678 910")
+    tela.botao_mascarar.click()
+
+    item = tela.lista._itens[id(tela._ocorrencias[0])]
+    etiqueta = _etiquetas_do_item(item)[0]
+    assert etiqueta.text() == "mascarado à mão"
+    assert estilo.COR_DESTAQUE_HOVER in etiqueta.styleSheet()
+
+
+def test_as_mascaras_a_mao_entram_na_ordem_do_texto(aplicacao):
+    """Regressão da revisão da etapa 4: elas entravam na ordem de criação."""
+    texto = "Primeiro 111 222 333 44, depois 555 666 777 88, fim."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("teste.md", texto, [])
+    # A segunda ocorrência do texto é mascarada primeiro, de propósito.
+    for trecho in ("555 666 777 88", "111 222 333 44"):
+        _marcar_no_texto(tela, trecho)
+        tela.botao_mascarar.click()
+
+    assert [o.inicio for o in tela._ocorrencias] == sorted(
+        o.inicio for o in tela._ocorrencias)
+    # A última mascarada é a primeira do texto, então a navegação está em "1 de
+    # 2"; daqui, o "próximo" vai ao segundo e a volta traz de novo ao primeiro.
+    assert tela.posicao.text() == "1 de 2"
+    tela.botao_proximo.click()
+    assert tela.posicao.text() == "2 de 2"
+    assert tela.texto.textCursor().selectedText() == tela._ocorrencias[1].mascara
+    tela.botao_proximo.click()
+    assert tela.texto.textCursor().selectedText() == tela._ocorrencias[0].mascara
+
+
+# ------------------------------------------- a caixa da dupla conferência
+
+def test_a_caixa_vem_com_manter_a_mascara_escolhido(aplicacao):
+    """Apertar Enter ou Esc mantém a máscara (regra RN-10)."""
+    achado = cpf.procurar("CPF 111.111.111-11 fim")[0]
+    caixa = DuplaConferencia(achado)
+    assert caixa.botao_manter.isDefault()
+    assert not caixa.botao_liberar.isDefault()
+    assert caixa.isModal()
+
+
+@pytest.mark.parametrize("texto, pedaco", [
+    ("CPF 111.111.111-11 fim", "a partir dos nove primeiros"),
+    ("CPF l11.111.111-11 fim", "letras trocadas de volta"),
+    ("CPF 555.555.\n555-55 fim", "partido em duas linhas"),
+    ("CPF 666 666 666 66 fim", "espaços pela pontuação"),
+    # O CPF sem o zero da frente (nona emenda, rascunho 09): a frase é mais
+    # comprida que as outras, e é a que mais corre o risco de sair cortada.
+    ("CPF 0000000000 fim", "um a menos que um CPF"),
+    ("CPF 000000000 fim", "dois a menos que um CPF"),
+])
+def test_a_caixa_explica_por_que_aquele_numero_passa(aplicacao, texto, pedaco):
+    achado = cpf.procurar(texto)[0]
+    caixa = DuplaConferencia(achado)
+    assert pedaco in caixa.explicacao.text()
+    # No "quase CPF", a caixa diz que o defeito é, quase sempre, da leitura - e
+    # que no original provavelmente há um número ali.
+    assert ("erro de leitura" in caixa.explicacao.text()) == (
+        achado.tipo == cpf.QUASE_CPF)
+    # A frase inteira precisa caber: a caixa tem largura fixa, e sem a altura
+    # calculada o fim dela some para fora da borda.
+    assert caixa.explicacao.minimumHeight() >= caixa.explicacao.heightForWidth(
+        caixa.explicacao.width() or 460)
+
+
+def test_a_massa_inteira_abre_na_lista_sem_nenhum_cpf_solto(aplicacao):
+    """O documento da massa, do jeito que a pessoa vai ver."""
+    texto = (MASSA / "10-prestacao-com-cpf.md").read_text(encoding="utf-8")
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("10-prestacao-com-cpf.md", texto, cpf.procurar(texto))
+
+    assert cpf.procurar(tela.texto_mascarado()) == []
+    assert len(tela.lista._itens) == 12
+    assert tela.selo_suspeitos.text() == "9 suspeitos"
+
+
+# ------------------- a etiqueta do CPF sem o zero da frente (nona emenda, etapa 3)
+
+def _linhas_de_etiquetas(item):
+    """As etiquetas do item, linha por linha, como elas estão dispostas."""
+    linhas = []
+    layout = item.layout()
+    for i in range(layout.count()):
+        linha = layout.itemAt(i).layout()
+        if linha is None:
+            continue
+        textos = [linha.itemAt(j).widget().text() for j in range(linha.count())
+                  if linha.itemAt(j).widget() is not None
+                  and "border-radius: 8px" in linha.itemAt(j).widget().styleSheet()]
+        if textos:
+            linhas.append(textos)
+    return linhas
+
+
+TEXTO_CURTO = ("| Davi Hipotético  | 0000000000     | R$ 1.500,00 |\n"
+               "| Ivo Fictício     | 000000000      | R$ 1.500,00 |\n")
+
+
+def test_o_curto_leva_a_etiqueta_ao_lado_de_cpf_valido(aplicacao):
+    import estilo
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("t.md", TEXTO_CURTO, cpf.procurar(TEXTO_CURTO))
+
+    dez = tela.lista._itens[id(_achado(tela, "0000000000"))]
+    nove = tela.lista._itens[id(_achado(tela, "000000000"))]
+    # Lado a lado, numa linha só: as duas cabem na coluna (rascunho 09).
+    assert _linhas_de_etiquetas(dez) == [["CPF válido", "sem o zero da frente"]]
+    assert _linhas_de_etiquetas(nove) == [["CPF válido", "sem os zeros da frente"]]
+    for etiqueta in _etiquetas_do_item(dez):
+        assert estilo.COR_ERRO_TEXTO in etiqueta.styleSheet()
+
+
+def test_liberado_o_curto_desce_so_a_etiqueta_que_nao_cabe(aplicacao, monkeypatch):
+    """Rascunho 09: liberado, o item tem três etiquetas, e desce só o que não cabe.
+
+    Medido na coluna de verdade: com 10 dígitos as três cabem numa linha (270 de
+    276 pontos), e com 9 a etiqueta do plural é mais comprida e "liberado" desce.
+    O rascunho desenhou o de 10 descendo, por uma estimativa de largura; a
+    regra aprovada é a de descer só o que não couber, medido na hora.
+    """
+    import estilo
+    monkeypatch.setattr("tela_revisao.liberar_mesmo_assim", lambda *_: True)
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("t.md", TEXTO_CURTO, cpf.procurar(TEXTO_CURTO))
+    for original in ("0000000000", "000000000"):
+        achado = _achado(tela, original)
+        tela.lista._itens[id(achado)].botao.click()
+        assert achado.situacao == cpf.LIBERADO
+
+    dez = tela.lista._itens[id(_achado(tela, "0000000000"))]
+    nove = tela.lista._itens[id(_achado(tela, "000000000"))]
+    assert _linhas_de_etiquetas(dez) == [
+        ["CPF válido", "sem o zero da frente", "liberado"]]
+    assert _linhas_de_etiquetas(nove) == [
+        ["CPF válido", "sem os zeros da frente"], ["liberado"]]
+    _, sem_zero, verde = _etiquetas_do_item(dez)
+    assert estilo.COR_TEXTO_SECUNDARIO in sem_zero.styleSheet()
+    assert estilo.COR_SUCESSO in verde.styleSheet()
+    # E o texto volta como estava no documento, com os espaços de depois dele.
+    assert tela.texto_mascarado() == TEXTO_CURTO
+
+
+def test_duas_etiquetas_que_nao_cabem_continuam_uma_por_linha(aplicacao):
+    """A regra nova não muda o item de hoje: o "quase CPF" de motivo comprido."""
+    texto = "Recibo de Paes, CPF 111 111 111 11, conferido."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    item = _itens(tela)[0]
+    assert _linhas_de_etiquetas(item) == [["quase CPF · espaços no lugar dos pontos"],
+                                          ["válido se corrigido"]]
+
+
+def test_a_caixa_do_curto_mostra_o_numero_como_esta_no_documento(aplicacao, monkeypatch):
+    """Nona emenda, etapa 4: a caixa mostra os 10 dígitos, e não a máscara.
+
+    E desfazer o curto passa pela caixa, como todo número que fecha a conta.
+    """
+    from PySide6.QtWidgets import QLabel
+    achado = cpf.procurar("Telefone do escritório: 0000000000 ramal 2")[0]
+    caixa = DuplaConferencia(achado)
+    textos = [rotulo.text() for rotulo in caixa.findChildren(QLabel)]
+    assert "0000000000" in textos
+    assert "telefone com DDD" in caixa.explicacao.text()
+    assert caixa.botao_manter.isDefault()
+
+    perguntou = []
+    monkeypatch.setattr("tela_revisao.liberar_mesmo_assim",
+                        lambda ocorrencia, _: perguntou.append(ocorrencia) or False)
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    texto = "Telefone do escritório: 0000000000 ramal 2"
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    curto = tela._ocorrencias[0]
+    tela.lista._itens[id(curto)].botao.click()
+    assert perguntou == [curto]
+    assert curto.situacao == cpf.MASCARADO
+
+
+def test_a_caixa_do_curto_aponta_o_numero_que_se_parece_de_verdade(aplicacao):
+    """Regressão da revisão da etapa 4 (lente crítica).
+
+    Com 9 dígitos, a caixa falava de "telefone com DDD", que nunca tem 9 dígitos;
+    e o "por isso" vinha logo depois do aviso do telefone, amarrado a ele.
+    """
+    # A caixa fica guardada antes de a frase ser lida: sem isso, o Python a
+    # descarta no meio da linha e a frase some junto com ela.
+    caixa_dez = DuplaConferencia(cpf.procurar("CPF 0000000000 fim")[0])
+    caixa_nove = DuplaConferencia(cpf.procurar("CPF 000000000 fim")[0])
+    dez = caixa_dez.explicacao.text()
+    nove = caixa_nove.explicacao.text()
+    assert "telefone com DDD" in dez
+    assert "celular escrito sem o DDD" in nove
+    assert "telefone com DDD" not in nove
+    for frase in (dez, nove):
+        # A conclusão vem antes do aviso.
+        assert frase.index("pode ser o CPF") < frase.index("por acaso")
+        # Sem a certeza do CPF completo (acréscimo à nona emenda, 22/10/2026).
+        assert "quase certamente" not in frase
+
+
+# ------------------ o clique no número do texto (acréscimo à nona emenda, etapa 6)
+
+def _clicar_no_texto(tela, aplicacao, posicao_na_tela):
+    """Um clique simples no texto da revisão, no ponto daquela letra."""
+    from PySide6.QtCore import Qt as _Qt
+    from PySide6.QtTest import QTest
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(posicao_na_tela)
+    ponto = tela.texto.cursorRect(cursor).center()
+    QTest.mouseClick(tela.texto.viewport(), _Qt.LeftButton, pos=ponto)
+    aplicacao.processEvents()
+
+
+def test_clicar_no_numero_do_texto_acende_o_item_dele(aplicacao):
+    texto = ("Ana, CPF 111.111.111-11; Ciclano, CPF 777.777.777-78;\n"
+             "| Davi Hipotético  | 0000000000     | R$ 1.500,00 |\n"
+             "Recibo de Otávio, CPF l11.111.111-11.")
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    na_tela = tela.texto_mascarado()
+    terceiro = _achado(tela, "0000000000")
+    # No meio da máscara que cresceu, que é onde a posição mais escorregaria.
+    _clicar_no_texto(tela, aplicacao, na_tela.index("XXX000000XX") + 5)
+
+    item = tela.lista._itens[id(terceiro)]
+    assert item.marcado
+    assert sum(1 for i in tela.lista._itens.values() if i.marcado) == 1
+    assert tela.posicao.text() == "3 de 4"
+    assert not tela.botao_mascarar.isEnabled()
+
+
+def test_clicar_fora_de_numero_nao_muda_nada(aplicacao):
+    texto = "Ana, CPF 111.111.111-11, e mais nada aqui."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    _clicar_no_texto(tela, aplicacao, tela.texto_mascarado().index("nada"))
+    assert not any(i.marcado for i in tela.lista._itens.values())
+    assert tela.posicao.text().startswith("—")
+
+
+def test_marcar_um_trecho_com_o_mouse_continua_como_antes(aplicacao):
+    """Arrastar para marcar não pode levar a tela para o número vizinho."""
+    texto = "Ana, CPF 111.111.111-11; código 1234 5678 910 da ficha."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    # O fim de um arrasto: o trecho já está marcado quando o botão do mouse é
+    # solto - e aqui ele é solto em cima do CPF, o pior caso.
+    from PySide6.QtCore import Qt as _Qt
+    from PySide6.QtTest import QTest
+    _marcar_no_texto(tela, "1234 5678 910")
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(tela.texto_mascarado().index("XXX.111") + 3)
+    ponto = tela.texto.cursorRect(cursor).center()
+    QTest.mouseRelease(tela.texto.viewport(), _Qt.LeftButton, pos=ponto)
+    aplicacao.processEvents()
+
+    assert tela.texto.textCursor().selectedText() == "1234 5678 910"
+    assert tela.botao_mascarar.isEnabled()
+    assert not any(i.marcado for i in tela.lista._itens.values())
+
+
+def test_clicar_no_branco_depois_da_linha_nao_pula_para_o_numero(aplicacao):
+    """Regressão da revisão da etapa 6 (lente crítica).
+
+    A linha termina com um CPF, e a pessoa clica no branco à direita dela. O
+    ponto do clique caía no fim do número, e a tela pulava para ele.
+    """
+    from PySide6.QtCore import QPoint, Qt as _Qt
+    from PySide6.QtTest import QTest
+    texto = "Linha que termina no CPF 111.111.111-11\nOutra linha sem número."
+    tela = TelaRevisao(ao_anonimizar_outro=lambda: None)
+    tela.resize(1000, 600)
+    tela.show()
+    tela.mostrar("t.md", texto, cpf.procurar(texto))
+    aplicacao.processEvents()
+
+    cursor = tela.texto.textCursor()
+    cursor.setPosition(tela.texto_mascarado().index("\n"))
+    fim_da_linha = tela.texto.cursorRect(cursor).center()
+    QTest.mouseClick(tela.texto.viewport(), _Qt.LeftButton,
+                     pos=fim_da_linha + QPoint(150, 0))
+    aplicacao.processEvents()
+    assert not any(i.marcado for i in tela.lista._itens.values())
+
+    # E a metade direita do último X continua contando.
+    cursor.setPosition(tela.texto_mascarado().index("\n") - 1)
+    ultimo_x = tela.texto.cursorRect(cursor).center() + QPoint(3, 0)
+    QTest.mouseClick(tela.texto.viewport(), _Qt.LeftButton, pos=ultimo_x)
+    aplicacao.processEvents()
+    assert all(i.marcado for i in tela.lista._itens.values())

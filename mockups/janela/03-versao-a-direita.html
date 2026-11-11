@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Rascunho 03 — A versão alinhada à direita</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --fonte-emoji: "Segoe UI Emoji", "Segoe UI", sans-serif;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #14171c; color: var(--cor-texto);
+    font-family: var(--fonte-texto); font-size: var(--texto-base);
+    padding: var(--espaco-5); line-height: 1.45;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  h2 { font-size: var(--texto-grande); margin: 48px 0 var(--espaco-2) 0; }
+  .subtitulo, .explica { color: var(--cor-texto-secundario); max-width: 860px; margin: 0 0 var(--espaco-3) 0; }
+  .explica b { color: var(--cor-texto); }
+  .rotulo {
+    font-size: var(--texto-pequeno); font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--cor-texto-secundario); margin: 0 0 var(--espaco-2) 0;
+  }
+
+  /* a faixa, nas medidas do programa (main.py), igual ao rascunho 02 */
+  .faixa {
+    width: 220px; flex: 0 0 220px; background: var(--cor-fundo-elevado);
+    border-right: 1px solid var(--cor-borda); padding: 24px 0;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .faixa.solta { height: 420px; border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+  .cabeca { padding: 0 16px 16px 16px; border-bottom: 1px solid var(--cor-borda); }
+  .nome { font-size: 20px; font-weight: 700; line-height: 1.25; }
+  .versao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: 6px; }
+  /* Jeito 1: a versão encosta na margem direita da faixa, a 16 px da borda,
+     a mesma distância que o nome guarda da borda esquerda. */
+  .jeito-1 .versao { text-align: right; }
+  /* Jeito 2: nome e versão formam um bloco da largura de "Anonimizador", e a
+     versão termina onde a palavra termina. */
+  .jeito-2 .bloco { display: inline-block; }
+  .jeito-2 .versao { text-align: right; }
+  .item {
+    display: flex; align-items: center; gap: 10px; padding: 12px; margin: 0 8px;
+    border-radius: var(--raio); color: var(--cor-texto-secundario); font-size: var(--texto-base);
+  }
+  .item.marcado { background: var(--cor-destaque); color: #fff; font-weight: 600; }
+  .emoji { font-family: var(--fonte-emoji); font-size: 15px; font-weight: 400; width: 18px; text-align: center; }
+  .espaco { flex: 1; }
+  .faixa .primeiro { margin-top: 12px; }
+
+  .lado-a-lado { display: flex; gap: var(--espaco-5); flex-wrap: wrap; }
+  .opcao { display: flex; flex-direction: column; gap: var(--espaco-2); }
+  .opcao-titulo { font-weight: 600; }
+  .opcao-titulo .recomendada { color: var(--cor-sucesso); font-size: var(--texto-pequeno); font-weight: 700; margin-left: 6px; }
+  .opcao-diz { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 220px; min-height: 58px; }
+
+  .janela { display: flex; border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.35); margin-bottom: var(--espaco-4); }
+  .janela.mil { width: 1000px; height: 640px; }
+  .janela.novecentos { width: 900px; height: 560px; }
+  .painel { flex: 1; background: var(--cor-fundo); display: flex; align-items: center; justify-content: center; }
+  .painel-vazio { text-align: center; color: var(--cor-texto-secundario); }
+  .painel-vazio .icone { font-size: 40px; }
+  .painel-vazio .titulo { font-size: 20px; color: var(--cor-texto); margin: 8px 0; }
+
+  .notas { margin-top: 48px; border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); max-width: 860px; }
+  .notas b { color: var(--cor-texto); }
+</style>
+</head>
+<body>
+
+<h1>Rascunho 03 — A versão alinhada à direita</h1>
+<p class="subtitulo">
+  Funcionalidade 9. Parte do rascunho 02, com o que já foi escolhido: o emoji 1 (🔍 em Gerar OCR,
+  🔒 em Anonimizar) e a versão em texto simples, de 13 px, no cinza de apoio, logo abaixo do nome.
+  O que muda é só o alinhamento: "Anonimizador" e "CAPCF" ficam à esquerda, e "versão 0.1.0" vai
+  para a direita. "À direita" pode ser de dois jeitos, e eles estão lado a lado.
+</p>
+
+<h2>Os dois jeitos</h2>
+<div class="lado-a-lado">
+  <div class="opcao jeito-1">
+    <div class="opcao-titulo">Jeito 1 — na margem direita da faixa <span class="recomendada">✅ RECOMENDADA</span></div>
+    <div class="opcao-diz">A versão termina a 16 px da borda direita, a mesma distância que o nome guarda da borda esquerda.</div>
+    <div class="faixa solta">
+      <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+      <div class="item marcado"><span class="emoji">🔒</span>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+  </div>
+  <div class="opcao jeito-2">
+    <div class="opcao-titulo">Jeito 2 — terminando com o nome</div>
+    <div class="opcao-diz">A versão termina embaixo do "r" de "Anonimizador", e os três formam um bloco só, como uma assinatura.</div>
+    <div class="faixa solta">
+      <div class="cabeca"><div class="bloco"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div></div>
+      <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+      <div class="item marcado"><span class="emoji">🔒</span>Anonimizar</div>
+      <div class="espaco"></div>
+      <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+    </div>
+  </div>
+</div>
+
+<h2>Na janela inteira, com o jeito 1</h2>
+<p class="explica">
+  No tamanho em que a janela abre fora do maximizado (1000 × 640) e no mínimo (900 × 560). A faixa
+  tem 220 px fixos, então a versão fica no mesmo lugar nos dois.
+</p>
+<div class="rotulo">1000 × 640 — nada escolhido ainda</div>
+<div class="janela mil jeito-1">
+  <div class="faixa">
+    <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+    <div class="item primeiro"><span class="emoji">🔍</span>Gerar OCR</div>
+    <div class="item"><span class="emoji">🔒</span>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+  </div>
+  <div class="painel"><div class="painel-vazio">
+    <div class="icone">◧</div>
+    <div class="titulo">Escolha um módulo para começar</div>
+    <div>Clique em "Gerar OCR" ou "Anonimizar" no menu ao lado.</div>
+  </div></div>
+</div>
+<div class="rotulo">900 × 560 — com o Gerar OCR escolhido</div>
+<div class="janela novecentos jeito-1">
+  <div class="faixa">
+    <div class="cabeca"><div class="nome">Anonimizador<br>CAPCF</div><div class="versao">versão 0.1.0</div></div>
+    <div class="item primeiro marcado"><span class="emoji">🔍</span>Gerar OCR</div>
+    <div class="item"><span class="emoji">🔒</span>Anonimizar</div>
+    <div class="espaco"></div>
+    <div class="item"><span class="emoji">⚙️</span>Configurações de IA</div>
+  </div>
+  <div class="painel"><div class="painel-vazio">
+    <div class="titulo">(a tela do Gerar OCR, que não muda)</div>
+  </div></div>
+</div>
+
+<div class="notas">
+  <p><b>Por que o jeito 1 é o recomendado:</b> ele não depende da largura da palavra "Anonimizador".
+  No jeito 2, o fim da versão acompanha o fim do nome, e o programa precisa medir o nome na fonte
+  da máquina. Dá para fazer, mas é uma conta a mais que pode sair diferente se a fonte do Windows
+  mudar. O jeito 1 é só "encostar à direita".</p>
+  <p><b>Continua de fora</b>, como no rascunho 02: "Configurações de IA" e o submenu, o ícone da
+  janela e o desenho do painel vazio.</p>
+</div>
+
+</body>
+</html>

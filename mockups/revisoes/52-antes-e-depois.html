@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 52 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .achado p { margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 52 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre os ajustes da conferência com modelo de verdade da funcionalidade 4, em 01/11/2026. De 10 suspeitas da varredura, 5 eram defeitos reais. A solicitante aprovou os 5, um a um, e todos foram consertados com teste. Os 940 testes passam, mas os consertos ainda não foram vistos na tela.</p>
+
+<h2>O que podia enganar sobre o CPF</h2>
+<div class="achado"><h3>1. "Nesta máquina", quando o documento saía dela</h3>
+  <p>Aceitar o endereço inteiro do LM Studio tornou a frase falsa para quem cola o endereço de outro computador.</p>
+  <div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Com <code>http://192.168.0.50:1234</code>, a tela dizia "o documento não sai dela", e a revisão, "nesta máquina". O texto viajava com os CPFs inteiros.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A tela diz que o texto viaja até o endereço, com os CPFs inteiros, e a revisão diz "em outra máquina", com o endereço ao parar o mouse. A lista de endereços locais não conta como esta máquina.</div></div></div>
+<div class="achado"><h3>2. CPF mal lido descartado como título de seção</h3>
+  <p>A regra que tirou o alarme falso de "12. Equipe do Projeto" também pegava um CPF partido em duas linhas, com um dígito mal lido.</p>
+  <div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div><code>CPF 123456780</code> seguido de <code>10. Declaro que...</code> saía inteiro no arquivo, sem máscara e fora da lista.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Com a palavra CPF logo antes do número, ele fica mascarado e na lista. O número de projeto, sem essa palavra por perto, continua sem alarme.</div></div></div>
+<div class="achado"><h3>5. Número apontado pela IA e descartado pelo jeito de escrever</h3>
+  <p>Ninguém viu acontecer: é o que um modelo diferente poderia fazer, e a falha seria silenciosa.</p>
+  <div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Só <code>"numero"</code>, exatamente assim, valia. Com <code>"número"</code> ou sem o campo, o número ficava sem máscara, e a faixa dizia que não havia nada a mais.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Os dois jeitos valem. Qualquer outro tipo, como <code>"trecho"</code> ou <code>"liberar"</code>, continua sem efeito.</div></div></div>
+
+<h2>O que podia enganar sobre a conexão</h2>
+<div class="achado"><h3>3. O clique que recusava o endereço e testava o antigo</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Escrever um endereço inválido e clicar em "Testar conexão" mostrava o erro e, ao soltar o botão, testava o antigo: o erro sumia e aparecia "Online".</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Aquele clique não testa nada, e o erro fica à vista. O clique seguinte testa normalmente.</div></div></div>
+<div class="achado"><h3>4. A resposta atrasada ao abrir a tela</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>"Online" e "Servidor não encontrado" podiam aparecer juntos, e uma resposta atrasada podia falar de um endereço já trocado ou aparecer com o switch já desligado.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Uma etiqueta apaga a outra. A resposta só vale se o endereço for o mesmo e o destino continuar ligado; se não, a tela pergunta de novo na próxima vez que abrir.</div></div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li>Nenhum arquivo criado, apagado ou movido por estes consertos. A regra deles entrou na spec 004, como RN-65, e na spec 003, no acréscimo à RN-2.</li>
+  <li>Testes novos para os cinco achados.</li>
+</ul>
+
+<h2>O que foi achado e não consertado</h2>
+<p>Estas suspeitas da varredura não passaram na trava da lente crítica: não houve cenário que prejudicasse quem usa o bastante para virar achado, ou é assunto de outra lente.</p>
+<ul>
+  <li><strong>Número solto com a IA já revisando:</strong> a lista dos marcados é lida ao começar, e a IA pode não opinar sobre o que a pessoa soltou depois disso. A decisão da pessoa continua valendo.</li>
+  <li><strong>Mesmo número em dois lugares, um deles grudado a outro dígito:</strong> mascarado o primeiro, o grudado pode não virar "número para olhar". Caso raro.</li>
+  <li><strong>Servidor que recusa o pedido de não pensar:</strong> cada pedaço vai duas vezes, o que gasta tempo e não muda o resultado. Seria da lente de manutenção.</li>
+  <li><strong>O relógio da faixa refaz o estilo a cada segundo:</strong> trabalho a mais, sem acúmulo nem erro. Também da lente de manutenção.</li>
+</ul>
+<p class="rodape">Gerada em 01/11/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

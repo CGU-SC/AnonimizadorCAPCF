@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa do entendimento — Ler com o PaddleOCR</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 900px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .contagens { display: flex; gap: var(--espaco-3); margin-bottom: var(--espaco-5); flex-wrap: wrap; }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 140px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-inferido .contagem-numero { color: var(--cor-alerta); }
+  .c-respondido .contagem-numero { color: var(--cor-sucesso); }
+  .c-aberto .contagem-numero { color: var(--cor-texto-secundario); }
+
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .explica-secao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: calc(-1 * var(--espaco-2)) 0 var(--espaco-3) 0; }
+  .marca { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .marca-inferido { background: var(--cor-alerta); }
+  .marca-respondido { background: var(--cor-sucesso); }
+  .marca-aberto { background: var(--cor-texto-secundario); }
+
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao.inferido { border-left-color: var(--cor-alerta); }
+  .cartao.aberto { border-left-color: var(--cor-texto-secundario); }
+  .cartao-titulo { font-weight: 600; margin-bottom: var(--espaco-2); display: flex; align-items: baseline; gap: var(--espaco-2); }
+  .numero { font-family: var(--fonte-mono); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); font-weight: 400; }
+  .dimensao { margin-left: auto; font-size: var(--texto-pequeno); font-weight: 400; color: var(--cor-texto-secundario); white-space: nowrap; }
+  .cartao-texto { color: var(--cor-texto); }
+  .por-que { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin-top: var(--espaco-2); }
+  .selo-premissa {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(217,164,65,0.15); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .selo-proposta {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(59,110,165,0.2); color: #8fb6de;
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+
+  /* o desenho das portas: três entradas que terminam na mesma revisão */
+  .portas { margin-top: var(--espaco-3); display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: var(--espaco-2) var(--espaco-2); align-items: center; }
+  .porta, .destino, .passo {
+    border: 1px solid var(--cor-borda); border-radius: var(--raio);
+    padding: var(--espaco-2) var(--espaco-3); font-size: var(--texto-pequeno);
+    background: var(--cor-fundo);
+  }
+  .porta strong, .destino strong, .passo strong { display: block; font-size: var(--texto-base); }
+  .seta { color: var(--cor-texto-secundario); text-align: center; }
+  .destino { border-color: var(--cor-sucesso); grid-column: 5; grid-row: 1 / span 3; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+  .passo { border-style: dashed; }
+  .rotulo-porta { color: var(--cor-texto-secundario); }
+
+  .fora { margin-top: var(--espaco-5); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+  .fora h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .fora ul { margin: 0; padding-left: 20px; color: var(--cor-texto-secundario); }
+  .fora li { margin-bottom: var(--espaco-1); }
+  .rodape { margin-top: var(--espaco-4); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+</style>
+</head>
+<body>
+
+<h1>Mapa do entendimento — Ler com o PaddleOCR</h1>
+<p class="subtitulo">Funcionalidade 7 do backlog — levantamento fechado em 18/10/2026, nível detalhado, depois da
+medição (conferência 02). Vem antes da emenda da spec 002: o que está aqui ainda se corrige de graça.</p>
+
+<div class="contagens">
+  <div class="contagem-item c-inferido">
+    <div class="contagem-numero">6</div>
+    <div class="contagem-label">inferido por mim — viram premissa se você não derrubar</div>
+  </div>
+  <div class="contagem-item c-respondido">
+    <div class="contagem-numero">15</div>
+    <div class="contagem-label">respondido por você</div>
+  </div>
+  <div class="contagem-item c-aberto">
+    <div class="contagem-numero">2</div>
+    <div class="contagem-label">em aberto — nenhum muda a estrutura</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Inferido por mim — confirme ou derrube</h2>
+<p class="explica-secao">Ninguém perguntou estes. Eu deduzi do que você respondeu, do código de hoje ou da
+revisão da medição. Diga o número de qualquer um que não seja assim.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-1</span> O aviso de página não endireitada sai uma vez por documento <span class="dimensao">estado da interface</span></div>
+    <div class="cartao-texto">Você escolheu que, sem o Tesseract, a conferência avise que a página não pôde ser endireitada. Mas sem o detector o programa não tem como saber <em>qual</em> página estava deitada. Então o aviso sai uma vez, no alto da conferência: "a orientação das páginas não pôde ser conferida — falta o Tesseract nesta máquina".</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-2</span> PDF com texto por dentro não muda nada <span class="dimensao">fluxo</span></div>
+    <div class="cartao-texto">O PaddleOCR só entra quando o programa lê a página como imagem — o PDF escaneado, ou quem manda ignorar o texto de dentro. Aproveitar o texto que já está no PDF continua igual.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-3</span> Ler, contar as páginas, cancelar e falhar continuam iguais <span class="dimensao">fluxo</span></div>
+    <div class="cartao-texto">Com o motor que estiver marcado, a leitura roda ao lado da janela, com "Lendo a página 3 de 12", o botão de cancelar (que espera a página atual terminar) e as mesmas telas de falha e de tentar de novo.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-4</span> Os motores são conferidos ao abrir o módulo e de novo antes de ler <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Como hoje se faz com o Tesseract: ao abrir o módulo, para a escolha já mostrar o que falta, e antes de cada leitura, para o caso de algo sumir com o programa aberto. O PaddleOCR é conferido olhando se os modelos estão no lugar antes de chamá-lo — é o que impede a biblioteca de tentar baixá-los.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-5</span> A prova completa de "sem internet" é critério de aceite <span class="dimensao">retenção e privacidade</span></div>
+    <div class="cartao-texto">A medição só vigiou as conexões feitas pela parte em Python (revisão 26). A construção prova a leitura com a máquina sem rede nenhuma, e a pasta montada para a entrega também.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-6</span> A página vai para o PaddleOCR na mesma densidade de hoje <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">300 pontos por polegada, a mesma da RN-7 e a mesma da medição. Mudar isso mudaria os números medidos.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+</div>
+
+<h2><span class="marca marca-respondido"></span>Respondido por você</h2>
+<div class="cartoes">
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-1</span> O pedido <span class="dimensao">propósito</span></div>
+    <div class="cartao-texto">O PaddleOCR entra na escolha do motor, vem primeiro e já marcado; o Tesseract logo abaixo, como alternativa; a "IA local" continua apagada. Leitura na própria máquina, sem internet, com a mesma conferência humana e a mesma lista de suspeitos. O Tesseract continua inteiro.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-2</span> Medir antes — e ele ganhou <span class="dimensao">propósito</span></div>
+    <div class="cartao-texto">Na medição, os modelos do PaddleOCR deixariam de 1 a 5 dos 60 CPFs escaparem nas páginas difíceis; o Tesseract, 42, porque pula tabela com grade. Fica valendo que ele vem marcado.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-3</span> Como ele roda <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Pelo RapidOCR, com o modelo pequeno (PP-OCRv6), que vem dentro do próprio pacote: 1 a 2 segundos por página. Descartados o PaddleOCR oficial (quase um minuto por página, mais de 1 GB) e o modelo médio.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-4</span> Página deitada <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">O detector do Tesseract endireita a página antes da leitura do PaddleOCR, sempre que o Tesseract estiver instalado. Sem ele, a página segue como está, e a conferência avisa (ver I-1).</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-5</span> PaddleOCR faltando <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Instalação estragada: a linha do PaddleOCR aparece apagada, com "esta instalação está incompleta — reinstale o programa", e o Tesseract passa a vir marcado. Nada troca de motor por baixo do pano.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-6</span> Tesseract faltando, com o PaddleOCR funcionando <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">O aviso do alto vira uma linha discreta: a opção do Tesseract aparece apagada, com "não encontrado nesta máquina — sem ele, página deitada não é endireitada", e as três saídas de hoje ficam ali. A tela cheia de motor faltando fica só para quando nenhum dos dois funciona.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-7</span> Os dois módulos <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">Gerar OCR e Anonimizar, com a mesma escolha e o mesmo padrão.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-8</span> Tamanho do instalador <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Até cerca de 250 MB (hoje são 97). Passando disso, a decisão volta para você antes de seguir.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-9</span> Qual motor leu <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">A conferência diz "lido pelo PaddleOCR" ou "lido pelo Tesseract", na linha que já diz de onde o texto veio.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-10</span> O nome na tela <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">"PaddleOCR (nesta máquina)". O RapidOCR é peça por dentro, registrada no CLAUDE.md.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-11</span> O resumo ao lado de cada motor <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">PaddleOCR: "Melhor resultado, inclusive em tabela e página escaneada ruim · cerca de 2 segundos por página". Tesseract: "Pode pular tabela com grade · cerca de 3 segundos por página". A estimativa do documento inteiro passa a usar o tempo do motor marcado.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-12</span> As tabelas no arquivo <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">Igual a hoje: tabela de texto, com as colunas alinhadas por espaço.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-13</span> Por quanto tempo vale a escolha <span class="dimensao">estados</span></div>
+    <div class="cartao-texto">Até a pessoa trocar, ou fechar o programa; ao abrir de novo, volta o PaddleOCR. Cada módulo tem a sua. A RN-22 continua inteira.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-14</span> Lembrar as escolhas entre um uso e outro <span class="dimensao">fora de escopo</span></div>
+    <div class="cartao-texto">Interessante, nas suas palavras — vira item novo no backlog, ligado à funcionalidade 4, que parou na mesma pergunta (onde guardar, e a emenda da RN-22). Aqui fica fora, com a referência.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-15</span> O que fica de fora <span class="dimensao">fora de escopo</span></div>
+    <div class="cartao-texto">Ver a lista no fim da página.</div></div>
+</div>
+
+<h2><span class="marca marca-aberto"></span>Em aberto — nenhum muda a estrutura</h2>
+<div class="cartoes">
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-1</span> O desenho da escolha com três motores <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">Onde ficam o resumo, a linha apagada e as três saídas do Tesseract faltando, na janela mínima de 900 px. Sai no rascunho de tela, que você aprova antes do código.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-2</span> O tamanho real do instalador <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Só se sabe montando a pasta do programa com o PaddleOCR dentro — é a primeira etapa da construção, e o limite de 250 MB (R-8) é conferido ali.</div></div>
+</div>
+
+<div class="fora">
+  <h3>Fora de escopo desta funcionalidade</h3>
+  <ul>
+    <li>A IA local (funcionalidade 4), que continua apagada na escolha.</li>
+    <li>Qualquer motor fora da máquina — nunca, por regra dura.</li>
+    <li>O PaddleOCR oficial e o modelo médio.</li>
+    <li>Um modelo próprio para descobrir página deitada.</li>
+    <li>Tabela no formato do Markdown, com barras.</li>
+    <li>O botão "ler de novo com o outro motor" na conferência.</li>
+    <li>Lembrar as escolhas da pessoa entre um uso e outro — item novo no backlog, ligado à funcionalidade 4.</li>
+    <li>A entrega da versão nova e os roteiros "Como instalar" e "Como usar" — skill de entrega, num prompt próprio.</li>
+  </ul>
+</div>
+
+<p class="rodape">Página gerada em 18/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-02-analista-de-requisitos. A medição que sustenta R-2 e R-3 está na
+<a href="../../conferencias/02-os-motores-de-leitura.html" style="color:#7fb1e8">conferência 02</a>.</p>
+</body>
+</html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Spec ilustrada 001 — Interface da janela</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-hover: #4f86bf;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro: #d9534f;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 980px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-5); }
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    padding-bottom: var(--espaco-2);
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .objetivo {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+    margin-bottom: var(--espaco-4);
+  }
+
+  /* fluxos lado a lado */
+  .fluxos { display: flex; gap: var(--espaco-4); flex-wrap: wrap; }
+  .fluxo-coluna {
+    flex: 1;
+    min-width: 300px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-4);
+  }
+  .fluxo-coluna.torto { border-color: var(--cor-alerta); }
+  .fluxo-titulo {
+    font-weight: 700;
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .fluxo-titulo .marca { width: 10px; height: 10px; border-radius: 50%; background: var(--cor-sucesso); }
+  .torto .fluxo-titulo .marca { background: var(--cor-alerta); }
+  .passo {
+    display: flex; gap: var(--espaco-3); align-items: flex-start;
+    padding: var(--espaco-2) 0;
+  }
+  .passo:not(:last-child) { border-bottom: 1px dashed var(--cor-borda); }
+  .passo-numero {
+    flex: 0 0 auto;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--cor-destaque); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--texto-pequeno); font-weight: 700;
+  }
+  .torto .passo-numero { background: var(--cor-alerta); color: #2a2200; }
+  .passo-texto { padding-top: 2px; }
+
+  /* estados */
+  .estados { display: flex; gap: var(--espaco-3); flex-wrap: wrap; margin-bottom: var(--espaco-3); }
+  .estado-quadro {
+    flex: 1; min-width: 240px;
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+  }
+  .estado-cabecalho {
+    padding: var(--espaco-2) var(--espaco-3);
+    font-weight: 700;
+    font-size: var(--texto-pequeno);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .estado-cabecalho.vazio { background: rgba(59,110,165,0.18); color: var(--cor-destaque-hover); }
+  .estado-cabecalho.selecionado { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .estado-corpo { padding: var(--espaco-3); color: var(--cor-texto); }
+  .nao-aplica {
+    flex: 1; min-width: 240px;
+    border: 1px dashed var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+  }
+
+  /* escopo / fora de escopo */
+  .escopos { display: flex; gap: var(--espaco-4); flex-wrap: wrap; }
+  .escopo-coluna { flex: 1; min-width: 300px; }
+  .escopo-titulo {
+    font-weight: 700;
+    padding: var(--espaco-2) var(--espaco-3);
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+  .escopo-titulo.dentro { background: rgba(76,175,109,0.18); color: var(--cor-sucesso); }
+  .escopo-titulo.fora { background: rgba(217,83,79,0.18); color: var(--cor-erro); }
+  .escopo-lista {
+    list-style: none; margin: 0; padding: var(--espaco-3);
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda); border-top: none;
+    border-radius: 0 0 var(--raio) var(--raio);
+  }
+  .escopo-lista li {
+    padding: var(--espaco-2) 0;
+    display: flex; gap: var(--espaco-2);
+  }
+  .escopo-lista li:not(:last-child) { border-bottom: 1px solid var(--cor-borda); }
+  .escopo-lista.dentro li::before { content: "✓"; color: var(--cor-sucesso); font-weight: 700; }
+  .escopo-lista.fora li::before { content: "✕"; color: var(--cor-erro); font-weight: 700; }
+
+  .rodape {
+    margin-top: var(--espaco-5);
+    color: var(--cor-texto-secundario);
+    font-size: var(--texto-pequeno);
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-3);
+  }
+  .rodape code {
+    font-family: var(--fonte-mono);
+    background: var(--cor-fundo-elevado);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Spec 001 — Interface da janela</h1>
+<p class="subtitulo">O combinado, desenhado — fluxos, estados e o que fica de fora. Rascunho: <code>especificacoes/specs/001-interface-da-janela.md</code></p>
+
+<div class="objetivo">
+  <strong>Objetivo:</strong> dar ao programa uma janela própria, com a
+  estrutura onde os dois módulos futuros (Gerar OCR e Anonimizar) vão
+  aparecer — um menu lateral para escolher qual rodar, e um painel principal
+  que muda de acordo com a escolha.
+</div>
+
+<h2>Fluxos</h2>
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminho normal — abrir e navegar</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">A pessoa abre o programa.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">A janela aparece: menu lateral (Gerar OCR / Anonimizar) e painel com a mensagem de boas-vindas.</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">A pessoa clica em "Gerar OCR" ou em "Anonimizar", no menu.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto">O painel troca para o conteúdo daquele módulo — nesta versão, o aviso de "ainda não construído".</div></div>
+    <div class="passo"><div class="passo-numero">5</div><div class="passo-texto">A pessoa pode clicar no outro item a qualquer momento, e o painel troca de novo.</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminho torto — clicar no que já está selecionado</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">A pessoa clica no item do menu que já está marcado.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">O item deixa de ficar marcado e o painel volta para a mensagem de boas-vindas — o mesmo estado de quando o programa abre.</div></div>
+  </div>
+</div>
+
+<h2>Estados da interface</h2>
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho vazio">Vazio — ao abrir, e ao sair de um módulo</div>
+    <div class="estado-corpo">Menu lateral visível, nada marcado. Painel mostra a mensagem convidando a escolher "Gerar OCR" ou "Anonimizar". É para cá que se volta ao clicar no item já marcado.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho selecionado">Com módulo selecionado</div>
+    <div class="estado-corpo">Menu lateral visível, com o item escolhido marcado. Painel mostra o aviso de que aquele módulo ainda não foi construído.</div>
+  </div>
+</div>
+<div class="estados">
+  <div class="nao-aplica">Carregando — não se aplica: abrir a janela e trocar o painel é instantâneo.</div>
+  <div class="nao-aplica">Erro — não se aplica: não há nenhuma operação nesta funcionalidade que possa falhar.</div>
+</div>
+
+<h2>Escopo</h2>
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Entra nesta entrega</div>
+    <ul class="escopo-lista dentro">
+      <li>Janela própria do programa</li>
+      <li>Menu lateral fixo com "Gerar OCR" e "Anonimizar"</li>
+      <li>Painel principal que troca conforme a escolha</li>
+      <li>Mensagem de boas-vindas quando nada está escolhido</li>
+      <li>Aviso de "módulo ainda não construído" ao escolher qualquer um dos dois</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Fora desta entrega</div>
+    <ul class="escopo-lista fora">
+      <li>O funcionamento real de "Gerar OCR" — spec 002</li>
+      <li>O funcionamento real de "Anonimizar" — spec 003</li>
+      <li>Qualquer processamento de documento</li>
+      <li>Redimensionar janela, temas, atalhos de teclado</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Emenda de 28/10/2026 — a janela maximizada e o tamanho lembrado</h2>
+<div style="background: rgba(217,164,65,0.10); border: 1px solid #d9a441; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovada em 28/10/2026.</strong> Funcionalidade 8 do backlog, a pedido da usuária no levantamento.
+  O motor lembrado, da mesma funcionalidade, está na spec 002.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>Primeiro uso:</strong> a janela abre maximizada, ocupando a tela (RN-4).</li>
+    <li><strong>Depois:</strong> abre como foi fechada — maximizada, ou com o tamanho que tinha (RN-5). Saindo do
+      maximizado, volta ao tamanho de antes de maximizar.</li>
+    <li><strong>Sempre no meio da tela:</strong> a posição não é lembrada, e a janela nunca abre fora da tela —
+      o caso de quem fechou num segundo monitor que não está mais ligado (RN-6).</li>
+    <li><strong>Sempre cabe:</strong> o tamanho lembrado maior que a tela encolhe, e o menor que 900 × 560 vira o
+      mínimo (RN-7).</li>
+  </ol>
+  <p style="margin: 12px 0 0 0;"><strong>Fica de fora:</strong> a posição da janela, e qual item do menu estava marcado — o menu abre sempre sem nada marcado.</p>
+</div>
+
+<h2>Emenda de 03/11/2026 — a faixa da esquerda redesenhada</h2>
+<div style="background: rgba(59,110,165,0.10); border: 1px solid #3b6ea5; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovada em 04/11/2026.</strong> Funcionalidade 9 do backlog, pedida na conferência da
+  funcionalidade 4. A aparência foi aprovada no rascunho <code>mockups/janela/04-tres-direcoes.html</code>, direção C.
+  Nenhum fluxo novo: abrir, escolher, desmarcar e o submenu da IA continuam como estão. Muda só como a faixa se mostra.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>Cabeçalho:</strong> símbolo à esquerda, "Anonimizador" ao lado e "CAPCF · versão 0.1.0" embaixo (RN-9).</li>
+    <li><strong>A versão sobe:</strong> sai do pé da faixa e fica só no cabeçalho, parada também no submenu da IA (RN-10).</li>
+    <li><strong>Um ícone por item do menu principal:</strong> lupa em Gerar OCR, cadeado em Anonimizar, engrenagem em
+      Configurações de IA, desenhados pelo próprio programa, sem nada baixado (RN-11), na cor do texto do item (RN-12).</li>
+    <li><strong>O marcado fica suave:</strong> fundo fraco com um filete à esquerda, em todo item da faixa, inclusive no
+      submenu da IA. O filete diz "este é o escolhido" sem depender da cor (RN-13).</li>
+  </ol>
+</div>
+
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho vazio">Item normal</div>
+    <div class="estado-corpo">Ícone e texto no cinza de apoio. Com o mouse em cima, como hoje.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho selecionado">Item marcado</div>
+    <div class="estado-corpo">Fundo fraco e filete à esquerda; ícone e texto claros, em negrito leve.</div>
+  </div>
+</div>
+<div class="estados">
+  <div class="nao-aplica">Carregando — não se aplica: a faixa não carrega nada.</div>
+  <div class="nao-aplica">Erro — não se aplica: a faixa não tem operação que possa falhar.</div>
+</div>
+
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Entra na emenda</div>
+    <ul class="escopo-lista dentro">
+      <li>O cabeçalho com o símbolo provisório, o nome e a versão</li>
+      <li>A versão fora do pé da faixa</li>
+      <li>A lupa, o cadeado e a engrenagem, desenhados pelo programa</li>
+      <li>O item marcado suave, no menu e no submenu da IA</li>
+      <li>O CLAUDE.md sem o "pé da faixa", e os roteiros na lista da próxima entrega</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Fora da emenda</div>
+    <ul class="escopo-lista fora">
+      <li>O tema claro e "Configurações" com Tema e IA — funcionalidade 10</li>
+      <li>Ícone nos itens do submenu, que continuam só texto</li>
+      <li>O ícone da janela, que continua o padrão do Windows</li>
+      <li>A marca definitiva — o símbolo é provisório</li>
+      <li>O passar do mouse, o que os módulos fazem e o painel vazio</li>
+      <li>Os roteiros "Como usar" e "Como instalar" — refeitos na próxima entrega</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Acréscimo de 04/11/2026 — o título dos módulos</h2>
+<div style="background: rgba(59,110,165,0.10); border: 1px solid #3b6ea5; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovado em 04/11/2026.</strong> Pedido na conferência da etapa 2: com a faixa nova, o título do painel ficou
+  fraco e solto. A aparência foi aprovada no rascunho <code>mockups/janela/05-titulo-dos-modulos.html</code>, direção A.
+  Nenhum fluxo novo, e nenhum texto muda.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>O ícone do módulo vai para o título:</strong> lupa no Gerar OCR, cadeado no Anonimizar, engrenagem nas
+      Configurações de IA, num quadrado no mesmo azul fraco do item marcado. Nas telas do caminho do PDF, o do módulo por
+      onde a pessoa entrou (RN-14).</li>
+    <li><strong>Uma linha fina embaixo do título</strong>, na altura da linha do cabeçalho da faixa quando a legenda cabe
+      numa linha (RN-14).</li>
+    <li><strong>A explicação da IA local alinhada</strong> com as do PaddleOCR e do Tesseract, e o tempo dela no mesmo
+      destaque claro (RN-15).</li>
+  </ol>
+</div>
+
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho vazio">Legenda numa linha</div>
+    <div class="estado-corpo">A linha embaixo do título fica na altura da linha do cabeçalho da faixa.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho selecionado">Legenda em duas linhas</div>
+    <div class="estado-corpo">A do Anonimizar nas janelas menores, e as do caminho do PDF, com o nome do arquivo: a linha desce junto, sem cortar nada.</div>
+  </div>
+</div>
+
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Ganham o título novo</div>
+    <ul class="escopo-lista dentro">
+      <li>A entrada do Gerar OCR e a do Anonimizar</li>
+      <li>A ficha do documento, no caminho do PDF</li>
+      <li>"Este documento já tem texto por dentro"</li>
+      <li>"Este documento precisa ser lido" e "Ler as imagens deste documento"</li>
+      <li>"Texto conferido. E agora?", "Onde salvar o arquivo" e "Onde salvar o texto mascarado" — incluídas na construção, por escolha sua</li>
+      <li>As três telas de Configurações de IA</li>
+      <li>E a explicação da IA local, na escolha do motor</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Continuam como estão</div>
+    <ul class="escopo-lista fora">
+      <li>O texto de todos os títulos e legendas</li>
+      <li>As telas de espera, com o título no meio</li>
+      <li>As caixas de erro e as telas com o título no meio ("Arquivo gravado", a pergunta antes de descartar, "Já existe um arquivo com esse nome")</li>
+      <li>"Conferir o texto" e "Revisar antes de salvar", que têm cabeçalho próprio</li>
+      <li>O painel vazio e o tema claro (funcionalidade 10)</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Emenda de 05/11/2026 — o tema claro e o menu Configurações</h2>
+<div style="background: rgba(217,164,65,0.10); border: 1px solid #d9a441; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovada em 05/11/2026.</strong> Funcionalidade 10 do backlog. A aparência já foi aprovada no
+  rascunho <code>mockups/janela/06-tema-claro-e-configuracoes.html</code>; esta página mostra o combinado: o que acontece,
+  em que ordem, e o que fica de fora. Vêm junto duas emendas pequenas: na spec 002, o tema guardado como o motor (RN-42),
+  e na spec 004, o nome "Configurações" nas cinco frases que apontam para ele.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>Dois temas, e só as cores mudam:</strong> o escuro de hoje continua o padrão, com os mesmos valores (RN-16).</li>
+    <li><strong>A janela nasce com um tema só:</strong> escolher outro vale ao reabrir (RN-17).</li>
+    <li><strong>No claro, toda letra se lê:</strong> contraste de pelo menos 4,5 para 1; o amarelo só pinta fundo, e a
+      letra de alerta é o âmbar escuro (RN-18).</li>
+    <li><strong>As marcas da revisão guardam o traço:</strong> reto, ondulado, traço-ponto, tracejado e pontilhado, nos
+      dois temas (RN-19).</li>
+    <li><strong>"Configurações", com duas seções:</strong> "Configurações Gerais" com o Tema, e "Configurações de IA" com
+      as três opções de hoje. O título de seção não se clica (RN-20). Cada opção tem o seu ícone, menos o "‹ Voltar" (RN-21).</li>
+    <li><strong>Entrar abre o Tema</strong>, e não mais o LM Studio (RN-22).</li>
+    <li><strong>A escolha é guardada no clique</strong>, e a frase com o "Reabrir agora" aparece só quando a escolha é
+      diferente do tema na tela (RN-23).</li>
+    <li><strong>"Reabrir agora" fecha e abre de novo</strong>, no tema marcado, mesmo sem ter conseguido guardar; a janela
+      velha só fecha depois que a nova começou a abrir (RN-24).</li>
+    <li><strong>Pergunta antes, quando há o que perder:</strong> leitura em andamento, texto lido e não salvo, revisão
+      não salva (RN-25).</li>
+    <li><strong>Toda cor vem do tema:</strong> nenhuma tela tem cor própria escrita dentro dela (RN-26).</li>
+  </ol>
+</div>
+
+<div class="fluxos">
+  <div class="fluxo-coluna">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminho normal — escolher o claro</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto">A pessoa clica em "Configurações". O submenu aparece com "Tema" marcado, e o painel mostra a tela do Tema, com "Escuro" marcado.</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto">Ela marca "Claro". A escolha fica guardada nessa hora, e aparecem a frase "O tema novo vale quando o programa abrir de novo." e o "Reabrir agora".</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto">Ela clica em "Reabrir agora". A janela fecha e abre de novo, inteira no claro, no tamanho de antes, com o menu principal e nada marcado.</div></div>
+    <div class="passo"><div class="passo-numero">◦</div><div class="passo-texto"><strong>Sem pressa:</strong> sem clicar no botão, o claro vem na próxima vez que o programa abrir.</div></div>
+    <div class="passo"><div class="passo-numero">◦</div><div class="passo-texto"><strong>Mudou de ideia:</strong> marcar "Escuro" de novo faz a frase e o botão sumirem, e a escolha guardada volta a ser o escuro.</div></div>
+  </div>
+  <div class="fluxo-coluna torto">
+    <div class="fluxo-titulo"><span class="marca"></span>Caminhos tortos — ao clicar em "Reabrir agora"</div>
+    <div class="passo"><div class="passo-numero">1</div><div class="passo-texto"><strong>Uma leitura em andamento</strong> no Gerar OCR ou no Anonimizar: a pergunta aparece na própria tela, com "Continuar a leitura" (o que não perde nada) e "Reabrir mesmo assim".</div></div>
+    <div class="passo"><div class="passo-numero">2</div><div class="passo-texto"><strong>Um texto lido e ainda não salvo:</strong> a mesma pergunta, com "Não reabrir" e "Reabrir mesmo assim". Havendo mais de uma coisa a perder, uma pergunta só cita todas — por exemplo, "Há uma leitura em andamento no Gerar OCR e um texto lido e ainda não salvo no Anonimizar." —, e o botão forte é "Continuar a leitura" sempre que uma delas é uma leitura. As quatro combinações, com as frases exatas, estão no acréscimo de 06/11/2026 (RN-27).</div></div>
+    <div class="passo"><div class="passo-numero">3</div><div class="passo-texto"><strong>Uma revisão não salva:</strong> a pergunta de quando se fecha a janela, no Anonimizar, com "Reabrir sem salvar". Ela vem antes de tudo; quem reabre sem salvar passa depois pela pergunta do Tema, se ainda houver o que perder no Gerar OCR (RN-28). Na prática não se chega a ela.</div></div>
+    <div class="passo"><div class="passo-numero">4</div><div class="passo-texto"><strong>Não dá para guardar a escolha:</strong> reabre no claro mesmo assim, sem aviso; fechando e abrindo por conta própria, volta o escuro guardado.</div></div>
+    <div class="passo"><div class="passo-numero">5</div><div class="passo-texto"><strong>A escolha guardada não se lê:</strong> abre no escuro, sem erro e sem aviso.</div></div>
+    <div class="passo"><div class="passo-numero">6</div><div class="passo-texto"><strong>O programa não consegue abrir de novo:</strong> a janela não fecha, e a tela diz "Não foi possível reabrir agora. O tema novo vale quando você fechar e abrir o programa."</div></div>
+  </div>
+</div>
+
+<h2 style="font-size: 17px; border-bottom: none; margin-top: 32px;">Os estados da tela do Tema</h2>
+<div class="estados">
+  <div class="estado-quadro">
+    <div class="estado-cabecalho vazio">1 · O tema marcado é o da tela</div>
+    <div class="estado-corpo">Só as duas opções, nada embaixo. É o que vê quem entra pela primeira vez.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho selecionado">2 · O tema marcado é outro</div>
+    <div class="estado-corpo">Embaixo das opções, a frase e o "Reabrir agora".</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho" style="background: rgba(217,164,65,0.18); color: #d9a441;">3 · A pergunta antes de reabrir</div>
+    <div class="estado-corpo">No lugar da frase e do botão, a frase do que se perderia e as duas saídas, sem caixa por cima.</div>
+  </div>
+  <div class="estado-quadro">
+    <div class="estado-cabecalho" style="background: rgba(217,83,79,0.18); color: #f08a86;">4 · Não deu para reabrir</div>
+    <div class="estado-corpo">A janela continua de pé, e a frase diz que o tema vale ao fechar e abrir.</div>
+  </div>
+</div>
+<div class="estados">
+  <div class="nao-aplica">Carregando — não há tela de espera: a janela some e volta, e a espera é a do programa abrindo, como sempre.</div>
+  <div class="nao-aplica">Erro ao guardar — não aparece: a escolha vale até fechar (RN-39 da spec 002).</div>
+</div>
+
+<div style="background: rgba(59,110,165,0.10); border: 1px solid #3b6ea5; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Três suposições que apareceram ao escrever, aprovadas por você junto com a spec:</strong>
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>Depois de reabrir, a janela abre como sempre:</strong> no tamanho lembrado, no menu principal e com nada
+      marcado. Para ver a tela do Tema de novo, entra-se em Configurações.</li>
+    <li><strong>O texto lido e ainda não salvo também faz perguntar.</strong> Dá para ir às Configurações com um texto
+      conferido no Gerar OCR, ou um PDF na conferência do Anonimizar, e reabrir o perderia como perde uma leitura.
+      Fechar pelo X continua sem perguntar, como hoje.</li>
+    <li><strong>Só fecha depois que a nova abriu.</strong> Sem conseguir abrir de novo, o programa fica de pé e diz por quê,
+      em vez de fechar e não voltar.</li>
+  </ol>
+</div>
+
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Entra na emenda</div>
+    <ul class="escopo-lista dentro">
+      <li>O tema claro, ao lado do escuro, que continua o padrão</li>
+      <li>"Configurações" no lugar de "Configurações de IA", com as duas seções</li>
+      <li>Um ícone para Tema, LM Studio, Servidor de IA Interno e Habilitar IA</li>
+      <li>A tela do Tema, a frase e o "Reabrir agora"</li>
+      <li>A pergunta antes de reabrir, quando há o que perder</li>
+      <li>Todas as telas do programa nas cores do claro, com o contraste conferido</li>
+      <li>O tema lembrado no <code>preferencias.ini</code> (spec 002)</li>
+      <li>As cinco frases que apontam para "Configurações de IA" (spec 004)</li>
+      <li>O <code>CLAUDE.md</code> e a linha do tema na lista da próxima entrega</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Fora da emenda</div>
+    <ul class="escopo-lista fora">
+      <li>Trocar o tema na hora, sem reabrir</li>
+      <li>Seguir sozinho o tema do Windows</li>
+      <li>Mudar desenho, tamanho, espaço, fonte ou texto de qualquer tela</li>
+      <li>Um terceiro tema, ou escolher cor a cor</li>
+      <li>A barra de título, o ícone da janela e a marca definitiva</li>
+      <li>O arquivo <code>.md</code> gravado, que não tem cor</li>
+      <li>As páginas de documentação, que continuam escuras, e os rascunhos antigos</li>
+      <li>Fechar pelo X perguntar pelo texto não salvo: continua como hoje</li>
+      <li>Fechar a funcionalidade 9 e gerar instalador agora: um instalador só, no fim</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Acréscimo de 06/11/2026 — o âmbar e o vermelho do claro</h2>
+<div style="background: rgba(59,110,165,0.10); border: 1px solid #3b6ea5; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovado em 06/11/2026.</strong> Pedido na conferência da etapa 3 da funcionalidade 10: no claro, o âmbar escuro do
+  suspeito se confundia com o preto do texto. As alternativas estão em <code>mockups/janela/08-o-ambar-do-suspeito-no-claro.html</code>
+  e <code>09-o-ambar-do-suspeito-ajustado.html</code>, e a escolhida foi a coluna A do rascunho 09. Nenhum fluxo, desenho ou
+  texto muda, e o escuro fica como está.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>O suspeito ganha cor própria no claro</strong>, separada da letra de aviso: <code>#c28102</code> no número,
+      na chave de cores, no selo e na etiqueta, e <code>#ec9c01</code> na barra do item da lista (RN-29).</li>
+    <li><strong>A letra de aviso passa a <code>#a85a00</code></strong>: o título das caixas de aviso, o "não há" da ficha
+      do PDF, o selo "LIDO PELO ...", a falta do motor.</li>
+    <li><strong>O vermelho passa a <code>#ae0202</code></strong>: o CPF válido e as caixas e os recados de erro.</li>
+    <li><strong>Duas exceções novas ao mínimo de contraste</strong>, escolhidas de propósito: o suspeito, a 3 para 1 sobre
+      o fundo e 5 para 1 contra o texto; e a letra de aviso dentro das caixas amarelas, entre 4,1 e 4,5 (RN-30).</li>
+  </ol>
+</div>
+
+<div class="escopos">
+  <div class="escopo-coluna">
+    <div class="escopo-titulo dentro">Muda, só no claro</div>
+    <ul class="escopo-lista dentro">
+      <li>A cor do suspeito, no texto da revisão e na lista</li>
+      <li>A cor da barra do item suspeito</li>
+      <li>A cor da letra de aviso</li>
+      <li>O vermelho do CPF válido e do erro</li>
+    </ul>
+  </div>
+  <div class="escopo-coluna">
+    <div class="escopo-titulo fora">Fica como está</div>
+    <ul class="escopo-lista fora">
+      <li>O escuro inteiro</li>
+      <li>O fundo das caixas de erro e o amarelo das caixas de aviso</li>
+      <li>O traço de cada marca da revisão (RN-19)</li>
+      <li>As outras cores do claro</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Acréscimo de 06/11/2026 — o ícone do título nas Configurações</h2>
+<div style="background: rgba(59,110,165,0.10); border: 1px solid #3b6ea5; border-radius: 6px; padding: 16px 24px; margin: 16px 0;">
+  <strong>Aprovado em 06/11/2026.</strong> Pedido na conferência da etapa 3 da funcionalidade 10: a engrenagem repetida no título
+  das quatro telas de Configurações não dizia em qual delas a pessoa está. Nenhum desenho novo, fluxo, texto ou cor.
+  <ol style="margin: 12px 0 0 0;">
+    <li><strong>O título leva o ícone da opção</strong>, igual ao do item do submenu: o do Tema, o do LM Studio, o do
+      Servidor de IA Interno e o do Habilitar IA, no quadrado azul fraco de sempre (RN-31).</li>
+    <li><strong>A engrenagem fica no item "Configurações" da faixa.</strong> No Gerar OCR e no Anonimizar, o título
+      continua com o ícone do módulo (RN-14).</li>
+  </ol>
+</div>
+
+<p class="rodape">
+  Gerado pela <code>skill-07-designer-de-telas</code> a partir da spec 001. Mostra o
+  combinado — não a aparência da tela. O rascunho visual (cores, botões,
+  layout de verdade) vem depois, como mockup aprovado à parte.
+</p>
+
+</body>
+</html>

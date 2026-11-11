@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Backlog — Anonimizador CAPCF</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.5;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-5); }
+  h2 {
+    font-size: var(--texto-grande);
+    color: var(--cor-texto-secundario);
+    font-weight: 600;
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-2);
+  }
+  .contagem {
+    background: var(--cor-fundo-elevado);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: var(--texto-pequeno);
+  }
+  .coluna { margin-bottom: var(--espaco-5); }
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-destaque);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao-titulo { font-size: var(--texto-grande); font-weight: 600; margin-bottom: var(--espaco-2); }
+  .cartao-entrega { color: var(--cor-texto-secundario); }
+  .vazio { color: var(--cor-texto-secundario); font-style: italic; }
+  .rodape { margin-top: var(--espaco-5); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+</style>
+</head>
+<body>
+
+<h1>Backlog</h1>
+<p class="subtitulo">O que está previsto para o Anonimizador CAPCF — espelha <code>especificacoes/backlog.md</code>, sempre a versão vigente</p>
+
+<div class="coluna">
+  <h2>Prevista <span class="contagem">0</span></h2>
+  <div class="cartoes">
+    <p class="vazio">Nenhuma funcionalidade prevista.</p>
+  </div>
+</div>
+
+<div class="coluna">
+  <h2>Em spec <span class="contagem">0</span></h2>
+  <div class="cartoes">
+    <p class="vazio">Nenhuma funcionalidade em spec.</p>
+  </div>
+</div>
+
+<div class="coluna">
+  <h2>Em construção <span class="contagem">0</span></h2>
+  <div class="cartoes">
+    <p class="vazio">Nenhuma funcionalidade em construção.</p>
+  </div>
+</div>
+
+<div class="coluna">
+  <h2>Construída <span class="contagem">10</span></h2>
+  <div class="cartoes">
+    <div class="cartao">
+      <div class="cartao-titulo">9. Ajustes de design do menu</div>
+      <div class="cartao-entrega">Um ícone para Gerar OCR e outro para Anonimizar, que combinem com o que cada um faz, e a versão do programa sobe para logo abaixo de "Anonimizador CAPCF", no alto da faixa.</div>
+      <div class="cartao-entrega"><strong>As 5 etapas conferidas na tela</strong> pela solicitante: o cabeçalho com a versão, os ícones em traço, o item marcado suave e o título dos módulos em 04/11/2026, e o programa instalado e aberto sem rede em 09/11/2026, pelo roteiro da conferência 08, com um instalador de teste só para a 9 e a 10 — os 13 passos como esperado. A pasta do programa não ganhou nenhum arquivo de imagem, fonte ou cor. A versão passou a 0.2.0, por escolha da solicitante. Emenda de 03/11/2026 da spec 001 (RN-9 a RN-13), com o acréscimo de 04/11 (RN-14 e RN-15: o ícone do módulo no título das telas). Rascunho 04 da janela, direção C. Na branch <code>feature-010-tema-claro-e-configuracoes</code>; a entrega da versão nova é trabalho à parte.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">10. Tema claro e menu Configurações</div>
+      <div class="cartao-entrega">Um tema claro ao lado do escuro de hoje, escolhido por quem usa e lembrado de um uso para o outro; e "Configurações de IA" vira "Configurações", com a escolha do tema e as configurações da IA dentro.</div>
+      <div class="cartao-entrega"><strong>As 6 etapas conferidas na tela</strong> pela solicitante, de 06 a 07/11/2026, pelo roteiro da conferência 07, e declarada construída em 09/11/2026. Os 39 critérios passando: 38 na revisão de 09/11/2026, e o do programa instalado e aberto sem rede conferido no mesmo dia, com o instalador de teste das funcionalidades 9 e 10 (conferência 08). Cada etapa revisada pela lente crítica (revisões 59 a 64). Só as cores mudam; a troca vale ao reabrir, com o "Reabrir agora", que pergunta antes quando reabrir jogaria trabalho fora. No claro, o suspeito ganhou âmbar próprio e o vermelho ficou mais vivo, a pedido da solicitante. Na branch <code>feature-010-tema-claro-e-configuracoes</code>; a entrega da versão nova é trabalho à parte.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">4. Revisão por IA local</div>
+      <div class="cartao-entrega">Um segundo par de olhos antes do olho humano: uma IA na própria máquina (LM Studio) ou num servidor interno aponta, na revisão do Anonimizar, onde vale olhar com mais cuidado. Os apontamentos somam à lista que já existe, e quem mascara é sempre o programa. Vem desligada. A IA também fica disponível como motor de leitura, atrás de uma chave e com ressalva.</div>
+      <div class="cartao-entrega">As 8 etapas construídas em 31/10/2026; conferida na tela com a solicitante, pela conferência 06, e testada com o <code>gemma-4-12b-qat</code> no LM Studio de 01 a 03/11/2026, com os ajustes das RN-63 a RN-70, revisados pelas lentes crítica e de clareza. Na branch <code>feature-004-revisao-por-ia-local</code>; a junção com a master e a entrega da versão nova são trabalho à parte.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">8. Lembrar as escolhas de quem usa</div>
+      <div class="cartao-entrega">O programa lembra, de um uso para o outro, o motor de leitura marcado em cada módulo, e a janela abre maximizada no primeiro uso e depois do tamanho em que foi deixada.</div>
+      <div class="cartao-entrega">As 5 etapas construídas em 28/10/2026 e conferidas na tela, passo a passo, em 29/10/2026, pelo roteiro da conferência 05 — a parte instalada com um instalador de teste. Guardado num <code>preferencias.ini</code> ao lado do <code>.env</code>; nada do trabalho é lembrado; desinstalar apaga, atualizar mantém.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">5. Abrir documento do Word</div>
+      <div class="cartao-entrega">Aceita <code>.docx</code> no Anonimizar, tirando o texto e as tabelas de dentro dele sem instalar nada a mais na máquina.</div>
+      <div class="cartao-entrega">As 6 etapas conferidas na tela em 26/10/2026, pelo roteiro da conferência 04, e os 25 critérios da décima emenda passando. Vai o documento impresso inteiro — cabeçalho, corpo, tabelas, listas numeradas, rodapé e notas —, e uma faixa azul diz o que ficou de fora.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">6. CPF sem o zero da frente</div>
+      <div class="cartao-entrega">Reconhece o CPF que perdeu o zero da frente e ficou com 10 dígitos, como em formulários de outros sistemas, ou que perdeu dois e ficou com 9: com os zeros de volta, o que fecha a conta do dígito verificador é CPF válido, com a etiqueta "sem o zero da frente", e sai mascarado com os 11 dígitos, a coluna da tabela continuando reta. Nona emenda da spec 003 e rascunho 09 aprovados em 20/10/2026.</div>
+      <div class="cartao-entrega"><strong>As 7 etapas conferidas na tela</strong> pela solicitante, de uma vez no fim: as 5 primeiras em 21/10/2026, e as 6 e 7 (o clique no número do texto e as frases do CPF curto, pedidos naquela conferência) em 22/10/2026. Os 18 critérios passando; 3 defeitos da construção achados pela lente crítica e consertados, mais um antigo da tela de salvar, presente na 0.1.0. Na branch <code>feature-006-cpf-sem-o-zero</code>; a entrega da versão nova é trabalho à parte.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">7. Ler com o PaddleOCR</div>
+      <div class="cartao-entrega">O PaddleOCR entra primeiro e já marcado na escolha do motor, com o Tesseract como alternativa, nos dois módulos: lê a tabela com grade, a página torta e a de contraste fraco, onde o Tesseract lê pior. Roda na própria máquina, sem internet, com os modelos dentro do programa. Emenda da spec 002 aprovada em 18/10/2026; rascunho 11 aprovado.</div>
+      <div class="cartao-entrega"><strong>As 5 etapas conferidas na tela</strong>, de 18 a 19/10/2026 — inclusive o programa instalado lendo com a rede desligada — e os 17 critérios da emenda passando. Instalador de teste com 180 MB. Observação: se o Tesseract marcado sumir com o programa aberto, a leitura seguinte sai com o PaddleOCR sem a troca aparecer antes, só depois, no selo (desvio da letra da RN-29). A entrega da versão nova é trabalho à parte.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">3. Módulo de Anonimizador de CPF</div>
+      <div class="cartao-entrega">Encontra todo CPF no texto (em qualquer formato de pontuação), mascara e gera o <code>.md</code> pronto para o assistente. Spec 003 aprovada em 14/09/2026, com oito emendas; rascunhos de tela 01 e 08 aprovados.</div>
+      <div class="cartao-entrega"><strong>As 8 etapas conferidas na tela</strong>, de 15 a 23/09/2026, e os 51 critérios da spec 003 conferidos — 50 na revisão de 22/09/2026, e o da reabertura do programa na tela, em 23/09.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">2. Módulo de OCR</div>
+      <div class="cartao-entrega">Transforma um documento escaneado sem texto em texto legível, usando o Tesseract local. Spec 002 aprovada em 09/09/2026.</div>
+      <div class="cartao-entrega"><strong>As 7 etapas conferidas na tela</strong>, de 10 a 13/09/2026, e os 26 critérios da spec 002 passando na revisão de 13/09/2026.</div>
+    </div>
+    <div class="cartao">
+      <div class="cartao-titulo">1. Interface da janela</div>
+      <div class="cartao-entrega">A estrutura com o menu lateral (Gerar OCR / Anonimizar) e o painel principal onde cada módulo aparece. Conferida na tela em 04/09/2026, spec 001.</div>
+    </div>
+  </div>
+</div>
+
+<p class="rodape">
+  Estas dez linhas são só a parte visível do trabalho — cerca de um terço do
+  esforço real de um projeto costuma ser funcionalidade nova; o resto é
+  correção, ajuste, empacotamento e registro, e não aparece aqui.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão 49 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro-texto: #f08a86; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lados { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lado { flex: 1; min-width: 280px; font-size: 13px; }
+  .rotulo { font-weight: 700; font-size: 13px; }
+  .antes .rotulo { color: var(--cor-erro-texto); }
+  .depois .rotulo { color: var(--cor-sucesso); }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 49 — antes e depois</h1>
+<p class="subtitulo">Lentes de critérios de aceite, segredo e dado real, manutenção e clareza sobre a funcionalidade 4, em 31/10/2026. Todos os achados foram aprovados de uma vez pela solicitante, a pedido dela, e consertados. Só a RN-34 muda o que se vê na tela, e ainda não foi vista.</p>
+
+<h2>Critérios de aceite</h2>
+<p>Dos 50 critérios, 48 passam e nenhum foi reprovado. "Desinstalar apaga o token" não dá para verificar sem rodar o instalador, e "navegar e liberar com a IA rodando" é para a solicitante conferir. Tudo passa contra o servidor de mentira, e não com um modelo de verdade.</p>
+<div class="achado"><h3>A IA parando ao sair da revisão (RN-34)</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Num documento sem nada a perder, indo para outro item do menu, a IA continuava mandando o texto, com ninguém olhando.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Ela para ao sair. Voltando, a faixa diz até onde foi, e dá para retomar. Minimizar a janela não para.</div></div></div>
+<div class="achado"><h3>Três critérios sem teste permanente</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A IA ligada ao abrir, o destino mudo e o caminho inteiro com a IA desligada estavam conferidos só por leitura, ou por uma verificação de uma vez só.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Os três têm teste na lista.</div></div></div>
+<div class="achado"><h3>A spec corrigida, e a tela não</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>A RN-18 mandava pôr no aviso uma frase que ali não faz sentido. A RN-29 pedia destino e modelo também no comentário, ao contrário do rascunho aprovado.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>As duas regras dizem o que o rascunho aprovado mostra.</div></div></div>
+
+<h2>Segredo e dado real</h2>
+<div class="achado"><h3>O provisório com o token</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Se a máquina caísse enquanto o token era gravado, o arquivo provisório, com ele dentro, podia entrar num commit e ir para o GitHub, num repositório público.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>O nome dele está no <code>.gitignore</code>.</div></div></div>
+<p>Não apareceu token de verdade, endereço de fora nem dado real no que vai para o histórico.</p>
+
+<h2>Manutenção</h2>
+<div class="achado"><h3>A regra de apontar saiu da tela</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Cada ajuste depois dos testes com modelos de verdade mexeria num arquivo de tela de 1.300 linhas.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>A regra mora em <code>programa/revisao_ia.py</code>, sem tela nenhuma.</div></div></div>
+<div class="achado"><h3>O preparo do servidor de mentira</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Copiado em 7 arquivos de teste.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Mora no <code>programa/conftest.py</code>.</div></div></div>
+<div class="achado"><h3>A conta de mascarados</h3><div class="lados">
+  <div class="lado antes"><div class="rotulo">Antes</div>Repetida em dois lugares: um grupo novo em só um deles faria duas telas dizerem números diferentes.</div>
+  <div class="lado depois"><div class="rotulo">Depois</div>Uma função só.</div></div></div>
+
+<h2>Clareza</h2>
+<ul>
+  <li>O comentário que falava em <code>None</code>, com o valor sendo <code>False</code>, agora diz o que a variável é.</li>
+  <li>Saíram dos testes as conferências que não provavam nada, e um parâmetro sem função.</li>
+  <li>A descrição do <code>tela_revisao.py</code> deixou de dizer que salvar "entra nas etapas seguintes".</li>
+  <li>Ganhou explicação a linha que guarda o trabalho terminado, e saiu uma importação sem uso.</li>
+</ul>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+  <li><code>.gitignore</code> com o provisório do <code>.env</code>.</li>
+  <li>A conferência 06 ganhou um passo novo, o de sair no meio.</li>
+  <li>Nenhum arquivo foi apagado, renomeado ou movido.</li>
+</ul>
+
+<h2>O que foi achado e não consertado</h2>
+<p>Nada foi deixado de fora. Nesta rodada, a lente de manutenção parou no limite de três achados, e a de clareza ficou em quatro.</p>
+
+<p class="rodape">Gerada em 31/10/2026 pela skill-07-designer-de-telas, a pedido da skill-09-revisor-de-codigo.</p>
+</body>
+</html>

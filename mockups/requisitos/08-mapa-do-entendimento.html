@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa do entendimento — Revisão por IA local</title>
+<style>
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", "Consolas", monospace;
+    --texto-pequeno: 13px;
+    --texto-base: 15px;
+    --texto-grande: 20px;
+    --texto-titulo: 28px;
+    --espaco-1: 4px;
+    --espaco-2: 8px;
+    --espaco-3: 16px;
+    --espaco-4: 24px;
+    --espaco-5: 32px;
+    --raio: 6px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: var(--fonte-texto);
+    font-size: var(--texto-base);
+    padding: var(--espaco-5);
+    line-height: 1.55;
+    max-width: 900px;
+  }
+  h1 { font-size: var(--texto-titulo); margin: 0 0 var(--espaco-2) 0; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: var(--espaco-4); }
+  code { font-family: var(--fonte-mono); font-size: 0.92em; background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 4px; }
+
+  .contagens { display: flex; gap: var(--espaco-3); margin-bottom: var(--espaco-5); flex-wrap: wrap; }
+  .contagem-item {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: var(--espaco-3);
+    flex: 1;
+    min-width: 140px;
+  }
+  .contagem-numero { font-size: var(--texto-titulo); font-weight: 700; }
+  .contagem-label { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  .c-inferido .contagem-numero { color: var(--cor-alerta); }
+  .c-respondido .contagem-numero { color: var(--cor-sucesso); }
+  .c-aberto .contagem-numero { color: var(--cor-texto-secundario); }
+
+  h2 {
+    font-size: var(--texto-grande);
+    margin-top: var(--espaco-5);
+    margin-bottom: var(--espaco-3);
+    display: flex; align-items: center; gap: var(--espaco-2);
+  }
+  .explica-secao { color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); margin: calc(-1 * var(--espaco-2)) 0 var(--espaco-3) 0; }
+  .marca { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .marca-inferido { background: var(--cor-alerta); }
+  .marca-respondido { background: var(--cor-sucesso); }
+  .marca-aberto { background: var(--cor-texto-secundario); }
+
+  .cartoes { display: flex; flex-direction: column; gap: var(--espaco-3); }
+  .cartao {
+    background: var(--cor-fundo-elevado);
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-sucesso);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .cartao.inferido { border-left-color: var(--cor-alerta); }
+  .cartao.aberto { border-left-color: var(--cor-texto-secundario); }
+  .cartao-titulo { font-weight: 600; margin-bottom: var(--espaco-2); display: flex; align-items: baseline; gap: var(--espaco-2); flex-wrap: wrap; }
+  .numero { font-family: var(--fonte-mono); font-size: var(--texto-pequeno); color: var(--cor-texto-secundario); font-weight: 400; }
+  .dimensao { margin-left: auto; font-size: var(--texto-pequeno); font-weight: 400; color: var(--cor-texto-secundario); white-space: nowrap; }
+  .cartao-texto { color: var(--cor-texto); }
+  .cartao-texto ul { margin: var(--espaco-2) 0 0 0; padding-left: 20px; }
+  .cartao-texto li + li { margin-top: var(--espaco-1); }
+  .selo-premissa {
+    display: inline-block; margin-top: var(--espaco-2);
+    background: rgba(217,164,65,0.15); color: var(--cor-alerta);
+    font-size: var(--texto-pequeno); font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+
+  /* o que muda em regra já escrita: amarelo, porque é decisão, e não defeito */
+  .regras {
+    margin-bottom: var(--espaco-4);
+    border: 1px solid var(--cor-alerta);
+    background: rgba(217,164,65,0.10);
+    border-radius: var(--raio);
+    padding: var(--espaco-3) var(--espaco-4);
+  }
+  .regras h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .regras ul { margin: 0; padding-left: 20px; }
+  .regras li + li { margin-top: var(--espaco-2); }
+
+  .fora { margin-top: var(--espaco-5); border-top: 1px solid var(--cor-borda); padding-top: var(--espaco-3); }
+  .fora h3 { font-size: var(--texto-base); margin: 0 0 var(--espaco-2) 0; }
+  .fora ul { margin: 0; padding-left: 20px; color: var(--cor-texto-secundario); }
+  .fora li { margin-bottom: var(--espaco-1); }
+  .rodape { margin-top: var(--espaco-4); color: var(--cor-texto-secundario); font-size: var(--texto-pequeno); }
+  @media (max-width: 600px) {
+    body { padding: var(--espaco-3); }
+    .dimensao { margin-left: 0; white-space: normal; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Mapa do entendimento — Revisão por IA local</h1>
+<p class="subtitulo">Funcionalidade 4 do backlog: levantamento começado em 23/09/2026 e fechado em 31/10/2026, no nível
+detalhado. Vira a spec 004. Ainda não foi escrita nem construída, então o que está aqui ainda se corrige de graça.</p>
+
+<div class="contagens">
+  <div class="contagem-item c-inferido">
+    <div class="contagem-numero">19</div>
+    <div class="contagem-label">inferido por mim: 5 novos para você ler agora, e 14 que você já leu e não derrubou</div>
+  </div>
+  <div class="contagem-item c-respondido">
+    <div class="contagem-numero">21</div>
+    <div class="contagem-label">respondido por você</div>
+  </div>
+  <div class="contagem-item c-aberto">
+    <div class="contagem-numero">5</div>
+    <div class="contagem-label">em aberto, a resolver por teste ou no rascunho de tela</div>
+  </div>
+</div>
+
+<div class="regras">
+  <h3>Três regras escritas que suas respostas mudam</h3>
+  <ul>
+    <li><strong>"Nenhum caminho de código aponta para fora da UFSC."</strong> O programa continua sem nenhum endereço
+    de fora escrito nele. Mas quem digita pode apontar para fora, depois de avisado (R-11). O que se prova por teste
+    passa a ser o aviso, e não o bloqueio.</li>
+    <li><strong>"O programa só lê o <code>.env</code>."</strong> Ele passa a gravar uma linha, a do token (R-7). A regra
+    "segredo mora no <code>.env</code>" continua inteira.</li>
+    <li><strong>"A IA nunca escreve o texto do documento."</strong> Continua valendo para a revisora. Como motor de
+    leitura, o texto é dela, quando a pessoa liga a chave e marca esse motor (I-6).</li>
+  </ul>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Inferido por mim, e ainda não lido: confirme ou derrube</h2>
+<p class="explica-secao">Apareceram agora, ao juntar tudo. Diga o número de qualquer um que não seja assim.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-1</span> O LM Studio não tem campo de token nesta versão <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">Ele vem sem essa exigência. Quem a tiver ligado lá vê o teste falhar, com a frase dizendo
+    para desligá-la. O campo de token fica só no Servidor de IA Interno.</div>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-2</span> O endereço do LM Studio é sempre esta máquina <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">A tela não pede endereço, só mostra a porta, que vem com o número de costume do LM Studio
+    e pode ser trocada. É a única coisa que já vem preenchida, e não aponta para fora daqui. LM Studio em outra máquina
+    se configura como servidor interno.</div>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-3</span> Sair de uma revisão pelo menu da IA pergunta antes <span class="dimensao">navegação</span></div>
+    <div class="cartao-texto">Clicar em "Configurações de IA" com uma revisão aberta e não salva faz a mesma pergunta de
+    descartar que os outros itens do menu já fazem. Está escrito aqui para não parecer defeito na conferência.</div>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-4</span> O token salvo pode ser trocado ou apagado <span class="dimensao">estados da interface</span></div>
+    <div class="cartao-texto">Depois de salvo, o campo mostra só "token salvo", com os botões de substituir e de apagar.
+    O valor nunca volta à tela nem aparece em mensagem de erro.</div>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-5</span> Desinstalar leva o token junto <span class="dimensao">retenção e privacidade</span></div>
+    <div class="cartao-texto">Como já acontece com o <code>preferencias.ini</code>: quem desinstala não deixa senha para
+    trás. Atualizar a versão mantém o token. Se o <code>.env</code> inteiro sair junto, sai também a pasta do Tesseract
+    que a TI tenha escrito nele, então a forma de apagar depende do teste (A-4).</div>
+  </div>
+</div>
+
+<h2><span class="marca marca-inferido"></span>Premissas: você leu e não derrubou</h2>
+<p class="explica-secao">Eram inferências, e passaram a valer como respondidas. Caindo uma, o entendimento reabre naquele
+ponto.</p>
+<div class="cartoes">
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-6</span> O limite da IA depende do uso <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Como revisora, ela nunca escreve o texto. Como motor, o texto é dela, e a conferência
+    humana continua obrigatória, como em todo OCR.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-7</span> Como motor, a IA recebe a página com os CPFs inteiros <span class="dimensao">retenção e privacidade</span></div>
+    <div class="cartao-texto">Não há como mascarar antes de ler. A tela da chave do motor diz isso, junto da ressalva.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-8</span> A ressalva é datada <span class="dimensao">saídas</span></div>
+    <div class="cartao-texto">Ela vai escrita como avaliação de quem fez o programa, com a data, porque o que temos
+    medido é o Tesseract contra o PaddleOCR. Fica junto do switch "IA como motor de leitura".</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-9</span> O aviso de troca de destino vem ao ligar o switch <span class="dimensao">fluxos</span></div>
+    <div class="cartao-texto">Abrir a tela do outro destino e preencher os campos não desliga nada.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-10</span> O submenu tem um "voltar" <span class="dimensao">navegação</span></div>
+    <div class="cartao-texto">É por ele que a pessoa retorna ao menu de sempre.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-11</span> A versão continua no pé da faixa <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">"Configurações de IA" fica logo acima dela.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-12</span> Endereço e modelos ficam no <code>preferencias.ini</code> <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">O token nunca vai para lá. Nenhuma confirmação de endereço fica gravada: o aviso volta a
+    cada abertura do programa.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-13</span> Redirecionamento não é seguido <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Se o servidor mandar o programa para outro endereço, ele não vai, porque esse destino a
+    pessoa não viu nem confirmou.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-14</span> Um aviso por abertura, para os dois usos <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Quem confirmou na revisora não é perguntado de novo no motor. Trocar o endereço com o
+    programa aberto faz perguntar de novo. Endereço em <code>http://</code> é aceito, e, se não for reconhecido, o
+    aviso diz que o texto e o token viajam sem cifra.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-15</span> Quem nunca escolheu começa em "ao clicar no botão" <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">A opção de iniciar fica em "Habilitar IA", abaixo do switch da revisora, e fica apagada com
+    ele desligado.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-16</span> Quem nunca ligou a IA vê onde ligar <span class="dimensao">estados da interface</span></div>
+    <div class="cartao-texto">O botão passa a se chamar "Revisar com IA". Ele e a "IA local" na escolha do motor ficam
+    apagados, cada um com uma frase dizendo onde ligar, no lugar de "Funcionalidade a ser implementada".</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-17</span> Trecho que não existe no texto é descartado <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Modelo às vezes inventa, e não haveria onde apontar. A pessoa só vê o que o programa
+    conseguiu localizar.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-18</span> Servidor que não lista modelos pede o nome digitado <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">O seletor vira um campo, com o nome que a TI passar.</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+  <div class="cartao inferido">
+    <div class="cartao-titulo"><span class="numero">I-19</span> A conferência humana não muda, e desligada é como hoje <span class="dimensao">propósito</span></div>
+    <div class="cartao-texto">A IA nunca dispensa a leitura da pessoa, e nenhum apontamento marca algo como "conferido".
+    Sem a IA ligada, nenhuma chamada de rede e nenhum caminho novo. A IA vem desligada, e os campos dos destinos,
+    vazios (a porta da I-2 é a exceção).</div>
+    <span class="selo-premissa">premissa</span>
+  </div>
+</div>
+
+<h2><span class="marca marca-respondido"></span>Respondido por você</h2>
+<div class="cartoes">
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-1</span> Uma IA revisora, antes de tudo <span class="dimensao">propósito</span></div>
+    <div class="cartao-texto">Um segundo par de olhos antes do olho humano, dizendo onde vale olhar com mais cuidado.
+    Validado em 23/09/2026.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-2</span> A IA também aparece como motor, atrás de uma chave <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">Com a chave desligada, "IA local" continua apagada na escolha de motores. Onde se liga, vai
+    a ressalva: até a criação do programa, os modelos locais eram muito inferiores ao PaddleOCR e ao Tesseract na
+    leitura, e o uso indicado é como revisora.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-3</span> "Configurações de IA" no fim da faixa, com submenu <span class="dimensao">navegação</span></div>
+    <div class="cartao-texto">Colado no final da tela. O clique troca o menu da esquerda inteiro por "LM Studio",
+    "Servidor de IA Interno" e "Habilitar IA".</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-4</span> Um destino por vez, e as escolhas ficam guardadas <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">Ligar um desliga o outro, com aviso antes. Ao religar, as configurações voltam como
+    estavam.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-5</span> A tela do LM Studio é a básica <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">Switch, situação da conexão, seletor de modelo e botão de testar. Ligar o servidor, baixar
+    e carregar modelo ficam no próprio LM Studio: "deixa a pessoa ter que abrir o LM Studio mesmo".</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-6</span> A tela do servidor interno pede endereço e token <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">Switch "Habilitar Servidor de IA Interno", o endereço e o campo do token.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-7</span> A pessoa digita o token, e o programa guarda no <code>.env</code> <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">A TI só entrega o token, sem precisar configurar máquina por máquina. O programa grava só
+    aquela linha, preservando o resto do arquivo, e não mostra mais o token depois de salvo.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-8</span> "Habilitar IA" tem três switches <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">O geral só funciona com um destino configurado. Ao ser ligado, liga também "IA revisora" e
+    mantém "IA como motor de leitura" desligada.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-9</span> A revisora vê só o texto, e a pessoa é avisada <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">Vale igual para PDF e <code>.docx</code>. O aviso diz que a IA não compara com a página
+    original, então um dígito lido errado num número que parece normal pode passar.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-10</span> O texto vai com os CPFs inteiros <span class="dimensao">retenção e privacidade</span></div>
+    <div class="cartao-texto">Nos dois destinos: "sem problema, pois será tudo local".</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-11</span> O endereço não é bloqueado <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">O endereço de cada instituição pode variar. O programa tenta reconhecer se é de dentro:
+    passam sem aviso a própria máquina, os nomes <code>.ufsc.br</code> e o que der em número interno. Número interno não
+    prova que é a UFSC, e na rede de casa ele também aparece.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-12</span> Endereço não reconhecido abre um aviso de risco <span class="dimensao">fluxos</span></div>
+    <div class="cartao-texto">Ao salvar e no primeiro uso da IA a cada abertura do programa. Sem confirmar, nada é
+    enviado, e a revisão ou a leitura segue sem IA.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-13</span> Uma lista no <code>.env</code> dispensa o aviso <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Vale para o endereço exato ou para uma terminação inteira. O programa só lê essa lista.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-14</span> Iniciar sozinha ou pelo botão é configurável <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">"Ao abrir a revisão" ou "ao clicar no botão", porque quem só usa documento simples nem
+    precisa da IA. Nos dois casos, salvar com a IA ainda rodando pergunta antes.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-15</span> Seção própria para o trecho novo, etiqueta para o comentário <span class="dimensao">layout</span></div>
+    <div class="cartao-texto">"A IA pediu para olhar" fica abaixo dos suspeitos, com cor própria. O comentário sobre um
+    número já listado vira etiqueta nele, e nunca solta a máscara.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-16</span> Número apontado pela IA entra mascarado <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">A pessoa solta se não for CPF, e quem faz a máscara é sempre o programa. Trecho estragado
+    sem número só é apontado.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-17</span> A revisora fica só no Anonimizar <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">A escolha entre motores continua nos dois módulos.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-18</span> Falha no meio guarda o que chegou <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">Os apontamentos ficam, e os números mascarados continuam mascarados. Uma linha fixa diz o
+    que não foi revisado e por quê, e "Tentar de novo" retoma só o que faltou.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-19</span> Desligar o destino desliga o switch geral <span class="dimensao">estados</span></div>
+    <div class="cartao-texto">A tela diz por quê, e as posições dos outros switches ficam guardadas. Se o motor marcado
+    era a IA, a marca passa a um dos outros, e a linha da "IA local" diz o motivo.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-20</span> Configurado é o que passou no teste <span class="dimensao">regra de negócio</span></div>
+    <div class="cartao-texto">O teste roda ao ligar o switch do destino, com uma frase inventada, sem CPF, e há um botão
+    para repetir. Se falhar, o switch volta para desligado, e a tela diz o que fazer. Ele não se repete a cada
+    abertura.</div></div>
+  <div class="cartao"><div class="cartao-titulo"><span class="numero">R-21</span> Um seletor de modelo para cada uso <span class="dimensao">funcionalidades</span></div>
+    <div class="cartao-texto">O da revisora está sempre na tela. O do motor só aparece com a chave ligada, vem vazio e
+    oferece só modelos que leem imagem.</div></div>
+</div>
+
+<h2><span class="marca marca-aberto"></span>Em aberto: nada aqui muda a estrutura</h2>
+<p class="explica-secao">Dependem de testar ou de desenhar. O que o teste mostrar volta para você se mudar algo que se vê
+na tela.</p>
+<div class="cartoes">
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-1</span> Modelo escolhido que não está carregado <span class="dimensao">caso de exceção</span></div>
+    <div class="cartao-texto">A documentação que li não diz o que acontece. Vou testar aqui com o LM Studio ligado.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-2</span> LM Studio de versão antiga <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Saber quais modelos leem imagem depende da API nova. Em versão antiga, o seletor pode trazer
+    só os nomes, e a escolha do motor precisa de outra saída.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-3</span> Se o texto fica guardado no LM Studio ou no servidor <span class="dimensao">retenção e privacidade</span></div>
+    <div class="cartao-texto">Com CPFs inteiros (R-10), isso pesa. A revisão usa o caminho em que cada pedido vale
+    sozinho, e no LM Studio vou conferir que nada do documento fica lá. Do servidor interno, só a TI pode responder.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-4</span> Como o token sai ao desinstalar <span class="dimensao">dados</span></div>
+    <div class="cartao-texto">O instalador hoje só manda apagar o <code>preferencias.ini</code>. Falta testar o que
+    acontece com o <code>.env</code> para decidir a forma da I-5.</div></div>
+  <div class="cartao aberto"><div class="cartao-titulo"><span class="numero">A-5</span> Servidor de verdade para conferir <span class="dimensao">integração</span></div>
+    <div class="cartao-texto">Sem o servidor da TI disponível, a conferência dessa tela usa um servidor de mentira nesta
+    máquina. Isso prova o caminho, mas não que o servidor real fala do mesmo jeito.</div></div>
+</div>
+
+<div class="fora">
+  <h3>Fora de escopo desta funcionalidade</h3>
+  <ul>
+    <li>Ligar o servidor, baixar e carregar modelo pelo programa: ficam no LM Studio (R-5).</li>
+    <li>Motor próprio dentro do programa e download direto do Hugging Face.</li>
+    <li>Revisora no Gerar OCR (R-17), e revisora olhando a imagem da página (R-9).</li>
+    <li>Dois destinos ligados ao mesmo tempo (R-4).</li>
+    <li>Editar pela tela as instruções que o programa manda para a IA: vêm fixas.</li>
+    <li>Guardar apontamentos de um uso para o outro, ou escrevê-los no <code>.md</code>.</li>
+    <li>Apontar outros dados sensíveis além do CPF: a IA aponta só número suspeito e trecho estragado.</li>
+    <li>Lista de modelos recomendados: a pessoa escolhe entre os instalados.</li>
+  </ul>
+</div>
+
+<p class="rodape">Página gerada em 31/10/2026 pela skill-07-designer-de-telas, a pedido da
+skill-02-analista-de-requisitos.</p>
+</body>
+</html>
