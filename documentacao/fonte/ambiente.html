@@ -1,0 +1,93 @@
+<div class="secao">
+  <div class="sobretitulo">Antes de começar</div>
+  <h2>O que a máquina <em>precisa</em></h2>
+  <p class="descricao">O desenvolvimento roda numa máquina Windows, a mesma em
+  que o programa é usado. Nada daqui é preciso nas máquinas do núcleo: lá, o
+  instalador leva tudo, e ninguém instala Python.</p>
+  <div class="tabela"><table>
+    <tr><th>O quê</th><th>Para quê</th><th>Observação</th></tr>
+    <tr><td class="curta"><b>Windows 11</b></td><td>Rodar e testar o programa.</td><td>A versão 0.2.0 só foi testada no Windows 11.</td></tr>
+    <tr><td class="curta"><b>Python 3.12</b></td><td>Criar o ambiente, rodar o programa e os testes.</td><td>Do site oficial do Python. O comando <code>python</code> precisa responder no terminal.</td></tr>
+    <tr><td class="curta"><b>Tesseract, com o português</b></td><td>Ler com o motor alternativo.</td><td>Sem ele, o programa abre e o PaddleOCR lê; a linha do Tesseract aparece como faltando. Ver <a href="#tesseract">abaixo</a>.</td></tr>
+    <tr><td class="curta"><b>Git</b></td><td>Guardar o histórico das mudanças.</td><td>A pasta chega sem histórico: o primeiro passo é começar o seu (aba <a href="#mudancas">Mudanças</a>).</td></tr>
+    <tr><td class="curta"><b>Inno Setup</b></td><td>Só para gerar o instalador.</td><td>Ver a aba <a href="#entrega">Entrega</a>.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao">
+  <div class="sobretitulo">Do zero</div>
+  <h2>Montar o ambiente <em>passo a passo</em></h2>
+  <p class="descricao">Todos os comandos rodam na pasta raiz do projeto, num
+  terminal do PowerShell.</p>
+  <ol class="passos">
+    <li><span class="titulo">Criar o ambiente virtual do Python</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>python -m venv .venv</pre></div>
+      <p>A pasta <code>.venv</code> é desta máquina e nunca vai para o histórico: cada máquina cria a sua.</p></li>
+    <li><span class="titulo">Instalar as dependências</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>.\.venv\Scripts\python.exe -m pip install -r requirements.txt</pre></div>
+      <p>Traz o PySide6, o PyMuPDF, o pytesseract, o RapidOCR com os modelos do PaddleOCR, o onnxruntime, o pytest e o PyInstaller. O motivo de cada versão está escrito no próprio <code>requirements.txt</code>.</p></li>
+    <li><span class="titulo">Criar o <code>.env</code></span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>Copy-Item .env.example .env</pre></div>
+      <p>Em branco, ele já serve: as três linhas são opcionais (ver <a href="#o-env">o <code>.env</code></a>). Criado pelo Bloco de Notas, ele sai <code>.env.txt</code>, o Windows esconde o <code>.txt</code>, e o programa o ignora sem avisar.</p></li>
+    <li><span class="titulo">Abrir o programa</span>
+      <div class="codigo"><div class="cab">Dois cliques, ou no PowerShell</div><pre>abrir\abrir-dev.bat</pre></div>
+      <p>O atalho cria o ambiente se ele faltar, confere as dependências toda vez (uma instalação interrompida no meio deixaria a <code>.venv</code> de pé mas incompleta) e abre o <code>programa/main.py</code>. <b>A janela não recarrega o código sozinha</b>: depois de mudar algo, feche e abra de novo.</p></li>
+    <li><span class="titulo">Rodar os testes</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>.\.venv\Scripts\python.exe -m pytest</pre></div>
+      <p>São 1.072 testes, que levaram uns 4 minutos na máquina em que o programa foi construído. Eles sobem o Qt de verdade, sem mostrar janela, e nenhum lê ou grava o <code>.env</code> nem o <code>preferencias.ini</code> desta máquina (aba <a href="#testes">Testes</a>).</p></li>
+  </ol>
+</div>
+
+<div class="secao" id="o-env">
+  <div class="sobretitulo">Configuração de cada máquina</div>
+  <h2>O <code>.env</code> e o <em>preferencias.ini</em></h2>
+  <p class="descricao">Os dois moram na pasta do programa: aqui, a raiz do
+  projeto; instalado, a pasta da instalação, ao lado do <code>.exe</code>. Nenhum
+  dos dois vai para o histórico, e desenvolvimento e produção nunca dividem um
+  deles: cada instalação tem os seus.</p>
+  <div class="tabela"><table>
+    <tr><th>Linha do <code>.env</code></th><th>O que é</th><th>Quem preenche</th></tr>
+    <tr><td class="mono">IA_SERVIDOR_TOKEN</td><td>O token do servidor de IA interno. <b>É a única linha que o programa grava no <code>.env</code></b>: a TI não daria conta de configurar máquina por máquina.</td><td>O programa, quando a pessoa digita o token na tela.</td></tr>
+    <tr><td class="mono">IA_ENDERECOS_LOCAIS</td><td>Os endereços que não precisam do aviso de "endereço externo", separados por vírgula: o endereço exato, ou uma terminação que comece com ponto.</td><td>A TI, se o servidor interno não for reconhecido sozinho.</td></tr>
+    <tr><td class="mono">TESSERACT_CAMINHO</td><td>A pasta do Tesseract, quando ele foi instalado fora do lugar de sempre.</td><td>A TI, naquela máquina.</td></tr>
+  </table></div>
+  <p>O <code>preferencias.ini</code> guarda as escolhas da pessoa — o motor de cada
+  módulo, o tamanho da janela, o tema e a configuração da IA (sem o token) —, e
+  o programa o cria sozinho. Os detalhes de como ele é gravado estão na aba
+  <a href="#arquitetura">Arquitetura</a>.</p>
+</div>
+
+<div class="secao" id="tesseract">
+  <div class="sobretitulo">Os motores de leitura</div>
+  <h2>Tesseract e <em>PaddleOCR</em></h2>
+  <h3>O PaddleOCR vem com o pip</h3>
+  <p>Os modelos PP-OCRv6 pequenos vêm dentro do pacote do RapidOCR, que os roda
+  com o onnxruntime. Não há o que instalar à parte, e nada é baixado. As versões
+  dos dois são fixas no <code>requirements.txt</code>, e não faixas: os nomes dos
+  arquivos dos modelos mudam de uma versão para outra, e o
+  <code>programa/motor_paddleocr.py</code> os abre pelo nome.</p>
+  <h3>O Tesseract é um programa do Windows</h3>
+  <p>Vem do instalador da UB-Mannheim, publicado no GitHub dela. O código SHA256
+  do arquivo se confere com o do catálogo do winget:</p>
+  <div class="codigo"><div class="cab">PowerShell</div><pre>winget show --id UB-Mannheim.TesseractOCR</pre></div>
+  <ul>
+    <li><b>Pede administrador</b>, porque instala em <code>C:\Program Files</code>. A confirmação do Windows só aparece numa sessão com tela: rodado por controle remoto ou por terminal sem interface, o instalador fica parado nessa hora.</li>
+    <li><b>Marque o português</b> nos componentes. O instalador o baixa da internet durante a instalação. Sem o português, toda leitura falharia, e o programa trata o Tesseract como faltando.</li>
+    <li>A versão 5.4.0 tem a <b>assinatura vencida</b>, e o Windows mostra "Editor: Desconhecido". O arquivo é o autêntico se o SHA256 bater.</li>
+  </ul>
+  <p>O instalador do Tesseract não põe o programa no caminho que o Windows
+  procura, e por isso o <code>pytesseract</code> sozinho não o acharia. O
+  <code>programa/motor.py</code> procura por conta própria, nesta ordem:</p>
+  <div class="tabela"><table>
+    <tr><th>Ordem</th><th>Onde</th></tr>
+    <tr><td class="curta">1</td><td>A pasta do <code>TESSERACT_CAMINHO</code> do <code>.env</code>: a TI sabe mais daquela máquina do que um palpite.</td></tr>
+    <tr><td class="curta">2</td><td>O caminho que o Windows conhece.</td></tr>
+    <tr><td class="curta">3</td><td><code>C:\Program Files\Tesseract-OCR</code> e <code>C:\Program Files (x86)\Tesseract-OCR</code>.</td></tr>
+    <tr><td class="curta">4</td><td>A pasta de programas da pessoa, em <code>%LOCALAPPDATA%\Programs\Tesseract-OCR</code>.</td></tr>
+  </table></div>
+  <div class="destaque cuidado"><span class="icone">⚠</span>
+    <div><p><b>Não mexa no caminho do Windows para fazer o Tesseract aparecer.</b>
+    Resolveria só a sua máquina, e as do núcleo continuariam sem ele. Para ver na
+    tela um motor faltando sem desinstalar nada, use os atalhos de
+    <code>abrir/</code> (aba <a href="#testes">Testes</a>).</p></div></div>
+</div>

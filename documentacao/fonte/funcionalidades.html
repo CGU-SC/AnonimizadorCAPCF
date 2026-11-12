@@ -1,0 +1,160 @@
+<div class="secao">
+  <div class="sobretitulo">Spec 001</div>
+  <h2>A <em>janela</em></h2>
+  <p class="descricao">Uma janela só: a faixa da esquerda com o nome, a versão e
+  os dois módulos, e Configurações no pé dela; o painel da direita mostra o
+  módulo escolhido. No primeiro uso ela abre maximizada; depois, do tamanho em
+  que foi fechada, sempre no meio da tela principal.</p>
+  <div class="print-bloco"><div class="print-legenda">a janela ao abrir, sem módulo escolhido</div>
+    <div class="print"><img src="imagens/janela-ao-abrir.png" alt="A janela do programa ao abrir: a faixa da esquerda com Gerar OCR, Anonimizar e Configurações, e o painel pedindo para escolher um módulo"></div></div>
+</div>
+
+<div class="secao" id="gerar-ocr">
+  <div class="sobretitulo">Spec 002</div>
+  <h2>Gerar <em>OCR</em></h2>
+  <p class="descricao">Transforma um PDF em texto conferido. É o módulo de quem
+  só quer o texto: <b>ele não procura nem mascara CPF</b>, e o aviso da tela de
+  salvar diz que o arquivo sai com os CPFs inteiros. Para mascarar, o caminho é
+  o botão "Seguir para Anonimizar", que leva o texto conferido para lá sem
+  gravar nada.</p>
+  <ol class="passos">
+    <li><span class="titulo">Escolher o PDF</span>
+      <p>Arrastando, ou pelo botão. O programa abre o documento sem nunca alterá-lo, conta as páginas e descobre se há camada de texto.</p></li>
+    <li><span class="titulo">Ver o que o programa descobriu</span>
+      <p>Com camada de texto, ele mostra as primeiras linhas, e a pessoa escolhe entre aproveitá-las e mandar ler as imagens: o programa não julga se o texto presta. Sem camada, cada página vai ser lida como imagem.</p></li>
+    <li><span class="titulo">Escolher o motor e ler</span>
+      <p>O PaddleOCR vem marcado, e o motor escolhido é lembrado de um uso para o outro, um por módulo. A leitura corre ao lado da janela, com o andamento e o botão de cancelar. Antes de ler, o detector de orientação do Tesseract endireita a página deitada, para os dois motores.</p></li>
+    <li><span class="titulo">Conferir</span>
+      <p>O original de um lado e o texto lido do outro, página por página. O texto se corrige aqui, e em nenhum outro lugar.</p></li>
+    <li><span class="titulo">Salvar ou seguir</span>
+      <p>Grava o texto conferido num arquivo, ou segue para o Anonimizar.</p></li>
+  </ol>
+  <div class="duas-prints">
+    <div class="print-bloco"><div class="print-legenda">o que o programa descobriu sobre o PDF</div>
+      <div class="print"><img src="imagens/gerar-ocr-antes-de-ler.png" alt="O cartão do documento: 12 páginas, sem camada de texto, e o botão Ler as 12 páginas"></div></div>
+    <div class="print-bloco"><div class="print-legenda">a escolha do motor de leitura</div>
+      <div class="print"><img src="imagens/escolha-do-motor.png" alt="A escolha do motor: PaddleOCR marcado, Tesseract como alternativa e a IA local apagada"></div></div>
+  </div>
+  <div class="print-bloco"><div class="print-legenda">a conferência: o original à esquerda, o texto lido à direita</div>
+    <div class="print"><img src="imagens/gerar-ocr-conferencia.png" alt="A tela de conferência com a página do documento ao lado do texto lido pelo PaddleOCR"></div></div>
+</div>
+
+<div class="secao" id="anonimizar">
+  <div class="sobretitulo">Spec 003</div>
+  <h2><em>Anonimizar</em></h2>
+  <p class="descricao">O módulo que dá razão ao programa. Recebe PDF, Word,
+  <code>.md</code> ou <code>.txt</code>, acha os CPFs, mascara e mostra tudo numa
+  revisão antes de salvar. O PDF passa pelo mesmo caminho do Gerar OCR,
+  <b>conferência inclusive</b>, e da conferência vai direto para a revisão.</p>
+  <ol class="passos">
+    <li><span class="titulo">Revisar</span>
+      <p>A revisão aparece sempre, com CPF ou sem. O texto não se edita: só se mascara e se desfaz a máscara. Cada número achado tem a marca do tipo dele, e a lista ao lado traz os suspeitos primeiro, porque são eles que pedem o olho da pessoa.</p></li>
+    <li><span class="titulo">Mascarar o que o programa não achou</span>
+      <p>A pessoa marca o trecho com o mouse e manda mascarar. O programa esconde as 3 primeiras e as 2 últimas posições do trecho.</p></li>
+    <li><span class="titulo">Liberar o que não é CPF</span>
+      <p>Desfazer a máscara de um suspeito é um clique. De um número que passa na conta, pede a dupla conferência. Ao salvar, o programa mostra os que passam na conta e foram liberados, antes de gravar.</p></li>
+    <li><span class="titulo">Salvar</span>
+      <p>O caminho vem preenchido — a pasta do original, com o nome dele mais <code> - sem CPF.md</code> — e o arquivo tem o texto e mais nada.</p></li>
+  </ol>
+  <div class="tabela"><table>
+    <tr><th>Na tela</th><th>Quer dizer</th></tr>
+    <tr><td class="curta"><span style="color:#f08a86;text-decoration:underline">XXX</span> sublinhado reto, vermelho</td><td>CPF válido: passa na conta. Liberar pede a dupla conferência.</td></tr>
+    <tr><td class="curta"><span style="color:#d9a441;text-decoration:underline wavy">XXX</span> ondulado, âmbar</td><td>Suspeito: falha na conta, ou é quase CPF.</td></tr>
+    <tr><td class="curta"><span style="color:#5b8fc9;text-decoration:underline dotted">XXX</span> pontilhado, azul</td><td>Mascarado à mão.</td></tr>
+    <tr><td class="curta"><span style="color:#b39ddb;text-decoration:underline dashed">XXX</span> tracejado, lilás</td><td>Apontado pela revisão por IA.</td></tr>
+  </table></div>
+  <div class="print-bloco"><div class="print-legenda">a revisão de um arquivo de texto, com um suspeito e dois CPFs válidos</div>
+    <div class="print"><img src="imagens/revisao-anonimizar.png" alt="A revisão do Anonimizar: o texto mascarado à esquerda e a lista do que o programa achou à direita, com o suspeito primeiro"></div></div>
+  <h3>O documento do Word</h3>
+  <p>Vai o documento impresso inteiro — cabeçalho, corpo, tabelas, listas,
+  rodapé e notas —, com as alterações controladas aceitas, como o documento
+  ficaria no fim. Uma faixa na revisão diz o que ficou de fora: comentários,
+  texto oculto e imagens, que o programa não lê. Sai só o <code>.md</code>: o
+  programa não devolve o próprio Word mascarado.</p>
+  <div class="print-bloco"><div class="print-legenda">a revisão de um documento do Word, com a faixa do que ficou de fora</div>
+    <div class="print"><img src="imagens/anonimizar-word.png" alt="A revisão de um documento do Word com a faixa azul dizendo que dois comentários, o texto oculto e uma imagem ficaram fora do arquivo"></div></div>
+</div>
+
+<div class="secao" id="configuracoes">
+  <div class="sobretitulo">Specs 001 e 004</div>
+  <h2><em>Configurações</em></h2>
+  <p class="descricao">O último item da faixa. Ao entrar, a faixa vira o submenu:
+  o Tema, em Configurações Gerais; e LM Studio, Servidor de IA Interno e
+  Habilitar IA, em Configurações de IA.</p>
+  <h3>O tema</h3>
+  <p>Escuro, o padrão, ou claro. Só as cores mudam: o desenho, os tamanhos, as
+  fontes e os textos são os mesmos. A janela nasce com um tema só, e por isso o
+  tema novo vale ao reabrir o programa; o botão "Reabrir agora" faz isso na
+  hora, perguntando antes se houver trabalho que se perderia.</p>
+  <div class="duas-prints">
+    <div class="print-bloco"><div class="print-legenda">a tela do tema</div>
+      <div class="print"><img src="imagens/configuracoes-tema.png" alt="A tela do Tema, com Escuro marcado e Claro como opção, e o submenu de Configurações à esquerda"></div></div>
+    <div class="print-bloco"><div class="print-legenda">o claro escolhido, ainda no escuro</div>
+      <div class="print"><img src="imagens/tema-claro-reabrir.png" alt="O aviso de que o tema claro vale ao reabrir, com o botão Reabrir agora"></div></div>
+  </div>
+  <h3>A revisão por IA</h3>
+  <p>Vem desligada, e só existe no Anonimizar. Ligada em Habilitar IA, aparece o
+  botão "Revisar com IA" embaixo da lista. O destino é um de dois: o
+  <b>LM Studio</b> na própria máquina (o programa fala com ele pela porta do
+  servidor local, a 1234 de costume) ou o <b>Servidor de IA Interno</b> da
+  universidade, com o endereço e o token digitados por quem usa. A IA vê só o
+  texto, com os CPFs inteiros, e responde onde vale olhar; os apontamentos somam
+  à lista, em lilás, e quem mascara é o programa. Baixar o modelo, carregá-lo e
+  ligar o servidor ficam no próprio LM Studio.</p>
+  <div class="destaque ia"><span class="icone">◆</span>
+    <div><p>A IA local também pode ser <b>motor de leitura</b>, atrás de uma chave
+    e com ressalva: na época da construção, os modelos locais liam bem pior que o
+    PaddleOCR e o Tesseract. Lendo, a página vai como imagem, com os CPFs
+    inteiros, e a conferência continua obrigatória.</p></div></div>
+  <div class="duas-prints">
+    <div class="print-bloco"><div class="print-legenda">a IA habilitada, como revisora</div>
+      <div class="print"><img src="imagens/ia-habilitada.png" alt="A tela Habilitar IA, com a revisão por IA ligada"></div></div>
+    <div class="print-bloco"><div class="print-legenda">o LM Studio configurado</div>
+      <div class="print"><img src="imagens/ia-lm-studio-configurado.png" alt="A tela do LM Studio com o endereço do servidor local preenchido"></div></div>
+  </div>
+  <div class="print-bloco"><div class="print-legenda">depois da revisão por IA: o número que ela apontou, na lista e no texto</div>
+    <div class="print"><img src="imagens/ia-depois-da-revisao.png" alt="A revisão do Anonimizar depois da IA, com um número apontado por ela marcado em lilás"></div></div>
+</div>
+
+<div class="secao" id="motor-faltando">
+  <div class="sobretitulo">Spec 002</div>
+  <h2>Quando falta um <em>motor</em></h2>
+  <p class="descricao">Faltando só um dos dois, a falta aparece na linha dele, e o
+  outro lê. Faltando os dois, um aviso no alto do painel explica o que fazer, e
+  o PDF que só se lê com motor leva a uma tela cheia em vez da leitura. O
+  documento com camada de texto continua funcionando.</p>
+  <div class="tabela"><table>
+    <tr><th>Botão</th><th>O que faz</th></tr>
+    <tr><td class="curta"><b>Instalar agora</b></td><td>Abre o instalador do Tesseract que vai na pasta <code>instaladores</code>, ao lado do programa. Sem ele lá, o botão fica apagado.</td></tr>
+    <tr><td class="curta"><b>Conferir de novo</b></td><td>Procura outra vez, para quando a TI terminar a instalação com o programa aberto.</td></tr>
+    <tr><td class="curta"><b>Apontar a pasta</b></td><td>A pessoa diz onde o Tesseract está. Vale só até fechar o programa; para valer sempre, a TI grava a pasta no <code>TESSERACT_CAMINHO</code> do <code>.env</code>.</td></tr>
+  </table></div>
+  <p>O PaddleOCR faltando quer dizer instalação estragada, porque os modelos vão
+  dentro do programa: a linha dele diz para reinstalar.</p>
+  <div class="print-bloco"><div class="print-legenda">os dois motores faltando: o aviso no alto e cada linha dizendo o que falta</div>
+    <div class="print"><img src="imagens/motor-faltando.png" alt="O Gerar OCR com o aviso de motor não encontrado e as linhas do PaddleOCR e do Tesseract dizendo o que falta"></div></div>
+</div>
+
+<div class="secao" id="as-dez">
+  <div class="sobretitulo">Backlog</div>
+  <h2>As dez <em>funcionalidades</em></h2>
+  <p class="descricao">Todas construídas. O <code>especificacoes/backlog.md</code>
+  tem a situação de cada uma; a regra está na spec, o desenho no rascunho, e o
+  resultado conferido na página de <code>conferencias/</code>.</p>
+  <div class="tabela"><table>
+    <tr><th>#</th><th>Funcionalidade</th><th>Onde está o combinado</th><th>Telas</th><th>Versão</th></tr>
+    <tr><td>1</td><td><b>Interface da janela</b></td><td><a href="../especificacoes/specs/001-interface-da-janela.md">spec 001</a></td><td><a href="../mockups/janela/01-interface-da-janela.html">janela/01</a></td><td>0.1.0</td></tr>
+    <tr><td>2</td><td><b>Módulo de OCR</b></td><td><a href="../especificacoes/specs/002-modulo-de-ocr.md">spec 002</a></td><td>ocr/01 a 10</td><td>0.1.0</td></tr>
+    <tr><td>3</td><td><b>Anonimizador de CPF</b></td><td><a href="../especificacoes/specs/003-anonimizador-de-cpf.md">spec 003</a> · <a href="../conferencias/01-o-motor-do-cpf-na-massa.html">conferência 01</a></td><td>anonimizar/01 a 08</td><td>0.1.0</td></tr>
+    <tr><td>4</td><td><b>Revisão por IA local</b></td><td><a href="../especificacoes/specs/004-revisao-por-ia-local.md">spec 004</a> · <a href="../conferencias/06-revisao-por-ia.html">conferência 06</a></td><td><a href="../mockups/ia/01-configuracoes-de-ia.html">ia/01</a>, <a href="../mockups/anonimizar/11-revisar-com-ia.html">anonimizar/11</a></td><td>0.2.0</td></tr>
+    <tr><td>5</td><td><b>Abrir documento do Word</b></td><td>spec 003, décima emenda · <a href="../conferencias/04-o-documento-do-word.html">conferência 04</a></td><td><a href="../mockups/anonimizar/10-documento-do-word.html">anonimizar/10</a></td><td>0.2.0</td></tr>
+    <tr><td>6</td><td><b>CPF sem o zero da frente</b></td><td>spec 003, nona emenda · <a href="../conferencias/03-o-cpf-sem-o-zero.html">conferência 03</a></td><td><a href="../mockups/anonimizar/09-cpf-sem-o-zero.html">anonimizar/09</a></td><td>0.2.0</td></tr>
+    <tr><td>7</td><td><b>Ler com o PaddleOCR</b></td><td>spec 002, emenda de 18/10/2026 · <a href="../conferencias/02-os-motores-de-leitura.html">conferência 02</a></td><td><a href="../mockups/ocr/11-escolher-o-motor.html">ocr/11</a></td><td>0.2.0</td></tr>
+    <tr><td>8</td><td><b>Lembrar as escolhas de quem usa</b></td><td>specs 002 e 001, emendas de 28/10/2026 · <a href="../conferencias/05-lembrar-as-escolhas.html">conferência 05</a></td><td>sem tela nova</td><td>0.2.0</td></tr>
+    <tr><td>9</td><td><b>Ajustes de design do menu</b></td><td>spec 001, emenda de 03/11/2026 · <a href="../conferencias/08-o-instalador-das-funcionalidades-9-e-10.html">conferência 08</a></td><td>janela/02 a 05</td><td>0.2.0</td></tr>
+    <tr><td>10</td><td><b>Tema claro e menu Configurações</b></td><td>spec 001, emenda de 05/11/2026 · <a href="../conferencias/07-tema-claro-e-configuracoes.html">conferência 07</a></td><td>janela/06 a 09</td><td>0.2.0</td></tr>
+  </table></div>
+  <p>Os rascunhos estão em <code>mockups/</code>, na pasta de cada área, e cada
+  spec tem a sua versão ilustrada em <code>mockups/specs/</code>, com os fluxos
+  e os estados desenhados.</p>
+</div>
