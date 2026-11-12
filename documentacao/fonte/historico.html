@@ -1,0 +1,66 @@
+<div class="secao">
+  <div class="sobretitulo">03/09 a 10/11/2026</div>
+  <h2>Como o programa foi <em>feito</em></h2>
+  <p class="descricao">O programa foi desenvolvido pela CGU no âmbito da
+  consultoria realizada à UFSC em 2026, com o solicitante acompanhando cada etapa
+  na tela, e será entregue à universidade depois. Esta aba conta o caminho, para
+  quem herdar o programa entender de onde vem cada decisão.</p>
+  <h3>O método</h3>
+  <p>Toda funcionalidade passou pelo mesmo caminho, e é dele que vêm os
+  documentos da pasta:</p>
+  <div class="tabela"><table>
+    <tr><th>Passo</th><th>O que ficou dele</th></tr>
+    <tr><td class="curta"><b>Levantamento</b></td><td>Perguntas ao solicitante antes de qualquer código, e o mapa do entendimento, em <code>mockups/requisitos/</code>, com o que foi respondido, o que foi inferido e o que ficou em aberto.</td></tr>
+    <tr><td class="curta"><b>Spec</b></td><td>O combinado escrito, com as regras e os critérios de aceite, em <code>especificacoes/specs/</code>, e a versão ilustrada em <code>mockups/specs/</code>. Mudança depois virou emenda, e nunca reescrita.</td></tr>
+    <tr><td class="curta"><b>Rascunho de tela</b></td><td>A tela desenhada e aprovada olhando, antes de existir, em <code>mockups/</code>.</td></tr>
+    <tr><td class="curta"><b>Construção em etapas</b></td><td>De cinco a oito por funcionalidade, cada uma terminando com o programa funcionando e alguma coisa nova para ver.</td></tr>
+    <tr><td class="curta"><b>Conferência na tela</b></td><td>O solicitante abria o programa e fazia o caminho normal e o torto, etapa por etapa; os roteiros mais longos estão em <code>conferencias/</code>.</td></tr>
+    <tr><td class="curta"><b>Revisão</b></td><td>Uma releitura por ângulo — quebra e resultado errado, critérios de aceite, segredo, clareza —, com o antes e depois de cada conserto em <code>mockups/revisoes/</code>.</td></tr>
+    <tr><td class="curta"><b>Commit</b></td><td>Só depois da conferência e da revisão, um por assunto.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="linha-do-tempo">
+  <div class="sobretitulo">Linha do tempo</div>
+  <h2>As <em>etapas</em></h2>
+  <p class="descricao">A ordem de construção não é a do número no backlog: a
+  funcionalidade 4, a revisão por IA, teve o levantamento parado para a 0.1.0
+  sair antes, e voltou depois de outras.</p>
+  <div class="linha-do-tempo">
+    <div class="marco"><div class="quando">03/09/2026</div><div class="titulo">O levantamento e a fundação</div><div class="texto">Os requisitos com o solicitante, a stack, o backlog e o sistema de design.</div></div>
+    <div class="marco"><div class="quando">04 e 05/09</div><div class="titulo">1 · A janela</div><div class="texto">A spec 001, o rascunho aprovado e a janela com o menu lateral.</div></div>
+    <div class="marco"><div class="quando">09 a 13/09</div><div class="titulo">2 · O Gerar OCR</div><div class="texto">A spec 002, a massa de PDFs, a leitura com o Tesseract, a conferência lado a lado, a tabela como tabela e o motor faltando. Os 26 critérios passando em 13/09.</div></div>
+    <div class="marco"><div class="quando">13 a 23/09</div><div class="titulo">3 · O Anonimizar</div><div class="texto">A spec 003 e oito rascunhos; o motor do CPF, a revisão, mascarar à mão, salvar sem CPF, o PDF pelo Anonimizar e o "Seguir para Anonimizar". A máscara trocou o asterisco pelo <code>X</code> em 18/09.</div></div>
+    <div class="marco versao"><div class="quando">25/09/2026 <b>0.1.0</b></div><div class="titulo">A primeira versão de teste</div><div class="texto">No instalador, decidido dois dias antes no lugar do <code>.exe</code> único. No teste dela, o solicitante achou o CPF sem o zero da frente saindo inteiro.</div></div>
+    <div class="marco"><div class="quando">30/09 a 09/10</div><div class="titulo">Entre as versões</div><div class="texto">O PaddleOCR é pedido, e entra no backlog. O roteiro "Como usar" entra na entrega, e o gerador passa a lembrar de refazer os roteiros.</div></div>
+    <div class="marco"><div class="quando">13 a 19/10</div><div class="titulo">7 · O PaddleOCR</div><div class="texto">Medido antes de construir, e o padrão a partir dali; o programa instalado lendo sem internet.</div></div>
+    <div class="marco"><div class="quando">20 a 22/10</div><div class="titulo">6 · O CPF sem o zero da frente</div><div class="texto">A nona emenda da spec 003 e sete etapas.</div></div>
+    <div class="marco"><div class="quando">23 a 26/10</div><div class="titulo">5 · O documento do Word</div><div class="texto">A décima emenda, lido sem biblioteca, com o que o Word imprime e a faixa do que ficou de fora.</div></div>
+    <div class="marco"><div class="quando">28 e 29/10</div><div class="titulo">8 · Lembrar as escolhas</div><div class="texto">O <code>preferencias.ini</code>, o motor de cada módulo e a janela.</div></div>
+    <div class="marco"><div class="quando">31/10 a 03/11</div><div class="titulo">4 · A revisão por IA local</div><div class="texto">A spec 004, o LM Studio e o servidor interno, a revisão, as falhas e a IA como motor; os ajustes depois de medir com um modelo de verdade.</div></div>
+    <div class="marco"><div class="quando">03 e 04/11</div><div class="titulo">9 · O desenho do menu</div><div class="texto">O cabeçalho com a versão, os ícones e o item marcado.</div></div>
+    <div class="marco"><div class="quando">05 a 09/11</div><div class="titulo">10 · O tema claro e o menu Configurações</div><div class="texto">As cores por papel, o claro conferido tela por tela e o "Reabrir agora".</div></div>
+    <div class="marco versao"><div class="quando">10/11/2026 <b>0.2.0</b></div><div class="titulo">A segunda versão de teste</div><div class="texto">Os dois roteiros refeitos com as telas de verdade, e o teste por cima de uma 0.1.0 em uso.</div></div>
+  </div>
+</div>
+
+<div class="secao" id="decisoes">
+  <div class="sobretitulo">O que mudou o rumo</div>
+  <h2>As <em>decisões</em></h2>
+  <div class="tabela"><table>
+    <tr><th>Quando</th><th>Decisão</th><th>Por quê</th></tr>
+    <tr><td class="curta">18/09</td><td><b>A máscara passa de asterisco a <code>X</code>.</b></td><td>Num <code>.md</code>, <code>***</code> e <code>**</code> são a marcação de negrito e itálico, e a máscara quebrava na tela de quem abria o arquivo.</td></tr>
+    <tr><td class="curta">21/09</td><td><b>O caminho do PDF vira uma peça só</b>, antes de entrar no Anonimizar.</td><td>Copiar deixaria duas cópias de umas 600 linhas, que divergiriam na primeira correção.</td></tr>
+    <tr><td class="curta">23/09</td><td><b>Instalador no lugar do <code>.exe</code> único</b>, instalado só para a pessoa, sem administrador.</td><td>O <code>.exe</code> único se desempacotava a cada abertura e o antivírus desconfiava dele; em <code>Program Files</code>, cada gravação das escolhas pediria confirmação.</td></tr>
+    <tr><td class="curta">23/09</td><td><b>A revisão por IA espera</b>, e a 0.1.0 sai com as funcionalidades 1 a 3.</td><td>O solicitante decidiu entregar antes uma versão de teste com o que já estava construído. O levantamento da revisão por IA, que tinha acabado de começar, foi parado e
+    registrado por escrito, para quem o retomasse não recomeçar do zero. Ela foi
+    retomada em 31/10, depois da 0.1.0.</td></tr>
+    <tr><td class="curta">18/10</td><td><b>O PaddleOCR vira o motor padrão</b>, pelo RapidOCR, e o Tesseract a alternativa.</td><td>Medido nas mesmas páginas: 42 de 60 CPFs sem máscara com o Tesseract, de 1 a 5 com o PaddleOCR. O oficial foi descartado: não leu no Windows, e consulta a internet.</td></tr>
+    <tr><td class="curta">20/10</td><td><b>O CPF sem o zero da frente</b>, só quando passa na conta.</td><td>Achado pelo solicitante no teste da 0.1.0. Sem a conta, nada o separa de um telefone.</td></tr>
+    <tr><td class="curta">23/10</td><td><b>O Word sem biblioteca</b>, pelo pacote de XML.</td><td>Nenhuma biblioteca lia tudo o que o Word imprime, e as que chegavam perto pediam versão paga ou programa a mais.</td></tr>
+    <tr><td class="curta">28/10</td><td><b>As escolhas num <code>preferencias.ini</code></b> ao lado do programa.</td><td>O <code>.env</code> é da TI; a pasta do usuário seria dividida com o programa de desenvolvimento; o registro do Windows é invisível.</td></tr>
+    <tr><td class="curta">31/10</td><td><b>O servidor de IA com aviso, e não bloqueio.</b> O token digitado por quem usa, no <code>.env</code>.</td><td>O endereço de cada instituição varia, e a TI não daria conta de configurar máquina por máquina. Um motor de IA próprio, com download, foi avaliado e recusado.</td></tr>
+    <tr><td class="curta">02 e 03/11</td><td><b>A IA deixa de opinar sobre cada suspeito</b> (RN-66 da spec 004, retirada).</td><td>Medido: o que pesa é o que ela escreve, e uma página cheia estourava o tempo.</td></tr>
+    <tr><td class="curta">05/11</td><td><b>O tema claro</b> ao lado do escuro, e o menu Configurações.</td><td>Só as cores mudam: desenho, tamanhos, fontes e textos são os mesmos. A janela nasce com um tema só, e por isso o novo vale ao reabrir.</td></tr>
+  </table></div>
+</div>

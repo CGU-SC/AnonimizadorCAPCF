@@ -226,6 +226,17 @@ td a { text-decoration: none; }
 .ramo .texto { color: var(--cor-texto-secundario); font-size: 13px; line-height: 1.5; }
 .ramo code { font-size: 11.5px; }
 
+/* A linha do tempo do Histórico; o ponto cheio, em âmbar, é versão entregue. */
+.linha-do-tempo { position: relative; padding-left: 24px; margin-bottom: 10px; }
+.linha-do-tempo::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 0; width: 1px; background: var(--cor-borda); }
+.marco { position: relative; padding: 0 0 20px 20px; }
+.marco::before { content: ""; position: absolute; left: -17px; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: var(--cor-fundo-elevado); border: 1.5px solid var(--cor-texto-apagado); }
+.marco.versao::before { width: 12px; height: 12px; left: -18.5px; background: var(--cor-alerta); border-color: var(--cor-alerta); box-shadow: 0 0 8px rgba(217,164,65,0.35); }
+.marco .quando { font-family: var(--fonte-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cor-texto-apagado); }
+.marco .quando b { color: #f0c674; margin-left: 6px; }
+.marco .titulo { font-weight: 600; font-size: 14.5px; }
+.marco .texto { font-size: 13.5px; color: var(--cor-texto-secundario); }
+
 /* A aba ainda não escrita, durante a construção da documentação. */
 .em-construcao { border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 14px 18px; color: var(--cor-texto-secundario); }
 
@@ -1267,13 +1278,222 @@ git commit -m "Anonimizador CAPCF - versão 0.2.0, como recebida"</pre></div></l
 </div>
 </section>
 <section class="painel" id="entrega">
-<div class="secao"><h2>Entrega</h2><div class="em-construcao">Em construção.</div></div>
+<div class="secao">
+  <div class="sobretitulo">Como chega em quem usa</div>
+  <h2>A <em>entrega</em></h2>
+  <p class="descricao">O núcleo recebe uma pasta com três arquivos: o instalador
+  do Windows e os roteiros <b>Como instalar</b> e <b>Como usar</b>. O instalador
+  põe o programa só para quem está usando, na pasta de programas dela, <b>sem
+  pedir administrador</b>, e não exige Python na máquina. O programa vai numa
+  pasta montada pelo PyInstaller, e não num <code>.exe</code> único: o
+  <code>.exe</code> único se desempacotava a cada abertura (5 a 10 segundos), e o
+  antivírus desconfiava dele.</p>
+</div>
+
+<div class="secao" id="antes-de-gerar">
+  <div class="sobretitulo">Antes de gerar</div>
+  <h2>O que preparar à <em>mão</em></h2>
+  <ol class="passos">
+    <li><span class="titulo">Subir o número da versão</span>
+      <p>Só em <code>programa/versao.py</code>: a janela o mostra e o instalador o lê dali, para os dois nunca dizerem números diferentes. <b>0.x é versão de teste</b>; a 1.0.0 fica para quando o núcleo aprovar o uso. Um número nunca volta a designar outra entrega.</p></li>
+    <li><span class="titulo">Refazer os dois roteiros</span>
+      <p><code>empacotar/como-instalar.html</code> e <code>empacotar/como-usar.html</code> têm o número da versão e as regras do programa escritos no texto, e envelhecem nas duas coisas. Cada um nasce de uma cópia do anterior, com as telas de verdade embutidas, e segue o padrão da seção "Roteiros da entrega" do <code>mockups/sistema-de-design.md</code>. Releia tudo: trocar só o número deixaria uma regra velha para trás. O gerador para se algum roteiro não citar a versão que está saindo.</p></li>
+    <li><span class="titulo">Baixar o instalador do Tesseract</span>
+      <p>Da UB-Mannheim, no GitHub dela, para a pasta <code>instaladores</code> da raiz, com o nome <code>tesseract-ocr-w64-setup-*.exe</code>. Ele vai dentro do nosso, e é ele que o botão "Instalar agora" abre. Confira o SHA256 com o do catálogo do winget:</p>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>winget show --id UB-Mannheim.TesseractOCR
+Get-FileHash instaladores\tesseract-ocr-w64-setup-*.exe</pre></div></li>
+    <li><span class="titulo">Ter o Inno Setup</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>winget install --id JRSoftware.InnoSetup --exact</pre></div></li>
+  </ol>
+</div>
+
+<div class="secao" id="o-gerador">
+  <div class="sobretitulo">empacotar/gerar-entrega.bat</div>
+  <h2>Gerar com dois <em>cliques</em></h2>
+  <p class="descricao">Cada passo para tudo se der errado: entrega gerada com um
+  passo falho no meio parece pronta e não está.</p>
+  <div class="tabela"><table>
+    <tr><th>Passo</th><th>O que faz</th></tr>
+    <tr><td class="curta">1</td><td>Roda a lista inteira dos testes. Um vermelho bloqueia a entrega.</td></tr>
+    <tr><td class="curta">—</td><td>Lê a versão de <code>programa/versao.py</code>, confere que os dois roteiros a citam e que o instalador do Tesseract está em <code>instaladores</code>.</td></tr>
+    <tr><td class="curta">2</td><td>Monta a pasta do programa com o PyInstaller, pela receita <code>empacotar/anonimizador.spec</code>, em <code>builds\programa</code>, e confere que os modelos do PaddleOCR estão nela. O PyInstaller termina sem erro mesmo sem eles, e o programa chegaria ao núcleo como "instalação incompleta".</td></tr>
+    <tr><td class="curta">3</td><td>Procura o Inno Setup, na pasta de programas da pessoa ou na de todos.</td></tr>
+    <tr><td class="curta">4</td><td>Monta o instalador pela receita <code>empacotar/instalador.iss</code>, em <code>builds\instalador</code>, e refaz do zero a pasta <code>builds\entrega-&lt;versão&gt;</code> com o instalador e os dois roteiros, já com os nomes <b>Como instalar.html</b> e <b>Como usar.html</b>. Nada entra nela copiado à mão.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="o-instalador">
+  <div class="sobretitulo">empacotar/instalador.iss</div>
+  <h2>O que o instalador <em>garante</em></h2>
+  <div class="destaque cuidado"><span class="icone">⚠</span>
+    <div><p><b>O <code>AppId</code> nunca muda.</b> É por ele que o Windows reconhece
+    a versão nova como atualização da instalada, e não como um segundo programa ao
+    lado. Mudado, cada máquina do núcleo ficaria com dois.</p></div></div>
+  <div class="tabela"><table>
+    <tr><th>O quê</th><th>Como, e por quê</th></tr>
+    <tr><td class="curta"><b>Onde instala</b></td><td>Em <code>%LOCALAPPDATA%\Programs\Anonimizador CAPCF</code>, sem administrador (<code>PrivilegesRequired=lowest</code>). O programa grava ao lado de si o <code>preferencias.ini</code> e o token no <code>.env</code>, e em <code>Program Files</code> cada gravação pediria a confirmação do Windows. Mudar de lugar depois custaria uma volta em cada máquina.</td></tr>
+    <tr><td class="curta"><b>O <code>.env</code></b></td><td>Nasce em branco, de <code>empacotar/modelo.env</code>, já com o nome certo — criado à mão, ele sairia <code>.env.txt</code>. Numa instalação por cima, o que já estava preenchido fica.</td></tr>
+    <tr><td class="curta"><b>O que nunca vai dentro</b></td><td>O <code>.env</code> e o <code>preferencias.ini</code> da pasta montada, que o programa cria se for aberto ali para testar — iriam com o token de quem testou, e passariam por cima da escolha de quem atualiza.</td></tr>
+    <tr><td class="curta"><b>O Tesseract</b></td><td>O instalador dele vai em <code>{app}\instaladores</code>, onde o botão "Instalar agora" o procura.</td></tr>
+    <tr><td class="curta"><b>Atualizar</b></td><td>Troca os arquivos do programa e mantém o <code>.env</code> e o <code>preferencias.ini</code>.</td></tr>
+    <tr><td class="curta"><b>Desinstalar</b></td><td>Apaga também o <code>preferencias.ini</code> e o <code>.env</code> inteiro, com o token e a pasta do Tesseract: quem desinstala não deixa senha para trás. Instalando de novo, a TI escreve o <code>.env</code> outra vez.</td></tr>
+    <tr><td class="curta"><b>O editor</b></td><td>"CGU", e nos detalhes a frase de quem fez.</td></tr>
+  </table></div>
+  <p>O instalador não recusa instalar nem desinstalar com o programa aberto; o
+  roteiro "Como instalar" pede para fechá-lo antes. Fazer o instalador recusar
+  foi avaliado e deixado de lado, por um efeito pequeno e raro.</p>
+</div>
+
+<div class="secao" id="testar-antes">
+  <div class="sobretitulo">Antes de mandar</div>
+  <h2>Testar sem estragar a <em>entrega</em></h2>
+  <h3>O instalador de teste</h3>
+  <p>O gerador, com a versão de sempre, grava o instalador com o mesmo nome do que
+  foi entregue e refaz a pasta da entrega. Para testar uma construção no programa
+  instalado, monte a pasta com o PyInstaller (o passo 2 do gerador) e chame o Inno
+  Setup com outra pasta e outro nome:</p>
+  <div class="codigo"><div class="cab">PowerShell</div><pre>ISCC.exe /Qp /DVersao=&lt;versão&gt; /O"builds\teste-&lt;nnn&gt;" /F"&lt;nome&gt;-teste" empacotar\instalador.iss</pre></div>
+  <p>Isso preserva o <b>arquivo</b> entregue. Instalado, o de teste substitui a
+  instalação da máquina como qualquer versão — é o mesmo programa para o Windows.
+  Só na máquina de desenvolvimento, nunca numa do núcleo.</p>
+  <h3>O teste obrigatório</h3>
+  <p>A versão nova instalada <b>por cima da anterior em uso</b>, com o
+  <code>.env</code> preenchido e escolhas lembradas, e aberta sem internet.
+  Começar do zero testaria o caminho que sempre funciona; é o de cima que quebra.
+  O roteiro da entrega da 0.2.0 está em
+  <code>conferencias/09-a-0.2.0-por-cima-da-0.1.0.html</code>, e serve de modelo:
+  desinstalar o de teste, instalar a anterior, usá-la, instalar a nova por cima,
+  conferir que nada se perdeu.</p>
+</div>
+
+<div class="secao" id="entregar-o-codigo">
+  <div class="sobretitulo">Se o código for passado adiante</div>
+  <h2>Montar a pasta do <em>código</em></h2>
+  <p>Monte a pasta a partir do git, e não copiando a pasta de trabalho: assim vai só
+  o que está no histórico, e nunca o <code>.env</code>, o
+  <code>preferencias.ini</code>, o ambiente do Python ou o que a entrega gerou.</p>
+  <div class="codigo"><div class="cab">PowerShell</div><pre>git archive --format=zip -o builds\codigo-&lt;versão&gt;.zip HEAD</pre></div>
+  <p>Antes de mandar, abra o <code>.zip</code> e confira a lista: o que entrou num
+  commit, entra no arquivo.</p>
+</div>
 </section>
 <section class="painel" id="versoes">
-<div class="secao"><h2>Versões</h2><div class="em-construcao">Em construção.</div></div>
+<div class="secao">
+  <div class="sobretitulo">O que foi entregue</div>
+  <h2>As <em>versões</em></h2>
+  <div class="tabela"><table>
+    <tr><th>Versão</th><th>Entregue</th><th>O que trouxe</th></tr>
+    <tr><td class="curta"><b>0.1.0</b></td><td class="curta">25/09/2026</td><td>A janela, o Gerar OCR com o Tesseract e o Anonimizar de <code>.md</code>, <code>.txt</code> e PDF, com a revisão e a dupla conferência. O primeiro instalador e o roteiro de instalação. Funcionalidades 1 a 3.</td></tr>
+    <tr><td class="curta"><b>0.2.0</b></td><td class="curta">10/11/2026</td><td>O PaddleOCR como motor padrão; o documento do Word; o CPF sem o zero da frente; o programa lembrando o motor, a janela e o tema; a revisão por IA local, e a IA como motor atrás de uma chave; a faixa da esquerda redesenhada, com a versão no alto e os ícones; o tema claro e o menu Configurações. O roteiro "Como usar". Funcionalidades 4 a 10.</td></tr>
+  </table></div>
+  <p>As duas são de teste: a 1.0.0 fica para quando o núcleo aprovar o uso.</p>
+</div>
+
+<div class="secao" id="atualizar">
+  <div class="sobretitulo">Por cima da anterior</div>
+  <h2>O que acontece ao <em>atualizar</em></h2>
+  <div class="tabela"><table>
+    <tr><th>Fica como estava</th><th>Muda</th></tr>
+    <tr><td>O <code>.env</code> que a TI preencheu, com a pasta do Tesseract e o token. As escolhas do <code>preferencias.ini</code>. O Tesseract instalado no Windows.</td><td>Os arquivos do programa, inteiros. Da 0.1.0 para a 0.2.0: o PaddleOCR passa a vir marcado; a versão sobe do pé para o alto da faixa; a janela abre maximizada no primeiro uso; e quem nunca escolheu fica no tema escuro.</td></tr>
+  </table></div>
+  <p>Feche o programa antes de instalar por cima ou de desinstalar: o instalador
+  não recusa com ele aberto.</p>
+</div>
+
+<div class="secao" id="proximo">
+  <div class="sobretitulo">Previsto</div>
+  <h2>A próxima <em>funcionalidade</em></h2>
+  <div class="destaque info"><span class="icone">ℹ</span>
+    <div><p><b>Anonimizar também o e-mail.</b> O nome sozinho fica no texto, como
+    combinado, mas o nome junto do e-mail pode identificar a pessoa. É a próxima
+    funcionalidade prevista, para a versão que o núcleo vier a aprovar.</p>
+    <p>Ela muda o combinado de "só o CPF", e por isso começa por um levantamento,
+    antes de qualquer código: como fica a máscara (o nome do e-mail, o domínio, os
+    dois), se o e-mail institucional também sai, o que acontece com o e-mail
+    partido pela leitura, e se ela é emenda da spec 003 ou spec própria. Depois,
+    o caminho de sempre da aba <a href="#mudancas">Mudanças</a>.</p></div></div>
+</div>
+
+<div class="secao" id="pendencias">
+  <div class="sobretitulo">Anotado e não feito</div>
+  <h2>As <em>pendências</em></h2>
+  <div class="tabela"><table>
+    <tr><th>Pendência</th><th>Por que ficou</th></tr>
+    <tr><td><b>O CPF que a leitura estragou demais.</b> Um <code>777.777.777-77</code> lido como <code>777.777.777.377</code>, nas páginas difíceis da massa, saiu sem máscara: são 12 dígitos, e a spec 003 só olha de 9 a 11. O <code>000.000:000-00</code>, com dois-pontos, também escapa.</td><td>A revisão por IA só o aponta com o cabeçalho da tabela à vista: aberto como texto, o documento vai à IA em pedaços de 6 mil letras, e o corte caiu entre o "CPF" do cabeçalho e a linha. Cortar numa linha em branco foi medido: a IA passou a apontar um e deixou de apontar o outro. Com o prazo da consultoria chegando ao fim, a limitação foi aceita nesta versão, e fica anotada para a TI da universidade, se ela der seguimento ao programa: o caminho é emenda na spec 003 (e, para o corte, na 004), medindo antes de mudar.</td></tr>
+    <tr><td><b>Lembrar a pasta do último arquivo escolhido.</b> Hoje "Escolher arquivo…" sempre abre na pasta da instalação.</td><td>Pedido no teste da entrega da 0.2.0. Antes de construir, a spec 002 precisa dizer se pode: o <code>preferencias.ini</code> guarda só escolhas da pessoa, e nada do trabalho, e a pasta diz onde ficam os documentos, mesmo sem dizer o que eles têm. Com o prazo da consultoria chegando ao fim, fica anotado para a TI da universidade, se ela der seguimento ao programa.</td></tr>
+    <tr><td><b>Duas frases do "Como instalar" escritas sem teste:</b> o plano B de copiar o modelo de <code>%USERPROFILE%\.lmstudio\models\lmstudio-community</code> de outra máquina, e "Windows 10 ou 11".</td><td>Ninguém copiou um modelo de uma máquina para outra, e a 0.2.0 só rodou no Windows 11. Se a pasta estiver errada, o modelo não aparece no LM Studio, e o roteiro já manda conferir lá.</td></tr>
+    <tr><td><b>O Tesseract que some com o programa aberto.</b> Marcado e desinstalado no meio do uso, a leitura seguinte sai com o PaddleOCR, e a troca só aparece depois, no selo "lido pelo…".</td><td>Desvio pequeno da letra da RN-29 da spec 002, sem critério de aceite que o pegue, registrado na construção da funcionalidade 7.</td></tr>
+    <tr><td><b>A licença do PyMuPDF</b> (AGPL-3.0).</td><td>Serve para o uso interno da UFSC. Precisa ser conferida antes de o programa sair da universidade.</td></tr>
+  </table></div>
+</div>
 </section>
 <section class="painel" id="historico">
-<div class="secao"><h2>Histórico</h2><div class="em-construcao">Em construção.</div></div>
+<div class="secao">
+  <div class="sobretitulo">03/09 a 10/11/2026</div>
+  <h2>Como o programa foi <em>feito</em></h2>
+  <p class="descricao">O programa foi desenvolvido pela CGU no âmbito da
+  consultoria realizada à UFSC em 2026, com o solicitante acompanhando cada etapa
+  na tela, e será entregue à universidade depois. Esta aba conta o caminho, para
+  quem herdar o programa entender de onde vem cada decisão.</p>
+  <h3>O método</h3>
+  <p>Toda funcionalidade passou pelo mesmo caminho, e é dele que vêm os
+  documentos da pasta:</p>
+  <div class="tabela"><table>
+    <tr><th>Passo</th><th>O que ficou dele</th></tr>
+    <tr><td class="curta"><b>Levantamento</b></td><td>Perguntas ao solicitante antes de qualquer código, e o mapa do entendimento, em <code>mockups/requisitos/</code>, com o que foi respondido, o que foi inferido e o que ficou em aberto.</td></tr>
+    <tr><td class="curta"><b>Spec</b></td><td>O combinado escrito, com as regras e os critérios de aceite, em <code>especificacoes/specs/</code>, e a versão ilustrada em <code>mockups/specs/</code>. Mudança depois virou emenda, e nunca reescrita.</td></tr>
+    <tr><td class="curta"><b>Rascunho de tela</b></td><td>A tela desenhada e aprovada olhando, antes de existir, em <code>mockups/</code>.</td></tr>
+    <tr><td class="curta"><b>Construção em etapas</b></td><td>De cinco a oito por funcionalidade, cada uma terminando com o programa funcionando e alguma coisa nova para ver.</td></tr>
+    <tr><td class="curta"><b>Conferência na tela</b></td><td>O solicitante abria o programa e fazia o caminho normal e o torto, etapa por etapa; os roteiros mais longos estão em <code>conferencias/</code>.</td></tr>
+    <tr><td class="curta"><b>Revisão</b></td><td>Uma releitura por ângulo — quebra e resultado errado, critérios de aceite, segredo, clareza —, com o antes e depois de cada conserto em <code>mockups/revisoes/</code>.</td></tr>
+    <tr><td class="curta"><b>Commit</b></td><td>Só depois da conferência e da revisão, um por assunto.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="linha-do-tempo">
+  <div class="sobretitulo">Linha do tempo</div>
+  <h2>As <em>etapas</em></h2>
+  <p class="descricao">A ordem de construção não é a do número no backlog: a
+  funcionalidade 4, a revisão por IA, teve o levantamento parado para a 0.1.0
+  sair antes, e voltou depois de outras.</p>
+  <div class="linha-do-tempo">
+    <div class="marco"><div class="quando">03/09/2026</div><div class="titulo">O levantamento e a fundação</div><div class="texto">Os requisitos com o solicitante, a stack, o backlog e o sistema de design.</div></div>
+    <div class="marco"><div class="quando">04 e 05/09</div><div class="titulo">1 · A janela</div><div class="texto">A spec 001, o rascunho aprovado e a janela com o menu lateral.</div></div>
+    <div class="marco"><div class="quando">09 a 13/09</div><div class="titulo">2 · O Gerar OCR</div><div class="texto">A spec 002, a massa de PDFs, a leitura com o Tesseract, a conferência lado a lado, a tabela como tabela e o motor faltando. Os 26 critérios passando em 13/09.</div></div>
+    <div class="marco"><div class="quando">13 a 23/09</div><div class="titulo">3 · O Anonimizar</div><div class="texto">A spec 003 e oito rascunhos; o motor do CPF, a revisão, mascarar à mão, salvar sem CPF, o PDF pelo Anonimizar e o "Seguir para Anonimizar". A máscara trocou o asterisco pelo <code>X</code> em 18/09.</div></div>
+    <div class="marco versao"><div class="quando">25/09/2026 <b>0.1.0</b></div><div class="titulo">A primeira versão de teste</div><div class="texto">No instalador, decidido dois dias antes no lugar do <code>.exe</code> único. No teste dela, o solicitante achou o CPF sem o zero da frente saindo inteiro.</div></div>
+    <div class="marco"><div class="quando">30/09 a 09/10</div><div class="titulo">Entre as versões</div><div class="texto">O PaddleOCR é pedido, e entra no backlog. O roteiro "Como usar" entra na entrega, e o gerador passa a lembrar de refazer os roteiros.</div></div>
+    <div class="marco"><div class="quando">13 a 19/10</div><div class="titulo">7 · O PaddleOCR</div><div class="texto">Medido antes de construir, e o padrão a partir dali; o programa instalado lendo sem internet.</div></div>
+    <div class="marco"><div class="quando">20 a 22/10</div><div class="titulo">6 · O CPF sem o zero da frente</div><div class="texto">A nona emenda da spec 003 e sete etapas.</div></div>
+    <div class="marco"><div class="quando">23 a 26/10</div><div class="titulo">5 · O documento do Word</div><div class="texto">A décima emenda, lido sem biblioteca, com o que o Word imprime e a faixa do que ficou de fora.</div></div>
+    <div class="marco"><div class="quando">28 e 29/10</div><div class="titulo">8 · Lembrar as escolhas</div><div class="texto">O <code>preferencias.ini</code>, o motor de cada módulo e a janela.</div></div>
+    <div class="marco"><div class="quando">31/10 a 03/11</div><div class="titulo">4 · A revisão por IA local</div><div class="texto">A spec 004, o LM Studio e o servidor interno, a revisão, as falhas e a IA como motor; os ajustes depois de medir com um modelo de verdade.</div></div>
+    <div class="marco"><div class="quando">03 e 04/11</div><div class="titulo">9 · O desenho do menu</div><div class="texto">O cabeçalho com a versão, os ícones e o item marcado.</div></div>
+    <div class="marco"><div class="quando">05 a 09/11</div><div class="titulo">10 · O tema claro e o menu Configurações</div><div class="texto">As cores por papel, o claro conferido tela por tela e o "Reabrir agora".</div></div>
+    <div class="marco versao"><div class="quando">10/11/2026 <b>0.2.0</b></div><div class="titulo">A segunda versão de teste</div><div class="texto">Os dois roteiros refeitos com as telas de verdade, e o teste por cima de uma 0.1.0 em uso.</div></div>
+  </div>
+</div>
+
+<div class="secao" id="decisoes">
+  <div class="sobretitulo">O que mudou o rumo</div>
+  <h2>As <em>decisões</em></h2>
+  <div class="tabela"><table>
+    <tr><th>Quando</th><th>Decisão</th><th>Por quê</th></tr>
+    <tr><td class="curta">18/09</td><td><b>A máscara passa de asterisco a <code>X</code>.</b></td><td>Num <code>.md</code>, <code>***</code> e <code>**</code> são a marcação de negrito e itálico, e a máscara quebrava na tela de quem abria o arquivo.</td></tr>
+    <tr><td class="curta">21/09</td><td><b>O caminho do PDF vira uma peça só</b>, antes de entrar no Anonimizar.</td><td>Copiar deixaria duas cópias de umas 600 linhas, que divergiriam na primeira correção.</td></tr>
+    <tr><td class="curta">23/09</td><td><b>Instalador no lugar do <code>.exe</code> único</b>, instalado só para a pessoa, sem administrador.</td><td>O <code>.exe</code> único se desempacotava a cada abertura e o antivírus desconfiava dele; em <code>Program Files</code>, cada gravação das escolhas pediria confirmação.</td></tr>
+    <tr><td class="curta">23/09</td><td><b>A revisão por IA espera</b>, e a 0.1.0 sai com as funcionalidades 1 a 3.</td><td>O solicitante decidiu entregar antes uma versão de teste com o que já estava construído. O levantamento da revisão por IA, que tinha acabado de começar, foi parado e
+    registrado por escrito, para quem o retomasse não recomeçar do zero. Ela foi
+    retomada em 31/10, depois da 0.1.0.</td></tr>
+    <tr><td class="curta">18/10</td><td><b>O PaddleOCR vira o motor padrão</b>, pelo RapidOCR, e o Tesseract a alternativa.</td><td>Medido nas mesmas páginas: 42 de 60 CPFs sem máscara com o Tesseract, de 1 a 5 com o PaddleOCR. O oficial foi descartado: não leu no Windows, e consulta a internet.</td></tr>
+    <tr><td class="curta">20/10</td><td><b>O CPF sem o zero da frente</b>, só quando passa na conta.</td><td>Achado pelo solicitante no teste da 0.1.0. Sem a conta, nada o separa de um telefone.</td></tr>
+    <tr><td class="curta">23/10</td><td><b>O Word sem biblioteca</b>, pelo pacote de XML.</td><td>Nenhuma biblioteca lia tudo o que o Word imprime, e as que chegavam perto pediam versão paga ou programa a mais.</td></tr>
+    <tr><td class="curta">28/10</td><td><b>As escolhas num <code>preferencias.ini</code></b> ao lado do programa.</td><td>O <code>.env</code> é da TI; a pasta do usuário seria dividida com o programa de desenvolvimento; o registro do Windows é invisível.</td></tr>
+    <tr><td class="curta">31/10</td><td><b>O servidor de IA com aviso, e não bloqueio.</b> O token digitado por quem usa, no <code>.env</code>.</td><td>O endereço de cada instituição varia, e a TI não daria conta de configurar máquina por máquina. Um motor de IA próprio, com download, foi avaliado e recusado.</td></tr>
+    <tr><td class="curta">02 e 03/11</td><td><b>A IA deixa de opinar sobre cada suspeito</b> (RN-66 da spec 004, retirada).</td><td>Medido: o que pesa é o que ela escreve, e uma página cheia estourava o tempo.</td></tr>
+    <tr><td class="curta">05/11</td><td><b>O tema claro</b> ao lado do escuro, e o menu Configurações.</td><td>Só as cores mudam: desenho, tamanhos, fontes e textos são os mesmos. A janela nasce com um tema só, e por isso o novo vale ao reabrir.</td></tr>
+  </table></div>
+</div>
 </section>
 </div>
 <footer><div class="rodape-dentro">

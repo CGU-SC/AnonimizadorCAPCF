@@ -217,6 +217,17 @@ td a { text-decoration: none; }
 .ramo .texto { color: var(--cor-texto-secundario); font-size: 13px; line-height: 1.5; }
 .ramo code { font-size: 11.5px; }
 
+/* A linha do tempo do Histórico; o ponto cheio, em âmbar, é versão entregue. */
+.linha-do-tempo { position: relative; padding-left: 24px; margin-bottom: 10px; }
+.linha-do-tempo::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 0; width: 1px; background: var(--cor-borda); }
+.marco { position: relative; padding: 0 0 20px 20px; }
+.marco::before { content: ""; position: absolute; left: -17px; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: var(--cor-fundo-elevado); border: 1.5px solid var(--cor-texto-apagado); }
+.marco.versao::before { width: 12px; height: 12px; left: -18.5px; background: var(--cor-alerta); border-color: var(--cor-alerta); box-shadow: 0 0 8px rgba(217,164,65,0.35); }
+.marco .quando { font-family: var(--fonte-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cor-texto-apagado); }
+.marco .quando b { color: #f0c674; margin-left: 6px; }
+.marco .titulo { font-weight: 600; font-size: 14.5px; }
+.marco .texto { font-size: 13.5px; color: var(--cor-texto-secundario); }
+
 /* A aba ainda não escrita, durante a construção da documentação. */
 .em-construcao { border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 14px 18px; color: var(--cor-texto-secundario); }
 
