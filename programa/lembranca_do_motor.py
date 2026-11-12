@@ -2,7 +2,7 @@
 
 Morava dentro da peça da tela que mostra os motores, e ali cada motor novo teria
 que repetir a mesma ligação. Tirada para cá antes de a IA local entrar como
-terceiro motor (revisões 43 e 44, `CLAUDE.md`). A tela diz o que foi marcado, e
+terceiro motor (revisões 43 e 44, em `mockups/revisoes/`). A tela diz o que foi marcado, e
 quem sabe guardar é esta peça.
 """
 import preferencias

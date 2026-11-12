@@ -1,0 +1,97 @@
+<div class="secao">
+  <div class="sobretitulo">Antes da primeira mudança</div>
+  <h2>Começar o seu <em>histórico</em></h2>
+  <p class="descricao">A pasta chega sem histórico do git. Comece o seu antes de
+  mudar qualquer coisa: é ele que deixa voltar atrás e mostra, depois, o que
+  cada mudança fez.</p>
+  <ol class="passos">
+    <li><span class="titulo">Ligar o histórico na raiz do projeto</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>git init</pre></div></li>
+    <li><span class="titulo">Conferir o que vai entrar</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>git status</pre></div>
+      <p>Nada de <code>.env</code>, <code>preferencias.ini</code>, <code>.venv</code> nem <code>builds</code> pode aparecer: o <code>.gitignore</code> os deixa de fora. Se aparecer, pare e descubra por quê antes do primeiro commit — o que entra num commit fica em todo clone para sempre, mesmo apagado depois.</p></li>
+    <li><span class="titulo">Gravar o ponto de partida</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>git add .
+git commit -m "Anonimizador CAPCF - versão 0.2.0, como recebida"</pre></div></li>
+  </ol>
+  <h3>O que o <code>.gitignore</code> deixa de fora, e por quê</h3>
+  <div class="tabela"><table>
+    <tr><th>Fora do histórico</th><th>Por quê</th></tr>
+    <tr><td class="curta mono">.env</td><td>O segredo de cada máquina. Só o <code>.env.example</code>, com os nomes das linhas, entra.</td></tr>
+    <tr><td class="curta mono">preferencias.ini</td><td>As escolhas de quem usa nesta máquina: são do uso, e não do projeto. Os <code>*.gravando</code> são os provisórios de uma gravação cortada, e o do <code>.env</code> tem o token dentro.</td></tr>
+    <tr><td class="curta mono">.venv/</td><td>Cada máquina cria o seu.</td></tr>
+    <tr><td class="curta mono">builds/, build/, dist/</td><td>O que a entrega gera. Nasce do código, e não se edita à mão. A receita do PyInstaller, em <code>empacotar/</code>, fica dentro: sem ela, a próxima versão seria montada de outro jeito.</td></tr>
+    <tr><td class="curta mono">instaladores/</td><td>O instalador do Tesseract: programa de terceiros, baixado no dia da entrega.</td></tr>
+    <tr><td class="curta mono">.venv-paddleocr/ e outros</td><td>Os ambientes e as leituras da medição dos motores, que se refazem.</td></tr>
+    <tr><td class="curta mono">abrir/.motor-escondido</td><td>A marca que os atalhos de motor faltando criam enquanto a simulação dura.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="o-caminho-de-uma-mudanca">
+  <div class="sobretitulo">O método</div>
+  <h2>O caminho de uma <em>mudança</em></h2>
+  <p class="descricao">O programa inteiro foi construído assim, e é o que manteve
+  as regras e o código dizendo a mesma coisa. Mudança pequena pula passos;
+  nenhuma pula o 4 e o 5.</p>
+  <ol class="passos">
+    <li><span class="titulo">Achar a regra</span>
+      <p>Na aba <a href="#regras">Regras</a>, o assunto e a spec. Se o pedido bate numa regra dura, ele volta para conversa antes de virar código.</p></li>
+    <li><span class="titulo">Mudar a spec antes do código</span>
+      <p>Uma emenda datada, com o porquê. RN nova continua a numeração da spec, e <b>um número nunca volta a ser usado</b>: a regra que sai fica escrita como retirada, com a data (como a RN-66 da spec 004), porque o código antigo e as revisões ainda a citam. A regra mudada leva a nota da emenda.</p></li>
+    <li><span class="titulo">Desenhar a tela, se ela muda</span>
+      <p>Um rascunho novo em <code>mockups/</code>, na pasta da área, com o número seguinte — nunca por cima do anterior —, nos dois temas, com as cores do <code>mockups/sistema-de-design.md</code>. Cor nova entra no sistema de design e no <code>programa/estilo.py</code>, e em nenhum outro lugar.</p></li>
+    <li><span class="titulo">Código e teste juntos</span>
+      <p>O teste prova a regra, não a linha. Defeito consertado ganha o teste que o teria pegado, para ele não voltar calado.</p></li>
+    <li><span class="titulo">A lista inteira dos testes</span>
+      <p>Toda, e não só a do arquivo mexido: as peças se usam umas às outras.</p></li>
+    <li><span class="titulo">Conferir na tela</span>
+      <p>Feche e abra o programa — ele não recarrega o código sozinho —, e faça o caminho normal e o torto: o arquivo vazio, o que não abre, o motor faltando, a janela estreita. Teste não vê tela, e a maior parte dos defeitos deste programa só apareceu olhando.</p></li>
+    <li><span class="titulo">Revisar por um ângulo</span>
+      <p>Releia a mudança procurando um tipo de defeito por vez: quebra, dado gravado errado, resultado errado sem aviso. Foi essa releitura que achou, na construção, CPF escapando inteiro e arquivo bom sendo recusado.</p></li>
+    <li><span class="titulo">Gravar e atualizar o backlog</span>
+      <p>Um commit por assunto. A situação da funcionalidade vai para o <code>especificacoes/backlog.md</code>.</p></li>
+  </ol>
+  <div class="destaque info"><span class="icone">ℹ</span>
+    <div><p><b>Meça antes de mudar o que depende de desempenho.</b> O PaddleOCR
+    só virou padrão depois de medido contra o Tesseract nas mesmas páginas, e o
+    que se pede à IA foi medido com uma página cheia (aba
+    <a href="#armadilhas">Armadilhas</a>). Mudança que parece barata, e não é, só
+    aparece medindo.</p></div></div>
+</div>
+
+<div class="secao" id="convencoes">
+  <div class="sobretitulo">Como o código é escrito</div>
+  <h2><em>Convenções</em></h2>
+  <div class="tabela"><table>
+    <tr><th>Convenção</th><th>Como</th></tr>
+    <tr><td class="curta"><b>Português</b></td><td>No código, nos comentários, nos testes e nos commits.</td></tr>
+    <tr><td class="curta"><b>Comentário explica o porquê</b></td><td>Nunca o quê. O que merece comentário é a decisão que não está escrita em lugar nenhum: por que este número, por que este caso à parte, de onde veio a regra. Comentário que repete a linha é ruído, e no dia em que a linha muda e ele não, passa a mentir. Linguagem do dia a dia.</td></tr>
+    <tr><td class="curta"><b>RN com a spec</b></td><td><code>(RN-30 da spec 004)</code>, e não só o número.</td></tr>
+    <tr><td class="curta"><b>Cada coisa num lugar só</b></td><td>As cores no <code>programa/estilo.py</code>; o número da versão no <code>programa/versao.py</code>; a rede no <code>programa/rede_da_ia.py</code>; o nome e a cor de cada tipo de número no <code>programa/tipos_na_tela.py</code>.</td></tr>
+    <tr><td class="curta"><b>A lógica longe da tela</b></td><td>O que decide (achar CPF, ler o PDF, gravar) não sabe que existe janela. É o que deixa provar a regra sem montar tela.</td></tr>
+    <tr><td class="curta"><b>Massa só inventada</b></td><td>Documento de teste novo entra pelo script que gera a massa, nunca copiado de um documento de trabalho.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="quebra-de-linha">
+  <div class="sobretitulo">Windows e Linux no mesmo projeto</div>
+  <h2>A quebra de <em>linha</em></h2>
+  <p>Os arquivos do projeto não usam todos a mesma quebra de linha: a maioria
+  dos <code>.py</code> usa a do Windows, alguns a do Linux, e o git do Windows
+  (com <code>core.autocrlf</code>) converte na entrada e na saída. Por isso o
+  <code>git diff</code> não acusa quando uma ferramenta troca a quebra do arquivo
+  inteiro.</p>
+  <ul>
+    <li><b>Edite pelo editor</b>, que mantém a quebra que o arquivo já tem. O
+    <code>sed -i</code> do Git Bash regrava o arquivo inteiro com a quebra do
+    Linux, calado.</li>
+    <li><b>O <code>&gt;</code> do PowerShell reescreve o que passa por ele</b>, com
+    outra codificação e outra quebra. Para olhar os bytes de um arquivo de outra
+    versão, use o Bash: <code>git show &lt;versão&gt;:arquivo | od -c</code>.</li>
+    <li><b>Para conferir, conte no Python</b> os <code>\r\n</code> nos bytes do
+    arquivo. O <code>grep</code> do Git Bash conta toda linha como do Windows,
+    também num arquivo todo do Linux.</li>
+    <li>O <code>.gitattributes</code> marca os PDFs como binários: os da massa
+    existem para serem exatos, e o git não pode "arrumá-los".</li>
+  </ul>
+</div>

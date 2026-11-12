@@ -1,0 +1,98 @@
+<div class="secao">
+  <div class="sobretitulo">Como chega em quem usa</div>
+  <h2>A <em>entrega</em></h2>
+  <p class="descricao">O núcleo recebe uma pasta com três arquivos: o instalador
+  do Windows e os roteiros <b>Como instalar</b> e <b>Como usar</b>. O instalador
+  põe o programa só para quem está usando, na pasta de programas dela, <b>sem
+  pedir administrador</b>, e não exige Python na máquina. O programa vai numa
+  pasta montada pelo PyInstaller, e não num <code>.exe</code> único: o
+  <code>.exe</code> único se desempacotava a cada abertura (5 a 10 segundos), e o
+  antivírus desconfiava dele.</p>
+</div>
+
+<div class="secao" id="antes-de-gerar">
+  <div class="sobretitulo">Antes de gerar</div>
+  <h2>O que preparar à <em>mão</em></h2>
+  <ol class="passos">
+    <li><span class="titulo">Subir o número da versão</span>
+      <p>Só em <code>programa/versao.py</code>: a janela o mostra e o instalador o lê dali, para os dois nunca dizerem números diferentes. <b>0.x é versão de teste</b>; a 1.0.0 fica para quando o núcleo aprovar o uso. Um número nunca volta a designar outra entrega.</p></li>
+    <li><span class="titulo">Refazer os dois roteiros</span>
+      <p><code>empacotar/como-instalar.html</code> e <code>empacotar/como-usar.html</code> têm o número da versão e as regras do programa escritos no texto, e envelhecem nas duas coisas. Cada um nasce de uma cópia do anterior, com as telas de verdade embutidas, e segue o padrão da seção "Roteiros da entrega" do <code>mockups/sistema-de-design.md</code>. Releia tudo: trocar só o número deixaria uma regra velha para trás. O gerador para se algum roteiro não citar a versão que está saindo.</p></li>
+    <li><span class="titulo">Baixar o instalador do Tesseract</span>
+      <p>Da UB-Mannheim, no GitHub dela, para a pasta <code>instaladores</code> da raiz, com o nome <code>tesseract-ocr-w64-setup-*.exe</code>. Ele vai dentro do nosso, e é ele que o botão "Instalar agora" abre. Confira o SHA256 com o do catálogo do winget:</p>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>winget show --id UB-Mannheim.TesseractOCR
+Get-FileHash instaladores\tesseract-ocr-w64-setup-*.exe</pre></div></li>
+    <li><span class="titulo">Ter o Inno Setup</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>winget install --id JRSoftware.InnoSetup --exact</pre></div></li>
+  </ol>
+</div>
+
+<div class="secao" id="o-gerador">
+  <div class="sobretitulo">empacotar/gerar-entrega.bat</div>
+  <h2>Gerar com dois <em>cliques</em></h2>
+  <p class="descricao">Cada passo para tudo se der errado: entrega gerada com um
+  passo falho no meio parece pronta e não está.</p>
+  <div class="tabela"><table>
+    <tr><th>Passo</th><th>O que faz</th></tr>
+    <tr><td class="curta">1</td><td>Roda a lista inteira dos testes. Um vermelho bloqueia a entrega.</td></tr>
+    <tr><td class="curta">—</td><td>Lê a versão de <code>programa/versao.py</code>, confere que os dois roteiros a citam e que o instalador do Tesseract está em <code>instaladores</code>.</td></tr>
+    <tr><td class="curta">2</td><td>Monta a pasta do programa com o PyInstaller, pela receita <code>empacotar/anonimizador.spec</code>, em <code>builds\programa</code>, e confere que os modelos do PaddleOCR estão nela. O PyInstaller termina sem erro mesmo sem eles, e o programa chegaria ao núcleo como "instalação incompleta".</td></tr>
+    <tr><td class="curta">3</td><td>Procura o Inno Setup, na pasta de programas da pessoa ou na de todos.</td></tr>
+    <tr><td class="curta">4</td><td>Monta o instalador pela receita <code>empacotar/instalador.iss</code>, em <code>builds\instalador</code>, e refaz do zero a pasta <code>builds\entrega-&lt;versão&gt;</code> com o instalador e os dois roteiros, já com os nomes <b>Como instalar.html</b> e <b>Como usar.html</b>. Nada entra nela copiado à mão.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="o-instalador">
+  <div class="sobretitulo">empacotar/instalador.iss</div>
+  <h2>O que o instalador <em>garante</em></h2>
+  <div class="destaque cuidado"><span class="icone">⚠</span>
+    <div><p><b>O <code>AppId</code> nunca muda.</b> É por ele que o Windows reconhece
+    a versão nova como atualização da instalada, e não como um segundo programa ao
+    lado. Mudado, cada máquina do núcleo ficaria com dois.</p></div></div>
+  <div class="tabela"><table>
+    <tr><th>O quê</th><th>Como, e por quê</th></tr>
+    <tr><td class="curta"><b>Onde instala</b></td><td>Em <code>%LOCALAPPDATA%\Programs\Anonimizador CAPCF</code>, sem administrador (<code>PrivilegesRequired=lowest</code>). O programa grava ao lado de si o <code>preferencias.ini</code> e o token no <code>.env</code>, e em <code>Program Files</code> cada gravação pediria a confirmação do Windows. Mudar de lugar depois custaria uma volta em cada máquina.</td></tr>
+    <tr><td class="curta"><b>O <code>.env</code></b></td><td>Nasce em branco, de <code>empacotar/modelo.env</code>, já com o nome certo — criado à mão, ele sairia <code>.env.txt</code>. Numa instalação por cima, o que já estava preenchido fica.</td></tr>
+    <tr><td class="curta"><b>O que nunca vai dentro</b></td><td>O <code>.env</code> e o <code>preferencias.ini</code> da pasta montada, que o programa cria se for aberto ali para testar — iriam com o token de quem testou, e passariam por cima da escolha de quem atualiza.</td></tr>
+    <tr><td class="curta"><b>O Tesseract</b></td><td>O instalador dele vai em <code>{app}\instaladores</code>, onde o botão "Instalar agora" o procura.</td></tr>
+    <tr><td class="curta"><b>Atualizar</b></td><td>Troca os arquivos do programa e mantém o <code>.env</code> e o <code>preferencias.ini</code>.</td></tr>
+    <tr><td class="curta"><b>Desinstalar</b></td><td>Apaga também o <code>preferencias.ini</code> e o <code>.env</code> inteiro, com o token e a pasta do Tesseract: quem desinstala não deixa senha para trás. Instalando de novo, a TI escreve o <code>.env</code> outra vez.</td></tr>
+    <tr><td class="curta"><b>O editor</b></td><td>"CGU", e nos detalhes a frase de quem fez.</td></tr>
+  </table></div>
+  <p>O instalador não recusa instalar nem desinstalar com o programa aberto; o
+  roteiro "Como instalar" pede para fechá-lo antes. Fazer o instalador recusar
+  foi avaliado e deixado de lado, por um efeito pequeno e raro.</p>
+</div>
+
+<div class="secao" id="testar-antes">
+  <div class="sobretitulo">Antes de mandar</div>
+  <h2>Testar sem estragar a <em>entrega</em></h2>
+  <h3>O instalador de teste</h3>
+  <p>O gerador, com a versão de sempre, grava o instalador com o mesmo nome do que
+  foi entregue e refaz a pasta da entrega. Para testar uma construção no programa
+  instalado, monte a pasta com o PyInstaller (o passo 2 do gerador) e chame o Inno
+  Setup com outra pasta e outro nome:</p>
+  <div class="codigo"><div class="cab">PowerShell</div><pre>ISCC.exe /Qp /DVersao=&lt;versão&gt; /O"builds\teste-&lt;nnn&gt;" /F"&lt;nome&gt;-teste" empacotar\instalador.iss</pre></div>
+  <p>Isso preserva o <b>arquivo</b> entregue. Instalado, o de teste substitui a
+  instalação da máquina como qualquer versão — é o mesmo programa para o Windows.
+  Só na máquina de desenvolvimento, nunca numa do núcleo.</p>
+  <h3>O teste obrigatório</h3>
+  <p>A versão nova instalada <b>por cima da anterior em uso</b>, com o
+  <code>.env</code> preenchido e escolhas lembradas, e aberta sem internet.
+  Começar do zero testaria o caminho que sempre funciona; é o de cima que quebra.
+  O roteiro da entrega da 0.2.0 está em
+  <code>conferencias/09-a-0.2.0-por-cima-da-0.1.0.html</code>, e serve de modelo:
+  desinstalar o de teste, instalar a anterior, usá-la, instalar a nova por cima,
+  conferir que nada se perdeu.</p>
+</div>
+
+<div class="secao" id="entregar-o-codigo">
+  <div class="sobretitulo">Se o código for passado adiante</div>
+  <h2>Montar a pasta do <em>código</em></h2>
+  <p>Monte a pasta a partir do git, e não copiando a pasta de trabalho: assim vai só
+  o que está no histórico, e nunca o <code>.env</code>, o
+  <code>preferencias.ini</code>, o ambiente do Python ou o que a entrega gerou.</p>
+  <div class="codigo"><div class="cab">PowerShell</div><pre>git archive --format=zip -o builds\codigo-&lt;versão&gt;.zip HEAD</pre></div>
+  <p>Antes de mandar, abra o <code>.zip</code> e confira a lista: o que entrou num
+  commit, entra no arquivo.</p>
+</div>

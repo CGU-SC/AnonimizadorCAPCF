@@ -40,8 +40,9 @@ motor de leitura, atrás de uma chave e com ressalva.
 - A **"IA local" como motor de leitura**, nos dois módulos, quando a chave
   estiver ligada.
 - A **separação da lembrança do motor** da peça de tela que mostra os motores,
-  antes de o terceiro motor entrar (`CLAUDE.md`, "Decidido antes de esquecer").
-- As **emendas** às specs 001, 002 e 003 e ao `CLAUDE.md`, descritas no fim.
+  antes de o terceiro motor entrar (decidido antes desta spec).
+- As **emendas** às specs 001, 002 e 003 e às anotações de trabalho do projeto,
+  descritas no fim.
 
 ## Fora de escopo
 
@@ -343,7 +344,7 @@ branco.
   (RN-12 da spec 003).
 - RN-34: salvar com a IA rodando pergunta antes. Sair da revisão, para outro item do
   menu ou outro documento, ou fechar o programa, para a IA antes, sem o programa
-  estourar (`CLAUDE.md`, sobre o trabalho ao lado da janela). Minimizar a janela não
+  estourar (o mesmo cuidado do trabalho ao lado da janela, desde 10/09/2026). Minimizar a janela não
   para. Voltando à revisão, a faixa diz o que faltou, e dá para retomar.
 - RN-35: os pedidos vão por um caminho em que cada um vale sozinho, sem pedir ao
   destino que guarde a conversa.
@@ -527,10 +528,10 @@ responder, e isso entra nos roteiros da entrega.
 Escritas nas specs de origem na aprovação, em 31/10/2026, valendo quando a
 funcionalidade estiver construída.
 
-- **`CLAUDE.md`, regra dura "nenhum caminho de código aponta para fora da UFSC":** o
+- **Anotações do projeto, regra dura "nenhum caminho de código aponta para fora da UFSC":** o
   programa continua sem nenhum endereço de fora escrito nele. Quem digita pode apontar
   para fora, depois de avisado, e o teste prova o aviso.
-- **`CLAUDE.md`, no combinado:** o `.env` deixa de ser só lido, por uma linha, e o
+- **Anotações do projeto, no combinado:** o `.env` deixa de ser só lido, por uma linha, e o
   motor "IA local" deixa de estar fora de escopo.
 - **Spec 001, RN-2:** ganha o submenu (RN-1 a RN-3 daqui).
 - **Spec 002, RN-20:** "nunca manda documento para lugar nenhum" passa a valer com a

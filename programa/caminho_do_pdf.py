@@ -8,8 +8,8 @@ quem a está usando — e é só aí que os dois módulos se separam: o "Gerar O
 oferece as duas saídas, e o "Anonimizar" vai direto para a revisão.
 
 Ela nasceu em 18/09/2026, na etapa 7 do Anonimizador, tirada de dentro do
-`painel_ocr.py`. A decisão de extrair em vez de copiar está registrada no
-CLAUDE.md: copiada, seriam duas cópias de umas seiscentas linhas, que divergem
+`painel_ocr.py`. Extrair em vez de copiar foi decidido antes de construir a
+etapa: copiada, seriam duas cópias de umas seiscentas linhas, que divergem
 na primeira correção - foi o que quase aconteceu no mesmo dia, quando a janela
 do Windows precisou do mesmo conserto nos dois módulos.
 
@@ -459,7 +459,7 @@ class _TelaFicha(QWidget):
             self.botao_ler.setText("Ver o texto e decidir")
         else:
             self.linha_texto.definir("não há", cor=estilo.COR_ALERTA_TEXTO)
-            self.botao_ler.setText(f"Ler as {ficha.paginas} páginas")
+            self.botao_ler.setText(texto_do_botao_ler(ficha.paginas))
         # A frase do que vem depois é de quem está usando a peça: no Anonimizar
         # ela termina na revisão, e no Gerar OCR, na conferência.
         self.linha_acontece.definir(o_que_vai_acontecer(ficha))
@@ -768,6 +768,18 @@ def com_separador_de_milhar(numero):
     configurado, e numa máquina em inglês o mesmo número sairia com vírgula.
     """
     return f"{numero:,}".replace(",", ".")
+
+
+def texto_do_botao_ler(paginas):
+    """O botão de ler, no singular quando o PDF tem uma página só.
+
+    Uma função só para as duas telas que mostram o botão: cada uma montava a
+    frase do seu jeito, e as duas saíam erradas com uma página ("Ler as 1
+    página" numa, "Ler as 1 páginas" na outra).
+    """
+    if paginas == 1:
+        return "Ler a página"
+    return f"Ler as {com_separador_de_milhar(paginas)} páginas"
 
 
 def titulo_da_tela(texto):
@@ -1118,7 +1130,7 @@ class _TelaDeLer(QWidget):
                 f"{ficha.caminho.name} — {paginas}, sem texto por dentro: cada "
                 "página será lida como imagem.")
             self.botao_outro.setText("Escolher outro arquivo")
-        self.botao_ler.setText(f"Ler as {paginas}")
+        self.botao_ler.setText(texto_do_botao_ler(ficha.paginas))
 
     def _ler(self):
         if self._ficha is not None:

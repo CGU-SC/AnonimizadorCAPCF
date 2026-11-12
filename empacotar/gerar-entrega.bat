@@ -20,8 +20,8 @@ for /f "delims=" %%v in ('call ".venv\Scripts\python.exe" -c "import sys; sys.pa
 if "%VERSAO%"=="" goto erro
 echo   Versao: %VERSAO%
 
-REM Os roteiros sao refeitos a mao a cada versao, num prompt proprio (decisao
-REM de 09/10/2026, no CLAUDE.md), e daqui so sao copiados. Roteiro que nao
+REM Os roteiros sao refeitos a mao a cada versao (decisao de 09/10/2026), e
+REM daqui so sao copiados. Roteiro que nao
 REM cita a versao que esta saindo e roteiro que ninguem refez - e ele iria
 REM para o nucleo com o numero e as regras da versao anterior.
 for %%r in (como-instalar como-usar) do (

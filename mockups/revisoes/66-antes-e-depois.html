@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 66 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro: #e05d5d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lado { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .caixa { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 12px 16px; }
+  .caixa.antes { border-top: 3px solid var(--cor-erro); }
+  .caixa.depois { border-top: 3px solid var(--cor-sucesso); }
+  .caixa b.rotulo { display: block; font-size: 13px; color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .caixa blockquote { margin: 0 0 10px; padding-left: 12px; border-left: 2px solid var(--cor-borda); font-style: italic; }
+  ol { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 66 — antes e depois</h1>
+<p class="subtitulo">Lente de segredo e dado real sobre a fase 3 da documentação de manutenção (as abas Testes,
+Mudanças e Armadilhas, e a correção da aba Ambiente), em 12/11/2026, contra a regra de conteúdo da documentação.
+Um achado, aprovado e consertado. A varredura automática (<code>/code-review</code>) não rodou, porque ela procura
+defeito de funcionamento, fora desta lente; a varredura desta lente foi feita por script: número que passa na conta,
+coisa com cara de segredo, caminho e nome desta máquina, os termos vetados e as frases que falam do que foi usado.</p>
+
+<div class="achado"><h3>Uma frase da aba Testes afirmava que todo teste foi feito com dado inventado</h3>
+<div class="lado">
+<div class="caixa antes"><b class="rotulo">Antes</b>
+<blockquote>Todo documento de teste é inventado e gerado por script.</blockquote>
+<ol>
+<li>Quem lê na UFSC entende "todo documento de teste" como todo documento com que o programa foi testado.</li>
+<li>A frase vira uma declaração sobre a construção inteira, que a regra de conteúdo manda omitir.</li>
+</ol>
+</div>
+<div class="caixa depois"><b class="rotulo">Depois</b>
+<blockquote>A massa de <code>dados-exemplo/</code> é inventada e gerada por script.</blockquote>
+<ol>
+<li>A frase fala da pasta, que é o assunto da seção.</li>
+<li>Nada é dito sobre o que foi ou não usado na construção.</li>
+</ol>
+</div>
+</div>
+</div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+<li><code>documentacao/fonte/testes.html</code>: só a frase acima, e o <code>documentacao/manutencao.html</code>
+remontado. Nenhum arquivo criado, apagado ou movido, e nada do programa tocado.</li>
+</ul>
+
+<h2>O que foi levantado e não virou achado</h2>
+<ul>
+<li><b>"nunca copiado de um documento de trabalho"</b>, na aba Mudanças: é regra para quem mexer daqui em diante, e
+não diz nada sobre o passado.</li>
+<li><b>"a massa, com a qual se testa"</b>, no glossário do Início: diz para que a pasta serve, e não que só ela foi
+usada.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 12/11/2026.</p>
+</body>
+</html>

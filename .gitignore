@@ -1,23 +1,9 @@
+# Pastas que só existem na máquina de quem desenvolve vão no
+# .git/info/exclude dela, que não é versionado, e não aqui.
+
 # Segredo do ambiente de desenvolvimento — nunca versionado.
 # O .env.example (com só os nomes das variáveis) fica de fora desta lista de propósito.
 .env
-
-# O pacote de skills e o mapa dele: ficam nesta máquina, para o agente
-# trabalhar, e não vão para o histórico. Estavam desde o commit fundador e
-# foram tirados do histórico inteiro em 28/10/2026, a pedido da solicitante.
-# São material cedido a ela num curso, com o pedido de NÃO DISTRIBUIR: nunca
-# commitar, publicar em página ou mandar para fora o conteúdo deles. O
-# repositório é público, e o PR #1 ainda os mostrava em 29/10/2026 - pedido
-# de limpeza aberto no suporte do GitHub; em 05/11/2026 foi autorizado apagar o PR.
-# A cerca do agente (.claude/settings.json) é do projeto, e continua.
-.claude/skills/
-.claude/mapa-das-skills.html
-
-# A página do PR #1 salva em PDF (conversa, commits e arquivos alterados) antes
-# de o suporte do GitHub apagá-lo, em 05/11/2026 - é o que sobra dele. Guarda
-# de quem mantém o projeto, e não do projeto: são 18 MB de página impressa, e o
-# código e os commits dela já estão na master reescrita.
-histórico Git/
 
 # As escolhas lembradas de quem usa o programa nesta máquina (o motor de cada
 # módulo, o tamanho da janela - funcionalidade 8). São do uso, e não do
@@ -26,14 +12,6 @@ preferencias.ini
 preferencias.ini.*.gravando
 # O provisório de uma gravação cortada do .env tem o token dentro.
 .env.*.gravando
-
-# Documentos de teste guardados só na própria máquina - nunca entram no
-# histórico, mesmo que a pasta volte a existir depois. Documento de pessoa não
-# vai para dados-exemplo/, que é versionada. O git do Windows não separa
-# maiúscula de minúscula: Exemplos/ pega também qualquer pasta "exemplos",
-# em qualquer lugar do projeto.
-Exemplos/
-fora-do-historico/
 
 # Artefatos gerados (instalador, .exe final) — nascem do código, não se editam à mão.
 builds/

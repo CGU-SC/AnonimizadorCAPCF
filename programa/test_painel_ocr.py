@@ -73,6 +73,13 @@ def test_separador_de_milhar_nao_depende_da_maquina():
     assert caminho_do_pdf.com_separador_de_milhar(1234567) == "1.234.567"
 
 
+def test_botao_ler_no_singular_com_uma_pagina():
+    """Achado na entrega da 0.2.0: com uma página, o botão saía "Ler as 1 página"."""
+    assert caminho_do_pdf.texto_do_botao_ler(1) == "Ler a página"
+    assert caminho_do_pdf.texto_do_botao_ler(2) == "Ler as 2 páginas"
+    assert caminho_do_pdf.texto_do_botao_ler(1200) == "Ler as 1.200 páginas"
+
+
 def test_falha_inesperada_nao_deixa_o_painel_preso(aplicacao, monkeypatch):
     """Teste de regressão do defeito mais grave achado pela lente crítica.
 

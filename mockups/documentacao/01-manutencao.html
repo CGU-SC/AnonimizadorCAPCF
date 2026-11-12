@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rascunho 01 — Documentação de manutenção</title>
+<style>
+  /* Rascunho da documentação de manutenção: a capa, o menu do alto e uma seção
+     de exemplo (Regras). A folha de estilo é a dos roteiros da entrega
+     (mockups/sistema-de-design.md, "Roteiros da entrega"), copiada inteira no
+     que se repete, com duas peças novas: o menu fixo e as etiquetas de RN.
+     Como os roteiros, é página que vai junto, e não tela do programa: só o
+     tema escuro, com a versão clara para imprimir. */
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-claro: #5b8fc9;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --cor-ia: #b39ddb;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", Consolas, monospace;
+    --raio: 6px;
+    --largura: max(55%, min(920px, 100%));
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--cor-fundo); color: var(--cor-texto);
+    font-family: var(--fonte-texto); font-size: 15px; line-height: 1.55;
+  }
+  main { width: var(--largura); margin: 0 auto; padding: 36px 16px 64px; }
+  code, .mono { font-family: var(--fonte-mono); font-size: 0.92em; }
+  code { background: rgba(255,255,255,0.07); padding: 1px 6px; border-radius: 4px; }
+  strong { font-weight: 600; }
+  a { color: var(--cor-destaque-claro); }
+  .secundario { color: var(--cor-texto-secundario); }
+
+  /* ---- a faixa do alto, igual à dos roteiros ---- */
+  .topo { background: #22262d; border-bottom: 1px solid var(--cor-borda); }
+  .topo-dentro {
+    width: var(--largura); margin: 0 auto; padding: 18px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  }
+  .identidade { display: flex; align-items: center; gap: 12px; }
+  .identidade .simbolo {
+    width: 43px; height: 43px; border-radius: 10px; background: var(--cor-destaque);
+    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  }
+  .identidade .nome { font-weight: 700; font-size: 19px; line-height: 1.2; }
+  .identidade .casa { color: var(--cor-texto-secundario); font-size: 14px; }
+  .etiqueta-versao {
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    font-size: 10.5px; font-weight: 600; color: #f0c674;
+    background: rgba(217,164,65,0.12); border: 1px solid rgba(217,164,65,0.5);
+    border-radius: 999px; padding: 4px 11px;
+  }
+  .etiqueta-versao::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cor-alerta); }
+
+  /* ---- o menu do alto (peça nova) ----
+     Fica preso no alto ao rolar: a faixa da identidade sobe e some, o menu não.
+     Mesmo fundo da faixa, para parecer uma peça só com ela quando a página está
+     no começo. O item da seção que está na tela leva o filete #5b8fc9, o mesmo
+     do item marcado da faixa do programa. */
+  .menu {
+    position: sticky; top: 0; z-index: 10;
+    background: #22262d; border-bottom: 1px solid var(--cor-borda);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  }
+  .menu-dentro {
+    width: var(--largura); margin: 0 auto; padding: 0 16px;
+    display: flex; gap: 2px; overflow-x: auto; scrollbar-width: thin;
+  }
+  .menu a {
+    flex: 0 0 auto; color: var(--cor-texto-secundario); text-decoration: none;
+    font-size: 13.5px; padding: 11px 10px 9px; border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .menu a:hover { color: var(--cor-texto); }
+  .menu a.atual { color: var(--cor-texto); border-bottom-color: var(--cor-destaque-claro); }
+  /* O título não pode ficar escondido debaixo do menu ao clicar num item. */
+  section[id], header[id] { scroll-margin-top: 58px; }
+
+  /* Variante B do menu: os grupos com a lista aberta ao passar o mouse. */
+  .menu.b .menu-dentro { overflow: visible; }
+  .menu .grupo { position: relative; flex: 0 0 auto; }
+  .menu .grupo > .titulo-grupo {
+    display: block; color: var(--cor-texto-secundario); font-size: 13.5px;
+    padding: 11px 12px 9px; border-bottom: 2px solid transparent; cursor: default; white-space: nowrap;
+  }
+  .menu .grupo.atual > .titulo-grupo { color: var(--cor-texto); border-bottom-color: var(--cor-destaque-claro); }
+  .menu .grupo .lista {
+    display: none; position: absolute; top: 100%; left: 0; min-width: 220px;
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-radius: var(--raio); padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .menu .grupo:hover .lista, .menu .grupo:focus-within .lista { display: block; }
+  .menu .grupo .lista a { display: block; border: 0; border-radius: 4px; padding: 7px 10px; }
+  .menu .grupo .lista a.atual { background: rgba(59,110,165,0.22); }
+  .menu.a .grupo, .menu.b > .menu-dentro > a { display: none; }
+
+  /* ---- capa, igual à dos roteiros ---- */
+  .capa {
+    position: relative; overflow: hidden; padding: 36px 40px 34px;
+    border-radius: 18px; border: 1px solid rgba(91,143,201,0.20);
+    background: linear-gradient(120deg, #131b28 0%, #16253a 55%, #1a2f4a 100%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .capa::after {
+    content: ""; position: absolute; right: -120px; bottom: -160px; width: 420px; height: 420px;
+    border-radius: 50%; border: 36px solid rgba(255,255,255,0.04);
+  }
+  .capa > * { position: relative; z-index: 1; }
+  .capa .chamada { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; color: #8fc1f0; }
+  .capa h1 { font-size: 44px; font-weight: 800; margin: 8px 0 0; line-height: 1.1; letter-spacing: -0.01em; }
+  .capa p { margin: 14px 0 0; max-width: 85%; color: #d4d8de; font-size: 16px; }
+  .capa p b { color: #fff; font-weight: 600; }
+  .capa p.ressalva { border-left: 3px solid var(--cor-alerta); padding: 2px 0 2px 12px; color: #f0d9a8; font-size: 15px; }
+  .capa p.ressalva b { color: #f0c674; }
+  .capa .fichas { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .capa .ficha { font-size: 13px; border-radius: 999px; padding: 4px 13px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); }
+  .capa .ficha.boa { border-color: rgba(76,175,109,0.6); color: #8fd6a6; }
+  @media (max-width: 600px) { .capa { padding: 26px 22px; } .capa h1 { font-size: 34px; } }
+
+  .aviso {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: rgba(217,164,65,0.10); border: 1px solid rgba(217,164,65,0.55);
+    border-radius: var(--raio); padding: 14px 18px; margin: 28px 0 0;
+  }
+  .aviso.azul { background: rgba(59,110,165,0.12); border-color: rgba(91,143,201,0.55); }
+  .aviso .icone { font-size: 20px; line-height: 1.3; }
+  .aviso p { margin: 0; }
+  .aviso p + p { margin-top: 8px; }
+
+  h2 { font-size: 21px; margin: 48px 0 6px; display: flex; align-items: center; gap: 12px; }
+  h2 .numero {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--cor-destaque);
+    color: #fff; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px; flex: 0 0 auto;
+  }
+  h3 { font-size: 16px; margin: 28px 0 10px; }
+  .lead { color: var(--cor-texto-secundario); margin: 0 0 18px; }
+
+  /* ---- por onde começar: os caminhos dos roteiros, com link ---- */
+  .caminhos { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-top: 10px; }
+  .caminho {
+    border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 12px 14px;
+    background: rgba(255,255,255,0.03); font-size: 14px;
+  }
+  .caminho .titulo { font-weight: 600; margin-bottom: 4px; }
+
+  /* ---- as regras duras: os cartões de "Se algo der errado", com o filete
+     vermelho, porque quebrar uma delas é o defeito que não se desfaz ---- */
+  .problemas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .problema {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-erro-texto); border-radius: var(--raio); padding: 14px 16px;
+  }
+  .problema .se { font-weight: 600; margin-bottom: 6px; }
+  .problema .entao { font-size: 14px; color: var(--cor-texto-secundario); }
+  .problema .entao b { color: var(--cor-texto); }
+
+  /* ---- os assuntos das regras (peça nova) ----
+     Um cartão por assunto: o que vale, em poucas linhas, e as etiquetas das RN
+     com a spec, que levam ao detalhe. A regra inteira fica só na spec. */
+  .assuntos { display: flex; flex-direction: column; gap: 10px; }
+  .assunto {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda);
+    border-radius: var(--raio); padding: 14px 18px;
+  }
+  .assunto .cabeca { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .assunto .nome { font-weight: 600; }
+  .assunto .spec { font-size: 12.5px; color: var(--cor-texto-secundario); }
+  .assunto ul { margin: 8px 0 0; padding-left: 20px; font-size: 14px; }
+  .assunto li + li { margin-top: 4px; }
+  .assunto .rns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .rn {
+    font-family: var(--fonte-mono); font-size: 12px; text-decoration: none;
+    border: 1px solid rgba(91,143,201,0.5); color: var(--cor-destaque-claro);
+    border-radius: 999px; padding: 1px 9px; white-space: nowrap;
+  }
+  .rn:hover { background: rgba(59,110,165,0.18); }
+  details.assunto summary { cursor: pointer; list-style: none; }
+  details.assunto summary::-webkit-details-marker { display: none; }
+  details.assunto summary .nome::before { content: "▸ "; color: var(--cor-texto-secundario); }
+  details.assunto[open] summary .nome::before { content: "▾ "; }
+
+  /* ---- tabela simples ---- */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cor-texto-secundario); font-weight: 600; }
+
+  /* As seções que o rascunho só anuncia. */
+  .a-escrever {
+    border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 12px 16px;
+    color: var(--cor-texto-secundario); font-size: 14px;
+  }
+
+  footer {
+    margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--cor-borda);
+    font-size: 13px; color: var(--cor-texto-secundario);
+    display: flex; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap;
+  }
+  footer .quem-fez { text-align: right; }
+
+  /* ---- só do rascunho: a troca de menu, para comparar ---- */
+  .so-rascunho {
+    position: fixed; right: 18px; bottom: 18px; z-index: 20;
+    background: #2d2440; border: 1px solid var(--cor-ia); border-radius: 10px;
+    padding: 10px 12px; font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,0.45); max-width: 300px;
+  }
+  .so-rascunho b { color: var(--cor-ia); }
+  .so-rascunho button {
+    font: inherit; font-size: 12.5px; margin: 6px 4px 0 0; padding: 3px 10px; cursor: pointer;
+    background: transparent; color: var(--cor-texto); border: 1px solid var(--cor-borda); border-radius: 4px;
+  }
+  .so-rascunho button.ligado { background: var(--cor-destaque); border-color: var(--cor-destaque); }
+
+  @media print {
+    :root {
+      --cor-fundo: #ffffff; --cor-fundo-elevado: #f5f6f8; --cor-borda: #cfd4db;
+      --cor-texto: #1e2228; --cor-texto-secundario: #555c66;
+      --cor-erro-texto: #b3261e; --cor-alerta: #9a6a00; --cor-sucesso: #2e7d4a; --cor-ia: #6a4fb0;
+    }
+    main { padding: 0; }
+    .topo { background: #f5f6f8; }
+    .menu, .so-rascunho { display: none; }
+    .capa { background: #f5f6f8; box-shadow: none; border-color: #cfd4db; }
+    .capa .chamada { color: #3b6ea5; }
+    .capa p, .capa p b { color: #1e2228; }
+    .capa p.ressalva, .capa p.ressalva b { color: #6b4a00; }
+    .capa .ficha { border-color: #cfd4db; }
+    .problema, .assunto, .caminho { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <div class="topo-dentro">
+    <div class="identidade">
+      <div class="simbolo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></div>
+      <div>
+        <div class="nome">Anonimizador</div>
+        <div class="casa">CAPCF · UFSC</div>
+      </div>
+    </div>
+    <div class="etiqueta-versao">Versão 0.2.0 · teste</div>
+  </div>
+</div>
+
+<nav class="menu a" id="menu">
+  <div class="menu-dentro">
+    <!-- Variante A: uma linha só, um item por seção. -->
+    <a href="#inicio">Início</a>
+    <a href="#ambiente">Ambiente</a>
+    <a href="#o-que-faz">O que faz</a>
+    <a href="#regras">Regras</a>
+    <a href="#arquitetura">Arquitetura</a>
+    <a href="#testes">Testes</a>
+    <a href="#mudar">Mudar</a>
+    <a href="#armadilhas">Armadilhas</a>
+    <a href="#entrega">Gerar versão</a>
+    <a href="#versoes">Versões</a>
+    <a href="#historico">Histórico</a>
+    <!-- Variante B: cinco grupos, cada um com a lista dele. -->
+    <div class="grupo" data-secoes="inicio ambiente"><span class="titulo-grupo" tabindex="0">Começar ▾</span>
+      <div class="lista"><a href="#inicio">Início</a><a href="#ambiente">Montar o ambiente</a></div></div>
+    <div class="grupo" data-secoes="o-que-faz regras arquitetura"><span class="titulo-grupo" tabindex="0">Entender ▾</span>
+      <div class="lista"><a href="#o-que-faz">O que o programa faz</a><a href="#regras">Regras</a><a href="#arquitetura">Arquitetura</a></div></div>
+    <div class="grupo" data-secoes="testes mudar armadilhas"><span class="titulo-grupo" tabindex="0">Mudar ▾</span>
+      <div class="lista"><a href="#testes">Testes e massa</a><a href="#mudar">Como fazer uma mudança</a><a href="#armadilhas">Armadilhas</a></div></div>
+    <div class="grupo" data-secoes="entrega versoes"><span class="titulo-grupo" tabindex="0">Entregar ▾</span>
+      <div class="lista"><a href="#entrega">Gerar uma versão</a><a href="#versoes">Versões e pendências</a></div></div>
+    <div class="grupo" data-secoes="historico"><span class="titulo-grupo" tabindex="0">Histórico ▾</span>
+      <div class="lista"><a href="#historico">Como o programa foi feito</a></div></div>
+  </div>
+</nav>
+
+<main>
+
+<header class="capa" id="inicio">
+  <div class="chamada">Para quem mantém o programa</div>
+  <h1>Documentação de manutenção</h1>
+  <p><b>O que é preciso para manter o Anonimizador CAPCF partindo do zero:</b>
+  montar o ambiente, entender o código e as regras, mudar sem quebrar e gerar
+  uma versão nova.</p>
+  <p class="ressalva">O programa existe por um motivo só: <b>documento com CPF
+  não sai da universidade para ser processado.</b> Toda mudança passa por essa
+  regra antes de qualquer outra.</p>
+  <div class="fichas">
+    <span class="ficha">Python 3.12 · PySide6</span>
+    <span class="ficha">1.072 testes</span>
+    <span class="ficha">instalador do Windows</span>
+    <span class="ficha boa">roda sem internet</span>
+  </div>
+</header>
+
+<h2>Por onde começar</h2>
+<p class="lead">Cada seção se lê sozinha. Pelo que você veio fazer:</p>
+<div class="caminhos">
+  <div class="caminho"><div class="titulo">Primeira vez aqui</div>
+    <a href="#ambiente">Montar o ambiente</a>, depois <a href="#o-que-faz">O que o programa faz</a> com o programa aberto ao lado.</div>
+  <div class="caminho"><div class="titulo">Vai mudar uma regra</div>
+    <a href="#regras">Regras</a>, para achar a spec, e <a href="#mudar">Como fazer uma mudança</a>.</div>
+  <div class="caminho"><div class="titulo">Algo estranho que nenhum teste acusa</div>
+    <a href="#armadilhas">Armadilhas</a>: quase todas foram assim, caladas.</div>
+  <div class="caminho"><div class="titulo">Vai gerar uma versão</div>
+    <a href="#entrega">Gerar uma versão</a> e, antes, <a href="#versoes">Versões e pendências</a>.</div>
+</div>
+
+<section id="ambiente"><h2>Montar o ambiente</h2>
+  <div class="a-escrever">Fase 2 — Python e ambiente virtual do zero, as dependências, o <code>.env</code>, o Tesseract e onde o programa o procura, abrir o programa e rodar os testes.</div></section>
+
+<section id="o-que-faz"><h2>O que o programa faz</h2>
+  <div class="a-escrever">Fase 2 — os dois módulos e as Configurações, com as telas de verdade; as 10 funcionalidades, cada uma com a spec dela.</div></section>
+
+<!-- ===================== a seção de exemplo ===================== -->
+<section id="regras">
+<h2>Regras</h2>
+<p class="lead">O que o programa tem de seguir. O detalhe de cada regra, com os
+critérios de aceite, está nas specs, em <code>especificacoes/specs/</code>; aqui
+fica o mapa para achá-las. As quatro primeiras não dependem de spec nenhuma.</p>
+
+<h3>As regras duras</h3>
+<div class="problemas">
+  <div class="problema">
+    <div class="se">Tarja nunca substitui remoção</div>
+    <div class="entao">Mascarar é <b>reescrever o texto</b>. Nada desenhado por
+    cima que deixe o número original por baixo, recuperável por quem copiar o
+    texto.</div>
+  </div>
+  <div class="problema">
+    <div class="se">Nenhum OCR nem IA fora da universidade</div>
+    <div class="entao">Nenhum endereço de fora escrito no código, e nada é
+    baixado. O endereço do servidor de IA é digitado por quem usa: o que não for
+    da rede interna abre <b>um aviso de risco, e não um bloqueio</b>. Só o
+    <code>programa/rede_da_ia.py</code> fala com a rede.</div>
+  </div>
+  <div class="problema">
+    <div class="se">Segredo só no <code>.env</code></div>
+    <div class="entao">Nunca no código nem no histórico. O token do servidor de
+    IA é <b>a única linha que o programa grava</b> no <code>.env</code>.</div>
+  </div>
+  <div class="problema">
+    <div class="se">Documento de pessoa nunca no repositório</div>
+    <div class="entao">A massa de teste é inventada, e o
+    <code>programa/test_cpf.py</code> <b>falha se aparecer em
+    <code>dados-exemplo/</code></b> um número que passe na conta sem ser de
+    dígitos repetidos.</div>
+  </div>
+</div>
+
+<div class="aviso azul">
+  <div class="icone">ℹ</div>
+  <div>
+    <p><strong>Um "RN" sozinho não diz de qual spec ele é.</strong> Cada spec
+    numera as regras dela a partir do 1: existe uma RN-30 na spec 001, outra na
+    002, outra na 003 e outra na 004. O código quase sempre cita só o número.</p>
+    <p>No mesmo arquivo pode haver duas: no <code>programa/cpf.py</code>, a
+    <a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-6 · 003</a>
+    é a máscara, e a
+    <a class="rn" href="../../especificacoes/specs/004-revisao-por-ia-local.md">RN-30 · 004</a>
+    é o número que a IA apontou. Quem decide é o assunto do comentário — e a
+    tabela no fim desta seção. Comentário novo cita com a spec:
+    <code>(RN-30 da spec 004)</code>.</p>
+  </div>
+</div>
+
+<h3>Por assunto</h3>
+<div class="assuntos">
+  <div class="assunto">
+    <div class="cabeca"><span class="nome">Que número conta como CPF</span><span class="spec">spec 003 · Anonimizar</span></div>
+    <ul>
+      <li>Quatro formatos: com pontos e traço, só com traço, só dígitos, e com
+      barra no lugar do traço.</li>
+      <li>Quem decide é a conta do dígito verificador. O que passa é <b>CPF de
+      forma válida</b>; o que falha, ou tem letra no lugar de dígito, é
+      <b>suspeito</b> — e é mascarado igual.</li>
+      <li>Também conta o que perdeu o zero da frente (10 ou 9 dígitos), mas só
+      se fechar a conta com os zeros de volta: sem a conta, nada o separa de um
+      telefone.</li>
+      <li>Número grudado num número maior não é CPF.</li>
+    </ul>
+    <div class="rns">
+      <a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-1 · 003</a>
+      <a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-2 · 003</a>
+      <a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-3 · 003</a>
+      <a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-4 · 003</a>
+    </div>
+  </div>
+  <div class="assunto">
+    <div class="cabeca"><span class="nome">A máscara</span><span class="spec">spec 003 · Anonimizar</span></div>
+    <ul>
+      <li>Os 3 primeiros dígitos viram <code>XXX</code> e os 2 últimos
+      <code>XX</code>, com a pontuação de antes: <code>123.456.789-10</code> →
+      <code>XXX.456.789-XX</code>. A barra vira traço.</li>
+      <li>Era asterisco até a 0.1.0 e virou <code>X</code>: num <code>.md</code>,
+      <code>***</code> e <code>**</code> são negrito e itálico, e a máscara
+      quebrava na tela de quem abria o arquivo.</li>
+      <li>O sem o zero da frente ganha os zeros de volta e sai com 11 dígitos; numa
+      tabela, a coluna é compensada.</li>
+    </ul>
+    <div class="rns">
+      <a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-5 · 003</a>
+      <a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-6 · 003</a>
+    </div>
+  </div>
+  <details class="assunto">
+    <summary><div class="cabeca"><span class="nome">A revisão antes de salvar</span><span class="spec">spec 003 · Anonimizar</span></div></summary>
+    <ul><li>Fase 2.</li></ul>
+    <div class="rns"><a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-7 a RN-14 · 003</a></div>
+  </details>
+  <details class="assunto">
+    <summary><div class="cabeca"><span class="nome">O documento do Word</span><span class="spec">spec 003 · Anonimizar</span></div></summary>
+    <ul><li>Fase 2.</li></ul>
+    <div class="rns"><a class="rn" href="../../especificacoes/specs/003-anonimizador-de-cpf.md">RN-23 a RN-30 · 003</a></div>
+  </details>
+  <details class="assunto">
+    <summary><div class="cabeca"><span class="nome">Ler o PDF e o OCR</span><span class="spec">spec 002 · Gerar OCR</span></div></summary>
+    <ul><li>Fase 2.</li></ul>
+  </details>
+  <details class="assunto">
+    <summary><div class="cabeca"><span class="nome">O que o programa lembra</span><span class="spec">spec 002 · preferências</span></div></summary>
+    <ul><li>Fase 2.</li></ul>
+    <div class="rns"><a class="rn" href="../../especificacoes/specs/002-modulo-de-ocr.md">RN-36 a RN-42 · 002</a></div>
+  </details>
+  <details class="assunto">
+    <summary><div class="cabeca"><span class="nome">A revisão por IA</span><span class="spec">spec 004 · IA local</span></div></summary>
+    <ul><li>Fase 2.</li></ul>
+  </details>
+  <details class="assunto">
+    <summary><div class="cabeca"><span class="nome">A janela, a faixa e o tema</span><span class="spec">spec 001 · janela</span></div></summary>
+    <ul><li>Fase 2.</li></ul>
+  </details>
+</div>
+
+<h3>De qual spec é a RN de cada arquivo</h3>
+<table>
+  <tr><th>Arquivo</th><th>As citações seguem</th></tr>
+  <tr><td><code>cpf.py</code></td><td>spec 003; as que falam da IA, spec 004</td></tr>
+  <tr><td><code>arquivo_word.py</code>, <code>arquivo_texto.py</code></td><td>spec 003</td></tr>
+  <tr><td><code>caminho_do_pdf.py</code>, <code>leitura.py</code></td><td>spec 002</td></tr>
+  <tr><td colspan="2" class="secundario">… os 43 arquivos, na Fase 2</td></tr>
+</table>
+</section>
+<!-- ================== fim da seção de exemplo ================== -->
+
+<section id="arquitetura"><h2>Arquitetura</h2>
+  <div class="a-escrever">Fase 2 — a stack com os motivos e o descartado, o caminho de um documento, o mapa de <code>programa/</code>, <code>.env</code> e <code>preferencias.ini</code>, o tema, a peça da rede, as licenças.</div></section>
+<section id="testes"><h2>Testes e massa</h2>
+  <div class="a-escrever">Fase 2 — o pytest e o <code>conftest.py</code>, a massa de <code>dados-exemplo/</code> e os scripts, os atalhos de <code>abrir/</code>, as conferências.</div></section>
+<section id="mudar"><h2>Como fazer uma mudança</h2>
+  <div class="a-escrever">Fase 2 — emenda na spec, código e teste, conferência na tela; os comentários; a quebra de linha dos arquivos.</div></section>
+<section id="armadilhas"><h2>Armadilhas</h2>
+  <div class="a-escrever">Fase 2 — o que já quebrou calado, por tema: Qt, Windows, OCR, IA, testes, git.</div></section>
+<section id="entrega"><h2>Gerar uma versão</h2>
+  <div class="a-escrever">Fase 2 — o gerador, o PyInstaller, o Inno Setup e o identificador que nunca muda, o Tesseract, o instalador de teste, os roteiros.</div></section>
+<section id="versoes"><h2>Versões e pendências</h2>
+  <div class="a-escrever">Fase 2 — a 0.1.0 e a 0.2.0, atualizar por cima, e o que ficou anotado.</div></section>
+<section id="historico"><h2>Histórico</h2>
+  <div class="a-escrever">Fase 2 — de 03/09 a 10/11/2026, o método e as decisões que mudaram o rumo.</div></section>
+
+<footer>
+  <span>Anonimizador CAPCF · documentação de manutenção · versão 0.2.0</span>
+  <span class="quem-fez">O programa foi desenvolvido pela CGU no âmbito da consultoria realizada à UFSC em 2026.</span>
+</footer>
+
+</main>
+
+<div class="so-rascunho">
+  <b>Só no rascunho</b> — dois jeitos de menu:<br>
+  <button type="button" data-variante="a" class="ligado">A · uma linha</button>
+  <button type="button" data-variante="b">B · cinco grupos</button>
+</div>
+
+<script>
+  // Marca no menu a seção que está na tela. Sem isso, num documento longo,
+  // quem rola perde a noção de onde está.
+  const menu = document.getElementById('menu');
+  const secoes = [...document.querySelectorAll('#inicio, main section[id]')];
+  function marcar() {
+    let atual = secoes[0].id;
+    for (const s of secoes) {
+      if (s.getBoundingClientRect().top < 120) atual = s.id;
+    }
+    menu.querySelectorAll('a').forEach(a => a.classList.toggle('atual', a.getAttribute('href') === '#' + atual));
+    menu.querySelectorAll('.grupo').forEach(g => g.classList.toggle('atual', g.dataset.secoes.split(' ').includes(atual)));
+  }
+  addEventListener('scroll', marcar, { passive: true });
+  marcar();
+
+  // Só do rascunho: troca a variante do menu.
+  document.querySelectorAll('.so-rascunho button').forEach(b => b.addEventListener('click', () => {
+    menu.className = 'menu ' + b.dataset.variante;
+    document.querySelectorAll('.so-rascunho button').forEach(x => x.classList.toggle('ligado', x === b));
+    marcar();
+  }));
+</script>
+</body>
+</html>

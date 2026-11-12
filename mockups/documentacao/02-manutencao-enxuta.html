@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rascunho 02 — Documentação de manutenção, enxuta</title>
+<style>
+  /* Rascunho 02: o desenho de uma documentação técnica de outra frente da
+     consultoria (abas no alto, uma seção por vez, título com sobretítulo,
+     tabelas e destaques em vez de quadros grandes), pedido pelo solicitante em
+     11/11/2026 no lugar da capa dos roteiros do rascunho 01. Ficam do projeto
+     as cores (mockups/sistema-de-design.md) e a faixa do alto dos roteiros. A
+     fonte é a da máquina: a página abre sem internet. */
+  :root {
+    --cor-fundo: #1e2228;
+    --cor-fundo-elevado: #262b33;
+    --cor-fundo-alto: #2c323b;
+    --cor-faixa: #22262d;
+    --cor-borda: #383e47;
+    --cor-texto: #e8eaed;
+    --cor-texto-secundario: #9aa1ac;
+    --cor-texto-apagado: #737b87;
+    --cor-destaque: #3b6ea5;
+    --cor-destaque-claro: #5b8fc9;
+    --cor-sucesso: #4caf6d;
+    --cor-alerta: #d9a441;
+    --cor-erro-texto: #f08a86;
+    --cor-ia: #b39ddb;
+    --fonte-texto: "Segoe UI", system-ui, sans-serif;
+    --fonte-mono: "Cascadia Mono", Consolas, monospace;
+    --raio: 9px;
+    --raio-grande: 13px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--cor-fundo); color: var(--cor-texto);
+    font-family: var(--fonte-texto); font-size: 15px; line-height: 1.7;
+  }
+  a { color: var(--cor-destaque-claro); }
+  code { font-family: var(--fonte-mono); font-size: 0.86em; background: rgba(91,143,201,0.12);
+         border: 1px solid rgba(91,143,201,0.22); padding: 1px 5px; border-radius: 4px; color: #a9c8ea; }
+
+  /* ---- o alto da página: a faixa dos roteiros e as abas, presas juntas ---- */
+  .alto { position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 18px rgba(0,0,0,0.4); }
+  .topo { background: var(--cor-faixa); border-bottom: 1px solid var(--cor-borda); }
+  .topo-dentro {
+    max-width: 1020px; margin: 0 auto; padding: 14px 48px;
+    display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  }
+  .identidade { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+  .identidade .simbolo {
+    width: 43px; height: 43px; border-radius: 10px; background: var(--cor-destaque);
+    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  }
+  .identidade .nome { font-weight: 700; font-size: 19px; line-height: 1.2; }
+  .identidade .casa { color: var(--cor-texto-secundario); font-size: 14px; line-height: 1.3; }
+  .etiqueta-versao {
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    font-size: 10.5px; font-weight: 600; color: #f0c674;
+    background: rgba(217,164,65,0.12); border: 1px solid rgba(217,164,65,0.5);
+    border-radius: 999px; padding: 4px 11px;
+  }
+  .etiqueta-versao::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cor-alerta); }
+
+  .abas {
+    background: #20242a; border-bottom: 1px solid var(--cor-borda);
+    display: flex; justify-content: center; overflow-x: auto; scrollbar-width: none;
+  }
+  .abas::-webkit-scrollbar { display: none; }
+  .aba {
+    display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; height: 44px;
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    text-decoration: none; color: var(--cor-texto-apagado); white-space: nowrap;
+    border-top: 2px solid transparent; border-bottom: 2px solid transparent;
+  }
+  .aba .icone { opacity: 0.75; }
+  .aba:hover { color: var(--cor-alerta); border-bottom-color: var(--cor-alerta); }
+  .aba.atual { color: var(--cor-destaque-claro); border-bottom-color: var(--cor-destaque-claro); }
+
+  /* ---- o corpo ---- */
+  .pagina-corpo { max-width: 1020px; margin: 0 auto; padding: 48px 48px 110px; }
+  .painel { display: none; }
+  .painel.visivel { display: block; }
+
+  /* A abertura: um cartão baixo, com uma linha de dados embaixo. */
+  .abertura {
+    background: linear-gradient(135deg, var(--cor-fundo-elevado) 0%, var(--cor-fundo-alto) 100%);
+    border: 1px solid rgba(91,143,201,0.22); border-radius: var(--raio-grande);
+    padding: 34px 40px; margin-bottom: 56px;
+  }
+  .sobretitulo {
+    font-family: var(--fonte-mono); font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--cor-destaque-claro); margin-bottom: 8px;
+  }
+  .abertura h1 { font-size: 32px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.1; margin: 4px 0 14px; }
+  .abertura h1 span, h2 em { color: var(--cor-destaque-claro); font-style: normal; }
+  .abertura p { color: var(--cor-texto-secundario); max-width: 640px; margin: 0 0 26px; }
+  .abertura p b { color: var(--cor-texto); font-weight: 600; }
+  .dados { display: flex; gap: 34px; flex-wrap: wrap; padding-top: 20px; border-top: 1px solid var(--cor-borda); }
+  .dado .rotulo { display: block; font-family: var(--fonte-mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cor-texto-apagado); margin-bottom: 2px; }
+  .dado .valor { font-size: 13.5px; font-weight: 500; }
+
+  .secao { margin-bottom: 64px; }
+  h2 { font-size: 21px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; margin: 0 0 8px; }
+  .descricao { color: var(--cor-texto-secundario); max-width: 720px; margin: 0 0 26px; font-size: 14.5px; }
+  .descricao b { color: var(--cor-texto); font-weight: 600; }
+  h3 {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--cor-texto-secundario); margin: 36px 0 16px; padding-bottom: 9px;
+    border-bottom: 1px solid var(--cor-borda); display: flex; align-items: center; gap: 9px;
+  }
+  h3::before { content: ""; width: 3px; height: 12px; background: var(--cor-alerta); border-radius: 2px; }
+
+  /* Cartões de cor: só quatro, e só onde a cor quer dizer alguma coisa
+     (a mesma cor do mesmo assunto na tela do programa). */
+  .cartoes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 26px; }
+  .cartao { border-radius: var(--raio-grande); padding: 20px 24px; border-left: 3px solid; }
+  .cartao .titulo { font-size: 13px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 6px; }
+  .cartao p { margin: 0; font-size: 14px; color: var(--cor-texto-secundario); line-height: 1.6; }
+  .cartao p b { color: var(--cor-texto); font-weight: 600; }
+  .azul    { background: linear-gradient(135deg, rgba(59,110,165,0.16), rgba(59,110,165,0.06)); border-color: var(--cor-destaque-claro); }
+  .verde   { background: linear-gradient(135deg, rgba(76,175,109,0.14), rgba(76,175,109,0.05)); border-color: var(--cor-sucesso); }
+  .ambar   { background: linear-gradient(135deg, rgba(217,164,65,0.14), rgba(217,164,65,0.05)); border-color: var(--cor-alerta); }
+  .lilas   { background: linear-gradient(135deg, rgba(179,157,219,0.14), rgba(179,157,219,0.05)); border-color: var(--cor-ia); }
+  .vermelho{ background: linear-gradient(135deg, rgba(240,138,134,0.13), rgba(240,138,134,0.04)); border-color: var(--cor-erro-texto); }
+
+  .numeros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .numero { border-radius: var(--raio-grande); padding: 16px 20px; border-left: 3px solid; }
+  .numero .rotulo { display: block; font-family: var(--fonte-mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cor-texto-apagado); margin-bottom: 6px; }
+  .numero .valor { font-size: 28px; font-weight: 800; line-height: 1; }
+  .numero.azul .valor { color: var(--cor-destaque-claro); }
+  .numero.verde .valor { color: #7fcf98; }
+  .numero.ambar .valor { color: #f0c674; }
+  .numero.neutro { background: var(--cor-fundo-elevado); border-color: var(--cor-borda); }
+
+  /* Os atalhos para as outras abas. */
+  .atalhos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .atalho {
+    background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-radius: var(--raio-grande);
+    padding: 18px 20px 14px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 6px;
+  }
+  .atalho:hover { border-color: rgba(91,143,201,0.45); background: var(--cor-fundo-alto); }
+  .atalho .icone { color: var(--cor-destaque-claro); font-size: 17px; }
+  .atalho .titulo { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .atalho .texto { font-size: 13px; color: var(--cor-texto-secundario); line-height: 1.5; }
+  .atalho .ir { font-family: var(--fonte-mono); font-size: 11px; font-weight: 600; color: var(--cor-destaque-claro); margin-top: auto; padding-top: 4px; }
+
+  /* Tabela, destaque e código: as peças de quase toda aba. */
+  .tabela { border: 1px solid var(--cor-borda); border-radius: var(--raio-grande); overflow: hidden; margin: 0 0 22px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; background: var(--cor-fundo-elevado); font-family: var(--fonte-mono); font-size: 9.5px; font-weight: 600;
+       letter-spacing: 0.12em; text-transform: uppercase; color: var(--cor-texto-apagado); padding: 10px 14px; }
+  td { padding: 10px 14px; border-top: 1px solid var(--cor-borda); vertical-align: top; }
+  td.rn { white-space: nowrap; font-family: var(--fonte-mono); font-size: 12px; }
+  td.rn a { text-decoration: none; }
+
+  .destaque {
+    display: flex; gap: 12px; align-items: flex-start; border-radius: var(--raio);
+    padding: 13px 16px; margin: 0 0 22px; font-size: 14px; border-left: 3px solid;
+  }
+  .destaque .icone { line-height: 1.5; }
+  .destaque p { margin: 0; }
+  .destaque p + p { margin-top: 6px; }
+  .destaque.info { background: rgba(59,110,165,0.12); border-color: var(--cor-destaque-claro); }
+  .destaque.cuidado { background: rgba(217,164,65,0.10); border-color: var(--cor-alerta); }
+
+  .codigo { border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; margin: 0 0 22px; }
+  .codigo .cab { background: var(--cor-fundo-elevado); font-family: var(--fonte-mono); font-size: 10px; letter-spacing: 0.1em;
+                 text-transform: uppercase; color: var(--cor-texto-apagado); padding: 7px 14px; border-bottom: 1px solid var(--cor-borda); }
+  .codigo pre { margin: 0; padding: 14px; background: rgba(0,0,0,0.22); font-family: var(--fonte-mono); font-size: 12.5px; line-height: 1.6; overflow-x: auto; }
+  .codigo .com { color: #8fb39a; }
+
+  /* A linha do tempo do Histórico; o ponto cheio é versão entregue. */
+  .linha-do-tempo { position: relative; padding-left: 24px; }
+  .linha-do-tempo::before { content: ""; position: absolute; left: 6px; top: 8px; bottom: 0; width: 1px; background: var(--cor-borda); }
+  .marco { position: relative; padding: 0 0 22px 20px; }
+  .marco::before { content: ""; position: absolute; left: -17px; top: 7px; width: 9px; height: 9px; border-radius: 50%; background: var(--cor-fundo-elevado); border: 1.5px solid var(--cor-texto-apagado); }
+  .marco.versao::before { width: 12px; height: 12px; left: -18.5px; background: var(--cor-alerta); border-color: var(--cor-alerta); box-shadow: 0 0 8px rgba(217,164,65,0.35); }
+  .marco .quando { font-family: var(--fonte-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cor-texto-apagado); }
+  .marco .quando b { color: #f0c674; margin-left: 6px; }
+  .marco .titulo { font-weight: 600; font-size: 14.5px; }
+  .marco .texto { font-size: 13.5px; color: var(--cor-texto-secundario); }
+
+  .a-escrever { border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 14px 18px; color: var(--cor-texto-secundario); font-size: 14px; }
+
+  footer { border-top: 1px solid var(--cor-borda); }
+  .rodape-dentro {
+    max-width: 1020px; margin: 0 auto; padding: 18px 48px 26px; font-size: 12.5px; color: var(--cor-texto-apagado);
+    display: flex; justify-content: space-between; gap: 6px 24px; flex-wrap: wrap;
+  }
+
+  @media (max-width: 760px) {
+    .topo-dentro, .pagina-corpo, .rodape-dentro { padding-left: 18px; padding-right: 18px; }
+    .abas { justify-content: flex-start; }
+    .cartoes, .atalhos { grid-template-columns: 1fr; }
+    .numeros { grid-template-columns: 1fr 1fr; }
+  }
+  /* Impressa, a documentação sai inteira, uma aba depois da outra, e clara. */
+  @media print {
+    :root { --cor-fundo: #fff; --cor-fundo-elevado: #f5f6f8; --cor-fundo-alto: #f5f6f8; --cor-borda: #cfd4db;
+            --cor-texto: #1e2228; --cor-texto-secundario: #4a525c; --cor-texto-apagado: #6b7380; }
+    .alto { position: static; box-shadow: none; }
+    .abas { display: none; }
+    .topo { background: #f5f6f8; }
+    .painel { display: block !important; break-before: page; }
+    .painel:first-child { break-before: auto; }
+    .cartao, .numero, .atalho, .tabela, .destaque, .marco { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="alto">
+  <div class="topo">
+    <div class="topo-dentro">
+      <a class="identidade" href="#inicio">
+        <div class="simbolo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></div>
+        <div>
+          <div class="nome">Anonimizador</div>
+          <div class="casa">CAPCF · UFSC</div>
+        </div>
+      </a>
+      <div class="etiqueta-versao">Versão 0.2.0 · teste</div>
+    </div>
+  </div>
+  <nav class="abas">
+    <a class="aba" href="#inicio"><span class="icone">⌂</span> Início</a>
+    <a class="aba" href="#ambiente"><span class="icone">⚙</span> Ambiente</a>
+    <a class="aba" href="#funcionalidades"><span class="icone">▤</span> Funcionalidades</a>
+    <a class="aba" href="#regras"><span class="icone">≡</span> Regras</a>
+    <a class="aba" href="#arquitetura"><span class="icone">⬡</span> Arquitetura</a>
+    <a class="aba" href="#testes"><span class="icone">✓</span> Testes</a>
+    <a class="aba" href="#mudancas"><span class="icone">✎</span> Mudanças</a>
+    <a class="aba" href="#armadilhas"><span class="icone">⚠</span> Armadilhas</a>
+    <a class="aba" href="#entrega"><span class="icone">⇪</span> Entrega</a>
+    <a class="aba" href="#versoes"><span class="icone">◷</span> Versões</a>
+    <a class="aba" href="#historico"><span class="icone">↺</span> Histórico</a>
+  </nav>
+</div>
+
+<div class="pagina-corpo">
+
+<!-- ============================ INÍCIO ============================ -->
+<section class="painel" id="inicio">
+  <div class="abertura">
+    <div class="sobretitulo">Documentação de manutenção</div>
+    <h1>Anonimizador <span>CAPCF</span></h1>
+    <p>Programa de janela para Windows que tira o CPF de documentos — PDF, Word e
+    texto — antes de eles irem para um assistente de IA, e devolve um
+    <code>.md</code> com o CPF mascarado. Esta documentação é para quem vai
+    <b>manter o programa partindo do zero</b>: montar o ambiente, entender o
+    código e as regras, mudar sem quebrar e gerar uma versão nova.</p>
+    <div class="dados">
+      <div class="dado"><span class="rotulo">Versão</span><span class="valor">0.2.0 — 10/11/2026</span></div>
+      <div class="dado"><span class="rotulo">Desenvolvido por</span><span class="valor">CGU, na consultoria à UFSC</span></div>
+      <div class="dado"><span class="rotulo">Quem usa</span><span class="valor">o núcleo da CAPCF</span></div>
+      <div class="dado"><span class="rotulo">Stack</span><span class="valor">Python 3.12 · PySide6</span></div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <div class="sobretitulo">Visão geral</div>
+    <h2>Por que o programa <em>existe</em></h2>
+    <p class="descricao">O núcleo da CAPCF quer usar assistentes de IA de assinatura
+    pessoal com os documentos que analisa, e esses documentos trazem CPF. O
+    programa resolve isso <b>sem que o documento saia da universidade para ser
+    processado</b>: toda leitura, todo OCR e toda revisão por IA acontecem na
+    própria máquina ou num servidor da rede interna.</p>
+    <div class="cartoes">
+      <div class="cartao azul"><div class="titulo">Só o CPF</div>
+        <p><code>123.456.789-10</code> → <code>XXX.456.789-XX</code>. Nome, RG e o resto
+        continuam no texto: para este uso, <b>só o CPF é sensível</b>.</p></div>
+      <div class="cartao verde"><div class="titulo">Nada sai da universidade</div>
+        <p>Nenhum endereço de fora no código, e nada é baixado. Os modelos de OCR
+        <b>vêm dentro do programa</b>.</p></div>
+      <div class="cartao ambar"><div class="titulo">Uma pessoa confere</div>
+        <p>O programa marca; quem decide é quem usa. Quando o texto veio de OCR,
+        <b>a conferência é parte fixa</b>, e não etapa opcional.</p></div>
+      <div class="cartao lilas"><div class="titulo">IA só aponta</div>
+        <p>A revisão por IA vem desligada. Quando ligada, ela aponta onde olhar, e
+        <b>quem mascara é sempre o programa</b>.</p></div>
+    </div>
+    <div class="numeros">
+      <div class="numero azul"><span class="rotulo">Funcionalidades</span><span class="valor">10</span></div>
+      <div class="numero ambar"><span class="rotulo">Regras de negócio</span><span class="valor">174</span></div>
+      <div class="numero verde"><span class="rotulo">Testes</span><span class="valor">1.072</span></div>
+      <div class="numero neutro"><span class="rotulo">Versões entregues</span><span class="valor">2</span></div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <div class="sobretitulo">Navegar</div>
+    <h2>Por onde <em>começar</em></h2>
+    <p class="descricao">Cada aba se lê sozinha. Na primeira vez, a ordem das abas
+    é a ordem de leitura.</p>
+    <div class="atalhos">
+      <a class="atalho" href="#ambiente"><span class="icone">⚙</span><span class="titulo">Montar o ambiente</span>
+        <span class="texto">Python, dependências, Tesseract e o primeiro teste rodando.</span><span class="ir">→ Ambiente</span></a>
+      <a class="atalho" href="#funcionalidades"><span class="icone">▤</span><span class="titulo">O que o programa faz</span>
+        <span class="texto">Os dois módulos e as Configurações, com as telas de verdade.</span><span class="ir">→ Funcionalidades</span></a>
+      <a class="atalho" href="#regras"><span class="icone">≡</span><span class="titulo">Achar uma regra</span>
+        <span class="texto">As regras duras e as RN por assunto, com a spec de cada uma.</span><span class="ir">→ Regras</span></a>
+      <a class="atalho" href="#arquitetura"><span class="icone">⬡</span><span class="titulo">Entender o código</span>
+        <span class="texto">A stack e os motivos, o caminho de um documento, o mapa dos arquivos.</span><span class="ir">→ Arquitetura</span></a>
+      <a class="atalho" href="#armadilhas"><span class="icone">⚠</span><span class="titulo">Algo estranho, e nenhum teste acusa</span>
+        <span class="texto">O que já quebrou calado — quase sempre no Qt ou no Windows.</span><span class="ir">→ Armadilhas</span></a>
+      <a class="atalho" href="#entrega"><span class="icone">⇪</span><span class="titulo">Gerar uma versão</span>
+        <span class="texto">Do número da versão ao instalador testado por cima da anterior.</span><span class="ir">→ Entrega</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ REGRAS (exemplo) ============================ -->
+<section class="painel" id="regras">
+  <div class="secao">
+    <div class="sobretitulo">Não dependem de spec</div>
+    <h2>As regras <em>duras</em></h2>
+    <p class="descricao">Quebrar uma destas é o defeito que não se desfaz: valem
+    antes de qualquer outra regra e de qualquer pedido de mudança.</p>
+    <div class="tabela"><table>
+      <tr><th>Regra</th><th>O que quer dizer no código</th></tr>
+      <tr><td><b>Tarja nunca substitui remoção</b></td><td>Mascarar é reescrever o texto. Nada desenhado por cima que deixe o número original por baixo, recuperável por quem copiar o texto.</td></tr>
+      <tr><td><b>Nenhum OCR nem IA fora da universidade</b></td><td>Nenhum endereço de fora escrito no código, e nada é baixado. Só o <code>programa/rede_da_ia.py</code> fala com a rede, e só com a IA ligada.</td></tr>
+      <tr><td><b>Segredo só no <code>.env</code></b></td><td>Nunca no código nem no histórico. O token do servidor de IA é a única linha que o programa grava nele.</td></tr>
+      <tr><td><b>Documento de pessoa nunca no repositório</b></td><td>A massa de teste é inventada, e o <code>programa/test_cpf.py</code> falha se aparecer em <code>dados-exemplo/</code> um número que passe na conta sem ser de dígitos repetidos.</td></tr>
+    </table></div>
+    <div class="destaque cuidado"><span class="icone">⚠</span>
+      <div><p><b>O servidor de IA é digitado por quem usa, e não é bloqueado.</b> O
+      que não for reconhecido como da rede interna abre um aviso de risco. O texto
+      vai com os CPFs inteiros: um servidor dentro da UFSC pode guardá-lo; o que
+      não pode é ele ir para uma nuvem pública.</p></div></div>
+  </div>
+
+  <div class="secao">
+    <div class="sobretitulo">Specs 001 a 004</div>
+    <h2>As regras <em>por assunto</em></h2>
+    <p class="descricao">O detalhe de cada regra, com os critérios de aceite, está
+    nas specs, em <code>especificacoes/specs/</code>. Aqui fica o resumo e o
+    endereço; a regra inteira mora só lá.</p>
+
+    <div class="destaque info"><span class="icone">ℹ</span>
+      <div><p><b>Um "RN" sozinho não diz de qual spec ele é.</b> Cada spec numera as
+      regras dela a partir do 1, e o código quase sempre cita só o número. No
+      mesmo <code>programa/cpf.py</code>, a RN-6 é da spec 003 (a máscara) e a
+      RN-30 é da spec 004 (o número que a IA apontou). Comentário novo cita com a
+      spec.</p></div></div>
+
+    <div class="tabela"><table>
+      <tr><th>Assunto</th><th>O que vale</th><th>Onde</th></tr>
+      <tr><td><b>Que número conta como CPF</b></td><td>Quatro formatos, e a conta do dígito verificador decide: o que passa é CPF de forma válida; o que falha, ou tem letra no lugar de dígito, é suspeito — e é mascarado igual. O sem o zero da frente só conta se fechar a conta.</td>
+        <td class="rn"><a href="../../especificacoes/specs/003-anonimizador-de-cpf.md">003 · RN-1 a 4</a></td></tr>
+      <tr><td><b>A máscara</b></td><td>3 primeiros e 2 últimos dígitos viram <code>X</code>, com a pontuação de antes; a barra vira traço. Era asterisco, que num <code>.md</code> vira negrito.</td>
+        <td class="rn"><a href="../../especificacoes/specs/003-anonimizador-de-cpf.md">003 · RN-5 e 6</a></td></tr>
+      <tr><td><b>A revisão antes de salvar</b></td><td>Fase 2.</td><td class="rn"><a href="../../especificacoes/specs/003-anonimizador-de-cpf.md">003 · RN-7 a 14</a></td></tr>
+      <tr><td><b>O documento do Word</b></td><td>Fase 2.</td><td class="rn"><a href="../../especificacoes/specs/003-anonimizador-de-cpf.md">003 · RN-23 a 30</a></td></tr>
+      <tr><td><b>O que o programa lembra</b></td><td>Fase 2.</td><td class="rn"><a href="../../especificacoes/specs/002-modulo-de-ocr.md">002 · RN-36 a 42</a></td></tr>
+      <tr><td><b>Ler o PDF, o OCR, a revisão por IA, a janela e o tema</b></td><td colspan="2" style="color:var(--cor-texto-apagado)">… Fase 2</td></tr>
+    </table></div>
+
+    <h3>Como citar uma RN num comentário</h3>
+    <div class="codigo"><div class="cab">Python — programa/cpf.py</div>
+<pre><span class="com"># A máscara de um número que a IA apontou e o programa não tinha
+# achado (RN-30 da spec 004): mascarado pela regra de sempre, porque
+# a IA nunca escreve o texto.</span></pre></div>
+  </div>
+</section>
+
+<!-- ============================ HISTÓRICO (amostra da linha do tempo) ============================ -->
+<section class="painel" id="historico">
+  <div class="secao">
+    <div class="sobretitulo">03/09 a 10/11/2026</div>
+    <h2>Como o programa <em>foi feito</em></h2>
+    <p class="descricao">Amostra da linha do tempo; a completa e o método entram na Fase 2.</p>
+    <div class="linha-do-tempo">
+      <div class="marco"><div class="quando">03/09/2026</div><div class="titulo">Levantamento</div><div class="texto">Os requisitos com o solicitante, antes de qualquer código.</div></div>
+      <div class="marco versao"><div class="quando">25/09/2026 <b>0.1.0</b></div><div class="titulo">Primeira versão de teste</div><div class="texto">A janela, o Gerar OCR e o Anonimizar, num instalador.</div></div>
+      <div class="marco"><div class="quando">18 e 19/10/2026</div><div class="titulo">O PaddleOCR vira o motor padrão</div><div class="texto">Medido antes de construir: nas páginas difíceis da massa, o Tesseract deixaria 42 de 60 CPFs sem máscara.</div></div>
+      <div class="marco versao"><div class="quando">10/11/2026 <b>0.2.0</b></div><div class="titulo">Segunda versão de teste</div><div class="texto">As funcionalidades 4 a 10, instalada por cima da 0.1.0.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ as outras abas ============================ -->
+<section class="painel" id="ambiente"><div class="secao"><h2>Montar o <em>ambiente</em></h2><div class="a-escrever">Fase 2.</div></div></section>
+<section class="painel" id="funcionalidades"><div class="secao"><h2>O que o programa <em>faz</em></h2><div class="a-escrever">Fase 2.</div></div></section>
+<section class="painel" id="arquitetura"><div class="secao"><h2><em>Arquitetura</em></h2><div class="a-escrever">Fase 3.</div></div></section>
+<section class="painel" id="testes"><div class="secao"><h2>Testes e <em>massa</em></h2><div class="a-escrever">Fase 4.</div></div></section>
+<section class="painel" id="mudancas"><div class="secao"><h2>Como fazer uma <em>mudança</em></h2><div class="a-escrever">Fase 4.</div></div></section>
+<section class="painel" id="armadilhas"><div class="secao"><h2><em>Armadilhas</em></h2><div class="a-escrever">Fase 4.</div></div></section>
+<section class="painel" id="entrega"><div class="secao"><h2>Gerar uma <em>versão</em></h2><div class="a-escrever">Fase 5.</div></div></section>
+<section class="painel" id="versoes"><div class="secao"><h2>Versões e <em>pendências</em></h2><div class="a-escrever">Fase 5.</div></div></section>
+
+</div>
+
+<footer><div class="rodape-dentro">
+  <span>Anonimizador CAPCF · documentação de manutenção da versão 0.2.0</span>
+  <span>O programa foi desenvolvido pela CGU no âmbito da consultoria realizada à UFSC em 2026.</span>
+</div></footer>
+
+<script>
+  // Uma aba por vez, num arquivo só: a página continua abrindo sem internet e
+  // sem arquivo ao lado. O endereço guarda a aba (#regras), e por isso o
+  // "voltar" do navegador e um link mandado a alguém caem na aba certa.
+  const paineis = [...document.querySelectorAll('.painel')];
+  const abas = [...document.querySelectorAll('.aba')];
+  function mostrar() {
+    const pedido = location.hash.slice(1);
+    const alvo = paineis.find(p => p.id === pedido) ? pedido : 'inicio';
+    paineis.forEach(p => p.classList.toggle('visivel', p.id === alvo));
+    abas.forEach(a => a.classList.toggle('atual', a.getAttribute('href') === '#' + alvo));
+    window.scrollTo(0, 0);
+  }
+  addEventListener('hashchange', mostrar);
+  mostrar();
+</script>
+</body>
+</html>
