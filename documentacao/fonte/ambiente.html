@@ -34,7 +34,8 @@
       <p>O atalho cria o ambiente se ele faltar, confere as dependências toda vez (uma instalação interrompida no meio deixaria a <code>.venv</code> de pé mas incompleta) e abre o <code>programa/main.py</code>. <b>A janela não recarrega o código sozinha</b>: depois de mudar algo, feche e abra de novo.</p></li>
     <li><span class="titulo">Rodar os testes</span>
       <div class="codigo"><div class="cab">PowerShell</div><pre>.\.venv\Scripts\python.exe -m pytest</pre></div>
-      <p>São 1.072 testes, que levaram uns 4 minutos na máquina em que o programa foi construído. Eles sobem o Qt de verdade, sem mostrar janela, e nenhum lê ou grava o <code>.env</code> nem o <code>preferencias.ini</code> desta máquina (aba <a href="#testes">Testes</a>).</p></li>
+      <p>São 1.072 testes, que levaram uns 4 minutos na máquina em que o programa foi construído. Eles sobem o Qt de verdade, sem mostrar janela, e nenhum lê ou grava o <code>.env</code> nem o <code>preferencias.ini</code> desta máquina (aba <a href="#testes">Testes</a>).</p>
+      <p>O programa abre sem este passo, e mesmo assim ele vem aqui, antes de qualquer mudança, por dois motivos. <b>Ele prova que o ambiente ficou completo</b>: uma instalação pela metade, uma biblioteca em outra versão ou os modelos do PaddleOCR faltando podem deixar o programa abrir e falhar só depois, sem aviso. E <b>ele marca o ponto de partida</b>: um teste que falha agora é problema da máquina, e não do código; rodado só depois da primeira mudança, a falha pareceria culpa dela.</p></li>
   </ol>
 </div>
 

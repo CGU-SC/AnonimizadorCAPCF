@@ -58,11 +58,14 @@ code { font-family: var(--fonte-mono); font-size: 0.86em; background: rgba(91,14
 }
 .etiqueta-versao::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cor-alerta); }
 
+/* As abas descem para a linha de baixo quando não cabem. Numa linha só, que
+   rolava para o lado, a janela estreita escondia as das pontas, e as da esquerda
+   ficavam fora de alcance: linha centralizada não rola para aquele lado
+   (conferência do solicitante, 12/11/2026). */
 .abas {
   background: #20242a; border-bottom: 1px solid var(--cor-borda);
-  display: flex; justify-content: center; overflow-x: auto; scrollbar-width: none;
+  display: flex; flex-wrap: wrap; justify-content: center; padding: 0 12px;
 }
-.abas::-webkit-scrollbar { display: none; }
 .aba {
   display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; height: 44px;
   font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
@@ -192,7 +195,27 @@ td a { text-decoration: none; }
 .print { display: inline-block; max-width: 100%; border: 1px solid #4a5260; border-radius: 8px; overflow: hidden;
          box-shadow: 0 6px 24px rgba(0,0,0,0.35); vertical-align: top; }
 .print img { display: block; max-width: 100%; height: auto; }
-.duas-prints { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* Uma embaixo da outra, e nunca lado a lado: com meia largura, a letra da
+   print ficava pequena demais para ler (conferência do solicitante, 12/11/2026). */
+.duas-prints { display: block; }
+
+/* ---- o caminho de um documento ----
+   Etapas de cima para baixo, com a seta entre elas; os ramos de uma etapa
+   ficam lado a lado. Cada caixa diz o que acontece e o arquivo que faz. */
+.fluxo { margin: 0 0 26px; }
+.fluxo .etapa-fluxo { border: 1px solid var(--cor-borda); border-radius: var(--raio-grande); padding: 14px 16px; background: rgba(255,255,255,0.02); }
+.fluxo .etapa-fluxo > .nome { font-family: var(--fonte-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cor-texto-apagado); margin-bottom: 8px; }
+.fluxo .seta { text-align: center; color: var(--cor-texto-apagado); font-size: 18px; line-height: 1; padding: 6px 0; }
+.ramos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.ramo { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-top: 3px solid var(--cor-destaque-claro); border-radius: var(--raio); padding: 10px 12px; font-size: 13.5px; }
+/* As classes de cor dos cartões pintam a borda inteira; no ramo, só a de cima. */
+.ramo.ambar, .ramo.lilas, .ramo.verde { background: var(--cor-fundo-elevado); border-color: var(--cor-borda); }
+.ramo.ambar { border-top-color: var(--cor-alerta); }
+.ramo.lilas { border-top-color: var(--cor-ia); }
+.ramo.verde { border-top-color: var(--cor-sucesso); }
+.ramo .titulo { font-weight: 600; margin-bottom: 2px; }
+.ramo .texto { color: var(--cor-texto-secundario); font-size: 13px; line-height: 1.5; }
+.ramo code { font-size: 11.5px; }
 
 /* A aba ainda não escrita, durante a construção da documentação. */
 .em-construcao { border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 14px 18px; color: var(--cor-texto-secundario); }
@@ -205,7 +228,6 @@ footer { border-top: 1px solid var(--cor-borda); }
 
 @media (max-width: 760px) {
   .topo-dentro, .pagina-corpo, .rodape-dentro { padding-left: 18px; padding-right: 18px; }
-  .abas { justify-content: flex-start; }
   .cartoes, .atalhos, .duas-prints { grid-template-columns: 1fr; }
   .numeros { grid-template-columns: 1fr 1fr; }
 }

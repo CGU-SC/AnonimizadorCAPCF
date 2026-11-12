@@ -67,11 +67,14 @@ code { font-family: var(--fonte-mono); font-size: 0.86em; background: rgba(91,14
 }
 .etiqueta-versao::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cor-alerta); }
 
+/* As abas descem para a linha de baixo quando não cabem. Numa linha só, que
+   rolava para o lado, a janela estreita escondia as das pontas, e as da esquerda
+   ficavam fora de alcance: linha centralizada não rola para aquele lado
+   (conferência do solicitante, 12/11/2026). */
 .abas {
   background: #20242a; border-bottom: 1px solid var(--cor-borda);
-  display: flex; justify-content: center; overflow-x: auto; scrollbar-width: none;
+  display: flex; flex-wrap: wrap; justify-content: center; padding: 0 12px;
 }
-.abas::-webkit-scrollbar { display: none; }
 .aba {
   display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; height: 44px;
   font-size: 11.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
@@ -201,7 +204,27 @@ td a { text-decoration: none; }
 .print { display: inline-block; max-width: 100%; border: 1px solid #4a5260; border-radius: 8px; overflow: hidden;
          box-shadow: 0 6px 24px rgba(0,0,0,0.35); vertical-align: top; }
 .print img { display: block; max-width: 100%; height: auto; }
-.duas-prints { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* Uma embaixo da outra, e nunca lado a lado: com meia largura, a letra da
+   print ficava pequena demais para ler (conferência do solicitante, 12/11/2026). */
+.duas-prints { display: block; }
+
+/* ---- o caminho de um documento ----
+   Etapas de cima para baixo, com a seta entre elas; os ramos de uma etapa
+   ficam lado a lado. Cada caixa diz o que acontece e o arquivo que faz. */
+.fluxo { margin: 0 0 26px; }
+.fluxo .etapa-fluxo { border: 1px solid var(--cor-borda); border-radius: var(--raio-grande); padding: 14px 16px; background: rgba(255,255,255,0.02); }
+.fluxo .etapa-fluxo > .nome { font-family: var(--fonte-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cor-texto-apagado); margin-bottom: 8px; }
+.fluxo .seta { text-align: center; color: var(--cor-texto-apagado); font-size: 18px; line-height: 1; padding: 6px 0; }
+.ramos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.ramo { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-top: 3px solid var(--cor-destaque-claro); border-radius: var(--raio); padding: 10px 12px; font-size: 13.5px; }
+/* As classes de cor dos cartões pintam a borda inteira; no ramo, só a de cima. */
+.ramo.ambar, .ramo.lilas, .ramo.verde { background: var(--cor-fundo-elevado); border-color: var(--cor-borda); }
+.ramo.ambar { border-top-color: var(--cor-alerta); }
+.ramo.lilas { border-top-color: var(--cor-ia); }
+.ramo.verde { border-top-color: var(--cor-sucesso); }
+.ramo .titulo { font-weight: 600; margin-bottom: 2px; }
+.ramo .texto { color: var(--cor-texto-secundario); font-size: 13px; line-height: 1.5; }
+.ramo code { font-size: 11.5px; }
 
 /* A aba ainda não escrita, durante a construção da documentação. */
 .em-construcao { border: 1px dashed var(--cor-borda); border-radius: var(--raio); padding: 14px 18px; color: var(--cor-texto-secundario); }
@@ -214,7 +237,6 @@ footer { border-top: 1px solid var(--cor-borda); }
 
 @media (max-width: 760px) {
   .topo-dentro, .pagina-corpo, .rodape-dentro { padding-left: 18px; padding-right: 18px; }
-  .abas { justify-content: flex-start; }
   .cartoes, .atalhos, .duas-prints { grid-template-columns: 1fr; }
   .numeros { grid-template-columns: 1fr 1fr; }
 }
@@ -345,7 +367,7 @@ footer { border-top: 1px solid var(--cor-borda); }
     <tr><td class="curta"><b>Massa</b></td><td>Os documentos inventados de <code>dados-exemplo/</code>, com os quais se testa. Nenhum número dela pode ser o CPF de alguém.</td></tr>
     <tr><td class="curta"><b>Spec</b></td><td>O combinado escrito de uma funcionalidade, em <code>especificacoes/specs/</code>: o que ela faz, o que não faz, as regras e os critérios de aceite.</td></tr>
     <tr><td class="curta"><b>RN</b></td><td>Regra de negócio, numerada dentro de cada spec. <b>Cada spec recomeça do 1</b>: a RN-30 da spec 003 e a da spec 004 são regras diferentes. Ver a aba <a href="#regras">Regras</a>.</td></tr>
-    <tr><td class="curta"><b>Emenda</b></td><td>A mudança aprovada numa spec depois de ela existir, datada e escrita no fim dela. A spec não é reescrita: ganha a emenda, e a regra mudada leva a nota.</td></tr>
+    <tr><td class="curta"><b>Emenda</b></td><td>A mudança aprovada numa spec depois de ela existir, datada e registrada nela — numa seção no fim, ou, na spec 003, na lista do alto. A spec não é reescrita: ganha a emenda, e a regra mudada leva a nota.</td></tr>
     <tr><td class="curta"><b>Rascunho de tela</b></td><td>O desenho de uma tela antes de ela ser construída, aprovado olhando, em <code>mockups/</code>. Numerado, e nunca escrito por cima.</td></tr>
     <tr><td class="curta"><b>Conferência</b></td><td>Duas coisas: o passo do OCR em que a pessoa compara o texto lido com a página; e as páginas de <code>conferencias/</code>, que mostram o que o programa decidiu sobre a massa, para conferir sem abrir o código.</td></tr>
   </table></div>
@@ -438,7 +460,8 @@ footer { border-top: 1px solid var(--cor-borda); }
       <p>O atalho cria o ambiente se ele faltar, confere as dependências toda vez (uma instalação interrompida no meio deixaria a <code>.venv</code> de pé mas incompleta) e abre o <code>programa/main.py</code>. <b>A janela não recarrega o código sozinha</b>: depois de mudar algo, feche e abra de novo.</p></li>
     <li><span class="titulo">Rodar os testes</span>
       <div class="codigo"><div class="cab">PowerShell</div><pre>.\.venv\Scripts\python.exe -m pytest</pre></div>
-      <p>São 1.072 testes, que levaram uns 4 minutos na máquina em que o programa foi construído. Eles sobem o Qt de verdade, sem mostrar janela, e nenhum lê ou grava o <code>.env</code> nem o <code>preferencias.ini</code> desta máquina (aba <a href="#testes">Testes</a>).</p></li>
+      <p>São 1.072 testes, que levaram uns 4 minutos na máquina em que o programa foi construído. Eles sobem o Qt de verdade, sem mostrar janela, e nenhum lê ou grava o <code>.env</code> nem o <code>preferencias.ini</code> desta máquina (aba <a href="#testes">Testes</a>).</p>
+      <p>O programa abre sem este passo, e mesmo assim ele vem aqui, antes de qualquer mudança, por dois motivos. <b>Ele prova que o ambiente ficou completo</b>: uma instalação pela metade, uma biblioteca em outra versão ou os modelos do PaddleOCR faltando podem deixar o programa abrir e falhar só depois, sem aviso. E <b>ele marca o ponto de partida</b>: um teste que falha agora é problema da máquina, e não do código; rodado só depois da primeira mudança, a falha pareceria culpa dela.</p></li>
   </ol>
 </div>
 
@@ -659,10 +682,292 @@ footer { border-top: 1px solid var(--cor-borda); }
 </div>
 </section>
 <section class="painel" id="regras">
-<div class="secao"><h2>Regras</h2><div class="em-construcao">Em construção.</div></div>
+<div class="secao">
+  <div class="sobretitulo">Não dependem de spec</div>
+  <h2>As regras <em>duras</em></h2>
+  <p class="descricao">Quebrar uma destas é o defeito que não se desfaz. Valem
+  antes de qualquer outra regra e de qualquer pedido de mudança: um pedido que
+  bata numa delas volta para conversa antes de virar código.</p>
+  <div class="tabela"><table>
+    <tr><th>Regra</th><th>O que quer dizer no código</th></tr>
+    <tr><td><b>Tarja nunca substitui remoção</b></td><td>Mascarar é reescrever o texto. Nada desenhado por cima que deixe o número original por baixo, recuperável por quem copiar o texto. Por isso a saída é <code>.md</code>, e não o PDF ou o Word com uma faixa preta.</td></tr>
+    <tr><td><b>Nenhum OCR nem IA fora da universidade</b></td><td>Nenhum endereço de fora escrito no código, e nada é baixado. Só o <code>programa/rede_da_ia.py</code> fala com a rede, só com a IA ligada, e o <code>programa/test_rede_da_ia.py</code> falha se outro arquivo do programa ganhar sinal de rede.</td></tr>
+    <tr><td><b>Segredo só no <code>.env</code></b></td><td>Nunca no código nem no histórico. O token do servidor de IA é a única linha que o programa grava nele, e depois de salvo ele nunca volta à tela.</td></tr>
+    <tr><td><b>Documento de pessoa nunca no repositório</b></td><td>A massa de teste é inventada, e o <code>programa/test_cpf.py</code> falha se aparecer em <code>dados-exemplo/</code> um número que passe na conta sem ser de dígitos repetidos.</td></tr>
+    <tr><td><b>Desenvolvimento e produção não se misturam</b></td><td>Desenvolvimento é a máquina de quem mantém, processando só a massa. Produção é a instalação nas máquinas do núcleo, com documento de trabalho. Cada instalação tem o próprio <code>.env</code> e o próprio <code>preferencias.ini</code>; não existe configuração compartilhada.</td></tr>
+  </table></div>
+  <div class="destaque cuidado"><span class="icone">⚠</span>
+    <div><p><b>O servidor de IA é digitado por quem usa, e não é bloqueado.</b> O
+    endereço de cada instituição varia, e por isso o programa não tem lista
+    fechada: o que não for reconhecido como da rede interna abre um aviso de
+    risco, com o botão que não envia já escolhido. O teste prova o aviso, e não
+    um bloqueio. O texto vai com os CPFs inteiros: um servidor dentro da UFSC
+    pode guardá-lo; o que não pode é ele ir para uma nuvem pública.</p></div></div>
+</div>
+
+<div class="secao" id="rn-por-spec">
+  <div class="sobretitulo">Specs 001 a 004</div>
+  <h2>Como achar uma <em>RN</em></h2>
+  <p class="descricao">O detalhe de cada regra, com os critérios de aceite, está
+  nas specs, em <code>especificacoes/specs/</code>. Esta aba resume e diz onde
+  procurar; a regra inteira mora só na spec, para não haver duas versões dela.</p>
+  <div class="destaque info"><span class="icone">ℹ</span>
+    <div><p><b>Um "RN" sozinho não diz de qual spec ele é.</b> Cada spec numera as
+    regras dela a partir do 1 — há uma RN-30 em cada uma das quatro —, e o código
+    quase sempre cita só o número. Valem duas pistas: a spec da casa do arquivo
+    (a tabela do fim desta aba) e o assunto do comentário. No mesmo
+    <code>programa/cpf.py</code>, a RN-6 é a máscara, da spec 003, e a RN-30 é o
+    número que a IA apontou, da spec 004.</p>
+    <p><b>Comentário novo cita com a spec:</b> <code>(RN-30 da spec 004)</code>.</p></div></div>
+  <div class="tabela"><table>
+    <tr><th>Spec</th><th>Assunto</th><th>RN</th><th>Emendas</th></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/001-interface-da-janela.md">001</a></td><td>A janela, a faixa da esquerda, o tema e as Configurações</td><td class="curta">1 a 31</td><td>28/10, 03/11 e 05/11/2026</td></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/002-modulo-de-ocr.md">002</a></td><td>O Gerar OCR, os motores e o que o programa lembra</td><td class="curta">1 a 42</td><td>18/10 e 28/10/2026, e a do tema</td></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/003-anonimizador-de-cpf.md">003</a></td><td>O Anonimizar: achar, mascarar, revisar e salvar; o Word</td><td class="curta">1 a 30</td><td>dez, de 14/09 a outubro de 2026, listadas no alto da spec</td></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/004-revisao-por-ia-local.md">004</a></td><td>A IA local: configurar, a revisão e a IA como motor</td><td class="curta">1 a 70</td><td>acréscimos de 01 a 03/11/2026; a RN-66 foi retirada</td></tr>
+  </table></div>
+  <p>Cada spec tem também a versão ilustrada em <code>mockups/specs/</code>, com
+  os fluxos e os estados desenhados: é o jeito mais rápido de entender uma spec
+  antes de lê-la.</p>
+</div>
+
+<div class="secao" id="rn-por-assunto">
+  <div class="sobretitulo">Por assunto</div>
+  <h2>O que as regras <em>dizem</em></h2>
+
+  <h3>A janela e o tema — spec 001</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>O menu</b></td><td>A faixa sempre visível, um item marcado por vez; clicar no marcado volta ao painel vazio.</td><td class="curta">1 a 3</td></tr>
+    <tr><td class="curta"><b>O tamanho da janela</b></td><td>Maximizada no primeiro uso; depois, o tamanho e o maximizado lembrados, sempre no meio da tela principal, e cabendo nela.</td><td class="curta">4 a 8</td></tr>
+    <tr><td class="curta"><b>A faixa da esquerda</b></td><td>O símbolo, o nome e a versão no cabeçalho, e a versão só ali; um ícone por item, na cor do texto dele; o marcado com fundo azul fraco e filete. O título de cada tela leva o ícone do módulo, ou o da opção do submenu.</td><td class="curta">9 a 15 e 31</td></tr>
+    <tr><td class="curta"><b>O tema</b></td><td>Escuro, o padrão, e claro. A janela nasce com um só, e o novo vale ao reabrir; "Reabrir agora" pergunta antes se jogaria trabalho fora. No claro, toda letra com contraste de pelo menos 4,5 para 1, com duas exceções registradas. As marcas da revisão mantêm o sentido nos dois. <b>Toda cor de tela vem do tema</b>, e um teste procura cor escrita fora do <code>programa/estilo.py</code>.</td><td class="curta">16 a 30</td></tr>
+  </table></div>
+
+  <h3>Ler o PDF — spec 002</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>O caminho</b></td><td>Um documento por vez; nada gravado antes de a pessoa escolher salvar. A camada de texto é verificada de verdade, e o programa nunca decide sozinho se ela presta. Sem camada, cada página vira imagem a 300 pontos por polegada, endireitada antes de ler. O texto fica separado por página, e a tabela sai como tabela.</td><td class="curta">1 a 10</td></tr>
+    <tr><td class="curta"><b>A conferência e o salvar</b></td><td>Nenhum aviso do programa entra no arquivo. A conferência é obrigatória, e é ali que o texto se corrige. O aviso do salvar diz que o arquivo sai com os CPFs inteiros. O PDF de origem nunca é mexido, e o módulo não trata CPF.</td><td class="curta">11 a 18</td></tr>
+    <tr><td class="curta"><b>O motor faltando</b></td><td>O programa procura o Tesseract ao abrir o módulo e nunca baixa nem instala nada sozinho: o "Instalar agora" só abre o instalador que a TI deixou na pasta.</td><td class="curta">19 e 20</td></tr>
+    <tr><td class="curta"><b>Na conferência</b></td><td>O item da IA local aparece apagado até a chave dela ser ligada. Nada do trabalho é guardado. A página tem zoom de 50% a 400%, e a letra do texto lido, de 10 a 22 pixels; nenhum dos dois muda o texto.</td><td class="curta">21 a 24</td></tr>
+    <tr><td class="curta"><b>A escolha do motor</b></td><td>PaddleOCR primeiro e já marcado, Tesseract como alternativa, nos dois módulos. O marcado é o que lê, e a conferência diz qual leu. O detector de orientação do Tesseract endireita a página também para o PaddleOCR. Faltando um, a linha dele diz o quê.</td><td class="curta">25 a 35</td></tr>
+    <tr><td class="curta"><b>O que o programa lembra</b></td><td>O motor de cada módulo, o tema e a configuração da IA, no <code>preferencias.ini</code>. O motor lembrado que falta passa a ser lembrado como o outro. Lembrar nunca atrapalha usar: falhou a gravação, o programa segue. Nada do trabalho é lembrado. Desinstalar apaga o arquivo; atualizar o mantém.</td><td class="curta">36 a 42</td></tr>
+  </table></div>
+
+  <h3>Achar e mascarar o CPF — spec 003</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>Que número conta</b></td><td>Os quatro formatos (<code>123.456.789-10</code>, <code>123456789-10</code>, <code>12345678910</code>, <code>123.456.789/10</code>) e a conta do dígito verificador, feita pelo próprio programa. O que passa é CPF válido; o que falha é suspeito. O quase CPF (letra parecida com dígito, espaços, número partido em duas linhas) é sempre suspeito, e se passar na conta depois de corrigido leva "válido se corrigido". O sem o zero da frente só conta se passar na conta. Número grudado num número maior — CNPJ, processo, boleto — fica inteiro.</td><td class="curta">1 a 4</td></tr>
+    <tr><td class="curta"><b>A máscara</b></td><td>Tudo o que foi achado é mascarado, suspeito inclusive: o erro fica do lado seguro. Saem as 3 primeiras e as 2 últimas posições, com os separadores; a barra vira traço; o comprimento não muda. O sem o zero da frente ganha os zeros de volta, e a coluna da tabela é compensada.</td><td class="curta">5 e 6</td></tr>
+    <tr><td class="curta"><b>A revisão</b></td><td>Aparece sempre. O texto não se edita. Mascarar à mão vale para o trecho marcado. Liberar um suspeito é um clique; um número que passa na conta pede a dupla conferência, com "manter a máscara" já escolhido. Ao salvar, os que passam na conta e foram liberados aparecem antes de gravar.</td><td class="curta">7 a 11</td></tr>
+    <tr><td class="curta"><b>O arquivo de saída</b></td><td>O texto e mais nada, nenhuma linha escrita pelo programa. O caminho vem preenchido, com <code> - sem CPF.md</code>, e o programa pergunta antes de escrever por cima. O original nunca é alterado nem apagado.</td><td class="curta">12 a 14</td></tr>
+    <tr><td class="curta"><b>Os dois módulos juntos</b></td><td>O PDF pelo Anonimizar passa pelo caminho inteiro do Gerar OCR, conferência inclusive. O "Seguir para Anonimizar" leva o texto conferido sem gravar arquivo. O Gerar OCR não tem nada de CPF.</td><td class="curta">15 a 18</td></tr>
+    <tr><td class="curta"><b>Os limites</b></td><td>Um arquivo por vez, nada do trabalho guardado. Nenhuma rede, salvo a peça da IA. O <code>.txt</code> e o <code>.md</code> lidos com os acentos certos nos dois jeitos do Bloco de Notas. A massa nunca tem CPF que possa ser de alguém.</td><td class="curta">19 a 22</td></tr>
+    <tr><td class="curta"><b>O documento do Word</b></td><td>Só o <code>.docx</code>. Vai o documento impresso, na ordem dele, com as alterações aceitas; imagem não vai; tabela vira tabela; títulos e listas ficam, o resto da formatação não. A faixa diz o que ficou de fora. O Word que não abre — estragado, protegido, vazio, grande demais, <code>.doc</code> renomeado — dá uma frase e volta à escolha.</td><td class="curta">23 a 30</td></tr>
+  </table></div>
+
+  <h3>A IA local — spec 004</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>Configurar</b></td><td>Um destino ligado por vez, LM Studio ou servidor interno, e só conta como configurado depois de um teste que passou — teste que nunca envia documento. O LM Studio é sempre esta máquina, e só a porta muda. O token é digitado no programa, vai para o <code>.env</code>, nunca volta à tela, e atualizar a versão o mantém.</td><td class="curta">1 a 14, 49 a 55, 58, 59, 64 e 65</td></tr>
+    <tr><td class="curta"><b>O endereço do servidor</b></td><td>Nenhum endereço de fora no programa, e nenhum bloqueado. Passam sem aviso a própria máquina, os nomes em <code>.ufsc.br</code>, o que der em número interno e o que estiver em <code>IA_ENDERECOS_LOCAIS</code>; o resto abre o aviso de risco. Número interno não prova que é a UFSC. Redirecionamento não é seguido.</td><td class="curta">15 a 23</td></tr>
+    <tr><td class="curta"><b>A revisão</b></td><td>Só liga com um destino configurado. A revisora vê só o texto, e a conferência não muda. <b>A IA nunca escreve o texto</b>: aponta números, e o programa mascara. Cada apontamento diz de onde veio, e nada deles entra no <code>.md</code>. A IA só comenta um número da lista quando discorda; o liberado que ela acha que é CPF sobe para "Revisar liberação". Falha no meio guarda o que chegou, e a parte que falhou pode ser pulada.</td><td class="curta">24 a 37, 46 a 48, 56, 57, 60 a 63, 67 a 70</td></tr>
+    <tr><td class="curta"><b>A IA como motor</b></td><td>Atrás de uma chave, com a ressalva datada. A conferência continua obrigatória, e a marca é lembrada por módulo.</td><td class="curta">38 a 42</td></tr>
+    <tr><td class="curta"><b>A rede e os testes</b></td><td>Sem a IA ligada, o programa é o de sempre. Um arquivo só fala com a rede. Os testes nunca dependem de um LM Studio ou servidor de verdade: usam o servidor de mentira de <code>abrir/servidor_de_ia_de_mentira.py</code>.</td><td class="curta">43 a 45</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="rn-no-codigo">
+  <div class="sobretitulo">No código</div>
+  <h2>A spec da casa de cada <em>arquivo</em></h2>
+  <p class="descricao">A RN citada sem spec segue a spec da casa do arquivo; a
+  exceção é o comentário que fala de outro assunto, e aí vale a spec desse
+  assunto. Os arquivos estão todos em <code>programa/</code>.</p>
+  <div class="tabela"><table>
+    <tr><th>Spec da casa</th><th>Arquivos</th><th>Onde cuidar</th></tr>
+    <tr><td class="curta"><b>001</b></td><td><code>main.py</code>, <code>estilo.py</code>, <code>desenhos_da_faixa.py</code>, <code>cabecalho_da_tela.py</code>, <code>tela_do_tema.py</code></td><td>O <code>main.py</code> cita as quatro specs, quase sempre dizendo qual. O <code>tela_do_tema.py</code> cita a RN-42 da 002, a do tema lembrado.</td></tr>
+    <tr><td class="curta"><b>002</b></td><td><code>documento.py</code>, <code>leitura.py</code>, <code>disposicao.py</code>, <code>caminho_do_pdf.py</code>, <code>painel_ocr.py</code>, <code>tela_conferencia.py</code>, <code>tela_decisao.py</code>, <code>telas_de_salvar.py</code>, <code>motor.py</code>, <code>motor_paddleocr.py</code>, <code>motor_na_tela.py</code>, <code>telas_do_motor.py</code>, <code>lembranca_do_motor.py</code>, <code>preferencias.py</code>, <code>arquivo_md.py</code></td><td>O <code>caminho_do_pdf.py</code> e o <code>leitura.py</code> servem aos dois módulos e à IA como motor: as citações da IA são da 004.</td></tr>
+    <tr><td class="curta"><b>003</b></td><td><code>cpf.py</code>, <code>arquivo_texto.py</code>, <code>arquivo_word.py</code>, <code>painel_anonimizar.py</code>, <code>tela_revisao.py</code>, <code>lista_de_achados.py</code>, <code>dupla_conferencia.py</code>, <code>telas_de_salvar_sem_cpf.py</code>, <code>tipos_na_tela.py</code></td><td>No <code>cpf.py</code> e no <code>tela_revisao.py</code>, o que fala da IA é da 004. No <code>painel_anonimizar.py</code>, o que fala do PDF é da 002.</td></tr>
+    <tr><td class="curta"><b>004</b></td><td><code>config_ia.py</code>, <code>rede_da_ia.py</code>, <code>revisao_ia.py</code>, <code>revisao_por_ia_na_tela.py</code>, <code>motor_ia.py</code>, <code>painel_ia.py</code>, <code>pecas_da_ia.py</code>, <code>avisos_da_ia.py</code>, <code>trabalho_da_ia.py</code>, <code>configuracao.py</code></td><td>O <code>painel_ia.py</code> também tem a tela do Tema, da 001. O <code>config_ia.py</code> cita a RN-38 da 002, a do <code>preferencias.ini</code>.</td></tr>
+    <tr><td class="curta"><b>nenhuma</b></td><td><code>leitura_em_segundo_plano.py</code>, <code>linha_que_desce.py</code>, <code>versao.py</code></td><td>Peças sem regra própria.</td></tr>
+  </table></div>
+</div>
 </section>
 <section class="painel" id="arquitetura">
-<div class="secao"><h2>Arquitetura</h2><div class="em-construcao">Em construção.</div></div>
+<div class="secao">
+  <div class="sobretitulo">Stack</div>
+  <h2>Com o que foi <em>feito</em>, e por quê</h2>
+  <p class="descricao">Python 3.12, pela prática de quem manteve o projeto e
+  pelo ecossistema mais maduro para ler PDF, rodar OCR e achar padrão com
+  expressão regular. Cada peça abaixo foi escolhida contra alternativas; o que
+  foi descartado está na coluna da direita, para ninguém refazer a mesma
+  pesquisa.</p>
+  <div class="tabela"><table>
+    <tr><th>Peça</th><th>Escolha</th><th>Descartado</th></tr>
+    <tr><td class="curta"><b>Interface</b></td><td>PySide6 (Qt): a faixa da esquerda e o painel principal.</td><td>C#/.NET, sem fluência de quem mantinha; Electron, mais pesado e com OCR pior.</td></tr>
+    <tr><td class="curta"><b>PDF</b></td><td>PyMuPDF: extrai o texto, mede se há camada de texto e desenha a página como imagem para o OCR.</td><td>—</td></tr>
+    <tr><td class="curta"><b>OCR padrão</b></td><td>Os modelos PP-OCRv6 pequenos do PaddleOCR, rodados pelo RapidOCR 3.10.0 com o onnxruntime 1.31.0, dentro do programa, a 1 ou 2 segundos por página. Medido antes de construir, nas páginas difíceis da massa: o Tesseract deixaria 42 de 60 CPFs sem máscara — pula tabela com grade, mesmo limpa —, e os modelos do PaddleOCR de 1 a 5.</td><td>O PaddleOCR oficial (PaddlePaddle): instalado do jeito normal, não leu nenhuma página no Windows; com a correção, quase um minuto por página, mais de 1 GB, e consulta a internet ao iniciar. O modelo médio: três vezes mais lento, quatro vezes maior, sem ganho firme.</td></tr>
+    <tr><td class="curta"><b>OCR alternativo</b></td><td>Tesseract, via pytesseract, com o pacote de português. O detector de orientação dele endireita a página também para o PaddleOCR.</td><td>—</td></tr>
+    <tr><td class="curta"><b>Word</b></td><td>Sem biblioteca: o <code>.docx</code> é um pacote compactado de XML, aberto com o <code>zipfile</code> e o <code>xml.etree.ElementTree</code>, que já vêm no Python.</td><td>O PyMuPDF, que só abre <code>.docx</code> na versão paga; a python-docx, que não lê caixa de texto, nota nem alteração controlada; o mammoth, que deixa de fora cabeçalho e rodapé; o docx2python, mantido por uma pessoa só; o pandoc, um programa a mais em cada máquina.</td></tr>
+    <tr><td class="curta"><b>CPF</b></td><td>Sem biblioteca: o dígito verificador calculado à mão, em <code>programa/cpf.py</code>.</td><td>—</td></tr>
+    <tr><td class="curta"><b>Rede</b></td><td>O <code>http.client</code> do Python: não segue redirecionamento sozinho e não passa por proxy configurado na máquina — o destino é sempre o que a pessoa viu.</td><td>Uma biblioteca de rede, que seria mais uma coisa para empacotar.</td></tr>
+    <tr><td class="curta"><b>Dados</b></td><td>Sem banco: cada documento é processado sozinho. As escolhas da pessoa ficam num <code>preferencias.ini</code> na pasta da instalação, lido e gravado com o <code>configparser</code>.</td><td>Escrever no <code>.env</code>, que é da TI; a pasta de configurações do usuário (<code>%APPDATA%</code>), que a máquina de desenvolvimento dividiria entre o programa instalado e o de desenvolvimento; o registro do Windows, invisível para quem não programa.</td></tr>
+    <tr><td class="curta"><b>Testes</b></td><td>pytest, com o Qt de verdade.</td><td>—</td></tr>
+    <tr><td class="curta"><b>Distribuição</b></td><td>Instalador do Windows (Inno Setup) sobre a pasta montada pelo PyInstaller, sem exigir Python nas máquinas do núcleo.</td><td>O <code>.exe</code> único, usado até a 0.1.0 ser preparada: ele se desempacota a cada abertura (5 a 10 segundos), e o antivírus desconfia dele.</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="caminho-de-um-documento">
+  <div class="sobretitulo">Do arquivo ao .md</div>
+  <h2>O caminho de um <em>documento</em></h2>
+  <p class="descricao">Todo arquivo citado mora em <code>programa/</code>. O que
+  lê, confere e mascara não sabe que existe uma janela: é isso que deixa cada
+  regra ser provada por teste automático, sem tela.</p>
+  <div class="fluxo">
+    <div class="etapa-fluxo"><div class="nome">1 · O arquivo escolhido</div>
+      <div class="ramos">
+        <div class="ramo"><div class="titulo">PDF</div><div class="texto"><code>documento.py</code> conta as páginas e mede a camada de texto, sem alterar o PDF. <code>caminho_do_pdf.py</code> conduz o resto, nos dois módulos.</div></div>
+        <div class="ramo"><div class="titulo">Word</div><div class="texto"><code>arquivo_word.py</code> abre o pacote e tira o documento impresso, com as tabelas.</div></div>
+        <div class="ramo"><div class="titulo">.md e .txt</div><div class="texto"><code>arquivo_texto.py</code> lê com os acentos certos, nos dois jeitos do Bloco de Notas.</div></div>
+      </div></div>
+    <div class="seta">↓ só o PDF sem camada de texto, ou com ela ignorada</div>
+    <div class="etapa-fluxo"><div class="nome">2 · Ler</div>
+      <div class="ramos">
+        <div class="ramo ambar"><div class="titulo">Página em imagem</div><div class="texto"><code>leitura.py</code> desenha cada página a 300 pontos por polegada, endireita e passa ao motor, numa linha ao lado da janela (<code>leitura_em_segundo_plano.py</code>).</div></div>
+        <div class="ramo ambar"><div class="titulo">O motor</div><div class="texto"><code>motor_paddleocr.py</code>, ou o Tesseract achado pelo <code>motor.py</code>, ou a IA pelo <code>motor_ia.py</code>.</div></div>
+        <div class="ramo ambar"><div class="titulo">Remontar</div><div class="texto"><code>disposicao.py</code> junta as palavras soltas em linhas e tabelas, como estavam na página.</div></div>
+      </div></div>
+    <div class="seta">↓ todo PDF</div>
+    <div class="etapa-fluxo"><div class="nome">3 · Conferir</div>
+      <div class="ramos">
+        <div class="ramo"><div class="titulo">Lado a lado</div><div class="texto"><code>tela_conferencia.py</code>: o original e o texto, que se corrige aqui. Antes dela, a <code>tela_decisao.py</code>, quando havia camada de texto.</div></div>
+      </div></div>
+    <div class="seta">↓ conforme o módulo</div>
+    <div class="etapa-fluxo"><div class="nome">4 · Sair</div>
+      <div class="ramos">
+        <div class="ramo"><div class="titulo">Gerar OCR</div><div class="texto"><code>telas_de_salvar.py</code> e <code>arquivo_md.py</code>: o texto conferido, <b>com os CPFs inteiros</b>.</div></div>
+        <div class="ramo verde"><div class="titulo">Anonimizar</div><div class="texto"><code>cpf.py</code> acha e mascara; <code>tela_revisao.py</code> e <code>lista_de_achados.py</code> mostram; <code>telas_de_salvar_sem_cpf.py</code> e <code>arquivo_md.py</code> gravam o <code> - sem CPF.md</code>.</div></div>
+        <div class="ramo lilas"><div class="titulo">Com a IA ligada</div><div class="texto"><code>revisao_ia.py</code> monta o pedido e confere a resposta; <code>trabalho_da_ia.py</code> o leva ao lado da janela; <code>rede_da_ia.py</code> é quem fala com a rede.</div></div>
+      </div></div>
+  </div>
+</div>
+
+<div class="secao" id="mapa-do-codigo">
+  <div class="sobretitulo">programa/</div>
+  <h2>O mapa dos <em>arquivos</em></h2>
+  <p class="descricao">São 42 arquivos de código e 42 de teste, lado a lado: cada
+  <code>test_*.py</code> está ao lado do que ele prova. Todo arquivo abre com um
+  texto que diz o que ele faz e por que existe separado.</p>
+  <div class="tabela"><table>
+    <tr><th>Camada</th><th>Arquivos</th></tr>
+    <tr><td class="curta"><b>A lógica, sem tela</b></td><td><code>cpf.py</code> (achar, conferir, mascarar), <code>documento.py</code>, <code>leitura.py</code>, <code>disposicao.py</code>, <code>arquivo_texto.py</code>, <code>arquivo_word.py</code>, <code>arquivo_md.py</code>, <code>motor.py</code> (onde está o Tesseract), <code>motor_paddleocr.py</code> (os modelos, e a conferência de que estão aqui), <code>motor_ia.py</code>, <code>revisao_ia.py</code>, <code>rede_da_ia.py</code>, <code>config_ia.py</code>, <code>configuracao.py</code> (a pasta do programa e o <code>.env</code>), <code>preferencias.py</code>, <code>lembranca_do_motor.py</code>, <code>versao.py</code></td></tr>
+    <tr><td class="curta"><b>Ao lado da janela</b></td><td><code>leitura_em_segundo_plano.py</code> (a leitura do OCR) e <code>trabalho_da_ia.py</code> (os pedidos à IA): a janela nunca espera.</td></tr>
+    <tr><td class="curta"><b>A janela e os painéis</b></td><td><code>main.py</code> (a janela, a faixa e o abrir), <code>painel_ocr.py</code>, <code>painel_anonimizar.py</code>, <code>painel_ia.py</code> (as Configurações)</td></tr>
+    <tr><td class="curta"><b>As telas</b></td><td><code>caminho_do_pdf.py</code> (o caminho do PDF, usado pelos dois painéis), <code>tela_decisao.py</code>, <code>tela_conferencia.py</code>, <code>telas_de_salvar.py</code>, <code>tela_revisao.py</code>, <code>lista_de_achados.py</code>, <code>dupla_conferencia.py</code>, <code>telas_de_salvar_sem_cpf.py</code>, <code>revisao_por_ia_na_tela.py</code>, <code>tela_do_tema.py</code>, <code>telas_do_motor.py</code>, <code>motor_na_tela.py</code></td></tr>
+    <tr><td class="curta"><b>Peças comuns</b></td><td><code>estilo.py</code> (as cores e medidas), <code>cabecalho_da_tela.py</code>, <code>desenhos_da_faixa.py</code> (os ícones, desenhados pelo programa), <code>linha_que_desce.py</code>, <code>tipos_na_tela.py</code> (o nome e a cor de cada tipo de número), <code>pecas_da_ia.py</code>, <code>avisos_da_ia.py</code></td></tr>
+  </table></div>
+  <div class="destaque info"><span class="icone">ℹ</span>
+    <div><p><b>O caminho do PDF é uma peça só, usada pelos dois módulos.</b> Ele
+    morava dentro do painel do OCR, e o Anonimizar precisava dele inteiro.
+    Copiar deixaria duas cópias de umas 600 linhas, que divergiriam na primeira
+    correção — e quase divergiram, quando a mesma correção precisou ser feita
+    nos dois. Por isso ele foi tirado para o <code>programa/caminho_do_pdf.py</code>
+    antes de qualquer tela nova.</p></div></div>
+</div>
+
+<div class="secao" id="o-que-fica-gravado">
+  <div class="sobretitulo">Na pasta da instalação</div>
+  <h2>O <code>.env</code> e o <em>preferencias.ini</em> por dentro</h2>
+  <ul>
+    <li><b>Os dois moram ao lado do programa</b>, na pasta que o
+    <code>configuracao.pasta_do_programa()</code> devolve: a do <code>.exe</code>,
+    instalado; a raiz do projeto, no desenvolvimento.</li>
+    <li><b>O <code>.env</code> é lido na mão</b>, linha <code>NOME=valor</code>,
+    sem biblioteca. Quando o programa grava o token, ele mantém as outras linhas
+    e a codificação em que a TI escreveu o arquivo.</li>
+    <li><b>Toda gravação passa por um provisório</b>
+    (<code>.env.*.gravando</code>, <code>preferencias.ini.*.gravando</code>) e
+    só depois toma o lugar do arquivo. Gravação cortada no meio não estraga o
+    que havia. A troca insiste cinco vezes num quarto de segundo, porque o
+    antivírus do Windows abre o arquivo por um instante para examiná-lo, e
+    nesse instante a troca é recusada.</li>
+    <li><b>Lembrar nunca atrapalha usar.</b> Não deu para ler ou gravar o
+    <code>preferencias.ini</code>, o programa segue com o padrão.</li>
+    <li><b>Atualizar mantém os dois; desinstalar apaga os dois</b> — o
+    <code>.env</code> inteiro, com o token e a pasta do Tesseract.</li>
+  </ul>
+</div>
+
+<div class="secao" id="o-tema">
+  <div class="sobretitulo">programa/estilo.py</div>
+  <h2>As cores e o <em>tema</em></h2>
+  <p>Toda cor de tela mora no <code>programa/estilo.py</code>, com nome de papel
+  (fundo, texto, destaque, alerta), num conjunto para o escuro e outro para o
+  claro. Os valores e o motivo de cada um estão em
+  <code>mockups/sistema-de-design.md</code>. O tema é escolhido antes de a
+  janela ser montada, pelo <code>estilo.usar_tema()</code>, e cada peça lê a cor
+  na hora em que nasce: é por isso que o tema novo só vale ao reabrir.</p>
+  <ul>
+    <li><b>Leia <code>estilo.COR_...</code> na hora de montar a peça.</b> Um
+    <code>from estilo import COR_...</code>, ou uma cor guardada numa variável
+    fora de função, fica presa no tema de antes, porque é lida quando o Python
+    carrega o arquivo. Quem precisa guardar uma cor guarda o nome do papel.</li>
+    <li><b>Um teste procura cor escrita fora do <code>estilo.py</code></b>
+    (<code>programa/test_tema.py</code>), inclusive dentro das folhas de estilo
+    montadas com f-string, e outro monta a janela no claro e procura valor do
+    escuro.</li>
+    <li>No claro, o programa pede ao Windows as peças que ele desenha sozinho
+    (barra de rolagem, menu do botão direito) no modo claro. Por isso o
+    <code>requirements.txt</code> pede o PySide6 6.8 ou mais novo.</li>
+  </ul>
+</div>
+
+<div class="secao" id="a-rede">
+  <div class="sobretitulo">programa/rede_da_ia.py</div>
+  <h2>A única peça que fala com a <em>rede</em></h2>
+  <ul>
+    <li><b>Só é carregada com a IA ligada.</b> Desligada, o programa nem abre o
+    arquivo, e um teste prova isso.</li>
+    <li><b>Não baixa nada e não conhece endereço de fora.</b> O único endereço
+    escrito nela é o da própria máquina, o do LM Studio
+    (<code>127.0.0.1</code>, na porta 1234 de costume). O do servidor é o que a
+    pessoa digitou.</li>
+    <li><b>O pedido corre numa linha à parte</b>, e quem pediu vai embora ao
+    cancelar. No Windows, fechar a conexão de outra linha não acorda quem espera
+    a resposta: cancelar levava o tempo todo que o servidor levasse.</li>
+    <li><b>Os testes nunca falam com um servidor de verdade.</b> Usam o servidor
+    de mentira de <code>abrir/servidor_de_ia_de_mentira.py</code>, numa porta
+    livre da própria máquina, e o <code>programa/test_rede_da_ia.py</code>
+    falha se outro arquivo do programa ganhar sinal de rede.</li>
+  </ul>
+</div>
+
+<div class="secao" id="ao-lado-da-janela">
+  <div class="sobretitulo">Linhas de trabalho</div>
+  <h2>O que roda ao lado da <em>janela</em></h2>
+  <p>A leitura do OCR e os pedidos à IA rodam numa <code>QThread</code>, para a
+  janela não congelar: doze páginas levam perto de vinte segundos, e um modelo
+  local pode levar minutos. Ao fechar, o <code>closeEvent</code> da janela
+  pergunta antes se há revisão não salva, pede o encerramento de cada painel e
+  espera. Sem isso, fechar no meio de uma leitura fazia o Windows mostrar "o
+  programa parou de funcionar" — o que assusta, e deixa a dúvida de se o
+  documento foi mexido (nunca é).</p>
+</div>
+
+<div class="secao" id="licencas">
+  <div class="sobretitulo">Antes de levar o programa para fora</div>
+  <h2><em>Licenças</em></h2>
+  <div class="tabela"><table>
+    <tr><th>Peça</th><th>Licença</th><th>Observação</th></tr>
+    <tr><td class="curta"><b>PyMuPDF</b></td><td>AGPL-3.0</td><td><b>Serve para uso interno da UFSC.</b> Se um dia o programa for distribuído fora da universidade, a licença precisa ser conferida antes: a AGPL pede o código aberto de quem a distribui.</td></tr>
+    <tr><td class="curta"><b>PySide6 (Qt)</b></td><td>LGPL-3.0</td><td>—</td></tr>
+    <tr><td class="curta"><b>RapidOCR e os modelos do PaddleOCR</b></td><td>Apache-2.0</td><td>—</td></tr>
+    <tr><td class="curta"><b>onnxruntime</b></td><td>MIT</td><td>—</td></tr>
+    <tr><td class="curta"><b>Tesseract e pytesseract</b></td><td>Apache-2.0</td><td>O instalador do Tesseract é de terceiros e vai dentro do nosso.</td></tr>
+    <tr><td class="curta"><b>PyInstaller e Inno Setup</b></td><td>as próprias</td><td>Só montam o programa; o PyInstaller permite distribuir o que ele monta.</td></tr>
+  </table></div>
+</div>
 </section>
 <section class="painel" id="testes">
 <div class="secao"><h2>Testes</h2><div class="em-construcao">Em construção.</div></div>

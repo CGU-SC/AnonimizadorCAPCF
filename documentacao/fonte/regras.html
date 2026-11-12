@@ -1,0 +1,111 @@
+<div class="secao">
+  <div class="sobretitulo">Não dependem de spec</div>
+  <h2>As regras <em>duras</em></h2>
+  <p class="descricao">Quebrar uma destas é o defeito que não se desfaz. Valem
+  antes de qualquer outra regra e de qualquer pedido de mudança: um pedido que
+  bata numa delas volta para conversa antes de virar código.</p>
+  <div class="tabela"><table>
+    <tr><th>Regra</th><th>O que quer dizer no código</th></tr>
+    <tr><td><b>Tarja nunca substitui remoção</b></td><td>Mascarar é reescrever o texto. Nada desenhado por cima que deixe o número original por baixo, recuperável por quem copiar o texto. Por isso a saída é <code>.md</code>, e não o PDF ou o Word com uma faixa preta.</td></tr>
+    <tr><td><b>Nenhum OCR nem IA fora da universidade</b></td><td>Nenhum endereço de fora escrito no código, e nada é baixado. Só o <code>programa/rede_da_ia.py</code> fala com a rede, só com a IA ligada, e o <code>programa/test_rede_da_ia.py</code> falha se outro arquivo do programa ganhar sinal de rede.</td></tr>
+    <tr><td><b>Segredo só no <code>.env</code></b></td><td>Nunca no código nem no histórico. O token do servidor de IA é a única linha que o programa grava nele, e depois de salvo ele nunca volta à tela.</td></tr>
+    <tr><td><b>Documento de pessoa nunca no repositório</b></td><td>A massa de teste é inventada, e o <code>programa/test_cpf.py</code> falha se aparecer em <code>dados-exemplo/</code> um número que passe na conta sem ser de dígitos repetidos.</td></tr>
+    <tr><td><b>Desenvolvimento e produção não se misturam</b></td><td>Desenvolvimento é a máquina de quem mantém, processando só a massa. Produção é a instalação nas máquinas do núcleo, com documento de trabalho. Cada instalação tem o próprio <code>.env</code> e o próprio <code>preferencias.ini</code>; não existe configuração compartilhada.</td></tr>
+  </table></div>
+  <div class="destaque cuidado"><span class="icone">⚠</span>
+    <div><p><b>O servidor de IA é digitado por quem usa, e não é bloqueado.</b> O
+    endereço de cada instituição varia, e por isso o programa não tem lista
+    fechada: o que não for reconhecido como da rede interna abre um aviso de
+    risco, com o botão que não envia já escolhido. O teste prova o aviso, e não
+    um bloqueio. O texto vai com os CPFs inteiros: um servidor dentro da UFSC
+    pode guardá-lo; o que não pode é ele ir para uma nuvem pública.</p></div></div>
+</div>
+
+<div class="secao" id="rn-por-spec">
+  <div class="sobretitulo">Specs 001 a 004</div>
+  <h2>Como achar uma <em>RN</em></h2>
+  <p class="descricao">O detalhe de cada regra, com os critérios de aceite, está
+  nas specs, em <code>especificacoes/specs/</code>. Esta aba resume e diz onde
+  procurar; a regra inteira mora só na spec, para não haver duas versões dela.</p>
+  <div class="destaque info"><span class="icone">ℹ</span>
+    <div><p><b>Um "RN" sozinho não diz de qual spec ele é.</b> Cada spec numera as
+    regras dela a partir do 1 — há uma RN-30 em cada uma das quatro —, e o código
+    quase sempre cita só o número. Valem duas pistas: a spec da casa do arquivo
+    (a tabela do fim desta aba) e o assunto do comentário. No mesmo
+    <code>programa/cpf.py</code>, a RN-6 é a máscara, da spec 003, e a RN-30 é o
+    número que a IA apontou, da spec 004.</p>
+    <p><b>Comentário novo cita com a spec:</b> <code>(RN-30 da spec 004)</code>.</p></div></div>
+  <div class="tabela"><table>
+    <tr><th>Spec</th><th>Assunto</th><th>RN</th><th>Emendas</th></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/001-interface-da-janela.md">001</a></td><td>A janela, a faixa da esquerda, o tema e as Configurações</td><td class="curta">1 a 31</td><td>28/10, 03/11 e 05/11/2026</td></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/002-modulo-de-ocr.md">002</a></td><td>O Gerar OCR, os motores e o que o programa lembra</td><td class="curta">1 a 42</td><td>18/10 e 28/10/2026, e a do tema</td></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/003-anonimizador-de-cpf.md">003</a></td><td>O Anonimizar: achar, mascarar, revisar e salvar; o Word</td><td class="curta">1 a 30</td><td>dez, de 14/09 a outubro de 2026, listadas no alto da spec</td></tr>
+    <tr><td class="curta"><a href="../especificacoes/specs/004-revisao-por-ia-local.md">004</a></td><td>A IA local: configurar, a revisão e a IA como motor</td><td class="curta">1 a 70</td><td>acréscimos de 01 a 03/11/2026; a RN-66 foi retirada</td></tr>
+  </table></div>
+  <p>Cada spec tem também a versão ilustrada em <code>mockups/specs/</code>, com
+  os fluxos e os estados desenhados: é o jeito mais rápido de entender uma spec
+  antes de lê-la.</p>
+</div>
+
+<div class="secao" id="rn-por-assunto">
+  <div class="sobretitulo">Por assunto</div>
+  <h2>O que as regras <em>dizem</em></h2>
+
+  <h3>A janela e o tema — spec 001</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>O menu</b></td><td>A faixa sempre visível, um item marcado por vez; clicar no marcado volta ao painel vazio.</td><td class="curta">1 a 3</td></tr>
+    <tr><td class="curta"><b>O tamanho da janela</b></td><td>Maximizada no primeiro uso; depois, o tamanho e o maximizado lembrados, sempre no meio da tela principal, e cabendo nela.</td><td class="curta">4 a 8</td></tr>
+    <tr><td class="curta"><b>A faixa da esquerda</b></td><td>O símbolo, o nome e a versão no cabeçalho, e a versão só ali; um ícone por item, na cor do texto dele; o marcado com fundo azul fraco e filete. O título de cada tela leva o ícone do módulo, ou o da opção do submenu.</td><td class="curta">9 a 15 e 31</td></tr>
+    <tr><td class="curta"><b>O tema</b></td><td>Escuro, o padrão, e claro. A janela nasce com um só, e o novo vale ao reabrir; "Reabrir agora" pergunta antes se jogaria trabalho fora. No claro, toda letra com contraste de pelo menos 4,5 para 1, com duas exceções registradas. As marcas da revisão mantêm o sentido nos dois. <b>Toda cor de tela vem do tema</b>, e um teste procura cor escrita fora do <code>programa/estilo.py</code>.</td><td class="curta">16 a 30</td></tr>
+  </table></div>
+
+  <h3>Ler o PDF — spec 002</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>O caminho</b></td><td>Um documento por vez; nada gravado antes de a pessoa escolher salvar. A camada de texto é verificada de verdade, e o programa nunca decide sozinho se ela presta. Sem camada, cada página vira imagem a 300 pontos por polegada, endireitada antes de ler. O texto fica separado por página, e a tabela sai como tabela.</td><td class="curta">1 a 10</td></tr>
+    <tr><td class="curta"><b>A conferência e o salvar</b></td><td>Nenhum aviso do programa entra no arquivo. A conferência é obrigatória, e é ali que o texto se corrige. O aviso do salvar diz que o arquivo sai com os CPFs inteiros. O PDF de origem nunca é mexido, e o módulo não trata CPF.</td><td class="curta">11 a 18</td></tr>
+    <tr><td class="curta"><b>O motor faltando</b></td><td>O programa procura o Tesseract ao abrir o módulo e nunca baixa nem instala nada sozinho: o "Instalar agora" só abre o instalador que a TI deixou na pasta.</td><td class="curta">19 e 20</td></tr>
+    <tr><td class="curta"><b>Na conferência</b></td><td>O item da IA local aparece apagado até a chave dela ser ligada. Nada do trabalho é guardado. A página tem zoom de 50% a 400%, e a letra do texto lido, de 10 a 22 pixels; nenhum dos dois muda o texto.</td><td class="curta">21 a 24</td></tr>
+    <tr><td class="curta"><b>A escolha do motor</b></td><td>PaddleOCR primeiro e já marcado, Tesseract como alternativa, nos dois módulos. O marcado é o que lê, e a conferência diz qual leu. O detector de orientação do Tesseract endireita a página também para o PaddleOCR. Faltando um, a linha dele diz o quê.</td><td class="curta">25 a 35</td></tr>
+    <tr><td class="curta"><b>O que o programa lembra</b></td><td>O motor de cada módulo, o tema e a configuração da IA, no <code>preferencias.ini</code>. O motor lembrado que falta passa a ser lembrado como o outro. Lembrar nunca atrapalha usar: falhou a gravação, o programa segue. Nada do trabalho é lembrado. Desinstalar apaga o arquivo; atualizar o mantém.</td><td class="curta">36 a 42</td></tr>
+  </table></div>
+
+  <h3>Achar e mascarar o CPF — spec 003</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>Que número conta</b></td><td>Os quatro formatos (<code>123.456.789-10</code>, <code>123456789-10</code>, <code>12345678910</code>, <code>123.456.789/10</code>) e a conta do dígito verificador, feita pelo próprio programa. O que passa é CPF válido; o que falha é suspeito. O quase CPF (letra parecida com dígito, espaços, número partido em duas linhas) é sempre suspeito, e se passar na conta depois de corrigido leva "válido se corrigido". O sem o zero da frente só conta se passar na conta. Número grudado num número maior — CNPJ, processo, boleto — fica inteiro.</td><td class="curta">1 a 4</td></tr>
+    <tr><td class="curta"><b>A máscara</b></td><td>Tudo o que foi achado é mascarado, suspeito inclusive: o erro fica do lado seguro. Saem as 3 primeiras e as 2 últimas posições, com os separadores; a barra vira traço; o comprimento não muda. O sem o zero da frente ganha os zeros de volta, e a coluna da tabela é compensada.</td><td class="curta">5 e 6</td></tr>
+    <tr><td class="curta"><b>A revisão</b></td><td>Aparece sempre. O texto não se edita. Mascarar à mão vale para o trecho marcado. Liberar um suspeito é um clique; um número que passa na conta pede a dupla conferência, com "manter a máscara" já escolhido. Ao salvar, os que passam na conta e foram liberados aparecem antes de gravar.</td><td class="curta">7 a 11</td></tr>
+    <tr><td class="curta"><b>O arquivo de saída</b></td><td>O texto e mais nada, nenhuma linha escrita pelo programa. O caminho vem preenchido, com <code> - sem CPF.md</code>, e o programa pergunta antes de escrever por cima. O original nunca é alterado nem apagado.</td><td class="curta">12 a 14</td></tr>
+    <tr><td class="curta"><b>Os dois módulos juntos</b></td><td>O PDF pelo Anonimizar passa pelo caminho inteiro do Gerar OCR, conferência inclusive. O "Seguir para Anonimizar" leva o texto conferido sem gravar arquivo. O Gerar OCR não tem nada de CPF.</td><td class="curta">15 a 18</td></tr>
+    <tr><td class="curta"><b>Os limites</b></td><td>Um arquivo por vez, nada do trabalho guardado. Nenhuma rede, salvo a peça da IA. O <code>.txt</code> e o <code>.md</code> lidos com os acentos certos nos dois jeitos do Bloco de Notas. A massa nunca tem CPF que possa ser de alguém.</td><td class="curta">19 a 22</td></tr>
+    <tr><td class="curta"><b>O documento do Word</b></td><td>Só o <code>.docx</code>. Vai o documento impresso, na ordem dele, com as alterações aceitas; imagem não vai; tabela vira tabela; títulos e listas ficam, o resto da formatação não. A faixa diz o que ficou de fora. O Word que não abre — estragado, protegido, vazio, grande demais, <code>.doc</code> renomeado — dá uma frase e volta à escolha.</td><td class="curta">23 a 30</td></tr>
+  </table></div>
+
+  <h3>A IA local — spec 004</h3>
+  <div class="tabela"><table>
+    <tr><th>Assunto</th><th>O que vale</th><th>RN</th></tr>
+    <tr><td class="curta"><b>Configurar</b></td><td>Um destino ligado por vez, LM Studio ou servidor interno, e só conta como configurado depois de um teste que passou — teste que nunca envia documento. O LM Studio é sempre esta máquina, e só a porta muda. O token é digitado no programa, vai para o <code>.env</code>, nunca volta à tela, e atualizar a versão o mantém.</td><td class="curta">1 a 14, 49 a 55, 58, 59, 64 e 65</td></tr>
+    <tr><td class="curta"><b>O endereço do servidor</b></td><td>Nenhum endereço de fora no programa, e nenhum bloqueado. Passam sem aviso a própria máquina, os nomes em <code>.ufsc.br</code>, o que der em número interno e o que estiver em <code>IA_ENDERECOS_LOCAIS</code>; o resto abre o aviso de risco. Número interno não prova que é a UFSC. Redirecionamento não é seguido.</td><td class="curta">15 a 23</td></tr>
+    <tr><td class="curta"><b>A revisão</b></td><td>Só liga com um destino configurado. A revisora vê só o texto, e a conferência não muda. <b>A IA nunca escreve o texto</b>: aponta números, e o programa mascara. Cada apontamento diz de onde veio, e nada deles entra no <code>.md</code>. A IA só comenta um número da lista quando discorda; o liberado que ela acha que é CPF sobe para "Revisar liberação". Falha no meio guarda o que chegou, e a parte que falhou pode ser pulada.</td><td class="curta">24 a 37, 46 a 48, 56, 57, 60 a 63, 67 a 70</td></tr>
+    <tr><td class="curta"><b>A IA como motor</b></td><td>Atrás de uma chave, com a ressalva datada. A conferência continua obrigatória, e a marca é lembrada por módulo.</td><td class="curta">38 a 42</td></tr>
+    <tr><td class="curta"><b>A rede e os testes</b></td><td>Sem a IA ligada, o programa é o de sempre. Um arquivo só fala com a rede. Os testes nunca dependem de um LM Studio ou servidor de verdade: usam o servidor de mentira de <code>abrir/servidor_de_ia_de_mentira.py</code>.</td><td class="curta">43 a 45</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="rn-no-codigo">
+  <div class="sobretitulo">No código</div>
+  <h2>A spec da casa de cada <em>arquivo</em></h2>
+  <p class="descricao">A RN citada sem spec segue a spec da casa do arquivo; a
+  exceção é o comentário que fala de outro assunto, e aí vale a spec desse
+  assunto. Os arquivos estão todos em <code>programa/</code>.</p>
+  <div class="tabela"><table>
+    <tr><th>Spec da casa</th><th>Arquivos</th><th>Onde cuidar</th></tr>
+    <tr><td class="curta"><b>001</b></td><td><code>main.py</code>, <code>estilo.py</code>, <code>desenhos_da_faixa.py</code>, <code>cabecalho_da_tela.py</code>, <code>tela_do_tema.py</code></td><td>O <code>main.py</code> cita as quatro specs, quase sempre dizendo qual. O <code>tela_do_tema.py</code> cita a RN-42 da 002, a do tema lembrado.</td></tr>
+    <tr><td class="curta"><b>002</b></td><td><code>documento.py</code>, <code>leitura.py</code>, <code>disposicao.py</code>, <code>caminho_do_pdf.py</code>, <code>painel_ocr.py</code>, <code>tela_conferencia.py</code>, <code>tela_decisao.py</code>, <code>telas_de_salvar.py</code>, <code>motor.py</code>, <code>motor_paddleocr.py</code>, <code>motor_na_tela.py</code>, <code>telas_do_motor.py</code>, <code>lembranca_do_motor.py</code>, <code>preferencias.py</code>, <code>arquivo_md.py</code></td><td>O <code>caminho_do_pdf.py</code> e o <code>leitura.py</code> servem aos dois módulos e à IA como motor: as citações da IA são da 004.</td></tr>
+    <tr><td class="curta"><b>003</b></td><td><code>cpf.py</code>, <code>arquivo_texto.py</code>, <code>arquivo_word.py</code>, <code>painel_anonimizar.py</code>, <code>tela_revisao.py</code>, <code>lista_de_achados.py</code>, <code>dupla_conferencia.py</code>, <code>telas_de_salvar_sem_cpf.py</code>, <code>tipos_na_tela.py</code></td><td>No <code>cpf.py</code> e no <code>tela_revisao.py</code>, o que fala da IA é da 004. No <code>painel_anonimizar.py</code>, o que fala do PDF é da 002.</td></tr>
+    <tr><td class="curta"><b>004</b></td><td><code>config_ia.py</code>, <code>rede_da_ia.py</code>, <code>revisao_ia.py</code>, <code>revisao_por_ia_na_tela.py</code>, <code>motor_ia.py</code>, <code>painel_ia.py</code>, <code>pecas_da_ia.py</code>, <code>avisos_da_ia.py</code>, <code>trabalho_da_ia.py</code>, <code>configuracao.py</code></td><td>O <code>painel_ia.py</code> também tem a tela do Tema, da 001. O <code>config_ia.py</code> cita a RN-38 da 002, a do <code>preferencias.ini</code>.</td></tr>
+    <tr><td class="curta"><b>nenhuma</b></td><td><code>leitura_em_segundo_plano.py</code>, <code>linha_que_desce.py</code>, <code>versao.py</code></td><td>Peças sem regra própria.</td></tr>
+  </table></div>
+</div>

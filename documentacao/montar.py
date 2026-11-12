@@ -186,7 +186,10 @@ def conferir_caminhos(partes, erros):
             citados.add(href)
         for trecho in re.findall(r"<code>([^<]+)</code>", texto):
             caminho = html.unescape(trecho).strip().replace("\\", "/").rstrip(".,;:")
-            if re.fullmatch(r"[\w.\-]+(/[\w.\-]*)+", caminho) or caminho in ENTREGUE:
+            # Só com letra: um CPF com barra (123.456.789/10) tem cara de caminho.
+            parece_caminho = (re.fullmatch(r"[\w.\-]+(/[\w.\-]*)+", caminho)
+                              and re.search(r"[a-zA-Z]", caminho))
+            if parece_caminho or caminho in ENTREGUE:
                 citados.add(caminho)
     for caminho in sorted(citados):
         primeiro = caminho.split("/")[0]
