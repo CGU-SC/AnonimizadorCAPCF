@@ -252,7 +252,6 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
     Antes de construir, a spec 002 precisa dizer se pode: o `preferencias.ini` guarda
     só escolhas da pessoa, e nada do trabalho, e a pasta diz onde ficam os documentos,
     mesmo sem dizer o que eles têm;
-  - **"Ler as 1 página"**: o botão de ler um PDF de uma página sai com o plural errado;
   - **duas frases do "Como instalar" escritas sem teste**: o plano B de copiar o modelo
     de `.lmstudio\models\lmstudio-community` de outra máquina, e "Windows 10 ou 11" (a
     0.2.0 só rodou no Windows 11).
