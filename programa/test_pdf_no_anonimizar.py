@@ -235,8 +235,8 @@ def test_fechar_a_janela_para_a_leitura_do_anonimizar(aplicacao):
     """Revisão da etapa 7: só a leitura do Gerar OCR parava ao fechar.
 
     A do Anonimizar sobrevivia à janela, e o Windows mostrava a caixa de "o
-    programa parou de funcionar" - o defeito que o CLAUDE.md registra como
-    resolvido em 10/09/2026, de volta pela porta nova.
+    programa parou de funcionar" - o defeito resolvido em 10/09/2026, e
+    registrado na aba Armadilhas da documentação, de volta pela porta nova.
     """
     from PySide6.QtGui import QCloseEvent
 

@@ -191,7 +191,7 @@ não perdido no pé.
 - O item marcado deixa de ser um bloco azul cheio e passa a ter um fundo azul
   fraco com um filete à esquerda, em todos os itens da faixa, inclusive os do
   submenu da IA.
-- O `CLAUDE.md` deixa de dizer que a versão fica "no pé da faixa", e a lista da
+- As anotações de trabalho do projeto deixam de dizer que a versão fica "no pé da faixa", e a lista da
   próxima entrega ganha os roteiros com a faixa nova.
 
 ### Fora de escopo
@@ -424,7 +424,7 @@ programa.
   Anonimizar, do caminho do PDF, da conferência, da revisão, de salvar, de
   Configurações e as perguntas e avisos dentro do painel, com o contraste
   conferido.
-- No `CLAUDE.md`: a escolha do tema entra na linha do `preferencias.ini`, o menu
+- Nas anotações de trabalho do projeto: a escolha do tema entra na linha do `preferencias.ini`, o menu
   passa a se chamar "Configurações", e a lista da próxima entrega ganha a linha
   do tema nos roteiros: onde se escolhe e que ele vale ao reabrir.
 

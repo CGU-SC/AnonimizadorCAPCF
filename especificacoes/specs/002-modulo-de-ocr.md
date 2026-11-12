@@ -91,7 +91,7 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
 - **A leitura por IA local.** O item aparece na tela desligado. Fazer ele
   funcionar — conexão com o LM Studio ou com o servidor da TI, endereço, token,
   teste de conexão — é funcionalidade própria, item novo no backlog, com spec
-  própria e decisão técnica anterior pela `skill-03-arquiteto-de-solucao`.
+  própria e decisão técnica tomada antes dela.
 - **Separar um PDF que traz vários documentos dentro.** Entra um, sai um.
 - **Processar vários PDFs de uma vez.** Um documento por vez.
 - **Saída em qualquer formato que não seja `.md`** — nada de XLSX, DOCX ou PDF.
@@ -101,8 +101,8 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
 - **Reconhecer letra manuscrita.** O Tesseract não faz isso de forma confiável,
   e prometer seria enganar quem usa.
 - **Empacotar o instalador do Tesseract junto do programa.** A spec exige que o
-  instalador esteja disponível na máquina; como ele chega lá é decisão da
-  `skill-11-gerente-de-entrega`, no dia da entrega.
+  instalador esteja disponível na máquina; como ele chega lá é decidido no
+  dia da entrega.
 - **Girar a página na tela de conferência**, e qualquer edição do documento
   original. O programa nunca escreve no PDF que recebeu (RN-17).
 - **Link para baixar o Tesseract dentro do programa.** O módulo não tem nenhum
@@ -491,8 +491,8 @@ mesmas páginas, o Tesseract pulou tabelas com grade inteiras, mesmo limpas.
 - **Lembrar as escolhas da pessoa entre um uso e outro** — item novo do backlog,
   ligado à funcionalidade 4, que parou na mesma pergunta (onde guardar, e a
   emenda da RN-22).
-- **A entrega da versão nova** e os roteiros "Como instalar" e "Como usar" — da
-  `skill-11-gerente-de-entrega`, num prompt próprio.
+- **A entrega da versão nova** e os roteiros "Como instalar" e "Como usar" —
+  trabalho da entrega, feito à parte.
 
 ### Premissas da emenda
 

@@ -87,8 +87,8 @@ def test_o_aviso_de_nenhum_cpf_aparece_e_o_texto_fica_como_veio(aplicacao):
 def test_os_avisos_da_revisao_cabem_inteiros(aplicacao):
     """Regressão da revisão da etapa 3: o aviso reservava 32 e precisava de 34.
 
-    É a classe de defeito que o CLAUDE.md registra: a última linha some para
-    fora da borda sem nada acusar. Este teste percorre as frases de largura fixa
+    É a classe de defeito da aba Armadilhas da documentação: a última linha
+    some para fora da borda sem nada acusar. Este teste percorre as frases de largura fixa
     da revisão e falha se alguma reservar menos do que precisa.
     """
     from lista_de_achados import LARGURA, _nada_para_olhar

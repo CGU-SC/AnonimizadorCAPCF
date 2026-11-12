@@ -271,6 +271,15 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   já faz. O caminho é uma mudança na spec 003 (e, para o corte, na 004), com a
   `skill-02` e a `skill-05`, medindo antes de mudar.
 
+- **O que só vale nesta máquina mora no `.git/info/`, e não no histórico**
+  (documentação de manutenção, 12/11/2026). O `.git/info/exclude` guarda as linhas
+  que saíram do `.gitignore`: o pacote de skills e o mapa dele (material de curso,
+  **não distribuir**), a pasta `histórico Git/`, `Exemplos/` e `fora-do-historico/`.
+  O `.git/info/attributes` tira o `CLAUDE.md` e a `.claude/` do `git archive`, que
+  é como a pasta do código é montada para a UFSC. Nenhum dos dois é versionado:
+  **num clone em outra máquina, recrie os dois antes do primeiro commit**, ou as
+  skills entram no histórico.
+
 - **Quando o backlog terminar, organizar a documentação num índice só**
   (pedido da solicitante em 22/10/2026, que achou a documentação "muito
   bagunçada"). Hoje ela está espalhada em `especificacoes/`, `mockups/`

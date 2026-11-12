@@ -8,8 +8,8 @@ quem a está usando — e é só aí que os dois módulos se separam: o "Gerar O
 oferece as duas saídas, e o "Anonimizar" vai direto para a revisão.
 
 Ela nasceu em 18/09/2026, na etapa 7 do Anonimizador, tirada de dentro do
-`painel_ocr.py`. A decisão de extrair em vez de copiar está registrada no
-CLAUDE.md: copiada, seriam duas cópias de umas seiscentas linhas, que divergem
+`painel_ocr.py`. Extrair em vez de copiar foi decidido antes de construir a
+etapa: copiada, seriam duas cópias de umas seiscentas linhas, que divergem
 na primeira correção - foi o que quase aconteceu no mesmo dia, quando a janela
 do Windows precisou do mesmo conserto nos dois módulos.
 
