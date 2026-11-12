@@ -1,0 +1,128 @@
+<div class="secao">
+  <div class="sobretitulo">pytest</div>
+  <h2>Os <em>testes</em></h2>
+  <p class="descricao">São 1.072 testes, em 42 arquivos <code>programa/test_*.py</code>,
+  cada um ao lado do que ele prova. Eles sobem o Qt de verdade, sem mostrar
+  janela, e leem a massa de <code>dados-exemplo/</code>. A lista inteira roda
+  antes de toda entrega: o gerador para se algum falhar.</p>
+  <div class="codigo"><div class="cab">PowerShell — a lista inteira, ou um arquivo só</div><pre>.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m pytest programa\test_cpf.py</pre></div>
+  <h3>O que o <code>programa/conftest.py</code> garante a todos</h3>
+  <div class="tabela"><table>
+    <tr><th>Preparo</th><th>Por quê</th></tr>
+    <tr><td class="curta"><b>O Qt sobe uma vez só</b></td><td>Uma tela só pode ser criada com o Qt de pé, e ele precisa ficar de pé até o fim da lista.</td></tr>
+    <tr><td class="curta"><b>As telas são desmontadas depois de cada teste</b></td><td>Tela deixada para trás era desmontada quando o Python fechava, com o Qt já desligado: <b>todos os testes passavam e o comando devolvia erro</b>, sem mensagem nenhuma.</td></tr>
+    <tr><td class="curta"><b>Um <code>preferencias.ini</code> por teste</b></td><td>Numa pasta provisória. Sem isso, um teste que marca o Tesseract deixaria o seguinte começando com ele, e gravaria no arquivo desta máquina.</td></tr>
+    <tr><td class="curta"><b>O <code>.env</code> desta máquina fica intocado</b></td><td>É nele que mora o token. Nenhum teste o lê nem o grava.</td></tr>
+    <tr><td class="curta"><b>O tema volta ao escuro</b></td><td>O tema vale para o programa inteiro: esquecido no claro, ele faria falhar os testes seguintes, longe de quem causou.</td></tr>
+    <tr><td class="curta"><b>Caixa sem resposta falha na hora</b></td><td>Uma caixa de aviso esperando resposta travaria a lista inteira, sem dizer nada.</td></tr>
+    <tr><td class="curta"><b>O servidor de IA de mentira</b></td><td>Os testes da IA nunca falam com um LM Studio ou um servidor de verdade: usam o de <code>abrir/servidor_de_ia_de_mentira.py</code>, numa porta livre da própria máquina.</td></tr>
+  </table></div>
+  <h3>Os testes de guarda</h3>
+  <p>Alguns testes não provam uma funcionalidade: vigiam uma regra dura, e são
+  os que nunca se apagam para "fazer passar".</p>
+  <div class="tabela"><table>
+    <tr><th>Teste</th><th>Falha quando</th></tr>
+    <tr><td class="mono">test_cpf.py</td><td>aparece em <code>dados-exemplo/</code>, inclusive dentro dos <code>.docx</code>, um número que passa na conta sem ser de dígitos repetidos.</td></tr>
+    <tr><td class="mono">test_rede_da_ia.py</td><td>outro arquivo do programa ganha sinal de rede; o arquivo da rede conhece endereço de fora ou baixa algo; o programa carrega a peça da rede com a IA desligada.</td></tr>
+    <tr><td class="mono">test_leitura.py</td><td>a leitura fala com alguém fora da máquina, ou altera o PDF de origem.</td></tr>
+    <tr><td class="mono">test_tema.py</td><td>aparece cor escrita fora do <code>estilo.py</code>, ou a janela montada no claro mostra valor do escuro.</td></tr>
+  </table></div>
+  <div class="destaque cuidado"><span class="icone">⚠</span>
+    <div><p><b>Não use <code>monkeypatch.undo()</code> dentro de um teste.</b> Ele desfaz
+    tudo, inclusive o isolamento do <code>conftest.py</code>, e o teste passa a
+    gravar no <code>preferencias.ini</code> de verdade, sem nada acusar. Para
+    desfazer uma troca só, ponha de volta o valor guardado com outro
+    <code>monkeypatch.setattr</code>.</p></div></div>
+</div>
+
+<div class="secao" id="a-massa">
+  <div class="sobretitulo">dados-exemplo/</div>
+  <h2>A <em>massa</em></h2>
+  <p class="descricao">A massa de <code>dados-exemplo/</code> é inventada e gerada
+  por script. O <code>dados-exemplo/README.md</code> descreve cada arquivo e o que ele
+  existe para testar; aqui fica o que é preciso saber para mexer nela.</p>
+  <div class="tabela"><table>
+    <tr><th>Arquivos</th><th>O que são</th><th>Gerados por</th></tr>
+    <tr><td class="curta mono">01 a 07</td><td>PDFs: com texto e tabela, "Imprimir para PDF", conteúdo deitado, texto embaralhado, corrompido, protegido por senha, carimbo na margem.</td><td><code>dados-exemplo/gerar-massa.py</code></td></tr>
+    <tr><td class="curta mono">10 a 17</td><td>Texto com CPF para o Anonimizar: todos os tipos de número, sem CPF, os acentos do Bloco de Notas, 40 bolsistas, vazio, planilha renomeada, sem o zero da frente.</td><td><code>dados-exemplo/gerar-massa-cpf.py</code></td></tr>
+    <tr><td class="curta mono">18, 19, 21 a 26</td><td>Documentos do Word: o completo, com cada caso difícil, e os que não abrem.</td><td><code>dados-exemplo/gerar-massa-word.py</code></td></tr>
+    <tr><td class="curta mono">20</td><td>As páginas difíceis da medição dos motores — torta, de contraste fraco, cheia de tabela —, com o gabarito em <code>.json</code>.</td><td><code>dados-exemplo/gerar-massa-medicao.py</code></td></tr>
+    <tr><td class="curta mono">30</td><td>O documento da revisão por IA com o servidor de mentira.</td><td>escrito à mão</td></tr>
+  </table></div>
+  <h3>Número novo na massa</h3>
+  <p>Nenhum número da massa pode ser o CPF de alguém. Os que passam na conta são
+  <b>só de dígitos repetidos</b> (<code>111.111.111-11</code>), que a Receita não
+  emite; os curtos, só de zeros. Número "de sequência" inventado na hora pode
+  passar na conta e ser de alguém — por isso nenhum número que passa na conta é
+  escrito na massa, nem como exemplo do que evitar. O teste de guarda acusa o
+  que escapar.</p>
+  <h3>Gerou de novo e o git acusou mudança?</h3>
+  <ul>
+    <li><b>Nos PDFs, é esperado.</b> Todo PDF leva uma marca gerada na hora de
+    gravar, e o protegido por senha é cifrado com chave nova. O documento é o
+    mesmo: descarte a troca de bytes e grave só o que mudou de verdade.</li>
+    <li><b>Nos <code>.md</code>, é a quebra de linha.</b> O script grava a do Linux,
+    e o git do Windows entrega a do Windows: o <code>git status</code> marca os
+    arquivos, e o <code>git diff</code> não mostra nada. Confira com
+    <code>git diff --stat</code>; vazio, devolva-os com <code>git restore</code>.</li>
+  </ul>
+</div>
+
+<div class="secao" id="atalhos-de-abrir">
+  <div class="sobretitulo">abrir/</div>
+  <h2>Ver na tela o que é difícil de <em>provocar</em></h2>
+  <p class="descricao">Os atalhos abrem o programa em desenvolvimento fingindo
+  uma situação, sem desinstalar nada nem precisar de um modelo de IA. Dois
+  cliques em cada um.</p>
+  <div class="tabela"><table>
+    <tr><th>Atalho</th><th>Finge</th></tr>
+    <tr><td class="mono">abrir-dev.bat</td><td>nada: é o programa como ele é.</td></tr>
+    <tr><td class="mono">abrir-sem-motor.bat</td><td>o Tesseract faltando, com o PaddleOCR lendo: a falta aparece só na linha do Tesseract.</td></tr>
+    <tr><td class="mono">abrir-sem-portugues.bat</td><td>o Tesseract instalado sem o pacote de português, que o programa trata como faltando.</td></tr>
+    <tr><td class="mono">abrir-sem-paddleocr.bat</td><td>a instalação sem os modelos do PaddleOCR.</td></tr>
+    <tr><td class="mono">abrir-sem-nenhum-motor.bat</td><td>os dois faltando: o único caso do aviso no alto e da tela cheia.</td></tr>
+    <tr><td class="mono">simular-instalacao.bat</td><td>a TI terminando de instalar o Tesseract com o programa aberto: o que estava escondido volta.</td></tr>
+    <tr><td class="mono">servidor-de-ia-de-mentira.bat</td><td>um servidor na porta do LM Studio, que responde sem modelo. Use com <code>dados-exemplo/30-revisao-por-ia.md</code>.</td></tr>
+    <tr><td class="mono">servidor-de-mentira-que-cai.bat</td><td>o mesmo servidor, caindo no meio da revisão.</td></tr>
+    <tr><td class="mono">abrir-sem-reabrir.bat</td><td>o Windows recusando abrir a cópia nova no "Reabrir agora".</td></tr>
+  </table></div>
+</div>
+
+<div class="secao" id="conferencias">
+  <div class="sobretitulo">conferencias/</div>
+  <h2>As <em>conferências</em></h2>
+  <p class="descricao">Páginas que mostram o que o programa decidiu sobre a
+  massa, para conferir sem abrir o código. As que têm um
+  <code>gerar-*.py</code> ao lado saem de chamadas de verdade ao programa:
+  mudou o motor do CPF ou a massa, rode o script de novo e a página acompanha.
+  As outras são roteiros de conferência na tela, escritos à mão.</p>
+  <div class="tabela"><table>
+    <tr><th>Página</th><th>O que mostra</th></tr>
+    <tr><td class="mono">01</td><td>O motor do CPF sobre a massa: cada número, o tipo e a máscara.</td></tr>
+    <tr><td class="mono">02</td><td>A medição dos motores de leitura sobre as páginas difíceis, que decidiu o PaddleOCR como padrão.</td></tr>
+    <tr><td class="mono">03 e 04</td><td>O CPF sem o zero da frente, e o documento do Word.</td></tr>
+    <tr><td class="mono">05</td><td>Lembrar as escolhas, com o roteiro de conferência na tela.</td></tr>
+    <tr><td class="mono">06 a 08</td><td>Os roteiros de conferência na tela da revisão por IA, do tema claro e do instalador das funcionalidades 9 e 10.</td></tr>
+    <tr><td class="mono">09</td><td>O teste da 0.2.0 instalada por cima de uma 0.1.0 em uso — o modelo do teste de cada entrega.</td></tr>
+  </table></div>
+  <p>A medição da 02 usa o <code>conferencias/ler-com-o-motor.py</code>, com um
+  ambiente do Python para cada motor, porque eles trazem versões diferentes da
+  mesma biblioteca de imagem. Esses ambientes e as leituras pesam perto de
+  1,5 GB e ficam fora do histórico; o script diz como refazê-los.</p>
+</div>
+
+<div class="secao" id="esta-documentacao">
+  <div class="sobretitulo">documentacao/</div>
+  <h2>Manter esta <em>documentação</em></h2>
+  <ol class="passos">
+    <li><span class="titulo">Escreva nas partes</span>
+      <p>Uma por aba, em <code>documentacao/fonte/</code>, e a folha de estilo ao lado. O <code>documentacao/manutencao.html</code> nunca se edita: a próxima montagem escreve por cima.</p></li>
+    <li><span class="titulo">Tire as prints de novo, se a tela mudou</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>.\.venv\Scripts\python.exe documentacao\capturar_telas.py</pre></div>
+      <p>A janela aparece e some algumas vezes. As prints vão para <code>documentacao/fonte/imagens/</code>, em 256 cores. As de LM Studio e da revisão por IA não se refazem por script, porque pedem um modelo carregado.</p></li>
+    <li><span class="titulo">Monte</span>
+      <div class="codigo"><div class="cab">PowerShell</div><pre>.\.venv\Scripts\python.exe documentacao\montar.py</pre></div>
+      <p>Ele confere os links, os caminhos citados e as imagens, e não grava se achar erro. Com <code>--termos</code> e um arquivo de termos, um por linha, ele recusa também a página que citar algum deles.</p></li>
+  </ol>
+</div>

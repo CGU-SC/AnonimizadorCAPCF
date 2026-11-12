@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 67 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro: #e05d5d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  pre { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; background: rgba(0,0,0,.25); border-radius: 4px; padding: 8px 10px; margin: 8px 0 0; white-space: pre-wrap; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lado { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .caixa { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 12px 16px; }
+  .caixa.antes { border-top: 3px solid var(--cor-erro); }
+  .caixa.depois { border-top: 3px solid var(--cor-sucesso); }
+  .caixa b.rotulo { display: block; font-size: 13px; color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 67 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre os dois scripts da documentação de manutenção,
+<code>documentacao/montar.py</code> e <code>documentacao/capturar_telas.py</code>, em 12/11/2026. A varredura
+automática (<code>/code-review</code>, nível médio) levantou dez suspeitas; três passaram pela trava da lente e pela
+tentativa de derrubada, as três no <code>montar.py</code> e do mesmo tipo: a montagem gravava uma documentação
+errada sem avisar. As três foram aprovadas e consertadas, e cada conferência nova foi provada com um caso feito para
+falhar.</p>
+
+<div class="achado"><h3>1 · Nome de arquivo citado sem a pasta nunca era conferido</h3>
+<p>A aba Regras cita 42 arquivos pelo nome (<code>painel_ocr.py</code>). Renomeado um deles numa versão futura, a
+documentação continuaria mandando o leitor para um arquivo que não existe, e a montagem passaria limpa.</p>
+<div class="lado">
+<div class="caixa antes"><b class="rotulo">Antes</b>
+Só se conferia o que tinha barra (<code>programa/cpf.py</code>) ou era um nome da raiz.</div>
+<div class="caixa depois"><b class="rotulo">Depois</b>
+Todo nome solto entre <code>&lt;code&gt;</code> com terminação de arquivo precisa existir em alguma pasta que vai para
+a UFSC; senão, é erro e nada é gravado. A família do <code>.env</code> (o <code>.env.txt</code> da armadilha do Bloco
+de Notas) pode ser citada sem existir, como já valia para o próprio <code>.env</code>.
+<pre>painel_que_sumiu.py → "arquivo citado que não existe na pasta entregue"</pre></div>
+</div></div>
+
+<div class="achado"><h3>2 · Imagem citada de outro jeito não era embutida nem acusada</h3>
+<p>Um <code>.svg</code>, aspas simples ou um <code>url()</code> na folha de estilo passavam limpos, e o arquivo
+entregue abria com a imagem quebrada, porque a pasta <code>imagens/</code> não vai ao lado dele.</p>
+<div class="lado">
+<div class="caixa antes"><b class="rotulo">Antes</b>
+Só <code>src="imagens/x.png"</code> era trocado pela imagem; o resto ficava como estava, calado.</div>
+<div class="caixa depois"><b class="rotulo">Depois</b>
+Depois de embutir, qualquer citação a <code>imagens/</code> que sobrou é erro, com a citação no aviso.
+<pre>src='imagens/...png'  → erro
+src="imagens/desenho.svg" → erro
+url(imagens/fundo.png)    → erro
+src="imagens/...png"  → embutida</pre></div>
+</div></div>
+
+<div class="achado"><h3>3 · Identificador repetido não era acusado</h3>
+<p>As abas vivem num documento só, e o navegador leva sempre ao primeiro de dois identificadores iguais: uma seção
+chamada <code>testes</code> abriria a aba errada. Hoje não há nenhum repetido entre os 38.</p>
+<div class="lado">
+<div class="caixa antes"><b class="rotulo">Antes</b>
+Os identificadores eram juntados sem olhar repetição.</div>
+<div class="caixa depois"><b class="rotulo">Depois</b>
+Identificador repetido é erro.
+<pre>id="testes" duas vezes → "identificador repetido: #testes"</pre></div>
+</div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+<li><code>documentacao/montar.py</code>: as três conferências, com o comentário do porquê de cada uma, e a função
+<code>nomes_entregues</code>. Nenhum arquivo criado, apagado ou movido, e nada do programa tocado.</li>
+<li><code>documentacao/manutencao.html</code>: remontado; o conteúdo não mudou.</li>
+</ul>
+
+<h2>O que foi levantado e não virou achado</h2>
+<ul>
+<li><b>O <code>capturar_telas.py</code> sem proteção quando um passo falha</b>: a janela pode fechar com a caixa de
+"parou de funcionar". O erro já foi dito antes, nas linhas do terminal, e nada se perde: não passa na trava.</li>
+<li><b>O segundo clique em "Ler" que não espera a tela</b>: no Gerar OCR, o primeiro clique já começa a leitura, e o
+segundo nunca acha botão. É código sem efeito — assunto da lente de clareza.</li>
+<li><b>A folha de abertura do <code>montar.py</code> diz que imagem sem uso bloqueia, e ela só avisa</b>: o texto
+promete mais do que o código faz — lente de clareza.</li>
+<li><b>Comentário recuado no arquivo de termos vira termo</b>: o arquivo é curto e escrito à mão; nenhum cenário
+real.</li>
+<li><b>Subpasta em <code>builds/capturas</code> derruba a limpeza</b>: a pasta só tem o que o próprio script grava.</li>
+<li><b>O script sai da revisão mexendo num campo de dentro do painel, e repete o jeito de esconder os motores do
+<code>abrir/sem_motor.py</code></b>: encarecem a próxima mudança — lente de manutenção.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 12/11/2026.</p>
+</body>
+</html>

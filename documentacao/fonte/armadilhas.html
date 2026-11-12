@@ -1,0 +1,66 @@
+<div class="secao">
+  <div class="sobretitulo">O que já quebrou calado</div>
+  <h2>As <em>armadilhas</em></h2>
+  <p class="descricao">Cada uma aconteceu na construção, e quase todas sem
+  nenhum erro na tela nem teste acusando: o programa parecia certo e não estava.
+  Quando algo estranho aparecer sem explicação, comece por aqui.</p>
+
+  <h3>O Qt e a tela</h3>
+  <div class="tabela"><table>
+    <tr><th>O que se vê</th><th>A causa, e a saída</th></tr>
+    <tr><td><b>Frase cortada numa caixa de aviso</b>, sem a última linha.</td><td>O <code>QLabel</code> com <code>setWordWrap</code> reserva a altura de uma linha só. Dê largura fixa ao texto, calcule a altura com <code>heightForWidth</code> e recalcule quando a frase mudar — com um <code>ensurePolished()</code> antes, senão o Qt mede com a fonte padrão, e não com a do estilo. Vale para toda caixa de aviso, erro ou explicação.</td></tr>
+    <tr><td><b>Botões com o texto cortado pela metade</b>, até em janela larga.</td><td>Uma fileira (<code>QHBoxLayout</code>) com mais peças do que cabe espreme todas, sem avisar. Meça o <code>sizeHint</code> contra a largura real na janela mínima, de 900 px. Não cabendo, a peça desce de linha (<code>programa/linha_que_desce.py</code>), muda de lugar, ou o texto quebra com <code>\n</code>.</td></tr>
+    <tr><td><b>Caixinhas de outro tom em volta de cada frase</b> de um quadro.</td><td>Regra de cor sem alvo vale para tudo o que está dentro, e todo <code>QLabel</code> é um <code>QFrame</code>. O quadro com fundo próprio leva a regra pelo nome (<code>QFrame#quadro</code>) e <code>QLabel { background: transparent; }</code>; um <code>QWidget</code> comum só pinta o fundo com <code>WA_StyledBackground</code>.</td></tr>
+    <tr><td><b>O sublinhado ondulado do suspeito sai reto.</b></td><td>O <code>text-decoration: underline wave</code> é ignorado num <code>QLabel</code>. Só o texto rico faz ondulado (<code>QTextCharFormat.WaveUnderline</code>), e por isso a chave de cores da revisão é um pedaço de texto.</td></tr>
+    <tr><td><b>O texto inteiro sai destacado</b> depois de um "Desfazer".</td><td>Texto novo num <code>QTextEdit</code> herda a formatação de debaixo do cursor. Devolva a formatação comum ao documento inteiro antes de pintar os destaques (<code>programa/tela_revisao.py</code>).</td></tr>
+    <tr><td><b>A primeira letra de cada item da lista cortada.</b></td><td>Numa área de rolagem, um item mais largo que a coluna faz a lista deslizar para o lado. Não deixe passar da largura (a etiqueta comprida desce de linha) e role só na vertical (<code>programa/lista_de_achados.py</code>).</td></tr>
+    <tr><td><b>O radio marcado sem a bolinha</b>, ou dois marcados ao mesmo tempo.</td><td>Sem o estilo próprio, o radio some no escuro; e o Qt só faz um desmarcar o outro entre vizinhos da mesma caixa. Use o <code>estilo_do_radio</code> de <code>programa/pecas_da_ia.py</code> e um <code>QButtonGroup</code>.</td></tr>
+    <tr><td><b>Cor do escuro aparecendo no tema claro.</b></td><td>Cor lida quando o arquivo carrega — <code>from estilo import COR_...</code>, ou guardada fora de função — fica presa no tema de antes. Leia <code>estilo.COR_...</code> na hora de montar a peça.</td></tr>
+    <tr><td><b>PDF desenhado pelo Qt cheio de quadradinhos pretos.</b></td><td>No modo "sem tela" (<code>QT_QPA_PLATFORM=offscreen</code>), o Qt não enxerga as fontes do Windows. Nada acusa erro, e o OCR não lê nada. Deixe o Qt subir no modo normal, mesmo quando nenhuma janela vai aparecer.</td></tr>
+    <tr><td><b>"O programa parou de funcionar"</b> ao fechar no meio de uma leitura.</td><td>Trabalho numa <code>QThread</code> precisa ser parado antes de a janela fechar: é o que o <code>closeEvent</code> faz. Trabalho novo ao lado da janela entra nele.</td></tr>
+    <tr><td><b>A mudança não aparece na tela.</b></td><td>A janela não recarrega o código. Feche e abra de novo, senão se confere a versão velha achando que é a nova.</td></tr>
+  </table></div>
+
+  <h3>Windows e instalação</h3>
+  <div class="tabela"><table>
+    <tr><th>O que se vê</th><th>A causa, e a saída</th></tr>
+    <tr><td><b>O instalador do Tesseract fica parado</b>, sem erro.</td><td>Instalar em <code>C:\Program Files</code> pede a confirmação do Windows, que só aparece numa sessão com tela. Por controle remoto ou terminal sem interface, ninguém a vê. Rode com alguém na frente da máquina.</td></tr>
+    <tr><td><b>O Tesseract está instalado e o <code>pytesseract</code> não o acha.</b></td><td>O instalador não o põe no caminho do Windows. O programa procura sozinho nas pastas de costume (<code>programa/motor.py</code>); numa máquina em que a TI instalou noutro lugar, o caminho vai no <code>TESSERACT_CAMINHO</code> do <code>.env</code>.</td></tr>
+    <tr><td><b>O <code>.env</code> parece certo e o programa o ignora.</b></td><td>Criado no Bloco de Notas, ele sai <code>.env.txt</code>, e o Windows esconde o <code>.txt</code>. Por isso o instalador já cria o <code>.env</code> em branco, para só ser editado.</td></tr>
+    <tr><td><b>"Editor: Desconhecido"</b> na instalação do Tesseract 5.4.0.</td><td>O certificado venceu antes de o arquivo ser assinado. O arquivo é o autêntico se o SHA256 bater com o do catálogo do winget. E ele baixa o português da internet durante a instalação.</td></tr>
+    <tr><td><b>Cancelar a IA demora o tempo todo do servidor.</b></td><td>No Windows, fechar a conexão de outra linha não acorda quem espera a resposta. O pedido corre numa linha à parte, e quem pediu vai embora ao cancelar (<code>programa/rede_da_ia.py</code>).</td></tr>
+    <tr><td><b>A escolha da pessoa se perde</b> de vez em quando.</td><td>O antivírus abre o arquivo recém-gravado por um instante, e a troca do provisório pelo arquivo é recusada. A troca insiste cinco vezes num quarto de segundo (<code>programa/configuracao.py</code>).</td></tr>
+  </table></div>
+
+  <h3>O OCR</h3>
+  <div class="tabela"><table>
+    <tr><th>O que se vê</th><th>A causa, e a saída</th></tr>
+    <tr><td><b>O RapidOCR tenta baixar um modelo</b> de um site de fora.</td><td>Sem o caminho de cada modelo (<code>Det.model_path</code>, <code>Cls.model_path</code>, <code>Rec.model_path</code>), ele procura pelo nome e, não achando, vai buscar na internet — calado, e contra a regra dura. O <code>programa/motor_paddleocr.py</code> sempre diz os três caminhos e confere que existem antes de chamar: faltando um, vira erro, e não download. Os nomes mudam entre versões do RapidOCR, e por isso a versão é fixa.</td></tr>
+    <tr><td><b>Uma página em pé lida de cabeça para baixo</b>, e o texto sai lixo.</td><td>O detector de orientação do Tesseract chuta em página desbotada. O programa só gira com confiança de 5 para cima (<code>programa/leitura.py</code>): medido em toda a massa, as decisões certas tinham de 7 a 23. E o RapidOCR, por padrão, vira linha por linha o que acha estar invertido, virando linhas certas: está desligado (<code>Global.use_cls</code>), porque sem ele a leitura melhorou ou empatou em todas as páginas medidas.</td></tr>
+    <tr><td><b>O programa instalado diz "instalação incompleta"</b> no PaddleOCR.</td><td>Os modelos só entram na pasta montada porque a receita os pede (<code>collect_data_files("rapidocr")</code>, em <code>empacotar/anonimizador.spec</code>): o programa os abre pelo caminho, e o PyInstaller não os acha sozinho. O gerador da entrega confere que eles estão lá.</td></tr>
+  </table></div>
+
+  <h3>A IA local</h3>
+  <div class="tabela"><table>
+    <tr><th>O que se vê</th><th>A causa, e a saída</th></tr>
+    <tr><td><b>A revisão parece travada</b>, e depois responde vazio.</td><td>Modelo que pensa antes de responder escreve milhares de palavras de raciocínio: quase 3 minutos num pedaço, até esgotar a memória. Pedir para pensar menos não adiantou; <code>reasoning_effort: none</code> resolveu, em 4 segundos (<code>programa/rede_da_ia.py</code>). Outros modelos podem se comportar diferente.</td></tr>
+    <tr><td><b>Pedir um pouco mais à IA deixa tudo lento.</b></td><td>O que pesa é o que ela escreve, e não o que ela lê: a página é lida num instante, e ela escreve uns 32 pedaços de palavra por segundo, cerca de 47 por número citado. Pedir uma opinião por número levou uma página com 45 suspeitos de 63 a mais de 150 segundos, e a regra foi retirada (RN-66 da spec 004). Antes de pedir mais, meça com uma página cheia.</td></tr>
+    <tr><td><b>O LM Studio sobe sozinho</b>, ou um comando não volta.</td><td>O <code>lms ls</code>, que parece só de leitura, acorda o serviço do LM Studio. O programa fala com ele só pela porta do servidor local, e não usa esse comando.</td></tr>
+  </table></div>
+
+  <h3>Testes e varreduras</h3>
+  <div class="tabela"><table>
+    <tr><th>O que se vê</th><th>A causa, e a saída</th></tr>
+    <tr><td><b>Todos os testes passam e o comando devolve erro.</b></td><td>Tela criada num teste e deixada para trás. O <code>programa/conftest.py</code> desmonta as telas no fim de cada teste; quem olha só o código de saída concluiria que a lista falhou.</td></tr>
+    <tr><td><b>Um teste grava no <code>preferencias.ini</code> desta máquina.</b></td><td>O <code>monkeypatch.undo()</code> desfez também o isolamento do <code>conftest.py</code>. Desfaça só a troca, com outro <code>monkeypatch.setattr</code>.</td></tr>
+    <tr><td><b>Uma varredura do código não acha nada</b>, e devia achar.</td><td>No Python 3.12, o <code>tokenize</code> entrega o texto de um <code>f"..."</code> em pedaços de outro tipo (<code>FSTRING_MIDDLE</code>), e não como <code>STRING</code>. Só o teste que prova a varredura com um arquivo de mentira acusou. Varredura nova ganha o teste dela.</td></tr>
+  </table></div>
+
+  <h3>Git e arquivos</h3>
+  <div class="tabela"><table>
+    <tr><th>O que se vê</th><th>A causa, e a saída</th></tr>
+    <tr><td><b>O git acusa a massa alterada</b>, e o diff não mostra nada.</td><td>A quebra de linha: veja <a href="#a-massa">a massa</a>.</td></tr>
+    <tr><td><b>Um arquivo inteiro mudou de quebra de linha</b> depois de uma troca pequena.</td><td>O <code>sed -i</code> do Git Bash, ou o <code>&gt;</code> do PowerShell: veja <a href="#quebra-de-linha">a quebra de linha</a>.</td></tr>
+    <tr><td><b>O instalador entregue foi substituído</b> por um de teste.</td><td>O gerador da entrega, com a mesma versão, grava o instalador com o mesmo nome e refaz a pasta da entrega. Para testar, monte à parte: veja a aba <a href="#entrega">Entrega</a>.</td></tr>
+  </table></div>
+</div>

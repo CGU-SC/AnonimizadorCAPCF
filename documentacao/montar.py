@@ -119,7 +119,14 @@ def embutir_imagens(texto, erros, usadas):
         usadas.add(nome)
         dados = base64.b64encode(arquivo.read_bytes()).decode("ascii")
         return f'src="data:image/png;base64,{dados}"'
-    return re.sub(r'src="imagens/([^"]+\.png)"', trocar, texto)
+    texto = re.sub(r'src="imagens/([^"]+\.png)"', trocar, texto)
+    # O que sobrou apontando para imagens/ não foi embutido: outro formato, aspas
+    # simples, ou um url() na folha de estilo. Passaria calado, e o arquivo
+    # entregue abriria com a imagem quebrada, porque a pasta não vai ao lado dele.
+    for sobra in re.findall(r"""(?:src|href)\s*=\s*["']?[^"'\s>]*imagens/[^"'\s>]*"""
+                            r"""|url\(\s*["']?[^)]*imagens/[^)]*\)""", texto):
+        erros.append(f"imagem que não foi embutida (só PNG, com src=\"imagens/...\"): {sobra}")
+    return texto
 
 
 def montar(partes, numero):
@@ -172,15 +179,34 @@ def montar(partes, numero):
 
 
 def conferir_ancoras(documento, erros):
-    ids = set(re.findall(r'\bid="([^"]+)"', documento))
+    todos = re.findall(r'\bid="([^"]+)"', documento)
+    ids = set(todos)
+    # As abas vivem num documento só, e o navegador leva sempre ao primeiro de
+    # dois identificadores iguais: uma seção com o nome de uma aba abriria a aba
+    # errada, sem ninguém notar.
+    for repetido in sorted({i for i in todos if todos.count(i) > 1}):
+        erros.append(f"identificador repetido: #{repetido}")
     for alvo in sorted(set(re.findall(r'href="#([^"]*)"', documento))):
         if alvo not in ids:
             erros.append(f"link para #{alvo}, que não existe")
 
 
+def nomes_entregues():
+    """O nome de cada arquivo da pasta entregue, sem a pasta dele."""
+    nomes = set()
+    for item in ENTREGUE:
+        caminho = RAIZ / item
+        if caminho.is_file():
+            nomes.add(caminho.name)
+        elif caminho.is_dir():
+            nomes.update(p.name for p in caminho.rglob("*")
+                         if p.is_file() and "__pycache__" not in p.parts)
+    return nomes
+
+
 def conferir_caminhos(partes, erros):
     """Todo arquivo do projeto citado existe, e é da pasta que vai junto."""
-    citados = set()
+    citados, soltos = set(), set()
     for texto in partes.values():
         for href in re.findall(r'href="\.\./([^"#]+)', texto):
             citados.add(href)
@@ -191,6 +217,17 @@ def conferir_caminhos(partes, erros):
                               and re.search(r"[a-zA-Z]", caminho))
             if parece_caminho or caminho in ENTREGUE:
                 citados.add(caminho)
+            elif re.fullmatch(r"[\w.\-]+\.(py|bat|md|html|css|spec|iss|json|txt|pdf|docx)", caminho):
+                soltos.add(caminho)
+    # Um nome sem pasta (`painel_ocr.py`) precisa existir em algum lugar da pasta
+    # entregue. Sem isso, o arquivo renomeado numa versão futura continuaria
+    # citado na documentação, e a montagem passaria limpa.
+    # Os da família dos que cada máquina cria (o `.env.txt` do Bloco de Notas)
+    # podem ser citados sem existir, como as pastas criadas pelo trabalho.
+    existentes = nomes_entregues()
+    soltos = {n for n in soltos if not n.startswith(tuple(CRIADAS_PELO_TRABALHO))}
+    for nome in sorted(soltos - existentes):
+        erros.append(f"arquivo citado que não existe na pasta entregue: {nome}")
     for caminho in sorted(citados):
         primeiro = caminho.split("/")[0]
         if primeiro in CRIADAS_PELO_TRABALHO:
