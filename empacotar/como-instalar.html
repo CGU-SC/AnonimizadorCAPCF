@@ -328,7 +328,7 @@
         <div class="casa">CAPCF · UFSC</div>
       </div>
     </div>
-    <div class="etiqueta-versao">Versão 0.2.0 · teste</div>
+    <div class="etiqueta-versao">Versão 1.0.0</div>
   </div>
 </div>
 <main>
@@ -350,7 +350,7 @@
 <div class="aviso">
   <div class="icone">⚠</div>
   <div>
-  <p><strong>Esta é uma versão de teste.</strong> Confira sempre, na tela de
+  <p>Confira sempre, na tela de
   revisão, o que o programa marcou antes de salvar — principalmente nos PDFs
   escaneados, em que o texto é lido da imagem e pode ter erro de leitura. O
   arquivo gerado não serve para nenhum uso oficial.</p>
@@ -360,8 +360,8 @@
 <div class="aviso azul">
   <div class="icone">↻</div>
   <div>
-  <p><strong>Já usa a versão 0.1.0?</strong> Não desinstale: instale esta por
-  cima. O que fica e o que muda está em <a href="#atualizar" style="color:var(--cor-destaque-claro)">Atualizar da 0.1.0</a>.</p>
+  <p><strong>Já usa uma versão anterior?</strong> Não desinstale: instale esta por
+  cima. O que fica e o que muda está em <a href="#atualizar" style="color:var(--cor-destaque-claro)">Atualizar de uma versão anterior</a>.</p>
   </div>
 </div>
 
@@ -422,7 +422,7 @@ precisa delas.</p>
   <div class="arquivo">
     <div class="icone">📦</div>
     <div>
-      <div class="nome">Anonimizador-CAPCF-0.2.0-instalador.exe</div>
+      <div class="nome">Anonimizador-CAPCF-1.0.0-instalador.exe</div>
       <div class="para-que">o instalador — já traz dentro o instalador do Tesseract</div>
     </div>
   </div>
@@ -489,8 +489,8 @@ precisa delas.</p>
   </div>
 </div>
 
-<h2 id="atualizar">Atualizar da 0.1.0</h2>
-<p class="lead">Para quem já tem a versão 0.1.0 instalada. Não é preciso
+<h2 id="atualizar">Atualizar de uma versão anterior</h2>
+<p class="lead">Para quem já tem a versão 0.1.0 ou a 0.2.0 instalada. Não é preciso
 desinstalar nada.</p>
 <div class="passos">
   <div class="passo">
@@ -500,7 +500,7 @@ desinstalar nada.</p>
   </div>
   <div class="passo">
     <div class="n">2</div>
-    <div class="corpo"><p>Dê dois cliques no instalador da 0.2.0 e siga a parte 1
+    <div class="corpo"><p>Dê dois cliques no instalador da 1.0.0 e siga a parte 1
     acima. Ele reconhece a versão antiga e a atualiza, na mesma pasta.</p></div>
   </div>
 </div>
@@ -510,15 +510,17 @@ desinstalar nada.</p>
     <ul>
       <li>O <code>.env</code> desta instalação, com a pasta do Tesseract, se a TI a escreveu.</li>
       <li>O Tesseract, se já estava instalado.</li>
+      <li>Vindo da 0.2.0: as escolhas lembradas — o motor, a janela, o tema e a configuração da IA.</li>
       <li>Os <code>.md</code> que você salvou, onde você os salvou.</li>
     </ul>
   </div>
   <div class="lado muda">
     <div class="titulo">O que muda</div>
     <ul>
-      <li>Na primeira abertura, a janela vem maximizada, o motor de leitura marcado é o <strong>PaddleOCR</strong>, o tema é o escuro e a IA vem desligada.</li>
-      <li>Daí em diante, o programa <strong>lembra</strong> o motor marcado em cada módulo, o tamanho da janela, o tema e a configuração da IA.</li>
-      <li>O CPF sem o zero da frente (com 10 dígitos) passa a ser reconhecido.</li>
+      <li><span class="botao">Escolher arquivo…</span> passa a abrir na pasta do último arquivo aberto, nos dois módulos.</li>
+      <li>Vindo da 0.1.0: na primeira abertura, a janela vem maximizada, o motor de leitura marcado é o <strong>PaddleOCR</strong>, o tema é o escuro e a IA vem desligada.</li>
+      <li>Vindo da 0.1.0: daí em diante, o programa <strong>lembra</strong> o motor marcado em cada módulo, o tamanho da janela, o tema e a configuração da IA.</li>
+      <li>Vindo da 0.1.0: o CPF sem o zero da frente (com 10 dígitos) passa a ser reconhecido.</li>
     </ul>
   </div>
 </div>
@@ -859,7 +861,7 @@ duas funciona.</p>
       <div class="simbolo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg></div>
       <div>
         <div class="nome">Anonimizador</div>
-        <div class="versao alvo">CAPCF · versão 0.2.0</div>
+        <div class="versao alvo">CAPCF · versão 1.0.0</div>
       </div>
     </div>
     <div class="item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>Gerar OCR</div>
@@ -889,7 +891,8 @@ duas funciona.</p>
     instalados</strong>, procure <strong>Anonimizador CAPCF</strong>, clique nos
     três pontinhos e em <span class="botao">Desinstalar</span>.</p>
     <p class="nota"><strong>Saem juntos:</strong> a pasta do programa, o atalho, as
-    escolhas lembradas (motor, janela, tema e configuração da IA) e o
+    escolhas lembradas (motor, janela, tema, configuração da IA e a pasta do último
+    arquivo) e o
     <code>.env</code> <strong>inteiro</strong> — com o token do servidor de IA e a
     pasta do Tesseract, se alguém os escreveu. Instalando de novo, eles precisam ser
     escritos outra vez.</p>
@@ -901,7 +904,7 @@ duas funciona.</p>
 </div>
 
 <footer>
-  <span>Anonimizador CAPCF · versão 0.2.0</span>
+  <span>Anonimizador CAPCF · versão 1.0.0</span>
   <span class="quem-fez">O programa foi desenvolvido pela CGU no âmbito da consultoria realizada à UFSC em 2026.</span>
 </footer>
 

@@ -15,7 +15,7 @@
   <h2>O que preparar à <em>mão</em></h2>
   <ol class="passos">
     <li><span class="titulo">Subir o número da versão</span>
-      <p>Só em <code>programa/versao.py</code>: a janela o mostra e o instalador o lê dali, para os dois nunca dizerem números diferentes. <b>0.x é versão de teste</b>; a 1.0.0 fica para quando o núcleo aprovar o uso. Um número nunca volta a designar outra entrega.</p></li>
+      <p>Só em <code>programa/versao.py</code>: a janela o mostra e o instalador o lê dali, para os dois nunca dizerem números diferentes. As 0.x foram versões de teste, e a 1.0.0 saiu em 14/11/2026. Um número nunca volta a designar outra entrega.</p></li>
     <li><span class="titulo">Refazer os dois roteiros</span>
       <p><code>empacotar/como-instalar.html</code> e <code>empacotar/como-usar.html</code> têm o número da versão e as regras do programa escritos no texto, e envelhecem nas duas coisas. Cada um nasce de uma cópia do anterior, com as telas de verdade embutidas, e segue o padrão da seção "Roteiros da entrega" do <code>mockups/sistema-de-design.md</code>. Releia tudo: trocar só o número deixaria uma regra velha para trás. O gerador para se algum roteiro não citar a versão que está saindo.</p></li>
     <li><span class="titulo">Baixar o instalador do Tesseract</span>
@@ -80,8 +80,9 @@ Get-FileHash instaladores\tesseract-ocr-w64-setup-*.exe</pre></div></li>
   <p>A versão nova instalada <b>por cima da anterior em uso</b>, com o
   <code>.env</code> preenchido e escolhas lembradas, e aberta sem internet.
   Começar do zero testaria o caminho que sempre funciona; é o de cima que quebra.
-  O roteiro da entrega da 0.2.0 está em
-  <code>conferencias/09-a-0.2.0-por-cima-da-0.1.0.html</code>, e serve de modelo:
+  O roteiro da entrega da 1.0.0 está em
+  <code>conferencias/10-a-1.0.0-por-cima-da-0.2.0.html</code>, e o da 0.2.0 em
+  <code>conferencias/09-a-0.2.0-por-cima-da-0.1.0.html</code>; servem de modelo:
   desinstalar o de teste, instalar a anterior, usá-la, instalar a nova por cima,
   conferir que nada se perdeu.</p>
 </div>
