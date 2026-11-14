@@ -69,7 +69,7 @@ def test_valor_em_branco_conta_como_nao_preenchido(tmp_path, monkeypatch):
 def test_o_env_que_o_instalador_cria_chega_em_branco(tmp_path, monkeypatch):
     """O modelo que vai no instalador não pode trazer caminho preenchido.
 
-    Ele nasce ao lado do programa em cada máquina do núcleo, e o exemplo dentro
+    Ele nasce ao lado do programa em cada máquina da CAPCF, e o exemplo dentro
     dele é comentário. Se o exemplo virasse valor, todas as máquinas passariam
     a procurar o Tesseract numa pasta que não existe nelas.
     """

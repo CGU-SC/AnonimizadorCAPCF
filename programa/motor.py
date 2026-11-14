@@ -23,8 +23,8 @@ ARQUIVO_DO_DETECTOR = "osd.traineddata"
 
 # Onde o instalador do Tesseract costuma deixar o programa no Windows. Ele não
 # entra no caminho que o Windows procura sozinho, então procurar aqui é o que
-# faz o programa funcionar sem ninguém configurar nada em cada máquina do
-# núcleo.
+# faz o programa funcionar sem ninguém configurar nada em cada máquina da
+# CAPCF.
 PASTAS_DE_COSTUME = [
     Path(r"C:\Program Files\Tesseract-OCR"),
     Path(r"C:\Program Files (x86)\Tesseract-OCR"),

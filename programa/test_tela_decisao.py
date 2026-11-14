@@ -162,7 +162,7 @@ def test_sem_o_motor_instalado_o_pdf_com_texto_continua_funcionando(
     "Dado que o Tesseract não está instalado, quando a pessoa escolhe um PDF que
     tem camada de texto, então o caminho segue normalmente até a conferência."
 
-    Numa máquina do núcleo onde o motor não foi instalado, metade do módulo
+    Numa máquina da CAPCF onde o motor não foi instalado, metade do módulo
     ainda serve — e é só esta metade que não depende dele.
     """
     import leitura

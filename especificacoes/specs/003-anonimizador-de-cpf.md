@@ -222,7 +222,7 @@ chatbot.
   quando os roteiros forem refeitos para a próxima entrega, num prompt próprio.
 - **Do documento do Word** (décima emenda):
   - **o `.doc` antigo**, que exigiria o Word instalado ou um programa a mais nas
-    máquinas do núcleo; **o `.docm`** (documento com macros) **e o `.dotx`**
+    máquinas da CAPCF; **o `.docm`** (documento com macros) **e o `.dotx`**
     (modelo), que recebem a frase de "outro tipo";
   - **ler o texto de dentro das imagens** coladas no documento. Quem precisar,
     salva o documento como PDF pelo Word e usa o caminho do PDF, que lê

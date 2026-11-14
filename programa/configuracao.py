@@ -1,6 +1,6 @@
 """O que cada instalação do programa tem de próprio: a pasta dela e o `.env`.
 
-Cada máquina do núcleo tem o seu `.env`, preenchido pela TI na hora da
+Cada máquina da CAPCF tem o seu `.env`, preenchido pela TI na hora da
 instalação e nunca versionado. Este arquivo só sabe onde ele fica e como tirar
 um valor de dentro dele.
 """
