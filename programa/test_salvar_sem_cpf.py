@@ -288,7 +288,11 @@ def test_o_campo_vazio_nao_grava_nada(tmp_path, aplicacao):
     painel.tela_salvar._salvar()
 
     assert painel.telas.currentWidget() is painel.tela_salvar
-    assert list(tmp_path.glob("*")) == [origem]
+    # O preferencias.ini do teste mora na mesma pasta provisória, e ganha a
+    # pasta lembrada ao abrir o arquivo (RN-43 da spec 002); documento, nenhum.
+    import preferencias
+    sobra = [p for p in tmp_path.glob("*") if p != preferencias.caminho()]
+    assert sobra == [origem]
 
 
 # --------------------------------------------------- o lembrete dos liberados

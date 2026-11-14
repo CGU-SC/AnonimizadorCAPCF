@@ -8,7 +8,9 @@ desenvolvimento, a pasta da instalação é a raiz do projeto, e o arquivo fica
 fora do histórico.
 
 Aqui só entra a escolha da pessoa - o motor de cada módulo, o tamanho da
-janela. Nada do trabalho (documento, texto, pasta) é guardado (RN-40).
+janela, o tema - e a pasta do último arquivo aberto, sem o nome dele (RN-43,
+`lembranca_da_pasta.py`). Nada do trabalho (documento, texto, achado) é
+guardado (RN-40).
 
 Lembrar nunca atrapalha usar (RN-39): o que não dá para ler vale como "nada
 lembrado", e o que não dá para gravar fica valendo só até fechar o programa,

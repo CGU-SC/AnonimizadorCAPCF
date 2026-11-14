@@ -6,7 +6,7 @@
   instalador leva tudo, e ninguém instala Python.</p>
   <div class="tabela"><table>
     <tr><th>O quê</th><th>Para quê</th><th>Observação</th></tr>
-    <tr><td class="curta"><b>Windows 11</b></td><td>Rodar e testar o programa.</td><td>A versão 0.2.0 só foi testada no Windows 11.</td></tr>
+    <tr><td class="curta"><b>Windows 11</b></td><td>Rodar e testar o programa.</td><td>A versão 1.0.0 só foi testada no Windows 11.</td></tr>
     <tr><td class="curta"><b>Python 3.12</b></td><td>Criar o ambiente, rodar o programa e os testes.</td><td>Do site oficial do Python. O comando <code>python</code> precisa responder no terminal.</td></tr>
     <tr><td class="curta"><b>Tesseract, com o português</b></td><td>Ler com o motor alternativo, endireitar a página deitada e <b>rodar os testes</b>: parte deles lê páginas da massa com ele de verdade.</td><td>Sem ele, o programa abre e o PaddleOCR lê, mas esses testes falham. Ver <a href="#tesseract">abaixo</a>.</td></tr>
     <tr><td class="curta"><b>Git</b></td><td>Guardar o histórico das mudanças.</td><td>A pasta chega sem histórico: o primeiro passo é começar o seu (aba <a href="#mudancas">Mudanças</a>).</td></tr>
@@ -34,7 +34,7 @@
       <p>O atalho cria o ambiente se ele faltar, confere as dependências toda vez (uma instalação interrompida no meio deixaria a <code>.venv</code> de pé mas incompleta) e abre o <code>programa/main.py</code>. <b>A janela não recarrega o código sozinha</b>: depois de mudar algo, feche e abra de novo.</p></li>
     <li><span class="titulo">Rodar os testes</span>
       <div class="codigo"><div class="cab">PowerShell</div><pre>.\.venv\Scripts\python.exe -m pytest</pre></div>
-      <p>São 1.072 testes, que levaram uns 4 minutos na máquina em que o programa foi construído. Eles sobem o Qt de verdade, sem mostrar janela, e nenhum lê ou grava o <code>.env</code> nem o <code>preferencias.ini</code> desta máquina (aba <a href="#testes">Testes</a>).</p>
+      <p>São 1.083 testes, que levaram uns 4 minutos na máquina em que o programa foi construído. Eles sobem o Qt de verdade, sem mostrar janela, e nenhum lê ou grava o <code>.env</code> nem o <code>preferencias.ini</code> desta máquina (aba <a href="#testes">Testes</a>).</p>
       <p>O programa abre sem este passo, e mesmo assim ele vem aqui, antes de qualquer mudança, por dois motivos. <b>Ele prova que o ambiente ficou completo</b>: uma instalação pela metade, uma biblioteca em outra versão ou os modelos do PaddleOCR faltando podem deixar o programa abrir e falhar só depois, sem aviso. E <b>ele marca o ponto de partida</b>: um teste que falha agora é problema da máquina, e não do código; rodado só depois da primeira mudança, a falha pareceria culpa dela.</p></li>
   </ol>
 </div>
@@ -53,7 +53,8 @@
     <tr><td class="mono">TESSERACT_CAMINHO</td><td>A pasta do Tesseract, quando ele foi instalado fora do lugar de sempre.</td><td>A TI, naquela máquina.</td></tr>
   </table></div>
   <p>O <code>preferencias.ini</code> guarda as escolhas da pessoa — o motor de cada
-  módulo, o tamanho da janela, o tema e a configuração da IA (sem o token) —, e
+  módulo, o tamanho da janela, o tema, a configuração da IA (sem o token) e a pasta
+  do último arquivo aberto, sem o nome dele —, e
   o programa o cria sozinho. Os detalhes de como ele é gravado estão na aba
   <a href="#arquitetura">Arquitetura</a>.</p>
 </div>

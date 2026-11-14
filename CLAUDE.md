@@ -20,7 +20,7 @@ maduro do mercado para ler PDF, rodar OCR e achar padrão com regex.
 | OCR | Dois motores na escolha (spec 002, emenda de 18/10/2026). **PaddleOCR**, o padrão: os modelos PP-OCRv6 pequenos, rodados pelo RapidOCR 3.10.0 com o onnxruntime 1.31.0, dentro do programa — nada é baixado. **Tesseract**, a alternativa, via pytesseract, com pacote de português; o detector de orientação dele endireita a página também para o PaddleOCR |
 | Leitura de Word | Sem biblioteca — o `.docx` é um pacote compactado de XML, aberto com o `zipfile` e o `xml.etree.ElementTree`, que já vêm no Python (funcionalidade 5, decidido em 23/10/2026). Descartados: o PyMuPDF, que só abre `.docx` na versão paga (Pro); a python-docx, que não lê caixa de texto, nota nem alteração controlada; o mammoth, que deixa de fora cabeçalho e rodapé; o docx2python, mantido por uma pessoa só; e o pandoc, programa a mais em cada máquina |
 | Validação de CPF | Sem biblioteca — dígito verificador calculado na mão |
-| Dados | Sem banco — cada documento é processado sozinho, sem estado entre usos. A **escolha da pessoa** (o motor de cada módulo, o tamanho da janela e, desde a funcionalidade 10, o tema) é lembrada num `preferencias.ini` na pasta da instalação, ao lado do `.env`, lido e gravado com o `configparser` do Python (funcionalidade 8, decidido em 28/10/2026); nada do trabalho é guardado. Descartados: escrever no `.env`, que é da TI; a pasta de configurações do usuário (`%APPDATA%`), que esta máquina dividiria entre o programa instalado e o de desenvolvimento; e o registro do Windows, invisível para quem não programa |
+| Dados | Sem banco — cada documento é processado sozinho, sem estado entre usos. A **escolha da pessoa** (o motor de cada módulo, o tamanho da janela, desde a funcionalidade 10 o tema e, desde a 11, a pasta do último arquivo aberto, sem o nome dele) é lembrada num `preferencias.ini` na pasta da instalação, ao lado do `.env`, lido e gravado com o `configparser` do Python (funcionalidade 8, decidido em 28/10/2026); nada do trabalho é guardado. Descartados: escrever no `.env`, que é da TI; a pasta de configurações do usuário (`%APPDATA%`), que esta máquina dividiria entre o programa instalado e o de desenvolvimento; e o registro do Windows, invisível para quem não programa |
 | Testes | pytest |
 | Distribuição | instalador do Windows (Inno Setup) com o programa numa pasta montada pelo PyInstaller — sem exigir Python nas máquinas do núcleo. Era `.exe` único até 23/09/2026: com instalador a pasta não aparece, e o `.exe` único se desempacota a cada abertura (5 a 10 s) e o antivírus desconfia dele |
 
@@ -142,7 +142,8 @@ RapidOCR e os modelos são Apache-2.0, e o onnxruntime é MIT.
   roteiros `Como instalar.html` e `Como usar.html`. O número da versão mora em
   `programa/versao.py`, e aparece no alto da faixa da esquerda, embaixo do nome
   (desde a funcionalidade 9), e no instalador;
-  0.x é versão de teste, 1.0.0 fica para quando o núcleo aprovar o uso.
+  as 0.x foram versões de teste, e a 1.0.0, reservada para a aprovação do núcleo, foi
+  dada pela solicitante à entrega de 14/11/2026, com a funcionalidade 11.
 - **Fora de escopo desta versão**: outro dado sensível além do CPF; saída em
   XLSX ou PDF (fica para um "anonimizador de documentos" futuro); construir o
   assistente de IA em si; qualquer uso oficial do arquivo gerado.
@@ -247,11 +248,9 @@ fim da revisão, diga quais ficaram de fora e o que elas veriam.
   guarda o texto recebido**, que vai com os CPFs inteiros.
 
 - **Melhorias anotadas na entrega da 0.2.0**, para uma versão depois dela:
-  - **lembrar a pasta do último arquivo escolhido** (pedido da solicitante no teste da
-    entrega, 10/11/2026): hoje "Escolher arquivo…" sempre abre na pasta da instalação.
-    Antes de construir, a spec 002 precisa dizer se pode: o `preferencias.ini` guarda
-    só escolhas da pessoa, e nada do trabalho, e a pasta diz onde ficam os documentos,
-    mesmo sem dizer o que eles têm;
+  - ~~lembrar a pasta do último arquivo escolhido~~: construída como funcionalidade 11
+    e entregue na 1.0.0 (14/11/2026), no lugar da anonimização do e-mail, que saiu do
+    previsto porque outro projeto pediu o tempo;
   - **duas frases do "Como instalar" escritas sem teste**: o plano B de copiar o modelo
     de `.lmstudio\models\lmstudio-community` de outra máquina, e "Windows 10 ou 11" (a
     0.2.0 só rodou no Windows 11).

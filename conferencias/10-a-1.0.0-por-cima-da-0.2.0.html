@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência 10 — a 1.0.0 instalada por cima de uma 0.2.0 em uso</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-destaque: #3b6ea5; --cor-alerta: #d9a441; --cor-sucesso: #4caf6d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 980px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--cor-borda); }
+  h3 { font-size: 16px; margin: 24px 0 8px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  .copiar { display: block; font-family: "Cascadia Mono", Consolas, monospace; font-size: 13.5px; background: #15181d; border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 8px 12px; margin: 6px 0; user-select: all; overflow-x: auto; white-space: nowrap; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th { text-align: left; color: var(--cor-texto-secundario); font-weight: 400; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--cor-borda); }
+  td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+  ol { padding-left: 24px; }
+  li { margin-bottom: 14px; }
+  .ve { color: var(--cor-texto-secundario); display: block; font-size: 14px; margin-top: 4px; }
+  .torto { color: var(--cor-alerta); font-weight: 600; }
+  .fase { color: var(--cor-destaque); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin: 26px 0 6px; font-weight: 600; }
+  .aviso { border: 1px solid var(--cor-alerta); background: rgba(217,164,65,.10); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Conferência 10 — a 1.0.0 instalada por cima de uma 0.2.0 em uso</h1>
+<p class="subtitulo">O teste obrigatório da entrega da versão 1.0.0, em 14/11/2026: provar que a versão nova encontra
+a 0.2.0 que já foi usada, com o <code>.env</code> preenchido e escolhas lembradas, e não estraga nada. A única
+novidade da 1.0.0 é a pasta do último arquivo lembrada (funcionalidade 11), e é ela que este teste olha com mais
+cuidado.</p>
+<div class="aviso"><strong>O que só este teste prova:</strong> que a 1.0.0 lê o <code>preferencias.ini</code> que a
+0.2.0 deixou, sem a pasta lembrada dentro, e continua lembrando o que já estava lá. O instalador testado aqui é o
+mesmo arquivo que vai para o núcleo.</div>
+
+<h2>O que já está provado, antes de você instalar</h2>
+<table>
+  <tr><th>Conferência</th><th>O resultado</th></tr>
+  <tr><td>A lista inteira de testes</td><td>1.083 testes passando, rodados pelo próprio gerador da entrega, antes de
+    montar o programa</td></tr>
+  <tr><td>Os roteiros da pasta da entrega</td><td>Idênticos, byte a byte, aos de <code>empacotar/</code>, com a versão
+    1.0.0, sem a marca de versão de teste e com a pasta lembrada</td></tr>
+  <tr><td>Segredo dentro do instalador</td><td>A pasta montada não tem <code>.env</code> nem <code>preferencias.ini</code>,
+    e a receita do instalador deixa os dois de fora de qualquer jeito</td></tr>
+  <tr><td>O instalador da 0.2.0</td><td>Intocado em <code>builds\instalador</code>: é o caminho de volta</td></tr>
+  <tr><td>A impressão digital do instalador da 1.0.0</td><td><code>50BE67EE5A480A17D7F173E4A3D05A282DC8C44916547B5781968AE10EB87BD6</code>
+    — a do arquivo que vai para o núcleo tem de ser esta</td></tr>
+</table>
+
+<h2>Antes de começar</h2>
+<div class="aviso">
+<ul>
+  <li><strong>O programa instalado nesta máquina é a 0.2.0</strong>, do teste da entrega de 10/11/2026. Se o passo 1
+    mostrar outra versão, pare e me diga.</li>
+  <li><strong>Feche o programa</strong>, o de desenvolvimento e o instalado, antes de instalar.</li>
+  <li><strong>Só documentos inventados</strong>, da pasta <code>dados-exemplo</code>.</li>
+  <li><strong>Desligue a internet no passo 5</strong>, e só religue no fim.</li>
+</ul>
+</div>
+
+<h2>Roteiro na tela</h2>
+<p class="fase">A 0.2.0 em uso</p>
+<ol>
+  <li><strong>Abrir a 0.2.0 instalada</strong>, pelo menu Iniciar.
+    <span class="ve">Você deve ver: "CAPCF · versão 0.2.0" no alto da faixa da esquerda.</span></li>
+  <li><strong>Deixar escolhas lembradas.</strong> Em Configurações › Tema, marque "Claro" e clique em "Reabrir agora".
+    No Gerar OCR, abra o PDF abaixo e marque o Tesseract, sem ler:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\dados-exemplo\03-conteudo-girado.pdf</span>
+    Tire a janela do maximizado, deixe-a de um tamanho menor, e feche pelo X.
+    <span class="ve">Você deve ver: o programa voltar no claro depois do "Reabrir agora".</span></li>
+  <li><strong>Marcar o <code>.env</code>, como a TI faria.</strong> Cole no Explorador de Arquivos:
+    <span class="copiar">%LOCALAPPDATA%\Programs\Anonimizador CAPCF</span>
+    Abra o <code>.env</code> no Bloco de Notas e escreva, no começo, uma linha só para reconhecer depois:
+    <span class="copiar"># escrito pela TI no teste da entrega 1.0.0</span>
+    Salve com Ctrl+S.
+    <span class="ve">Você deve ver: o arquivo continuar se chamando só <code>.env</code>, e não <code>.env.txt</code>.</span></li>
+</ol>
+
+<p class="fase">Atualizar, sem internet</p>
+<ol start="4">
+  <li><strong>Conferir o instalador novo.</strong> Abra a pasta da entrega:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\builds\entrega-1.0.0</span>
+    <span class="ve">Você deve ver: três arquivos — "Anonimizador-CAPCF-1.0.0-instalador.exe", "Como instalar.html" e
+    "Como usar.html".</span></li>
+  <li><strong>Desligar a internet</strong> e <strong>instalar a 1.0.0 por cima</strong>, sem desinstalar a 0.2.0: dois
+    cliques no instalador da pasta da entrega. Siga e deixe marcado "Abrir o Anonimizador CAPCF agora".
+    <span class="ve">Você deve ver: o instalador dizendo "Anonimizador CAPCF 1.0.0", sem pedir senha de administrador e
+    sem perguntar a pasta.</span>
+    <span class="ve"><span class="torto">Se ele pedir para fechar um programa</span>, a 0.2.0 ficou aberta: feche e
+    tente de novo.</span></li>
+  <li><strong>A primeira abertura da 1.0.0.</strong>
+    <span class="ve">Você deve ver: "CAPCF · versão 1.0.0" no alto da faixa, no <strong>claro</strong> e do
+    <strong>tamanho menor</strong> em que a 0.2.0 foi fechada. Nenhuma caixa de erro.</span></li>
+  <li><strong>A primeira escolha de arquivo.</strong> No Anonimizar, clique em "Escolher arquivo…".
+    <span class="ve">Você deve ver: a janela de escolher abrir como na 0.2.0, porque a 0.2.0 não lembrava pasta
+    nenhuma.</span>
+    Escolha:
+    <span class="copiar">C:\Dev\AnonimizadorCAPCF\dados-exemplo\30-revisao-por-ia.md</span>
+    <span class="ve">Você deve ver: a revisão aberta, com os CPFs marcados.</span></li>
+  <li><strong>A pasta lembrada vale no outro módulo.</strong> No Gerar OCR, clique em "Escolher arquivo…".
+    <span class="ve">Você deve ver: a janela abrir já em <code>dados-exemplo</code>.</span>
+    Escolha o <code>03-conteudo-girado.pdf</code>.
+    <span class="ve">Você deve ver: o <strong>Tesseract</strong> marcado, como a 0.2.0 deixou.</span></li>
+  <li><strong>Ler sem internet.</strong> Marque o PaddleOCR, clique para ler, confira a página e clique em "Conferido".
+    <span class="ve">Você deve ver: a leitura terminar em poucos segundos e a página endireitada na conferência.</span></li>
+  <li><strong>Os roteiros sem internet.</strong> Abra o "Como usar.html" da pasta da entrega.
+    <span class="ve">Você deve ver: todas as imagens, com "versão 1.0.0" no alto da faixa; nenhuma "versão de teste";
+    e, na parte 5, o item "A pasta do último arquivo".</span></li>
+</ol>
+
+<p class="fase">A segunda abertura</p>
+<ol start="11">
+  <li><strong>Fechar pelo X e abrir de novo</strong>, pelo menu Iniciar. No Anonimizar, clique em "Escolher arquivo…"
+    e cancele.
+    <span class="ve">Você deve ver: o programa no claro, do mesmo tamanho, e a janela de escolher abrindo em
+    <code>dados-exemplo</code>.</span></li>
+  <li><strong>O <code>.env</code>, depois de tudo.</strong> Feche o programa e abra o <code>.env</code> no Bloco de Notas,
+    na pasta do passo 3.
+    <span class="ve">Você deve ver: a linha "# escrito pela TI no teste da entrega 1.0.0" e o resto como estava, nada
+    apagado.</span></li>
+  <li><strong>Deixar a máquina no padrão.</strong> Abra o programa, volte o tema para "Escuro" e feche. Religue a
+    internet.
+    <span class="ve">A 1.0.0 fica instalada nesta máquina, que é o programa entregue.</span></li>
+</ol>
+
+<h2>Se der errado</h2>
+<p>O caminho de volta é o mesmo do núcleo: desinstalar a 1.0.0 e instalar a 0.2.0, que está guardada em
+<code>builds\instalador</code>. Desinstalar apaga o <code>.env</code>: o que a TI escreveu nele precisa ser escrito de
+novo. Nesse caso, a entrega não vai para o núcleo até o defeito ser consertado, numa versão com outro número.</p>
+<p class="rodape">Escrita a pedido da skill-11, no modelo da conferência 09, em 14/11/2026. Os números de CPF dos
+documentos de exemplo são inventados.</p>
+</body>
+</html>
