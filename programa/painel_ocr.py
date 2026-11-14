@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 import estilo
+import lembranca_da_pasta
 from cabecalho_da_tela import CabecalhoDaTela
 from caminho_do_pdf import (
     CaminhoDoPdf,
@@ -274,10 +275,9 @@ class PainelOcr(QWidget):
     # ------------------------------------------------------------- escolher
 
     def _abrir_seletor_de_arquivo(self):
-        # A pasta inicial fica em branco de propósito: nada é lembrado entre um
-        # uso e outro, nem a última pasta usada (RN-22).
         caminho, _ = QFileDialog.getOpenFileName(
-            self, "Escolher documento", "", "Documentos PDF (*.pdf)"
+            self, "Escolher documento", lembranca_da_pasta.pasta_inicial(),
+            "Documentos PDF (*.pdf)",
         )
         if caminho:
             self.receber_documento(Path(caminho))
@@ -432,6 +432,9 @@ class PainelOcr(QWidget):
 
     def receber_documento(self, caminho):
         """Recebe outro documento - perguntando antes, se houver texto não salvo."""
+        # Lembrada já aqui, antes da pergunta: mesmo que a pessoa desista de
+        # trocar de documento, a pasta em que ela foi procurar é a que ela usa.
+        lembranca_da_pasta.lembrar(caminho)
         if not self._perguntar_antes_de_descartar(
             lambda: self._receber_documento(caminho)
         ):

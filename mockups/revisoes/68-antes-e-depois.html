@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Revisão 68 — antes e depois</title>
+<style>
+  :root { --cor-fundo: #1e2228; --cor-fundo-elevado: #262b33; --cor-borda: #383e47; --cor-texto: #e8eaed; --cor-texto-secundario: #9aa1ac; --cor-sucesso: #4caf6d; --cor-erro: #e05d5d; --raio: 6px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--cor-fundo); color: var(--cor-texto); font-family: "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.55; padding: 32px; max-width: 1040px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 32px 0 16px; }
+  .subtitulo { color: var(--cor-texto-secundario); margin-bottom: 24px; }
+  code { font-family: "Cascadia Mono", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.06); padding: 1px 5px; border-radius: 4px; }
+  pre { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; background: rgba(0,0,0,.25); border-radius: 4px; padding: 8px 10px; margin: 8px 0 0; white-space: pre-wrap; }
+  .achado { background: var(--cor-fundo-elevado); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-sucesso); border-radius: var(--raio); padding: 16px 24px; margin-bottom: 16px; }
+  .achado h3 { font-size: 15px; margin: 0 0 8px; }
+  .lado { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .caixa { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 12px 16px; }
+  .caixa.antes { border-top: 3px solid var(--cor-erro); }
+  .caixa.depois { border-top: 3px solid var(--cor-sucesso); }
+  .caixa b.rotulo { display: block; font-size: 13px; color: var(--cor-texto-secundario); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .rodape { margin-top: 32px; color: var(--cor-texto-secundario); font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Revisão 68 — antes e depois</h1>
+<h1>Revisão 68 — antes e depois</h1>
+<p class="subtitulo">Lente crítica sobre a funcionalidade 11, a pasta do último arquivo lembrada (RN-43 da spec 002,
+emenda de 14/11/2026), em 14/11/2026. A varredura automática (<code>/code-review</code>, nível médio) levantou oito
+suspeitas; uma passou pela trava da lente e pela tentativa de derrubada, foi aprovada e consertada. Os 1.083 testes
+passam.</p>
+
+<div class="achado"><h3>1 · A pasta de rede fora do ar congelava a janela</h3>
+<p>Para saber se a pasta lembrada ainda existe, o programa pergunta ao Windows. Numa pasta da rede da universidade
+com a rede fora, o Windows espera o servidor por 20 a 60 segundos antes de responder que ela não existe, e a janela
+ficava parada no clique em "Escolher arquivo…", às vezes com o "Não respondendo" no título. A emenda promete que a
+pasta que sumiu abre a janela como antes, sem aviso.</p>
+<div class="lado">
+<div class="caixa antes"><b class="rotulo">Antes</b>
+A pergunta era feita direto, e a janela esperava a resposta, durasse o que durasse.
+<pre>if pasta and os.path.isdir(pasta):
+    return pasta</pre></div>
+<div class="caixa depois"><b class="rotulo">Depois</b>
+A pergunta vai numa linha à parte, e a janela espera no máximo 2 segundos. Sem resposta, vale como nada lembrado, e
+a janela de escolher arquivo abre como antes.
+<pre>if pasta and _existe_a_tempo(pasta):
+    return pasta
+
+SEGUNDOS_PARA_CONFERIR = 2
+# _existe_a_tempo: threading.Thread(daemon=True)
+# chamando os.path.isdir, e join(2)</pre>
+Teste novo: <code>test_a_pasta_de_rede_fora_do_ar_nao_congela_a_janela</code>, com uma pasta que finge não
+responder.</div>
+</div></div>
+
+<h2>O que mudou no projeto</h2>
+<ul>
+<li><code>programa/lembranca_da_pasta.py</code>: a conferência com prazo, com o comentário do porquê.</li>
+<li><code>programa/test_lembranca_da_pasta.py</code>: o teste da pasta que não responde.</li>
+<li>Nenhum arquivo criado, apagado ou movido nesta revisão: os dois já nasceram na construção da funcionalidade 11.</li>
+</ul>
+
+<h2>O que foi levantado e não virou achado</h2>
+<ul>
+<li><b>O comentário da janela de apontar a pasta do Tesseract</b> (<code>programa/motor_na_tela.py</code>, linha 174)
+diz que "nada é lembrado entre um uso e outro", o que deixou de ser verdade com a RN-43. Não muda nada na tela —
+lente de clareza, não aprovado nesta rodada.</li>
+<li><b>Nome de pasta com CPF fica escrito no <code>preferencias.ini</code></b>, que não sai da máquina da pessoa, onde
+o mesmo nome já está no disco — lente de segredo e dado real, não rodada.</li>
+<li><b>Gravações e leituras a mais no arquivo de escolhas</b>, <b>a unidade mapeada lembrada pelo caminho da rede</b>
+e <b>dois pontos fracos de teste</b>: nenhum trava o programa, perde dado ou dá resultado errado.</li>
+</ul>
+
+<p class="rodape">Gerada pela skill-07, a pedido da skill-09, em 14/11/2026.</p>
+</body>
+</html>

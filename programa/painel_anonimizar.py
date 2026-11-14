@@ -33,6 +33,7 @@ import arquivo_texto
 import arquivo_word
 import cpf
 import estilo
+import lembranca_da_pasta
 from cabecalho_da_tela import CabecalhoDaTela
 from caminho_do_pdf import CaminhoDoPdf, FaixaDoTopo
 from lembranca_do_motor import LembrancaDoMotor
@@ -296,10 +297,8 @@ class PainelAnonimizar(QWidget):
     # ------------------------------------------------------------- escolher
 
     def _abrir_seletor_de_arquivo(self):
-        # A pasta inicial fica em branco de propósito: nada é lembrado entre um
-        # uso e outro, nem a última pasta usada (regra RN-19).
         caminho, _ = QFileDialog.getOpenFileName(
-            self, "Escolher arquivo", "",
+            self, "Escolher arquivo", lembranca_da_pasta.pasta_inicial(),
             "Documentos (*.pdf *.docx *.md *.txt)",
         )
         if caminho:
@@ -311,6 +310,9 @@ class PainelAnonimizar(QWidget):
         Havendo revisão aberta e não salva, a pergunta vem antes: o arquivo novo
         só é aberto depois de a pessoa dizer que pode jogar fora o anterior.
         """
+        # Lembrada já aqui, antes da pergunta: mesmo que a pessoa desista de
+        # trocar de arquivo, a pasta em que ela foi procurar é a que ela usa.
+        lembranca_da_pasta.lembrar(caminho)
         if self.perguntar_antes_de_descartar(
                 lambda: self.receber_arquivo(caminho), incluir_conferencia=True):
             return

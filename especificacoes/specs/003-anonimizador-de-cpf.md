@@ -719,6 +719,9 @@ aprovação própria, antes da construção.
   de um uso para o outro - spec 002, emenda de 28/10/2026, RN-36. Nada do
   trabalho é guardado: documento, texto, pasta, histórico continuam
   proibidos - RN-40 da spec 002.)*
+  *(Emendada em 14/11/2026: a pasta do último arquivo aberto passa a ser
+  lembrada, uma só para os dois módulos, sem o nome do arquivo - spec 002,
+  emenda de 14/11/2026, RN-43.)*
 - *(Acréscimo de 01/11/2026 à RN-2, na conferência da funcionalidade 4: número de 9 dígitos
   sem pontuação, no fim da linha, com um título numerado na de baixo ("12. Equipe do
   Projeto"), não é "quase CPF" quando não fecha a conta. O que fecha continua mascarado, e

@@ -38,6 +38,9 @@ trazem a remissão.
 `preferencias.ini` (funcionalidade 10 do backlog). Está na seção "Emenda de
 05/11/2026", no fim; a tela do Tema e o resto da funcionalidade estão na emenda de
 mesma data da spec 001.
+**Emendada em:** 2026-11-14 (aprovada no mesmo dia) — a pasta do último arquivo aberto
+passa a ser lembrada, uma só para os dois módulos (funcionalidade 11 do backlog). Está
+na seção "Emenda de 14/11/2026", no fim; abre uma exceção na RN-40.
 
 ## Objetivo
 
@@ -350,7 +353,8 @@ usado quando a IA local entrar, em spec própria.
   motor** passa a ser lembrada, um por módulo — RN-36. Todo o resto continua
   proibido: nada do **trabalho** é guardado — documento, texto lido, pasta
   usada, histórico, achados, nem o tamanho de letra e de página da
-  conferência — RN-40.)*
+  conferência — RN-40.)* *(Emendada em 14/11/2026: a **pasta do último arquivo
+  aberto** passa a ser lembrada — RN-43.)*
 - RN-23: a página do documento, na conferência, tem controles de **−** e **+**,
   indo de 50% a 400%, mais um botão que volta ao tamanho que cabe na largura. O
   tamanho escolhido **vale para as páginas seguintes** enquanto o mesmo
@@ -810,7 +814,9 @@ rascunho de tela.
 - RN-40: **nada do trabalho é lembrado.** O `preferencias.ini` guarda só a
   escolha da pessoa; documento, texto lido, pasta usada, histórico, achados e o
   tamanho de letra e de página da conferência continuam proibidos de ficar
-  guardados (RN-22).
+  guardados (RN-22). *(Emendada em 14/11/2026: a pasta do último arquivo aberto
+  passa a ser lembrada, sem o nome do arquivo — RN-43. O resto continua
+  proibido.)*
 - RN-41: **desinstalar apaga o `preferencias.ini`; atualizar o mantém.** Quem
   desinstala e instala de novo começa do padrão.
 
@@ -901,6 +907,72 @@ e o "Reabrir agora" estão na emenda de mesma data da spec 001 (RN-16 a RN-26).
   `preferencias.ini` da raiz do projeto.
 - Dado o instalador, então desinstalar apaga o tema junto com o resto do
   `preferencias.ini`, e instalar uma versão nova por cima o mantém.
+
+### Questões em aberto da emenda
+
+Nenhuma.
+
+## Emenda de 14/11/2026 — a pasta lembrada
+
+**Situação:** aprovada em 14/11/2026.
+
+Funcionalidade 11 do backlog. Pedida pela solicitante no teste da entrega da 0.2.0
+(10/11/2026): "Escolher arquivo…" abria sempre na pasta da instalação, e cada
+documento pedia o caminho inteiro de novo. Entrou no lugar da anonimização de
+e-mail, que saiu do previsto em 14/11/2026. Acordo curto, sem rascunho de tela: a
+janela de escolher arquivo é a do Windows, e só muda a pasta em que ela abre.
+
+### Escopo da emenda
+
+- A pasta do último arquivo aberto é lembrada de um uso para o outro, e a janela
+  de "Escolher arquivo…" abre nela, no Gerar OCR e no Anonimizar.
+
+### Fora de escopo da emenda
+
+- Lembrar o nome do arquivo, ou uma lista dos últimos abertos.
+- A janela de salvar, que continua abrindo na pasta do documento (spec 003).
+- Uma pasta por módulo.
+
+### Premissas da emenda
+
+- premissa: a pasta diz onde os documentos moram, e não o que eles têm; guardá-la,
+  sem o nome do arquivo, foi aceito pela solicitante em 14/11/2026 como exceção à
+  RN-40.
+- premissa: a pasta que não existe mais (o pendrive tirado, a rede fora) vale como
+  nada lembrado, sem aviso.
+- premissa: desinstalar apaga a pasta lembrada, e atualizar a mantém (RN-41).
+
+### Dados da emenda
+
+| Informação | De onde vem | Observação |
+| --- | --- | --- |
+| pasta lembrada | o arquivo que a pessoa escolhe ou arrasta, em qualquer dos dois módulos | o caminho da pasta, sem o nome do arquivo, no bloco `arquivos` do `preferencias.ini` |
+
+### Regras de negócio da emenda
+
+- RN-43: **a pasta do último arquivo aberto é lembrada, uma só para os dois
+  módulos.** Conta o arquivo escolhido em "Escolher arquivo…" e o arrastado para a
+  janela, e ela é guardada na hora, antes da pergunta sobre o trabalho não salvo. A
+  janela de escolher arquivo dos dois módulos abre nela. Valem as RN-38, RN-39 e
+  RN-41: mora no `preferencias.ini`; o que não dá para ler, ou a pasta que não
+  existe mais, vale como nada lembrado, sem erro e sem aviso; desinstalar apaga, e
+  atualizar mantém. Guardar a pasta não mexe no motor, na janela nem no tema.
+
+### Critérios de aceite da emenda
+
+- Dado que a pessoa abre um arquivo no Anonimizar, escolhido ou arrastado, quando
+  ela clica em "Escolher arquivo…" no Gerar OCR, então a janela abre na pasta desse
+  arquivo; e o mesmo do Gerar OCR para o Anonimizar.
+- Dado que a pessoa abriu um arquivo e fechou o programa, quando ela abre de novo e
+  clica em "Escolher arquivo…", então a janela abre na mesma pasta.
+- Dado que a pasta lembrada não existe mais, quando a pessoa clica em "Escolher
+  arquivo…", então a janela abre como antes da emenda, sem aviso.
+- Dado o `preferencias.ini` depois de abrir um arquivo, então ele tem a pasta, e
+  nenhum nome de arquivo.
+- Dado um `preferencias.ini` com os motores e o tema, quando a pessoa abre um
+  arquivo, então os motores e o tema continuam como estavam.
+- Dados os testes automáticos, então nenhum deles lê ou grava a pasta no
+  `preferencias.ini` da raiz do projeto.
 
 ### Questões em aberto da emenda
 
