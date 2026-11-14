@@ -192,7 +192,7 @@ def passa_na_conta(digitos):
     Os dois últimos dígitos são calculados a partir dos nove primeiros e
     comparados com os que estão escritos. Sem biblioteca de fora: a conta tem
     seis linhas, e uma dependência a mais seria mais uma coisa para instalar
-    nas máquinas do núcleo.
+    nas máquinas da CAPCF.
     """
     if len(digitos) != 11 or not digitos.isdigit():
         return False

@@ -9,7 +9,7 @@
   <div class="dados">
     <div class="dado"><span class="rotulo">Versão</span><span class="valor">{{VERSAO}}</span></div>
     <div class="dado"><span class="rotulo">Desenvolvido por</span><span class="valor">CGU, na consultoria à UFSC em 2026</span></div>
-    <div class="dado"><span class="rotulo">Quem usa</span><span class="valor">o núcleo da CAPCF</span></div>
+    <div class="dado"><span class="rotulo">Quem usa</span><span class="valor">a CAPCF</span></div>
     <div class="dado"><span class="rotulo">Stack</span><span class="valor">Python 3.12 · PySide6</span></div>
   </div>
 </div>
@@ -26,8 +26,7 @@
   nenhuma mudança pode quebrar.</p>
   <div class="cartoes">
     <div class="cartao azul"><div class="titulo">Só o CPF</div>
-      <p><code>123.456.789-10</code> → <code>XXX.456.789-XX</code>. Pelo que o núcleo
-      informou, os documentos que vão ao assistente não trazem outro dado pessoal
+      <p><code>123.456.789-10</code> → <code>XXX.456.789-XX</code>. Pelo que a coordenadoria informou, os documentos que vão ao assistente não trazem outro dado pessoal
       além do nome e do CPF das pessoas, e <b>o programa tira só o CPF</b>.</p></div>
     <div class="cartao verde"><div class="titulo">Nada sai da universidade</div>
       <p>Nenhum endereço de fora escrito no código, e nada é baixado. Os modelos do
@@ -55,7 +54,7 @@
   combinado, e pede emenda na spec antes do código.</p>
   <div class="tabela"><table>
     <tr><th>Assunto</th><th>O combinado</th></tr>
-    <tr><td class="curta"><b>Quem usa</b></td><td>O núcleo da CAPCF, uma pessoa por vez, cada uma na própria máquina. Não é serviço compartilhado.</td></tr>
+    <tr><td class="curta"><b>Quem usa</b></td><td>A CAPCF, uma pessoa por vez, cada uma na própria máquina. Não é serviço compartilhado.</td></tr>
     <tr><td class="curta"><b>O que entra</b></td><td>PDF com texto por dentro ou só com imagem (o programa descobre sozinho, e só roda o OCR quando não há texto), documento do Word (<code>.docx</code>), <code>.md</code> e <code>.txt</code>. Um arquivo por vez. O <code>.doc</code> antigo não entra.</td></tr>
     <tr><td class="curta"><b>O que sai</b></td><td>Um <code>.md</code>, com as tabelas como tabelas de texto, para a pessoa arrastar para a conversa com o assistente. O nome é o do original mais <code> - sem CPF</code>, na mesma pasta. O original nunca é alterado nem apagado.</td></tr>
     <tr><td class="curta"><b>A máscara</b></td><td>Os 3 primeiros e os 2 últimos dígitos viram <code>X</code>, com a pontuação de antes; a barra vira traço. Reconhece CPF com pontos e traço, só com traço, só dígitos, com barra, e o que perdeu o zero da frente.</td></tr>
@@ -99,7 +98,7 @@
   <div class="tabela"><table>
     <tr><th>Pasta ou arquivo</th><th>O que tem</th></tr>
     <tr><td class="curta"><code>programa/</code></td><td>O código e os testes, lado a lado: cada <code>test_*.py</code> ao lado do que ele testa.</td></tr>
-    <tr><td class="curta"><code>especificacoes/</code></td><td>O backlog (as 10 funcionalidades) e as quatro specs, com as emendas.</td></tr>
+    <tr><td class="curta"><code>especificacoes/</code></td><td>O backlog (as 11 funcionalidades) e as quatro specs, com as emendas.</td></tr>
     <tr><td class="curta"><code>mockups/</code></td><td>O sistema de design (as cores e as medidas), os rascunhos de cada tela, as specs ilustradas e as páginas de antes e depois das revisões. O <code>mockups/00-indice.html</code> lista tudo, da mais nova para a mais antiga.</td></tr>
     <tr><td class="curta"><code>dados-exemplo/</code></td><td>A massa inventada e os scripts que a geram.</td></tr>
     <tr><td class="curta"><code>conferencias/</code></td><td>As páginas que mostram o que o programa decidiu sobre a massa, e os scripts que as geram.</td></tr>

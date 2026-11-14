@@ -30,7 +30,7 @@ VersionInfoVersion={#Versao}
 ; si as escolhas de quem usa (o preferencias.ini, funcionalidade 8), e a
 ; funcionalidade 4 vai gravar ali a configuração da IA local; em Program Files
 ; cada gravação pediria a confirmação do Windows. Mudar de lugar depois custaria uma volta em cada
-; máquina do núcleo.
+; máquina da CAPCF.
 PrivilegesRequired=lowest
 DefaultDirName={autopf}\{#Nome}
 DisableProgramGroupPage=yes

@@ -1,7 +1,7 @@
 <div class="secao">
   <div class="sobretitulo">Como chega em quem usa</div>
   <h2>A <em>entrega</em></h2>
-  <p class="descricao">O núcleo recebe uma pasta com três arquivos: o instalador
+  <p class="descricao">A CAPCF recebe uma pasta com três arquivos: o instalador
   do Windows e os roteiros <b>Como instalar</b> e <b>Como usar</b>. O instalador
   põe o programa só para quem está usando, na pasta de programas dela, <b>sem
   pedir administrador</b>, e não exige Python na máquina. O programa vai numa
@@ -36,7 +36,7 @@ Get-FileHash instaladores\tesseract-ocr-w64-setup-*.exe</pre></div></li>
     <tr><th>Passo</th><th>O que faz</th></tr>
     <tr><td class="curta">1</td><td>Roda a lista inteira dos testes. Um vermelho bloqueia a entrega.</td></tr>
     <tr><td class="curta">—</td><td>Lê a versão de <code>programa/versao.py</code>, confere que os dois roteiros a citam e que o instalador do Tesseract está em <code>instaladores</code>.</td></tr>
-    <tr><td class="curta">2</td><td>Monta a pasta do programa com o PyInstaller, pela receita <code>empacotar/anonimizador.spec</code>, em <code>builds\programa</code>, e confere que os modelos do PaddleOCR estão nela. O PyInstaller termina sem erro mesmo sem eles, e o programa chegaria ao núcleo como "instalação incompleta".</td></tr>
+    <tr><td class="curta">2</td><td>Monta a pasta do programa com o PyInstaller, pela receita <code>empacotar/anonimizador.spec</code>, em <code>builds\programa</code>, e confere que os modelos do PaddleOCR estão nela. O PyInstaller termina sem erro mesmo sem eles, e o programa chegaria à CAPCF como "instalação incompleta".</td></tr>
     <tr><td class="curta">3</td><td>Procura o Inno Setup, na pasta de programas da pessoa ou na de todos.</td></tr>
     <tr><td class="curta">4</td><td>Monta o instalador pela receita <code>empacotar/instalador.iss</code>, em <code>builds\instalador</code>, e refaz do zero a pasta <code>builds\entrega-&lt;versão&gt;</code> com o instalador e os dois roteiros, já com os nomes <b>Como instalar.html</b> e <b>Como usar.html</b>. Nada entra nela copiado à mão.</td></tr>
   </table></div>
@@ -48,7 +48,7 @@ Get-FileHash instaladores\tesseract-ocr-w64-setup-*.exe</pre></div></li>
   <div class="destaque cuidado"><span class="icone">⚠</span>
     <div><p><b>O <code>AppId</code> nunca muda.</b> É por ele que o Windows reconhece
     a versão nova como atualização da instalada, e não como um segundo programa ao
-    lado. Mudado, cada máquina do núcleo ficaria com dois.</p></div></div>
+    lado. Mudado, cada máquina da CAPCF ficaria com dois.</p></div></div>
   <div class="tabela"><table>
     <tr><th>O quê</th><th>Como, e por quê</th></tr>
     <tr><td class="curta"><b>Onde instala</b></td><td>Em <code>%LOCALAPPDATA%\Programs\Anonimizador CAPCF</code>, sem administrador (<code>PrivilegesRequired=lowest</code>). O programa grava ao lado de si o <code>preferencias.ini</code> e o token no <code>.env</code>, e em <code>Program Files</code> cada gravação pediria a confirmação do Windows. Mudar de lugar depois custaria uma volta em cada máquina.</td></tr>
@@ -75,7 +75,7 @@ Get-FileHash instaladores\tesseract-ocr-w64-setup-*.exe</pre></div></li>
   <div class="codigo"><div class="cab">PowerShell</div><pre>ISCC.exe /Qp /DVersao=&lt;versão&gt; /O"builds\teste-&lt;nnn&gt;" /F"&lt;nome&gt;-teste" empacotar\instalador.iss</pre></div>
   <p>Isso preserva o <b>arquivo</b> entregue. Instalado, o de teste substitui a
   instalação da máquina como qualquer versão — é o mesmo programa para o Windows.
-  Só na máquina de desenvolvimento, nunca numa do núcleo.</p>
+  Só na máquina de desenvolvimento, nunca numa da CAPCF.</p>
   <h3>O teste obrigatório</h3>
   <p>A versão nova instalada <b>por cima da anterior em uso</b>, com o
   <code>.env</code> preenchido e escolhas lembradas, e aberta sem internet.

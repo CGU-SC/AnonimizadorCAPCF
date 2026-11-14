@@ -811,7 +811,7 @@ def rotulo_de_secao(texto):
 
 
 # O resumo embaixo de cada motor (RN-31 da emenda de 18/10/2026). Os tempos
-# foram medidos nesta máquina na conferência 02; nas do núcleo podem ser um
+# foram medidos nesta máquina na conferência 02; nas da CAPCF podem ser um
 # pouco maiores. O tempo vai na cor do texto, e o resto na cor de apoio, para o
 # olho achar o número sem ler a frase inteira (rascunho 11).
 RESUMO_PADDLEOCR = ("Melhor resultado, inclusive em tabela e página escaneada "

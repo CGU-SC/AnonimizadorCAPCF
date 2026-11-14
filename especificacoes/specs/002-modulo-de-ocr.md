@@ -132,7 +132,7 @@ documento impresso, anexo escaneado por terceiro, ou documento passado pelo
   sai como um `.md` só. Separar por dentro é melhoria futura.
 - premissa: a conferência humana é parte fixa do processo quando o texto veio de
   OCR, e não etapa opcional.
-- premissa: as máquinas do núcleo são Windows.
+- premissa: as máquinas da CAPCF são Windows.
 - premissa: o instalador do Tesseract estará disponível na máquina para o botão
   "instalar agora" abrir, **numa pasta chamada `instaladores`, ao lado do
   programa**. Deixá-lo ali é combinado com o dia da entrega. Não estando, o
@@ -512,7 +512,7 @@ mesmas páginas, o Tesseract pulou tabelas com grade inteiras, mesmo limpas.
   leitura, como hoje se faz com o Tesseract.
 - premissa: a página vai para o PaddleOCR na mesma densidade de hoje, 300 pontos
   por polegada (RN-7), a mesma da medição.
-- premissa: os tempos do resumo foram medidos nesta máquina; nas do núcleo podem
+- premissa: os tempos do resumo foram medidos nesta máquina; nas da CAPCF podem
   ser um pouco maiores.
 
 ### Fluxos da emenda
@@ -738,7 +738,7 @@ lembrada de um uso para o outro.
 Inferências do mapa 07 que a usuária leu e não derrubou:
 
 - premissa: a instalação é de uma pessoa só, na pasta de programas dela, e o que
-  o programa lembra é dela; ninguém do núcleo herda a escolha de outra pessoa.
+  o programa lembra é dela; ninguém da CAPCF herda a escolha de outra pessoa.
 - premissa: nada do trabalho é lembrado (RN-40).
 - premissa: o tamanho de letra e de página da conferência continua não lembrado.
 - premissa: o que não dá para ler volta ao padrão, e o que não dá para gravar
@@ -918,8 +918,7 @@ Nenhuma.
 
 Funcionalidade 11 do backlog. Pedida pela solicitante no teste da entrega da 0.2.0
 (10/11/2026): "Escolher arquivo…" abria sempre na pasta da instalação, e cada
-documento pedia o caminho inteiro de novo. Entrou no lugar da anonimização de
-e-mail, que saiu do previsto em 14/11/2026. Acordo curto, sem rascunho de tela: a
+documento pedia o caminho inteiro de novo. Acordo curto, sem rascunho de tela: a
 janela de escolher arquivo é a do Windows, e só muda a pasta em que ela abre.
 
 ### Escopo da emenda

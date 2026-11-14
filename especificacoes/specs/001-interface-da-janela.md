@@ -53,7 +53,7 @@ rodar, e um painel principal que muda de acordo com a escolha.
   identidade visual e não de código. Até lá a janela usa o ícone padrão.
 
 ## Premissas
-- premissa: as máquinas do núcleo onde o programa roda são Windows.
+- premissa: as máquinas da CAPCF onde o programa roda são Windows.
 
 ## Fluxos
 
