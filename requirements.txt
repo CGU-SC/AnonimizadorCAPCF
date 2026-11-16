@@ -22,6 +22,6 @@ onnxruntime==1.31.0
 pytest>=8.0,<9
 
 # Empacotamento: monta o programa numa pasta que roda sem Python, e o Inno
-# Setup faz dela o instalador das máquinas do núcleo. Era um .exe único até
+# Setup faz dela o instalador das máquinas da CAPCF. Era um .exe único até
 # 23/09/2026; com instalador a pasta não aparece para quem usa.
 pyinstaller>=6.0,<7
